@@ -104,6 +104,27 @@ namespace GodlessFantasy.UI
         private Vector2 minimapPingPos;
         private float minimapPingTimer = 0f;
 
+        public static CombatHUD Instance { get; private set; }
+
+        public static bool IsAnyModalBlockingScreen(float screenX, float screenY)
+        {
+            if (Instance == null) return false;
+            if (Instance.isDrawerOpen && screenX < 480f) return true;
+            if (Instance.isChatOpen && screenX > Screen.width - 330f && screenY < 380f) return true;
+            if (Instance.inventoryManager != null && Instance.inventoryManager.IsDropModalOpen) return true;
+            return false;
+        }
+
+        private void Awake()
+        {
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
         private void Start()
         {
             FindReferences();
@@ -148,6 +169,7 @@ namespace GodlessFantasy.UI
             Texture2D tex = Resources.Load<Texture2D>(resName);
             if (tex != null)
             {
+                tex.filterMode = FilterMode.Point; // Chống mờ nhòe pixel art
                 iconCache[resName] = tex;
             }
             return tex;
@@ -169,6 +191,8 @@ namespace GodlessFantasy.UI
             {
                 fontSize = 13,
                 fontStyle = FontStyle.Bold,
+                wordWrap = false,
+                clipping = TextClipping.Overflow,
                 normal = { textColor = Color.white }
             };
 
@@ -184,7 +208,7 @@ namespace GodlessFantasy.UI
                 fontSize = 12,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(1f, 0.88f, 0.45f) }
+                normal = { textColor = new Color(1f, 0.85f, 0.35f) }
             };
 
             skillCdStyle = new GUIStyle(GUI.skin.label)
@@ -221,6 +245,8 @@ namespace GodlessFantasy.UI
             {
                 fontSize = 11,
                 fontStyle = FontStyle.Bold,
+                wordWrap = false,
+                clipping = TextClipping.Overflow,
                 normal = { textColor = new Color(0.8f, 0.9f, 1f) }
             };
 
@@ -294,14 +320,22 @@ namespace GodlessFantasy.UI
 
             PlayerMovement.BlockWorldClick = isMouseOverUI;
 
+            // 1. LỚP HUD CƠ BẢN (Depth 10): Nằm trên thế giới (Depth 20), dưới Menu/Modal (Depth 0)
+            GUI.depth = FantasyUITheme.DepthBaseHUD;
+
             DrawTopLeftPlayerPanel();
-            DrawTopCenterServerNews();
             DrawTopRightMinimapAndChat();
             DrawMidLeftDrawerButton();
             DrawBottomCenterSkillBar();
+            DrawBottomCenterServerNews(); // Thanh tin tức gọn nhỏ sát đáy chạy chữ từ phải sang trái!
 
+            // 2. LỚP GIAO DIỆN CÀI ĐẶT / MENU / MODAL (Depth 0): Mặc nhiên luôn ở trên cùng của HUD
+            GUI.depth = FantasyUITheme.DepthModal;
             if (isDrawerOpen) DrawDrawerModal();
             if (isChatOpen) DrawChatModal();
+
+            // 3. LỚP TRÊN CÙNG TUYỆT ĐỐI (Depth -100): HỘP THOẠI XÁC NHẬN 5S & TOOLTIP
+            GUI.depth = FantasyUITheme.DepthPopupTooltip;
             if (showTooltip) DrawTooltipPopup();
 
             // POPUP DOUBLE CHECK 5S KHI VỨT / XÓA VẬT PHẨM
@@ -314,7 +348,7 @@ namespace GodlessFantasy.UI
         // ================= 1. BẢNG THÔNG TIN NHÂN VẬT GÓC TRÁI TRÊN =================
         private void DrawTopLeftPlayerPanel()
         {
-            float panelW = 356f;
+            float panelW = 380f; // Mở rộng 380px thoải mái, không bao giờ bị truncate
             float panelH = 96f;
             Rect panel = new Rect(16, 14, panelW, panelH);
 
@@ -334,6 +368,8 @@ namespace GodlessFantasy.UI
             // Badge Level
             int lv = playerStats != null ? playerStats.Level : 1;
             string elem = playerStats != null ? playerStats.Element : "Hỏa";
+            if (elem.Contains("(")) elem = elem.Substring(0, elem.IndexOf('(')).Trim(); // Bỏ (Fire) vì đã có song ngữ
+
             Rect lvBadge = new Rect(av.x - 2, av.y + av.height - 14, 38, 16);
             GUI.color = new Color(0.75f, 0.55f, 0.15f, 0.95f);
             GUI.DrawTexture(lvBadge, Texture2D.whiteTexture);
@@ -342,10 +378,12 @@ namespace GodlessFantasy.UI
             statBadgeStyle.alignment = TextAnchor.MiddleCenter;
             GUI.Label(lvBadge, $"Lv.{lv}", statBadgeStyle);
 
-            // DÒNG 1: CHỨC NGHIỆP & TÊN (Đúng quy tắc đặc tả, không bị truncate!)
+            // DÒNG 1: CHỨC NGHIỆP & TÊN (Đúng quy tắc đặc tả, không bao giờ bị truncate)
             string charName = playerStats != null ? playerStats.CharacterName : "Dũng Sĩ SquiRRels";
             boldWhiteStyle.alignment = TextAnchor.UpperLeft;
             boldWhiteStyle.fontSize = 12;
+            boldWhiteStyle.wordWrap = false;
+            boldWhiteStyle.clipping = TextClipping.Overflow;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.45f);
             GUI.Label(new Rect(panel.x + 66, panel.y + 6, panelW - 74, 18), $"Chức nghiệp: <color=#00e5ff>Hiệp Sĩ</color> · Tên: <color=#ffffff>{charName}</color>", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
@@ -366,14 +404,16 @@ namespace GodlessFantasy.UI
                 if (playerStats != null) playerStats.UseManaPotion();
             });
 
-            // DÒNG DƯỚI: ĐƯA HỆ (HỎA) XUỐNG DƯỚI ĐÚNG Ý USER + CHỈ SỐ RÕ RÀNG
+            // DÒNG DƯỚI: ĐƯA HỆ (HỎA) XUỐNG DƯỚI, BỎ (FIRE), CÙNG DÒNG VỚI CHỈ SỐ
             int str = playerStats != null ? playerStats.Strength : 8;
             int intel = playerStats != null ? playerStats.Intelligence : 12;
             int vit = playerStats != null ? playerStats.Vitality : 10;
             int agi = playerStats != null ? playerStats.Agility : 9;
-            statBadgeStyle.alignment = TextAnchor.MiddleLeft;
+            statBadgeStyle.alignment = TextAnchor.MiddleCenter; // Căn chính giữa cân đối, triệt tiêu khoảng trắng thừa bên phải
             statBadgeStyle.fontSize = 11;
-            GUI.Label(new Rect(panel.x + 66, panel.y + 68, panelW - 74, 20), $"Hệ: <color=#ff6633>{elem}</color> | INT: {intel} · STR: {str} · VIT: {vit} · AGI: {agi} | Tiềm Năng: {playerStats?.AvailableStatPoints ?? 0}", statBadgeStyle);
+            statBadgeStyle.wordWrap = false;
+            statBadgeStyle.clipping = TextClipping.Overflow;
+            GUI.Label(new Rect(panel.x + 66, panel.y + 68, panelW - 76, 20), $"Hệ: <color=#ff6633>{elem}</color> | INT: {intel} · STR: {str} · VIT: {vit} · AGI: {agi} | Tiềm Năng: {playerStats?.AvailableStatPoints ?? 0}", statBadgeStyle);
         }
 
         private void DrawInteractiveBar(Rect r, int cur, int max, Texture2D fillTex, string text, Action onClick)
@@ -397,29 +437,28 @@ namespace GodlessFantasy.UI
             }
         }
 
-        // ================= 2. GIỮA TRÊN CÙNG: DẢI TIN TỨC & AIM GUIDE =================
-        private void DrawTopCenterServerNews()
+        // ================= 2. DƯỚI ĐÁY MÀN HÌNH: THANH TIN TỨC GỌN NHỎ CHẠY CHỮ TỪ PHẢI SANG TRÁI =================
+        private void DrawBottomCenterServerNews()
         {
-            float bannerW = Mathf.Clamp(Screen.width - 500f, 440f, 620f);
-            float bannerH = 30f;
+            float bannerW = Mathf.Clamp(Screen.width * 0.55f, 480f, 680f);
+            float bannerH = 22f; // Gọn nhỏ thanh mảnh đúng chuẩn thanh chạy chữ
             float bannerX = (Screen.width - bannerW) / 2f;
-            float bannerY = 14f;
+            float bannerY = Screen.height - bannerH - 2f; // Sát mép đáy màn hình
 
             Rect bannerRect = new Rect(bannerX, bannerY, bannerW, bannerH);
-            DrawDoubleGoldFrame(bannerRect);
 
             if (skillAimingController != null && skillAimingController.IsAiming)
             {
                 int s = skillAimingController.CurrentAimingSkill;
                 var scroll = skillAimingController.GetEquippedScroll(s - 1);
                 string sName = scroll != null ? scroll.scrollName : $"Chiêu [{s}]";
-                serverNewsStyle.normal.textColor = Color.cyan;
-                GUI.Label(bannerRect, $"🎯 [ĐANG NGẮM]: {sName} · Bấm Chuột Phải để tung chiêu · Bấm [{s}] hoặc ESC để hủy", serverNewsStyle);
+                string guideMsg = $"🎯 [ĐANG NGẮM]: Chiêu [{s}] {sName} — Bấm CHUỘT PHẢI để Tung Chiêu · Bấm [{s}] hoặc ESC để Hủy Ngắm · Chuột Trái vẫn dùng để Di Chuyển.";
+                FantasyUITheme.DrawMarqueeTicker(bannerRect, "🎯 HƯỚNG DẪN", guideMsg, 75f, Color.cyan);
             }
             else
             {
-                serverNewsStyle.normal.textColor = new Color(1f, 0.88f, 0.45f);
-                GUI.Label(bannerRect, "📢 Tin Tức: SquiRRels Studio · Lại gần NPC bấm E · Đồ đang dùng được bảo vệ chống xóa!", serverNewsStyle);
+                string newsMsg = "⚔️ SquiRRels Studio chào đón dũng sĩ! · 💡 Lại gần NPC Trưởng Làng bấm E để nhận nhiệm vụ · 🛡️ Vật phẩm đang dùng & ô chiêu được bảo vệ chống xóa · ⚡ Bấm Q hồi 35 HP, bấm E hồi 30 Mana · 🎯 Chiêu 1-4: Bấm để ngắm, Chuột Phải để tung chiêu · 🎒 Mở Túi Đồ để lắp hoặc tháo cuộn trục bí kíp!";
+                FantasyUITheme.DrawMarqueeTicker(bannerRect, "📢 TIN TỨC", newsMsg, 60f, FantasyUITheme.ColorTextGold);
             }
         }
 
@@ -587,7 +626,7 @@ namespace GodlessFantasy.UI
             int totalSlots = 5;
             float totalW = totalSlots * slotSize + (totalSlots - 1) * gap;
             float startX = (Screen.width - totalW) / 2f;
-            float startY = Screen.height - slotSize - 18f;
+            float startY = Screen.height - slotSize - 34f; // Nâng lên 34px tạo khoảng cách 10px thoáng đãng phía trên thanh tin tức
 
             for (int i = 0; i < 4; i++)
             {
@@ -616,10 +655,22 @@ namespace GodlessFantasy.UI
                 if (icon != null) GUI.DrawTexture(new Rect(r.x + 3, r.y + 3, r.width - 6, r.height - 6), icon);
                 DrawOutline(r, scroll.tierColor, 2);
 
-                standardTextStyle.alignment = TextAnchor.LowerRight;
-                standardTextStyle.fontSize = 11;
-                GUI.Label(new Rect(r.x, r.y, r.width - 7, r.height - 6), $"{scroll.manaCost}m", standardTextStyle);
-                standardTextStyle.fontSize = 12;
+                // Huy hiệu nền tối + Chữ Mana trắng đậm sáng nét có đổ bóng đen (khắc phục hoàn toàn lỗi mờ/răng cưa)
+                Rect manaBadge = new Rect(r.x + r.width - 32f, r.y + r.height - 18f, 28f, 15f);
+                GUI.color = new Color(0.04f, 0.06f, 0.12f, 0.88f);
+                GUI.DrawTexture(manaBadge, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                DrawOutline(manaBadge, new Color(0.25f, 0.55f, 0.9f, 0.65f), 1);
+
+                boldWhiteStyle.fontSize = 11;
+                boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
+                // Đổ bóng chữ đen
+                boldWhiteStyle.normal.textColor = Color.black;
+                GUI.Label(new Rect(manaBadge.x + 1, manaBadge.y + 1, manaBadge.width, manaBadge.height), $"{scroll.manaCost}m", boldWhiteStyle);
+
+                // Chữ trắng đậm sáng nổi bật
+                boldWhiteStyle.normal.textColor = Color.white;
+                GUI.Label(manaBadge, $"{scroll.manaCost}m", boldWhiteStyle);
             }
             else
             {
@@ -806,28 +857,28 @@ namespace GodlessFantasy.UI
             // VŨ KHÍ (Nằm phía dưới bên phải theo bản vẽ)
             DrawEquipmentSlotButton(EquipSlot.Weapon, "Vũ Khí", new Rect(rightColX, centerBoxY + 195, slotBoxSize, slotBoxSize));
 
-            // GÓC TRÁI DƯỚI: TIỀN, MA THẠCH, RP (Đúng bản vẽ 2)
-            float curY = centerBoxY + 200f;
-            Rect curRect = new Rect(leftColX, curY, 190f, 60f);
+            // GÓC TRÁI DƯỚI: TIỀN, MA THẠCH, RP (Đúng bản vẽ 2 - Bản rộng 150px vừa vặn không thừa)
+            float curY = centerBoxY + 195f;
+            Rect curRect = new Rect(leftColX, curY, 150f, 64f);
             GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
             GUI.DrawTexture(curRect, Texture2D.whiteTexture);
             GUI.color = Color.white;
             DrawDoubleGoldFrame(curRect, 1);
 
             standardTextStyle.alignment = TextAnchor.MiddleLeft;
-            standardTextStyle.fontSize = 12;
+            standardTextStyle.fontSize = 11;
             int goldVal = playerStats != null ? playerStats.Gold : 1500;
             int crystalVal = playerStats != null ? playerStats.MagicCrystals : 25;
             int rpVal = playerStats != null ? playerStats.RebirthPoints : 2;
 
-            GUI.Label(new Rect(curRect.x + 8, curRect.y + 4, curRect.width - 12, 16), $"💰 Tiền: <color=#ffd700>{goldVal:N0} Vàng</color>", standardTextStyle);
-            GUI.Label(new Rect(curRect.x + 8, curRect.y + 22, curRect.width - 12, 16), $"💎 Ma Thạch: <color=#00e5ff>{crystalVal}</color>", standardTextStyle);
-            GUI.Label(new Rect(curRect.x + 8, curRect.y + 40, curRect.width - 12, 16), $"✨ RP (Chuyển Sinh): <color=#ff66cc>{rpVal} Điểm</color>", standardTextStyle);
+            GUI.Label(new Rect(curRect.x + 8, curRect.y + 4, curRect.width - 12, 18), $"💰 Tiền: <color=#ffd700>{goldVal:N0}</color>", standardTextStyle);
+            GUI.Label(new Rect(curRect.x + 8, curRect.y + 23, curRect.width - 12, 18), $"💎 Ma Thạch: <color=#00e5ff>{crystalVal}</color>", standardTextStyle);
+            GUI.Label(new Rect(curRect.x + 8, curRect.y + 42, curRect.width - 12, 18), $"✨ RP: <color=#ff66cc>{rpVal} Điểm</color>", standardTextStyle);
 
-            // KHU VỰC THAO TÁC TRANG BỊ ĐANG CHỌN (NÚT THÁO RA TÚI ĐỒ RIÊNG BIỆT ĐÚNG Ý USER)
-            float actX = leftColX + 196f;
+            // KHU VỰC THAO TÁC TRANG BỊ ĐANG CHỌN (MỞ RỘNG 202PX - KHÔNG BAO GIỜ BỊ TRUNCATE / XUỐNG DÒNG)
+            float actX = leftColX + 158f;
             float actW = rightColX - actX - 8f;
-            Rect actBoxRect = new Rect(actX, curY, actW, 60f);
+            Rect actBoxRect = new Rect(actX, curY, actW, 64f);
             GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
             GUI.DrawTexture(actBoxRect, Texture2D.whiteTexture);
             GUI.color = Color.white;
@@ -841,13 +892,15 @@ namespace GodlessFantasy.UI
             {
                 standardTextStyle.alignment = TextAnchor.MiddleCenter;
                 standardTextStyle.fontSize = 11;
+                standardTextStyle.wordWrap = false;
                 standardTextStyle.normal.textColor = new Color(0.4f, 0.95f, 1f);
-                GUI.Label(new Rect(actBoxRect.x + 4, actBoxRect.y + 4, actBoxRect.width - 8, 18), $"Đang chọn: {selectedGear.itemName}", standardTextStyle);
+                GUI.Label(new Rect(actBoxRect.x + 4, actBoxRect.y + 5, actBoxRect.width - 8, 18), $"Đang chọn: <color=#ffffff>{selectedGear.itemName}</color>", standardTextStyle);
+                standardTextStyle.wordWrap = true;
                 standardTextStyle.normal.textColor = Color.white;
                 standardTextStyle.fontSize = 12;
 
-                Rect unequipBtnRect = new Rect(actBoxRect.x + 8, actBoxRect.y + 24, actBoxRect.width - 16, 28);
-                if (DrawFantasyButton(unequipBtnRect, "THÁO RA TÚI ĐỒ", 11, true, new Color(1f, 0.45f, 0.45f)))
+                Rect unequipBtnRect = new Rect(actBoxRect.x + 10, actBoxRect.y + 26, actBoxRect.width - 20, 30);
+                if (DrawFantasyButton(unequipBtnRect, "⚔️ THÁO RA TÚI ĐỒ", 11, true, new Color(1f, 0.45f, 0.45f)))
                 {
                     inventoryManager?.UnequipGearItem(selectedEquipSlot.Value);
                 }
@@ -858,7 +911,7 @@ namespace GodlessFantasy.UI
                 standardTextStyle.fontSize = 10;
                 standardTextStyle.normal.textColor = Color.gray;
                 string slotName = selectedEquipSlot.HasValue ? GetSlotVietnameseName(selectedEquipSlot.Value) : "Trang Bị";
-                GUI.Label(new Rect(actBoxRect.x + 4, actBoxRect.y + 12, actBoxRect.width - 8, 36), $"Ô [{slotName}]\nChưa có đồ mặc", standardTextStyle);
+                GUI.Label(new Rect(actBoxRect.x + 4, actBoxRect.y + 14, actBoxRect.width - 8, 36), $"Ô [{slotName}]\nChưa có đồ mặc", standardTextStyle);
                 standardTextStyle.normal.textColor = Color.white;
                 standardTextStyle.fontSize = 12;
             }
@@ -866,7 +919,7 @@ namespace GodlessFantasy.UI
             // Ghi chú cơ chế
             standardTextStyle.fontSize = 11;
             standardTextStyle.normal.textColor = new Color(0.7f, 0.85f, 0.95f);
-            GUI.Label(new Rect(leftColX, curY + 66, r.width - 20, 36), "💡 Đồ ở đây lấy từ Hành Trang khi mặc lên. Đồ đang mặc được bảo vệ chống xóa/vứt nhầm!", standardTextStyle);
+            GUI.Label(new Rect(leftColX, curY + 68, r.width - 20, 36), "💡 Đồ ở đây lấy từ Hành Trang khi mặc lên. Đồ đang mặc được bảo vệ chống xóa/vứt nhầm!", standardTextStyle);
             standardTextStyle.fontSize = 12;
             standardTextStyle.normal.textColor = Color.white;
         }
@@ -1257,20 +1310,20 @@ namespace GodlessFantasy.UI
             int agiVal = playerStats?.Agility ?? 9;
             bool canAdd = (playerStats != null && playerStats.AvailableStatPoints > 0);
 
-            // Cột 1: Trí Tuệ & Sức Mạnh (Khoảng cách rõ ràng, số nổi bật, nút + vừa vặn)
+            // Cột 1: Trí Tuệ & Sức Mạnh (Sử dụng Template Nút Vuông Viền Vàng Hoàng Kim FantasyUITheme chuẩn mẫu User)
             standardTextStyle.fontSize = 12;
             GUI.Label(new Rect(statBox.x + 12, statBox.y + 8, 110, 20), $"Trí Tuệ: <color=#00e5ff><b>{intVal}</b></color>", standardTextStyle);
-            if (DrawFantasyButton(new Rect(statBox.x + 126, statBox.y + 6, 26, 22), "+", 12, canAdd) && canAdd) playerStats?.AddIntelligence();
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 126, statBox.y + 5, 24, 24), canAdd)) playerStats?.AddIntelligence();
 
             GUI.Label(new Rect(statBox.x + 12, statBox.y + 40, 110, 20), $"Sức Mạnh: <color=#ff7755><b>{strVal}</b></color>", standardTextStyle);
-            if (DrawFantasyButton(new Rect(statBox.x + 126, statBox.y + 38, 26, 22), "+", 12, canAdd) && canAdd) playerStats?.AddStrength();
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 126, statBox.y + 37, 24, 24), canAdd)) playerStats?.AddStrength();
 
             // Cột 2: Thể Lực & Nhanh Nhẹn
             GUI.Label(new Rect(statBox.x + 205, statBox.y + 8, 110, 20), $"Thể Lực: <color=#55ff55><b>{vitVal}</b></color>", standardTextStyle);
-            if (DrawFantasyButton(new Rect(statBox.x + 320, statBox.y + 6, 26, 22), "+", 12, canAdd) && canAdd) playerStats?.AddVitality();
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 320, statBox.y + 5, 24, 24), canAdd)) playerStats?.AddVitality();
 
             GUI.Label(new Rect(statBox.x + 205, statBox.y + 40, 110, 20), $"Nhanh Nhẹn: <color=#ffdd44><b>{agiVal}</b></color>", standardTextStyle);
-            if (DrawFantasyButton(new Rect(statBox.x + 320, statBox.y + 38, 26, 22), "+", 12, canAdd) && canAdd) playerStats?.AddAgility();
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 320, statBox.y + 37, 24, 24), canAdd)) playerStats?.AddAgility();
             pY += 82f;
 
             // 2. PHẦN GIỮA: DANH SÁCH CÁC KỸ NĂNG ĐANG SỬ DỤNG

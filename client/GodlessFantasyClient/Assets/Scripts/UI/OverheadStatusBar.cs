@@ -77,6 +77,9 @@ namespace GodlessFantasy.UI
 
         private void OnGUI()
         {
+            // LỚP 1 (Depth 20): Luôn nằm dưới toàn bộ HUD và Menu
+            GUI.depth = FantasyUITheme.DepthOverhead;
+
             if (health != null && health.IsDead) return;
             if (mainCam == null) mainCam = Camera.main;
             if (mainCam == null) return;
@@ -91,6 +94,9 @@ namespace GodlessFantasy.UI
 
             float guiX = Mathf.Round(screenPos.x);
             float guiY = Mathf.Round(Screen.height - screenPos.y);
+
+            // Tuyệt đối không vẽ đè lên Menu trượt / Modal / Cài đặt khi đang mở
+            if (CombatHUD.IsAnyModalBlockingScreen(guiX, guiY)) return;
 
             // Kích thước thanh trên đầu
             float barW = (entityType == OverheadType.Player) ? 76f : 60f;

@@ -186,3 +186,29 @@ Game hỗ trợ chính thức kiến trúc **Song Ngữ Toàn Diện (Bilingual 
 ### 5.3. Yêu Cầu Kỹ Thuật Phông Chữ (Typography / Unicode)
 - Sử dụng bảng mã **UTF-8 tiêu chuẩn**.
 - Toàn bộ Text Asset và Font Asset trong Unity (Text Mesh Pro) phải được nướng sẵn (bake SDF) đầy đủ bảng ký tự tiếng Việt có dấu (bao gồm cả hoa và thường: `ă, â, đ, ê, ô, ơ, ư...`) nhằm triệt tiêu hoàn toàn lỗi hiển thị ô vuông (missing glyph) khi hiển thị tiếng Việt.
+
+---
+
+## 6. HỆ THỐNG THỨ TỰ PHÂN LỚP GIAO DIỆN & BỘ TEMPLATE THIẾT KẾ FANTASY (DESIGN SYSTEM)
+
+### 6.1. Kiến Trúc Phân Lớp Giao Diện Độc Quyền (UI Depth Hierarchy)
+Nhằm triệt tiêu vĩnh viễn hiện tượng chữ/thanh máu từ thế giới (nhân vật, NPC) vẽ đè hoặc nhìn xuyên qua cửa sổ Menu/Cài đặt/Hành trang, hệ thống áp dụng 4 lớp hiển thị nghiêm ngặt:
+1. **Lớp 1 — Thế Giới (Depth = 20):** Tên quái vật, thanh máu trên đầu, bong bóng gợi ý `[ BẤM E ĐỂ NÓI CHUYỆN ]` của NPC. Tự động ẩn hoàn toàn khi nằm trong vùng che phủ của Menu trượt.
+2. **Lớp 2 — HUD Cơ Bản (Depth = 10):** Khung Avatar nhân vật góc trái trên, Minimap góc phải trên, Hotbar chiêu thức `[1..4]` và Thanh tin tức chạy chữ sát mép đáy màn hình.
+3. **Lớp 3 — Cửa Sổ Menu / Modal / Cài Đặt (Depth = 0):** Bảng Menu trượt 5 Tab, Cửa sổ Chat 2 tab, Hộp thoại đối thoại của NPC. Luôn luôn nằm đè lên trên toàn bộ HUD và thế giới.
+4. **Lớp 4 — Popup Cảnh Báo & Tooltip (Depth = -100):** Cửa sổ đếm ngược 5 giây bảo vệ vứt đồ, Tooltip soi chi tiết trang bị. Luôn ở tầng cao nhất tuyệt đối.
+
+### 6.2. Thanh Tin Tức Chạy Chữ Tự Động Sát Đáy (Bottom Marquee Ticker)
+- **Vị trí:** Chính giữa mép đáy màn hình (`y = Screen.height - 24px`, cao `22px`), cách thanh chiêu thức bên trên 10px thoáng đãng.
+- **Hiệu ứng chữ chạy (Marquee):** Dòng chữ tự động cuộn mượt mà từ phải sang trái (vận tốc ~60px/s) bên trong khung cắt `GUI.BeginGroup` có viền mạ vàng và 4 chốt góc hoàng kim.
+- **Huy hiệu cố định bên trái:** Huy hiệu `📢 TIN TỨC` (Vàng kim) khi bình thường, tự động đổi thành `🎯 HƯỚNG DẪN` (Cyan) khi người chơi đang ngắm chiêu để hiển thị hướng dẫn tung chiêu/hủy chiêu.
+
+### 6.3. Bộ Template Giao Diện Tái Sử Dụng (`FantasyUITheme.cs`)
+- **Nút Vuông Viền Vàng Hoàng Kim (`DrawSquareIconButton` / `DrawSquarePlusButton`):** Ô vuông viền vàng nổi khối 2px, 4 chốt góc đính tán kim, nền xanh than Navy ma thuật (`#162033`), biểu tượng ký tự ở giữa (ví dụ `[+]`) có đổ bóng đen sắc nét chống răng cưa.
+- **Nút Chữ Nhật Fantasy MMO (`DrawButton`):** Đồng bộ hiệu ứng hover đổi sáng, đổ bóng chữ đen 1px chống mờ nhòe.
+- **Hào Quang Chọn Ô Đồ (`DrawSelectionGlow`):** Hiệu ứng nhịp đập chuyển màu Gold - Cyan phát sáng quanh ô trang bị/vật phẩm đang chọn.
+
+### 6.4. Trí Tuệ Nhân Tạo Thú Cưng Mini (`PetFollower.cs`)
+- **Không bao giờ chắn trước mặt:** Thú cưng luôn di chuyển bám ở 1 trong 2 bên hông người chơi (Left/Right Flank) cách đều đúng `0.85m`.
+- **Đổi bên ngẫu nhiên sinh động (Lively Side Switching):** Cứ mỗi 4.5 đến 8.0 giây, thú cưng tự động ngẫu nhiên đổi bên (lúc lượn sang hông trái, lúc chạy sang hông phải) và tự động lật mặt (FlipX) nhìn về phía chủ nhân.
+

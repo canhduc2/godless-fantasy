@@ -171,6 +171,11 @@ namespace GodlessFantasy.Core
             SetPrivateField(pCombat, "playerStats", pStats);
             pCombat.InitializeDefaultScrolls();
 
+            // Đồng bộ túi đồ với bộ chiêu thức chiến đấu
+            SetPrivateField(pInventory, "skillAimingController", pCombat);
+            SetPrivateField(pInventory, "playerStats", pStats);
+            pInventory.SyncEquippedScrollsToCombat();
+
             // 6. Thú Cưng Mini (Cute Mascot Pet Sóc Chibi của SquiRRels Studio!)
             if (petSprite != null)
             {
@@ -183,6 +188,7 @@ namespace GodlessFantasy.Core
 
                 var petFollower = petObj.AddComponent<PetFollower>();
                 petFollower.SetOwner(playerObj.transform);
+                SetPrivateField(pInventory, "petFollower", petFollower);
             }
 
             // 7. Tạo NPC Trưởng Làng Tân Thủ (Có thanh tên/máu NPC và Hộp thoại nhiệm vụ)

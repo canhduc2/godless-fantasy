@@ -1,5 +1,6 @@
 using UnityEngine;
 using GodlessFantasy.Combat;
+using GodlessFantasy.UI;
 
 namespace GodlessFantasy.Player
 {
@@ -62,6 +63,9 @@ namespace GodlessFantasy.Player
 
         private void OnGUI()
         {
+            // LỚP 1 (Depth 20): Bảng gợi ý NPC ở thế giới luôn nằm dưới HUD và Menu
+            GUI.depth = FantasyUITheme.DepthOverhead;
+
             if (isPlayerNearby && !showDialogue)
             {
                 Camera cam = Camera.main;
@@ -72,6 +76,9 @@ namespace GodlessFantasy.Player
                     float promptW = 160f;
                     float promptH = 22f;
                     Rect promptRect = new Rect(screenPos.x - promptW / 2f, Screen.height - screenPos.y - 14, promptW, promptH);
+
+                    // Không vẽ đè lên Menu trượt / Modal / Cài đặt khi đang mở
+                    if (CombatHUD.IsAnyModalBlockingScreen(promptRect.x + promptRect.width / 2f, promptRect.y + promptRect.height / 2f)) return;
 
                     GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
                     GUI.DrawTexture(promptRect, Texture2D.whiteTexture);
@@ -91,6 +98,8 @@ namespace GodlessFantasy.Player
 
             if (showDialogue)
             {
+                // Lớp 3 (Depth 0): Hộp thoại NPC hiển thị ngang hàng các Modal
+                GUI.depth = FantasyUITheme.DepthModal;
                 float boxW = 380f;
                 float boxH = 110f;
                 float boxX = (Screen.width - boxW) / 2f;

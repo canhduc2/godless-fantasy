@@ -55,6 +55,8 @@ namespace GodlessFantasy.Combat
         public int Skill3ManaCost => equippedSlots[2] != null ? equippedSlots[2].manaCost : 20;
         public int Skill4ManaCost => equippedSlots[3] != null ? equippedSlots[3].manaCost : 35;
 
+        private bool isDefaultScrollsInitialized = false;
+
         private void Awake()
         {
             if (indicatorRenderer == null) indicatorRenderer = GetComponentInChildren<IndicatorRenderer>();
@@ -66,6 +68,9 @@ namespace GodlessFantasy.Combat
 
         public void InitializeDefaultScrolls()
         {
+            if (isDefaultScrollsInitialized) return;
+            isDefaultScrollsInitialized = true;
+
             // Khởi tạo 4 Bí Kíp mặc định gắn vào 4 ô
             if (equippedSlots[0] == null)
             {
@@ -117,7 +122,7 @@ namespace GodlessFantasy.Combat
         public SkillScrollData GetEquippedScroll(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= 4) return null;
-            if (equippedSlots[0] == null) InitializeDefaultScrolls();
+            if (!isDefaultScrollsInitialized) InitializeDefaultScrolls();
             return equippedSlots[slotIndex];
         }
 

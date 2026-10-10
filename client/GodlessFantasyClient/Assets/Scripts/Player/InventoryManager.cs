@@ -41,11 +41,47 @@ namespace GodlessFantasy.Player
 
         private void Awake()
         {
+            EnsureReferences();
+            InitializeStarterInventory();
+        }
+
+        private void Start()
+        {
+            EnsureReferences();
+            SyncEquippedScrollsToCombat();
+        }
+
+        public void EnsureReferences()
+        {
             if (playerStats == null) playerStats = GetComponent<PlayerStats>();
             if (skillAimingController == null) skillAimingController = GetComponent<SkillAimingController>();
             if (petFollower == null) petFollower = FindAnyObjectByType<PetFollower>();
+        }
 
-            InitializeStarterInventory();
+        public void SyncEquippedScrollsToCombat()
+        {
+            EnsureReferences();
+            if (skillAimingController == null) return;
+            for (int i = 0; i < 4; i++)
+            {
+                InventoryItem equippedScroll = null;
+                foreach (var it in items)
+                {
+                    if (it.itemType == ItemType.SkillScroll && it.isEquipped && it.equippedHotbarSlot == i)
+                    {
+                        equippedScroll = it;
+                        break;
+                    }
+                }
+                if (equippedScroll != null)
+                {
+                    skillAimingController.EquipScroll(i, equippedScroll.scrollData);
+                }
+                else
+                {
+                    skillAimingController.UnequipScroll(i);
+                }
+            }
         }
 
         private void Update()
@@ -188,6 +224,8 @@ namespace GodlessFantasy.Player
             if (scrollItem == null || scrollItem.itemType != ItemType.SkillScroll || scrollItem.scrollData == null) return false;
             if (slotIndex < 0 || slotIndex >= 4) return false;
 
+            EnsureReferences();
+
             if (!bypassLevelCheck && !IsSlotUnlocked(slotIndex))
             {
                 int reqLv = GetRequiredLevelForSlot(slotIndex);
@@ -219,20 +257,24 @@ namespace GodlessFantasy.Player
 
         public void UnequipSkillScrollFromHotbar(int slotIndex)
         {
+            if (slotIndex < 0 || slotIndex >= 4) return;
+            EnsureReferences();
+
             foreach (var it in items)
             {
                 if (it.itemType == ItemType.SkillScroll && it.isEquipped && it.equippedHotbarSlot == slotIndex)
                 {
                     it.isEquipped = false;
                     it.equippedHotbarSlot = -1;
-                    if (skillAimingController != null)
-                    {
-                        skillAimingController.UnequipScroll(slotIndex);
-                    }
-                    Debug.Log($"<color=yellow>[THÁO BÍ KÍP] Đã tháo cuộn trục khỏi Ô [{slotIndex + 1}]!</color>");
                     break;
                 }
             }
+
+            if (skillAimingController != null)
+            {
+                skillAimingController.UnequipScroll(slotIndex);
+            }
+            Debug.Log($"<color=yellow>[THÁO BÍ KÍP] Đã tháo cuộn trục khỏi Ô [{slotIndex + 1}]!</color>");
         }
 
         // ================= XỬ LÝ VỨT ĐỒ (DOUBLE CHECK 5S) =================
