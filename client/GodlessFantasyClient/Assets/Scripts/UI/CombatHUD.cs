@@ -485,7 +485,7 @@ namespace GodlessFantasy.UI
             }
             else
             {
-                string newsMsg = "⚔️ SquiRRels Studio chào đón dũng sĩ! · 💡 Lại gần NPC Trưởng Làng bấm E để nhận nhiệm vụ · 🛡️ Vật phẩm đang dùng & ô chiêu được bảo vệ chống xóa · ⚡ Bấm Q hồi 35 HP, bấm E hồi 30 Mana · 🎯 Chiêu 1-4: Bấm để ngắm, Chuột Phải để tung chiêu · 🎒 Mở Túi Đồ để lắp hoặc tháo cuộn trục bí kíp!";
+                string newsMsg = "⚔️ SquiRRels Studio chào đón dũng sĩ! · 🗺️ Khám phá Làng Khởi Đầu và Rừng Quái Vật · 🎒 Mở Hành Trang để trang bị cuộn trục bí kíp!";
                 FantasyUITheme.DrawMarqueeTicker(bannerRect, "📢 TIN TỨC", newsMsg, 60f, FantasyUITheme.ColorTextGold);
             }
         }
@@ -683,22 +683,18 @@ namespace GodlessFantasy.UI
                 if (icon != null) GUI.DrawTexture(new Rect(r.x + 3, r.y + 3, r.width - 6, r.height - 6), icon);
                 DrawOutline(r, scroll.tierColor, 2);
 
-                // Huy hiệu nền tối + Chữ Mana trắng đậm sáng nét có đổ bóng đen (khắc phục hoàn toàn lỗi mờ/răng cưa)
-                Rect manaBadge = new Rect(r.x + r.width - 32f, r.y + r.height - 18f, 28f, 15f);
-                GUI.color = new Color(0.04f, 0.06f, 0.12f, 0.88f);
-                GUI.DrawTexture(manaBadge, Texture2D.whiteTexture);
-                GUI.color = Color.white;
-                DrawOutline(manaBadge, new Color(0.25f, 0.55f, 0.9f, 0.65f), 1);
+                // Bỏ hoàn toàn nền và viền theo đúng yêu cầu user - Chỉ giữ text có đổ bóng nổi bật
+                Rect manaLabelRect = new Rect(r.x + r.width - 34f, r.y + r.height - 19f, 28f, 16f);
+                statBadgeStyle.fontSize = 11;
+                statBadgeStyle.alignment = TextAnchor.LowerRight;
 
-                boldWhiteStyle.fontSize = 11;
-                boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
                 // Đổ bóng chữ đen
-                boldWhiteStyle.normal.textColor = Color.black;
-                GUI.Label(new Rect(manaBadge.x + 1, manaBadge.y + 1, manaBadge.width, manaBadge.height), $"{scroll.manaCost}m", boldWhiteStyle);
+                statBadgeStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+                GUI.Label(new Rect(manaLabelRect.x + 1, manaLabelRect.y + 1, manaLabelRect.width, manaLabelRect.height), $"{scroll.manaCost}m", statBadgeStyle);
 
-                // Chữ trắng đậm sáng nổi bật
-                boldWhiteStyle.normal.textColor = Color.white;
-                GUI.Label(manaBadge, $"{scroll.manaCost}m", boldWhiteStyle);
+                // Chữ trắng đậm sáng
+                statBadgeStyle.normal.textColor = Color.white;
+                GUI.Label(manaLabelRect, $"{scroll.manaCost}m", statBadgeStyle);
             }
             else
             {
@@ -733,13 +729,12 @@ namespace GodlessFantasy.UI
                     string tipBody = $"• Phẩm: <color=#{ColorUtility.ToHtmlStringRGB(scroll.tierColor)}>{scroll.tierRank}</color> | Thuộc tính: {scroll.element}\n" +
                                      $"• Tiêu hao: {scroll.manaCost} Mana | Hồi: {scroll.cooldown:F1}s\n" +
                                      $"• Sát thương: {scroll.baseDamage} + {Mathf.RoundToInt(scroll.intelligenceScaling * 100)}% Trí Tuệ = <color=#ffff00>{dmg} ST</color>\n" +
-                                     $"• {scroll.description}\n" +
-                                     $"<color=#55ff55>🛡️ Đang được bảo vệ chống xóa/vứt nhầm!</color>";
+                                     $"• {scroll.description}";
                     SetTooltip($"{scroll.scrollName} [Phím {slotNumber}]", tipBody, new Vector2(Mathf.Clamp(r.x + (r.width - 290f) / 2f, 16f, Screen.width - 290f - 16f), r.y - 8f), true);
                 }
                 else
                 {
-                    SetTooltip($"Ô Kỹ Năng [{slotNumber}]", "Mở Menu Túi Đồ [Tab 2] để chọn Sách Kỹ Năng lắp vào ô này!", new Vector2(Mathf.Clamp(r.x + (r.width - 290f) / 2f, 16f, Screen.width - 290f - 16f), r.y - 8f), true);
+                    SetTooltip($"Ô Kỹ Năng [{slotNumber}]", "Ô trống (Mở Túi Đồ để trang bị)", new Vector2(Mathf.Clamp(r.x + (r.width - 290f) / 2f, 16f, Screen.width - 290f - 16f), r.y - 8f), true);
                 }
 
                 // Chuột phải để tháo chiêu
@@ -947,12 +942,6 @@ namespace GodlessFantasy.UI
                 standardTextStyle.fontSize = 12;
             }
 
-            // Ghi chú cơ chế
-            standardTextStyle.fontSize = 11;
-            standardTextStyle.normal.textColor = new Color(0.7f, 0.85f, 0.95f);
-            GUI.Label(new Rect(leftColX, curY + 68, r.width - 20, 36), "💡 Đồ ở đây lấy từ Hành Trang khi mặc lên. Đồ đang mặc được bảo vệ chống xóa/vứt nhầm!", standardTextStyle);
-            standardTextStyle.fontSize = 12;
-            standardTextStyle.normal.textColor = Color.white;
         }
 
         private void DrawEquipmentSlotButton(EquipSlot slot, string slotName, Rect r)
@@ -1053,7 +1042,7 @@ namespace GodlessFantasy.UI
         {
             boldWhiteStyle.fontSize = 13;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
-            GUI.Label(new Rect(r.x, r.y, r.width, 20), "HÀNH TRANG (CHỌN ĐỂ XEM & DÙNG · CUỘN CON LĂN ĐỒ)", boldWhiteStyle);
+            GUI.Label(new Rect(r.x, r.y, r.width, 20), "HÀNH TRANG", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
 
             float slotSize = 42f;
@@ -1148,7 +1137,7 @@ namespace GodlessFantasy.UI
                 standardTextStyle.alignment = TextAnchor.MiddleCenter;
                 standardTextStyle.fontSize = 11;
                 standardTextStyle.normal.textColor = Color.gray;
-                GUI.Label(inspectRect, "Ấn vào 1 ô icon\nđể xem thông tin\nvà các nút hành động!\n\n(Dùng con lăn chuột\nđể cuộn danh sách)", standardTextStyle);
+                GUI.Label(inspectRect, "Chọn một vật phẩm\nđể xem chi tiết.", standardTextStyle);
                 standardTextStyle.normal.textColor = Color.white;
                 standardTextStyle.fontSize = 12;
             }
@@ -1187,16 +1176,6 @@ namespace GodlessFantasy.UI
             standardTextStyle.normal.textColor = Color.white;
             GUI.Label(new Rect(r.x + 8, pY, r.width - 16, 44), item.description, standardTextStyle);
             pY += 46f;
-
-            // Trạng thái bảo vệ
-            if (item.isEquipped)
-            {
-                standardTextStyle.fontSize = 10;
-                standardTextStyle.normal.textColor = new Color(0.4f, 1f, 0.4f);
-                string eqLocation = (item.itemType == ItemType.SkillScroll) ? $"Ô Phím [{item.equippedHotbarSlot + 1}]" : (item.itemType == ItemType.Equipment) ? $"{item.equipSlot}" : "Đang Đi Theo";
-                GUI.Label(new Rect(r.x + 8, pY, r.width - 16, 28), $"🛡️ ĐANG DÙNG ({eqLocation})\n(Được bảo vệ chống xóa/vứt!)", standardTextStyle);
-                pY += 30f;
-            }
 
             // CÁC NÚT HÀNH ĐỘNG ĐỒNG BỘ FANTASY BUTTON
             float btnW = r.width - 16f;
@@ -1471,7 +1450,7 @@ namespace GodlessFantasy.UI
 
             // DƯỚI: THÔNG TIN CHI TIẾT
             float infoY = pY + boxSize + 20f;
-            Rect infoRect = new Rect(r.x + 10, infoY, r.width - 20, 160f);
+            Rect infoRect = new Rect(r.x + 10, infoY, r.width - 20, 80f);
             DrawDoubleGoldFrame(infoRect, 1);
 
             boldWhiteStyle.fontSize = 12;
@@ -1480,12 +1459,9 @@ namespace GodlessFantasy.UI
             boldWhiteStyle.normal.textColor = Color.white;
 
             standardTextStyle.fontSize = 12;
-            GUI.Label(new Rect(infoRect.x + 10, infoRect.y + 30, infoRect.width - 20, 120),
-                "🐿️ <b>Sóc Chibi SquiRRels Studio (Cấp 1)</b>\n" +
-                "• Loại: Thú Cưng Đồng Hành (Vật Phẩm Đặc Quyền)\n" +
-                "• Chuyển động: Nhấp nhô nhẹ quanh chân nhân vật\n" +
-                "• Tiêu chuẩn 3-KHÔNG: Không cưỡi, Không đánh, Không bị chọn làm mục tiêu\n" +
-                "• Quyền lợi: Không bị xóa hay mất khi Chuyển Sinh!", standardTextStyle);
+            GUI.Label(new Rect(infoRect.x + 10, infoRect.y + 30, infoRect.width - 20, 40),
+                "🐿️ <b>Sóc Chibi SquiRRels Studio</b>\n" +
+                "• Loại: Thú Cưng Đồng Hành (Cấp 1)", standardTextStyle);
         }
 
         // ================= TAB 5: CÀI ĐẶT =================
@@ -1493,16 +1469,14 @@ namespace GodlessFantasy.UI
         {
             boldWhiteStyle.fontSize = 13;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
-            GUI.Label(new Rect(r.x, r.y, r.width, 22), "CÀI ĐẶT HỆ THỐNG & GIAO DỊCH", boldWhiteStyle);
+            GUI.Label(new Rect(r.x, r.y, r.width, 22), "CÀI ĐẶT HỆ THỐNG", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
 
             autoDeclineTrade = GUI.Toggle(new Rect(r.x, r.y + 32, r.width, 26), autoDeclineTrade, " 🛡️ Tự động TỪ CHỐI mọi yêu cầu Giao Dịch (/trade)");
 
-            GUI.Label(new Rect(r.x, r.y + 68, r.width, 100),
+            GUI.Label(new Rect(r.x, r.y + 68, r.width, 60),
                 $"• Trạng thái Giao Dịch: {(autoDeclineTrade ? "<color=#ff5555>ĐANG KHÓA GIAO DỊCH</color>" : "<color=#55ff55>SẴN SÀNG GIAO DỊCH</color>")}\n" +
-                $"• Giới hạn tốc độ giao dịch: 2 phút / 1 người chơi.\n" +
-                $"• Tỉ lệ rơi đồ khi tử nạn ngoài vùng an toàn: 5% theo GDD DOC-01.\n" +
-                $"• Phím tắt: [Q] Uống máu, [E] Uống mana (hoặc Nói chuyện khi gần NPC), [Shift] Lướt (10 Mana, giảm theo AGI), [1..4] Kỹ năng.",
+                $"• Phím tắt: [Q] Bình Máu, [E] Bình Mana / Tương tác, [Shift] Lướt nhanh, [1..4] Kỹ năng.",
                 tooltipDescStyle);
 
             // BỘ CÔNG CỤ ENGINE THIẾT KẾ (NO-CODE STUDIO)
