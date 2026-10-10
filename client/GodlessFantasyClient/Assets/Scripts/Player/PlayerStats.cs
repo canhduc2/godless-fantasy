@@ -47,8 +47,50 @@ namespace GodlessFantasy.Player
         public int Strength => strength;
         public int Intelligence => intelligence;
         public int Vitality => vitality;
-        public int Agility => agility;
+        [Header("Stat Points & Currencies (Điểm Tiềm Năng & Tiền Tệ)")]
+        [SerializeField] private int availableStatPoints = 5;
+        [SerializeField] private int gold = 1500;
+        [SerializeField] private int magicCrystals = 25;
+        [SerializeField] private int rebirthPoints = 2;
 
+        public int AvailableStatPoints => availableStatPoints;
+        public int Gold => gold;
+        public int MagicCrystals => magicCrystals;
+        public int RebirthPoints => rebirthPoints;
+
+        public void AddStrength()
+        {
+            if (availableStatPoints > 0) { strength++; availableStatPoints--; }
+        }
+
+        public void AddIntelligence()
+        {
+            if (availableStatPoints > 0) { intelligence++; availableStatPoints--; }
+        }
+
+        public void AddVitality()
+        {
+            if (availableStatPoints > 0)
+            {
+                vitality++;
+                availableStatPoints--;
+                if (health != null) health.SetMaxHealth(health.MaxHealth + 10);
+            }
+        }
+
+        public void AddAgility()
+        {
+            if (availableStatPoints > 0) { agility++; availableStatPoints--; }
+        }
+
+        public void AddGold(int amount) => gold += amount;
+        public bool ConsumeGold(int amount)
+        {
+            if (gold >= amount) { gold -= amount; return true; }
+            return false;
+        }
+
+        public int Agility => agility;
         public int CurrentMana => currentMana;
         public int MaxMana => maxMana;
         public int HpPotionCount => hpPotionCount;
@@ -82,12 +124,12 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            // Phím tắt nhanh: Q dùng bình máu, E dùng bình mana
+            // Phím tắt nhanh: Q dùng bình máu, E dùng bình mana (chỉ dùng nếu không đứng gần nói chuyện với NPC)
             if (GameInput.GetHpPotionKeyDown())
             {
                 UseHpPotion();
             }
-            if (GameInput.GetManaPotionKeyDown())
+            if (GameInput.GetManaPotionKeyDown() && !VillageNPC.IsPlayerNearAnyNPC && !VillageNPC.IsAnyNPCDialogueOpen)
             {
                 UseManaPotion();
             }

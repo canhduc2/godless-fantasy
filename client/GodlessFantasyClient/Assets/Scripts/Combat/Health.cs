@@ -103,6 +103,13 @@ namespace GodlessFantasy.Combat
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
         }
 
+        public void SetMaxHealth(int newMax)
+        {
+            maxHealth = newMax;
+            currentHealth = Mathf.Min(currentHealth, maxHealth);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        }
+
         public void Revive()
         {
             currentHealth = maxHealth;

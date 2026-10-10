@@ -136,5 +136,14 @@ namespace GodlessFantasy.Core
 #endif
             try { return Input.GetKeyDown(KeyCode.E); } catch { return false; }
         }
+
+        public static bool GetInteractKeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.fKey.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.F); } catch { return false; }
+        }
     }
 }

@@ -14,6 +14,9 @@ namespace GodlessFantasy.Player
         [SerializeField] private string npcName = "Trưởng Làng Eldrin";
         [SerializeField] private string dialogue = "Chào mừng dũng sĩ đến với Godless Fantasy! Hãy sử dụng Chiêu 1 [Phím 1] và Lướt [Shift] để luyện tập với các Hình Nộm gỗ ngoài kia trước khi bước vào vùng chiến trường đẫm máu!";
 
+        public static bool IsPlayerNearAnyNPC { get; private set; } = false;
+        public static bool IsAnyNPCDialogueOpen { get; private set; } = false;
+
         private bool isPlayerNearby = false;
         private bool showDialogue = false;
         private Transform playerTransform;
@@ -28,15 +31,24 @@ namespace GodlessFantasy.Player
         {
             if (playerTransform == null)
             {
-                var player = FindFirstObjectByType<PlayerMovement>();
+                var player = FindAnyObjectByType<PlayerMovement>();
                 if (player != null) playerTransform = player.transform;
             }
 
             if (playerTransform != null)
             {
                 float dist = Vector2.Distance(transform.position, playerTransform.position);
-                isPlayerNearby = (dist <= 2.2f);
+                isPlayerNearby = (dist <= 2.8f);
                 if (!isPlayerNearby) showDialogue = false;
+            }
+
+            IsPlayerNearAnyNPC = isPlayerNearby;
+            IsAnyNPCDialogueOpen = showDialogue;
+
+            // BẤM PHÍM E ĐỂ NÓI CHUYỆN KHI LẠI GẦN
+            if (isPlayerNearby && Core.GameInput.GetInteractKeyDown())
+            {
+                showDialogue = !showDialogue;
             }
         }
 
@@ -54,11 +66,25 @@ namespace GodlessFantasy.Player
             {
                 Camera cam = Camera.main;
                 if (cam == null) return;
-                Vector3 screenPos = cam.WorldToScreenPoint(transform.position + new Vector3(0, 1.2f, 0));
+                Vector3 screenPos = cam.WorldToScreenPoint(transform.position + new Vector3(0, 1.25f, 0));
                 if (screenPos.z > 0)
                 {
-                    GUI.color = new Color(1f, 0.9f, 0.4f);
-                    GUI.Label(new Rect(screenPos.x - 60, Screen.height - screenPos.y - 12, 120, 24), "[BẤM NÓI CHUYỆN 💬]");
+                    float promptW = 160f;
+                    float promptH = 22f;
+                    Rect promptRect = new Rect(screenPos.x - promptW / 2f, Screen.height - screenPos.y - 14, promptW, promptH);
+
+                    GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
+                    GUI.DrawTexture(promptRect, Texture2D.whiteTexture);
+                    GUI.color = new Color(1f, 0.88f, 0.35f);
+
+                    var promptStyle = new GUIStyle(GUI.skin.label)
+                    {
+                        fontSize = 11,
+                        fontStyle = FontStyle.Bold,
+                        alignment = TextAnchor.MiddleCenter,
+                        normal = { textColor = new Color(1f, 0.88f, 0.35f) }
+                    };
+                    GUI.Label(promptRect, "[ BẤM E ĐỂ NÓI CHUYỆN 💬 ]", promptStyle);
                     GUI.color = Color.white;
                 }
             }

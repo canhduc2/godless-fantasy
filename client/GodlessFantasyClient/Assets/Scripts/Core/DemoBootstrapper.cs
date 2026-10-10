@@ -149,6 +149,7 @@ namespace GodlessFantasy.Core
             var pMovement = playerObj.AddComponent<PlayerMovement>();
             var pHealth = playerObj.AddComponent<Health>();
             var pStats = playerObj.AddComponent<PlayerStats>();
+            var pInventory = playerObj.AddComponent<InventoryManager>();
 
             // THANH MÁU TRÊN ĐẦU NGƯỜI CHƠI (Overhead Status Bar: Tên, Cấp, Hệ, Máu, Mana)
             var pOverhead = playerObj.AddComponent<OverheadStatusBar>();
