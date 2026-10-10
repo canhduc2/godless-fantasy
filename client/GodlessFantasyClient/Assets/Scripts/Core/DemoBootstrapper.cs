@@ -150,6 +150,10 @@ namespace GodlessFantasy.Core
             var pHealth = playerObj.AddComponent<Health>();
             var pStats = playerObj.AddComponent<PlayerStats>();
 
+            // THANH MÁU TRÊN ĐẦU NGƯỜI CHƠI (Overhead Status Bar: Tên, Cấp, Hệ, Máu, Mana)
+            var pOverhead = playerObj.AddComponent<OverheadStatusBar>();
+            pOverhead.Setup(OverheadType.Player, "Dũng Sĩ SquiRRels", "Lv.1 · Hỏa", 0.95f);
+
             // Tạo Indicator Mũi Tên Ngắm Chuẩn:
             // - Gốc đuôi mũi tên bắt đầu ngay trước ngực nhân vật (+0.35f offset).
             // - SortingOrder = 0 (NẰM DƯỚI NHÂN VẬT LAYER 10, ĐÚNG TƯ DUY CĂN BẢN!)
@@ -190,7 +194,30 @@ namespace GodlessFantasy.Core
                 petFollower.SetOwner(playerObj.transform);
             }
 
-            // 7. Cấu Hình Camera Centered Parallax Tracking
+            // 7. Tạo NPC Trưởng Làng Tân Thủ (Có thanh tên/máu NPC và Hộp thoại nhiệm vụ)
+            Sprite npcSprite = Resources.Load<Sprite>("npc_elder");
+            if (npcSprite != null)
+            {
+                GameObject npcObj = new GameObject("NPC_Elder_Eldrin");
+                npcObj.transform.position = new Vector3(-9.0f, 1.2f, 0);
+
+                var nSr = npcObj.AddComponent<SpriteRenderer>();
+                nSr.sprite = npcSprite;
+                nSr.sortingOrder = 10;
+
+                var nCol = npcObj.AddComponent<BoxCollider2D>();
+                nCol.size = new Vector2(0.8f, 1.0f);
+
+                var nHealth = npcObj.AddComponent<Health>();
+                nHealth.IsInSafeZone = true;
+
+                npcObj.AddComponent<VillageNPC>();
+
+                var nOverhead = npcObj.AddComponent<OverheadStatusBar>();
+                nOverhead.Setup(OverheadType.NPC, "Trưởng Làng Eldrin", "NPC 💬", 0.95f);
+            }
+
+            // 8. Cấu Hình Camera Centered Parallax Tracking
             Camera mainCam = Camera.main;
             if (mainCam != null)
             {
@@ -205,15 +232,15 @@ namespace GodlessFantasy.Core
                 camCtrl.SetTarget(playerObj.transform);
             }
 
-            // 8. Tạo Bù Nhìn Luyện Công (Monster Targets) Có Thanh Máu Trên Đầu & Tự Hồi Sinh
+            // 9. Tạo Bù Nhìn Luyện Công (Monster Targets) Có Thanh Máu Trên Đầu & Tự Hồi Sinh
             // - Quái 1: Trong bãi quái PvP (x = 5.0, y = 0)
-            CreateMonsterTarget("Dummy_PvP_Champion", new Vector3(5.0f, 0, 0), dummySprite, false);
+            CreateMonsterTarget("Dummy_PvP_Champion", "Bù Nhìn PvP 1", "Lv.1 Quái", new Vector3(5.0f, 0, 0), dummySprite, false);
             // - Quái 2: Trong bãi quái PvP (x = 9.0, y = 3.5)
-            CreateMonsterTarget("Dummy_PvP_Warrior", new Vector3(9.0f, 3.5f, 0), dummySprite, false);
+            CreateMonsterTarget("Dummy_PvP_Warrior", "Bù Nhìn PvP 2", "Lv.1 Quái", new Vector3(9.0f, 3.5f, 0), dummySprite, false);
             // - Quái 3: Trong Vùng An Toàn Làng Tân Thủ (Miễn nhiễm sát thương)
-            CreateMonsterTarget("Dummy_Village_SafeGuard", new Vector3(-12.0f, 2.0f, 0), dummySprite, true);
+            CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Làng", "SafeZone", new Vector3(-14.0f, 2.0f, 0), dummySprite, true);
 
-            // 9. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
+            // 10. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
             if (FindFirstObjectByType<FloatingDamageManager>() == null)
             {
                 new GameObject("[FLOATING_DAMAGE_MANAGER]").AddComponent<FloatingDamageManager>();
@@ -222,10 +249,10 @@ namespace GodlessFantasy.Core
             GameObject hudObj = new GameObject("Combat_HUD");
             hudObj.AddComponent<CombatHUD>();
 
-            Debug.Log("<color=green>[SquiRRels Studio] Thế giới Alpha Slice đã hoàn thiện 100%: Bản đồ rộng, Camera Parallax, Pet theo sau, Skill Layering chuẩn!</color>");
+            Debug.Log("<color=green>[SquiRRels Studio] Thế giới Alpha Slice đã hoàn thiện 100%: Thanh máu trên đầu Player, NPC, Quái vật đầy đủ!</color>");
         }
 
-        private void CreateMonsterTarget(string name, Vector3 position, Sprite sprite, bool isSafe)
+        private void CreateMonsterTarget(string name, string displayName, string levelStr, Vector3 position, Sprite sprite, bool isSafe)
         {
             GameObject dummyObj = new GameObject(name);
             dummyObj.transform.position = position;
@@ -244,7 +271,10 @@ namespace GodlessFantasy.Core
             var health = dummyObj.AddComponent<Health>();
             health.IsInSafeZone = isSafe;
 
-            var monsterTarget = dummyObj.AddComponent<MonsterTarget>();
+            dummyObj.AddComponent<MonsterTarget>();
+
+            var overhead = dummyObj.AddComponent<OverheadStatusBar>();
+            overhead.Setup(OverheadType.Monster, displayName, isSafe ? "SafeZone" : levelStr, 0.85f);
         }
 
         private void SetPrivateField(object target, string fieldName, object value)
