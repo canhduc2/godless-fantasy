@@ -219,59 +219,285 @@ namespace GodlessFantasy.Combat
             if (target == null) yield break;
 
             Vector3 startPos = transform.position + Vector3.up * 0.1f;
-            Vector3 endPos = target.position;
 
-            // Tính sát thương cơ bản và nhân trực tiếp hệ số BUFF từ PlayerStats:
             bool isBuffed = (playerStats != null && playerStats.GetDamageBuffMultiplier() > 0f);
-            int damage;
-            if (playerStats != null)
+            int damage = playerStats != null
+                ? playerStats.CalculateBasicAttackDamage()
+                : baseDamage + Mathf.RoundToInt(12 * 0.4f + 8 * 0.3f);
+
+            string charClass = playerStats != null ? playerStats.CharacterClass : "Kị Sĩ";
+            string element   = playerStats != null ? playerStats.Element : "Hỏa";
+
+            // Màu theo thuộc tính (dùng lại GetElementColor từ SkillVFXManager)
+            Color elemColor = SkillVFXManager.Instance != null
+                ? SkillVFXManager.Instance.GetElementColor(element, new Color(0.25f, 0.85f, 1f))
+                : new Color(0.25f, 0.85f, 1f);
+
+            // Buff tăng độ bão hoà màu: khi buff ON thì màu sáng hơn, có thêm glow vàng cam
+            if (isBuffed) elemColor = Color.Lerp(elemColor, new Color(1f, 0.75f, 0.1f), 0.35f);
+
+            // Chạy VFX phù hợp từng class
+            yield return StartCoroutine(SpawnClassBasicAttackVFX(charClass, startPos, target, elemColor, isBuffed));
+
+            // Gây sát thương khi đạn chạm trúng
+            if (target != null && h != null && !h.IsDead)
             {
-                damage = playerStats.CalculateBasicAttackDamage();
+                h.TakeDamage(damage, "Player_Hero");
+                FloatingDamageManager.Spawn(target.position + Vector3.up * 0.35f, damage, isCrit: isBuffed);
             }
+        }
+
+        /// <summary>
+        /// Dispatch VFX đánh thường theo từng chức nghiệp:
+        /// - Pháp Sư  → Cầu phép tròn (magic orb) bay theo đường parabol nhẹ, có trail sáng
+        /// - Kị Sĩ    → Kiếm khí (slash streak) — vệt kéo dài, xoay 45° bay thẳng tới mục tiêu
+        /// - Võ Sĩ    → Chưởng (palm shockwave) — 2 vòng sóng tỏa ra từ người rồi hội tụ vào mục tiêu
+        /// - Xạ Thủ   → Mũi tên (arrow) mảnh, bay thẳng nhanh, trail mảnh như luồng khí
+        /// </summary>
+        private IEnumerator SpawnClassBasicAttackVFX(string charClass, Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
+        {
+            string cls = charClass?.ToLower() ?? "";
+
+            if (cls.Contains("pháp") || cls.Contains("mage"))
+                yield return StartCoroutine(VFX_MageOrb(startPos, target, elemColor, isBuffed));
+            else if (cls.Contains("kị") || cls.Contains("knight"))
+                yield return StartCoroutine(VFX_KnightSlash(startPos, target, elemColor, isBuffed));
+            else if (cls.Contains("võ") || cls.Contains("warrior"))
+                yield return StartCoroutine(VFX_WarriorPalm(startPos, target, elemColor, isBuffed));
+            else if (cls.Contains("xạ") || cls.Contains("archer"))
+                yield return StartCoroutine(VFX_ArcherArrow(startPos, target, elemColor, isBuffed));
             else
-            {
-                int intVal = 12;
-                int strVal = 8;
-                damage = baseDamage + Mathf.RoundToInt(intVal * 0.4f + strVal * 0.3f);
-            }
+                yield return StartCoroutine(VFX_MageOrb(startPos, target, elemColor, isBuffed)); // fallback
+        }
 
-            // Tạo đạn năng lượng ma pháp bay từ người chơi tới mục tiêu
-            GameObject bolt = new GameObject("BasicAttack_Missile");
-            bolt.transform.position = startPos;
+        // ─────────────────────────────────────────────────────────
+        // PHÁP SƯ: Cầu phép tròn màu thuộc tính có trail sáng
+        // ─────────────────────────────────────────────────────────
+        private IEnumerator VFX_MageOrb(Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
+        {
+            GameObject orb = new GameObject("BA_MageOrb");
+            orb.transform.position = startPos;
 
-            var sr = bolt.AddComponent<SpriteRenderer>();
+            var sr = orb.AddComponent<SpriteRenderer>();
             sr.sprite = Resources.Load<Sprite>("magic_bolt") ?? Resources.Load<Sprite>("indicator_ground_circle");
-            // Khi có Buff Công, đạn chuyển sang màu vàng cam bốc lửa
-            sr.color = isBuffed ? new Color(1f, 0.65f, 0.15f, 0.98f) : new Color(0.2f, 0.9f, 1f, 0.95f);
-            bolt.transform.localScale = isBuffed ? new Vector3(0.65f, 0.65f, 1f) : new Vector3(0.5f, 0.5f, 1f);
+            sr.color = elemColor;
+            float scale = isBuffed ? 0.55f : 0.42f;
+            orb.transform.localScale = new Vector3(scale, scale, 1f);
             sr.sortingOrder = 22;
 
-            float speed = 18f;
-            float totalDist = Vector3.Distance(startPos, endPos);
-            float duration = Mathf.Clamp(totalDist / speed, 0.05f, 0.35f);
+            // Trail glow mờ dài, màu thuộc tính
+            var trail = orb.AddComponent<TrailRenderer>();
+            trail.time = 0.18f;
+            trail.startWidth = scale * 0.8f;
+            trail.endWidth = 0.02f;
+            trail.sortingOrder = 21;
+            trail.material = new Material(Shader.Find("Sprites/Default"));
+            Gradient g = new Gradient();
+            g.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(elemColor, 0f), new GradientColorKey(Color.white, 1f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
+            trail.colorGradient = g;
+
+            float speed = 16f;
+            float totalDist = Vector3.Distance(startPos, target != null ? target.position : startPos);
+            float duration = Mathf.Clamp(totalDist / speed, 0.06f, 0.38f);
             float elapsed = 0f;
 
             while (elapsed < duration && target != null)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-                bolt.transform.position = Vector3.Lerp(startPos, target.position, t);
-
-                Vector3 dir = (target.position - bolt.transform.position);
-                float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                bolt.transform.rotation = Quaternion.Euler(0, 0, angle);
-
+                // Nhẹ arc parabol theo chiều Y
+                float arc = Mathf.Sin(t * Mathf.PI) * 0.25f;
+                Vector3 pos = Vector3.Lerp(startPos, target.position, t);
+                pos.y += arc;
+                orb.transform.position = pos;
+                // Quay vòng nhẹ
+                orb.transform.Rotate(0, 0, 360f * Time.deltaTime * 3f);
                 yield return null;
             }
+            Destroy(orb);
+        }
 
-            Destroy(bolt);
+        // ─────────────────────────────────────────────────────────
+        // KỊ SĨ: Kiếm khí — vệt kéo dài xoay 45° bay thẳng
+        // ─────────────────────────────────────────────────────────
+        private IEnumerator VFX_KnightSlash(Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
+        {
+            if (target == null) yield break;
 
-            // Gây sát thương khi đạn chạm trúng mục tiêu!
-            if (target != null && h != null && !h.IsDead)
+            Vector3 dir = (target.position - startPos).normalized;
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+
+            // Vệt kiếm khí: hình chữ nhật mảnh, dài, xoay theo hướng bay
+            GameObject slash = new GameObject("BA_KnightSlash");
+            slash.transform.position = startPos;
+            slash.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+            var sr = slash.AddComponent<SpriteRenderer>();
+            sr.sprite = Resources.Load<Sprite>("magic_bolt") ?? Resources.Load<Sprite>("indicator_ground_circle");
+            sr.color = elemColor;
+            // Hình kiếm khí: hẹp và dài
+            float w = isBuffed ? 1.2f : 0.85f;
+            float h2 = isBuffed ? 0.22f : 0.16f;
+            slash.transform.localScale = new Vector3(w, h2, 1f);
+            sr.sortingOrder = 22;
+
+            // Trail mảnh sắc bén
+            var trail = slash.AddComponent<TrailRenderer>();
+            trail.time = 0.12f;
+            trail.startWidth = h2 * 0.6f;
+            trail.endWidth = 0f;
+            trail.sortingOrder = 21;
+            trail.material = new Material(Shader.Find("Sprites/Default"));
+            Gradient g = new Gradient();
+            g.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(elemColor, 0f), new GradientColorKey(Color.white, 1f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(0.95f, 0f), new GradientAlphaKey(0f, 1f) });
+            trail.colorGradient = g;
+
+            float speed = 22f; // kiếm khí bay nhanh hơn
+            float totalDist = Vector3.Distance(startPos, target.position);
+            float duration = Mathf.Clamp(totalDist / speed, 0.05f, 0.3f);
+            float elapsed = 0f;
+
+            while (elapsed < duration && target != null)
             {
-                h.TakeDamage(damage, "Player_Hero");
-                FloatingDamageManager.Spawn(target.position + Vector3.up * 0.35f, damage, isCrit: isBuffed);
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                slash.transform.position = Vector3.Lerp(startPos, target.position, t);
+                // Quay lắc nhẹ như lưỡi kiếm rung
+                slash.transform.rotation = Quaternion.Euler(0, 0, angle + Mathf.Sin(t * Mathf.PI * 4f) * 8f);
+                yield return null;
             }
+            Destroy(slash);
+        }
+
+        // ─────────────────────────────────────────────────────────
+        // VÕ SĨ: Chưởng — 2 vòng sóng xung kích bay ra rồi hội tụ
+        // ─────────────────────────────────────────────────────────
+        private IEnumerator VFX_WarriorPalm(Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
+        {
+            if (target == null) yield break;
+
+            // Spawn 2 ring sóng offset nhẹ rồi cùng bay đến target
+            for (int wave = 0; wave < 2; wave++)
+            {
+                int w = wave; // capture
+                float wDelay = wave * 0.06f;
+                StartCoroutine(WarriorWaveRing(startPos, target, elemColor, isBuffed, wDelay, w));
+            }
+
+            // Đợi tới khi vòng 1 đến đích
+            float speed = 15f;
+            float totalDist = Vector3.Distance(startPos, target.position);
+            float duration = Mathf.Clamp(totalDist / speed, 0.07f, 0.4f) + 0.12f;
+            yield return new WaitForSeconds(duration);
+        }
+
+        private IEnumerator WarriorWaveRing(Vector3 startPos, Transform target, Color elemColor, bool isBuffed, float delay, int waveIndex)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (target == null) yield break;
+
+            GameObject ring = new GameObject($"BA_WarriorWave_{waveIndex}");
+            Vector3 offset = new Vector3(
+                (waveIndex == 0 ? -0.15f : 0.15f) * (Random.value > 0.5f ? 1 : -1),
+                (waveIndex == 0 ? 0.12f : -0.12f),
+                0);
+            ring.transform.position = startPos + offset;
+
+            var sr = ring.AddComponent<SpriteRenderer>();
+            sr.sprite = Resources.Load<Sprite>("indicator_ground_circle") ?? Resources.Load<Sprite>("magic_bolt");
+            sr.color = new Color(elemColor.r, elemColor.g, elemColor.b, 0.85f);
+            float sc = isBuffed ? 0.50f : 0.38f;
+            ring.transform.localScale = new Vector3(sc, sc, 1f);
+            sr.sortingOrder = 22;
+
+            var trail = ring.AddComponent<TrailRenderer>();
+            trail.time = 0.10f;
+            trail.startWidth = sc * 0.5f;
+            trail.endWidth = 0f;
+            trail.sortingOrder = 21;
+            trail.material = new Material(Shader.Find("Sprites/Default"));
+            Gradient g = new Gradient();
+            g.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(elemColor, 0f), new GradientColorKey(Color.white, 1f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(0.80f, 0f), new GradientAlphaKey(0f, 1f) });
+            trail.colorGradient = g;
+
+            float speed = 15f;
+            float totalDist = Vector3.Distance(ring.transform.position, target.position);
+            float duration = Mathf.Clamp(totalDist / speed, 0.06f, 0.4f);
+            float elapsed = 0f;
+            Vector3 sp = ring.transform.position;
+
+            while (elapsed < duration && target != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                ring.transform.position = Vector3.Lerp(sp, target.position, t);
+                ring.transform.Rotate(0, 0, 480f * Time.deltaTime);
+                yield return null;
+            }
+            Destroy(ring);
+        }
+
+        // ─────────────────────────────────────────────────────────
+        // XẠ THỦ: Mũi tên — hình mảnh bay thẳng siêu nhanh
+        // ─────────────────────────────────────────────────────────
+        private IEnumerator VFX_ArcherArrow(Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
+        {
+            if (target == null) yield break;
+
+            Vector3 dir = (target.position - startPos).normalized;
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+
+            GameObject arrow = new GameObject("BA_ArcherArrow");
+            arrow.transform.position = startPos;
+            arrow.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+            var sr = arrow.AddComponent<SpriteRenderer>();
+            sr.sprite = Resources.Load<Sprite>("magic_bolt") ?? Resources.Load<Sprite>("indicator_ground_circle");
+            sr.color = elemColor;
+            // Mũi tên: rất hẹp rất dài
+            float arrowW = isBuffed ? 1.35f : 1.0f;
+            float arrowH = isBuffed ? 0.12f : 0.09f;
+            arrow.transform.localScale = new Vector3(arrowW, arrowH, 1f);
+            sr.sortingOrder = 22;
+
+            // Trail siêu mảnh như làn khí sau mũi tên
+            var trail = arrow.AddComponent<TrailRenderer>();
+            trail.time = 0.10f;
+            trail.startWidth = arrowH * 0.5f;
+            trail.endWidth = 0f;
+            trail.sortingOrder = 21;
+            trail.material = new Material(Shader.Find("Sprites/Default"));
+            Gradient g = new Gradient();
+            Color tipColor = Color.Lerp(elemColor, Color.white, 0.5f);
+            g.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(tipColor, 0f), new GradientColorKey(elemColor, 0.4f), new GradientColorKey(Color.clear, 1f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.5f, 0.4f), new GradientAlphaKey(0f, 1f) });
+            trail.colorGradient = g;
+
+            float speed = 28f; // Xạ thủ bắn nhanh nhất
+            float totalDist = Vector3.Distance(startPos, target.position);
+            float duration = Mathf.Clamp(totalDist / speed, 0.04f, 0.28f);
+            float elapsed = 0f;
+
+            while (elapsed < duration && target != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                arrow.transform.position = Vector3.Lerp(startPos, target.position, t);
+                // Giữ góc xoay luôn trỏ về phía mục tiêu
+                Vector3 d = (target.position - arrow.transform.position);
+                if (d.sqrMagnitude > 0.001f)
+                    arrow.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+                yield return null;
+            }
+            Destroy(arrow);
         }
 
         private void InitStyles()
