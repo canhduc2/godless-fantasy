@@ -21,6 +21,15 @@ namespace GodlessFantasy.Core
             try { return Input.GetMouseButtonDown(0); } catch { return false; }
         }
 
+        public static bool GetLeftMouseButton()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Mouse.current != null)
+                return Mouse.current.leftButton.isPressed;
+#endif
+            try { return Input.GetMouseButton(0); } catch { return false; }
+        }
+
         public static bool GetRightMouseButtonDown()
         {
 #if ENABLE_INPUT_SYSTEM

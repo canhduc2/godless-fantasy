@@ -44,9 +44,9 @@ namespace GodlessFantasy.Player
             get
             {
                 int agi = (playerStats != null) ? playerStats.Agility : 9;
-                // Mỗi điểm Nhanh Nhẹn (AGI) tăng thêm giảm 0.1s hồi chiêu; tối đa giảm về 1.0s (không giảm hơn được nữa theo yêu cầu User)
-                float cd = dashCooldown - Mathf.Max(0, agi - 9) * 0.1f;
-                return Mathf.Max(1.0f, cd);
+                // Mỗi điểm AGI giảm 0.1s; giảm tối đa 1.0s (không bao giờ tụt quá 1s so với 3.5s gốc, không tụt về 0.9s, 0.8s, 0.7s...)
+                float reduction = Mathf.Min(1.0f, Mathf.Max(0, agi - 9) * 0.1f);
+                return dashCooldown - reduction;
             }
         }
 
@@ -133,15 +133,35 @@ namespace GodlessFantasy.Player
             clickMarkerTimer = CLICK_MARKER_DURATION;
         }
 
+        public void SetTargetPosition(Vector2 worldPos)
+        {
+            targetPosition = worldPos;
+            isMovingToTarget = true;
+        }
+
+        public void StopMoving()
+        {
+            isMovingToTarget = false;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+        }
+
         private void HandleMouseMovement()
         {
             if (BlockWorldClick) return;
 
-            // Click chuột trái để di chuyển (kể cả khi đang ngắm skill, chuột trái vẫn ra lệnh chạy)
+            // Click chuột trái để di chuyển
             if (GameInput.GetLeftMouseButtonDown())
             {
                 if (mainCamera == null) mainCamera = Camera.main;
                 Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
+
+                // Nếu click trúng quái vật / mục tiêu tấn công thì nhường quyền xử lý cho BasicAttack
+                Collider2D hit = Physics2D.OverlapPoint(new Vector2(mouseWorldPos.x, mouseWorldPos.y));
+                if (hit != null && hit.gameObject != gameObject && (hit.GetComponent<Combat.IDamageable>() != null || hit.GetComponent<Combat.MonsterTarget>() != null))
+                {
+                    return;
+                }
+
                 targetPosition = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
                 isMovingToTarget = true;
                 clickMarkerWorldPos = targetPosition;

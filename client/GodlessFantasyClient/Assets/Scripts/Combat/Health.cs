@@ -18,10 +18,11 @@ namespace GodlessFantasy.Combat
 
         [Header("Hit Flash Feedback")]
         [SerializeField] private SpriteRenderer spriteRenderer;
-        [SerializeField] private Color hitColor = new Color(1f, 0.3f, 0.3f, 1f);
-        [SerializeField] private float flashDuration = 0.12f;
+        [SerializeField] private Color hitColor = new Color(1f, 0.2f, 0.2f, 1f);
+        [SerializeField] private float flashDuration = 0.22f;
 
-        private Color originalColor = Color.white;
+        private SpriteRenderer[] allRenderers;
+        private Color[] originalColors;
         private float flashTimer = 0f;
         private bool isFlashing = false;
 
@@ -35,8 +36,19 @@ namespace GodlessFantasy.Combat
 
         private void Awake()
         {
-            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null) originalColor = spriteRenderer.color;
+            allRenderers = GetComponentsInChildren<SpriteRenderer>();
+            if (allRenderers != null && allRenderers.Length > 0)
+            {
+                originalColors = new Color[allRenderers.Length];
+                for (int i = 0; i < allRenderers.Length; i++)
+                {
+                    originalColors[i] = allRenderers[i].color;
+                }
+            }
+            if (spriteRenderer == null && allRenderers != null && allRenderers.Length > 0)
+            {
+                spriteRenderer = allRenderers[0];
+            }
             currentHealth = maxHealth;
         }
 
@@ -48,7 +60,21 @@ namespace GodlessFantasy.Combat
                 if (flashTimer <= 0f)
                 {
                     isFlashing = false;
-                    if (spriteRenderer != null) spriteRenderer.color = originalColor;
+                    RestoreColors();
+                }
+            }
+        }
+
+        private void RestoreColors()
+        {
+            if (allRenderers != null && originalColors != null)
+            {
+                for (int i = 0; i < allRenderers.Length; i++)
+                {
+                    if (allRenderers[i] != null && i < originalColors.Length)
+                    {
+                        allRenderers[i].color = originalColors[i];
+                    }
                 }
             }
         }
@@ -69,8 +95,14 @@ namespace GodlessFantasy.Combat
 
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-            // Chớp đỏ phản hồi trúng đòn
+            // Chớp đỏ phản hồi trúng đòn cho cả Người Chơi lẫn Quái Vật
             TriggerHitFlash();
+
+            // Nếu người chơi bị đánh -> Màn hình chớp đỏ cảnh báo
+            if (gameObject.name.Contains("Player") || CompareTag("Player"))
+            {
+                UI.CombatHUD.TriggerScreenDamageFlash();
+            }
 
             if (currentHealth <= 0)
             {
@@ -80,9 +112,17 @@ namespace GodlessFantasy.Combat
 
         private void TriggerHitFlash()
         {
-            if (spriteRenderer != null)
+            if (allRenderers == null || allRenderers.Length == 0)
             {
-                spriteRenderer.color = hitColor;
+                allRenderers = GetComponentsInChildren<SpriteRenderer>();
+            }
+
+            if (allRenderers != null)
+            {
+                foreach (var sr in allRenderers)
+                {
+                    if (sr != null) sr.color = hitColor;
+                }
                 flashTimer = flashDuration;
                 isFlashing = true;
             }
@@ -110,10 +150,17 @@ namespace GodlessFantasy.Combat
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
         }
 
+        public void IncreaseMaxHealth(int amount)
+        {
+            maxHealth += amount;
+            currentHealth += amount;
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        }
+
         public void Revive()
         {
             currentHealth = maxHealth;
-            if (spriteRenderer != null) spriteRenderer.color = originalColor;
+            RestoreColors();
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
         }
     }

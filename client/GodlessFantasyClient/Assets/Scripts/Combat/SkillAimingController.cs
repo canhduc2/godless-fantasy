@@ -28,6 +28,7 @@ namespace GodlessFantasy.Combat
         [Header("References")]
         [SerializeField] private IndicatorRenderer indicatorRenderer;
         [SerializeField] private PlayerStats playerStats;
+        [SerializeField] private Health playerHealth;
 
         // 4 Ô Cuộn Trục Kỹ Năng Đang Trang Bị (Hotbar Slots 1..4)
         [SerializeField] private SkillScrollData[] equippedSlots = new SkillScrollData[4];
@@ -62,6 +63,7 @@ namespace GodlessFantasy.Combat
             if (indicatorRenderer == null) indicatorRenderer = GetComponentInChildren<IndicatorRenderer>();
             if (firePoint == null) firePoint = transform;
             if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+            if (playerHealth == null) playerHealth = GetComponent<Health>();
 
             InitializeDefaultScrolls();
         }
@@ -200,6 +202,13 @@ namespace GodlessFantasy.Combat
                 return;
             }
 
+            // Archetype 5: Buff Tự Thân - Kích hoạt ngay lập tức mà không cần ngắm
+            if (scroll.indicatorType == 5)
+            {
+                ConfirmAndCastSkill(slot);
+                return;
+            }
+
             if (currentState == AimState.Idle)
             {
                 EnterAimingState(slot);
@@ -287,10 +296,41 @@ namespace GodlessFantasy.Combat
                 case 4:
                     CastSelfNova(scroll, totalDamage);
                     break;
+                case 5:
+                    CastSelfBuff(scroll);
+                    break;
             }
 
             slotLastCastTime[slotIdx] = Time.time;
             ExitAimingState();
+        }
+
+        private void CastSelfBuff(SkillScrollData scroll)
+        {
+            if (SkillVFXManager.Instance != null)
+            {
+                SkillVFXManager.Instance.SpawnSelfBuffVFX(transform.position, scroll.element);
+            }
+
+            if (scroll.skillCategory == 1) // Hồi Máu
+            {
+                if (playerHealth != null) playerHealth.Heal(scroll.baseDamage);
+                FloatingDamageManager.SpawnHeal(transform.position, scroll.baseDamage, false);
+            }
+            else if (scroll.skillCategory == 2) // Hồi Mana
+            {
+                if (playerStats != null) playerStats.RestoreMana(scroll.baseDamage);
+                FloatingDamageManager.SpawnHeal(transform.position, scroll.baseDamage, true);
+            }
+            else // Cường Hóa (Buff Stat)
+            {
+                if (playerStats != null)
+                {
+                    playerStats.ApplyBuff(scroll.id, scroll.scrollName, scroll.iconName, 15.0f, 1, 25f);
+                }
+                FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 0.8f, $"BUFF: {scroll.scrollName} (15s)", Color.cyan);
+            }
+            Debug.Log($"<color=cyan>[BUFF CAST]</color> Đã kích hoạt Buff '{scroll.scrollName}' ({scroll.element})!");
         }
 
         // 1. Phóng Đạn Tuyến Tính (Line Skillshot)
@@ -315,30 +355,59 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[CAST] Phóng '{scroll.scrollName}'! Sát thương: {dmg}");
         }
 
-        // 2. Thả Vòng Tròn Đất (Ground AoE - Bán kính 1.9m khớp 100% Visual Indicator)
+        // 2. Thả Vòng Tròn Đất (Ground AoE / Rain Effect - Bán kính 1.9m)
         private void CastGroundAoE(SkillScrollData scroll, int dmg)
         {
             Vector3 targetPos = indicatorRenderer != null ? indicatorRenderer.GetGroundTargetPosition() : transform.position;
             float aoeRadius = 1.9f;
 
-            if (SkillVFXManager.Instance != null)
+            if (scroll.IsSupport)
             {
-                SkillVFXManager.Instance.SpawnGroundAoEImpact(targetPos, aoeRadius, dmg, scroll, gameObject.name);
-            }
-            else
-            {
+                // HỖ TRỢ / HỒI MÁU / HỒI MANA / BUFF ĐỒNG ĐỘI (Ví dụ: Mưa Sinh Mệnh Hệ Mộc)
+                if (SkillVFXManager.Instance != null)
+                {
+                    SkillVFXManager.Instance.SpawnHealingRain(targetPos, aoeRadius, 2.0f, scroll.element);
+                }
+
+                // Nếu người chơi đứng trong vùng mưa
+                if (Vector2.Distance(transform.position, targetPos) <= aoeRadius)
+                {
+                    ApplySupportEffect(scroll, dmg, gameObject);
+                }
+
+                // Quét đồng minh / đồng đội trong vùng
                 Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, aoeRadius);
                 foreach (var col in hits)
                 {
                     if (col.gameObject == gameObject) continue;
-                    if (col.TryGetComponent<IDamageable>(out var target))
+                    if (col.CompareTag("Player") || col.gameObject.name.Contains("Player") || col.gameObject.name.Contains("Pet"))
                     {
-                        target.TakeDamage(dmg, gameObject.name);
-                        FloatingDamageManager.Spawn(col.transform.position, dmg, true);
+                        ApplySupportEffect(scroll, dmg, col.gameObject);
                     }
                 }
+                Debug.Log($"<color=green>[HEALING RAIN / SUPPORT]</color> Kích hoạt mưa hỗ trợ '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})!");
             }
-            Debug.Log($"[CAST] Thả '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})! Bán kính: {aoeRadius}m. Sát thương: {dmg}");
+            else
+            {
+                if (SkillVFXManager.Instance != null)
+                {
+                    SkillVFXManager.Instance.SpawnGroundAoEImpact(targetPos, aoeRadius, dmg, scroll, gameObject.name);
+                }
+                else
+                {
+                    Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, aoeRadius);
+                    foreach (var col in hits)
+                    {
+                        if (col.gameObject == gameObject) continue;
+                        if (col.TryGetComponent<IDamageable>(out var target))
+                        {
+                            target.TakeDamage(dmg, gameObject.name);
+                            FloatingDamageManager.Spawn(col.transform.position, dmg, true);
+                        }
+                    }
+                }
+                Debug.Log($"[CAST] Thả '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})! Bán kính: {aoeRadius}m. Sát thương: {dmg}");
+            }
         }
 
         // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep - Tầm 4.5m, góc 60 độ khớp 100% Visual Indicator)
@@ -375,10 +444,31 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[CAST] Quét '{scroll.scrollName}' hình quạt! Sát thương: {dmg}");
         }
 
-        // 4. Bộc Phá Hào Quang 360 Độ (Self Nova - Bán kính chuẩn 2.5m khớp 100% Visual Indicator)
+        // 4. Bộc Phá Hào Quang 360 Độ (Self Nova - Bán kính chuẩn 2.5m)
         private void CastSelfNova(SkillScrollData scroll, int dmg)
         {
             float novaRadius = 2.5f;
+
+            if (scroll.IsSupport)
+            {
+                if (SkillVFXManager.Instance != null)
+                {
+                    SkillVFXManager.Instance.SpawnSelfNovaVFX(transform.position, scroll.element);
+                }
+                ApplySupportEffect(scroll, dmg, gameObject);
+
+                Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, novaRadius);
+                foreach (var col in hits)
+                {
+                    if (col.gameObject == gameObject) continue;
+                    if (col.CompareTag("Player") || col.gameObject.name.Contains("Player") || col.gameObject.name.Contains("Pet"))
+                    {
+                        ApplySupportEffect(scroll, dmg, col.gameObject);
+                    }
+                }
+                Debug.Log($"<color=cyan>[SUPPORT NOVA]</color> Hào quang hỗ trợ '{scroll.scrollName}' 360 độ quanh người!");
+                return;
+            }
 
             if (SkillVFXManager.Instance != null)
             {
@@ -398,6 +488,34 @@ namespace GodlessFantasy.Combat
                 }
             }
             Debug.Log($"[CAST] Nổ '{scroll.scrollName}' 360 độ quanh người! Sát thương: {dmg}");
+        }
+
+        private void ApplySupportEffect(SkillScrollData scroll, int amount, GameObject targetObj)
+        {
+            if (scroll.skillCategory == 1) // Hồi Máu
+            {
+                if (targetObj.TryGetComponent<Health>(out var h))
+                {
+                    h.Heal(amount);
+                    FloatingDamageManager.SpawnHeal(targetObj.transform.position, amount, false);
+                }
+            }
+            else if (scroll.skillCategory == 2) // Hồi Mana
+            {
+                if (targetObj.TryGetComponent<PlayerStats>(out var ps))
+                {
+                    ps.RestoreMana(amount);
+                    FloatingDamageManager.SpawnHeal(targetObj.transform.position, amount, true);
+                }
+            }
+            else if (scroll.skillCategory == 3) // Buff Chỉ Số
+            {
+                if (targetObj.TryGetComponent<PlayerStats>(out var ps))
+                {
+                    ps.ApplyBuff(scroll.id, scroll.scrollName, scroll.iconName, 15f, 1, amount);
+                    FloatingDamageManager.Instance?.SpawnFloatingText(targetObj.transform.position, $"BUFF: {scroll.scrollName}", Color.cyan);
+                }
+            }
         }
 
         private void CancelAiming()

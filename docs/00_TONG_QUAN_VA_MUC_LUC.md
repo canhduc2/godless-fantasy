@@ -12,12 +12,23 @@
 | :--- | :--- | :--- |
 | **DOC-01** | [01_KINH_TE_TIEN_TE_SHOP_VAT_PHAM.md](file:///D:/godless-fantasy/docs/01_KINH_TE_TIEN_TE_SHOP_VAT_PHAM.md) | Hệ thống 3 loại tiền tệ, NPC Shop, Mở rộng ô hành trang, Rương kho, **🔖 [MỤC THIẾT KẾ MỚI: Danh mục vật phẩm ngoài lề, tiêu hao, nguyên liệu]** |
 | **DOC-02** | [02_COMBAT_PVP_PARTY_FRIENDLY_FIRE.md](file:///D:/godless-fantasy/docs/02_COMBAT_PVP_PARTY_FRIENDLY_FIRE.md) | PvP tự do, Friendly Fire (đánh trúng cả đồng đội), Safe Zone logic, Party chia EXP / Loot tự do, Cơ chế UX ngắm/hủy skill chống lặp |
-| **DOC-03** | [03_HE_THONG_HE_THUOC_TINH_KY_NANG.md](file:///D:/godless-fantasy/docs/03_HE_THONG_HE_THUOC_TINH_KY_NANG.md) | 5 Hệ chiến đấu (4 hệ gốc + Hệ Ẩn), 6 Thuộc tính ma lực, Tiến trình Cấp 1–100 mở 4 ô skill, Kỹ năng Shift Dash, Phân cấp Cuộn trục kỹ năng X-E |
+| **DOC-03** | [03_HE_THONG_HE_THUOC_TINH_KY_NANG.md](file:///D:/godless-fantasy/docs/03_HE_THONG_HE_THUOC_TINH_KY_NANG.md) | 5 Hệ chiến đấu (4 hệ gốc + Hệ Ẩn), 7 Thuộc tính ma lực, Tiến trình Cấp 1–100 mở 4 ô skill, Kỹ năng Shift Dash, Phân cấp Cuộn trục kỹ năng X-E |
+| **DOC-03B**| [GDD_SKILL_SCROLL_ELEMENT_SYSTEM.md](file:///D:/godless-fantasy/docs/GDD_SKILL_SCROLL_ELEMENT_SYSTEM.md) | **[MỚI]** Kiến trúc Bí Kíp Cuộn Trục Túi Đồ (7 Ấn Ký) vs Icon Hotbar Độc Nhất, 4 Archetypes Tầm Đánh & Cơ Chế Import Ảnh Đồ Họa Ngoại Bộ |
 | **DOC-04** | [04_REBIRTH_PERK_GACHA_VA_CHET_ROT_DO.md](file:///D:/godless-fantasy/docs/04_REBIRTH_PERK_GACHA_VA_CHET_ROT_DO.md) | Chuyển sinh Lv 100, Rebirth Vault (Rương 2 món lưu server), 5 Ô cường hóa vĩnh viễn không mất, Luật rơi 5% đồ khi chết, Perk Gacha, Title System |
 | **DOC-05** | [05_THE_GIOI_MAP_NPC_QUAI_BOSS.md](file:///D:/godless-fantasy/docs/05_THE_GIOI_MAP_NPC_QUAI_BOSS.md) | Kiến trúc Thế giới World → Region → Chunk, Hệ thống NPC đầy đủ, Quái vật, Boss rơi đồ ngẫu nhiên, Cơ chế kích hoạt chuyển chức Hệ Ẩn cực hiếm |
 | **DOC-06** | [06_GIAO_DIEN_UI_HUD_VA_CHAT.md](file:///D:/godless-fantasy/docs/06_GIAO_DIEN_UI_HUD_VA_CHAT.md) | Wireframe chi tiết HUD Top/Bottom/Left, Menu trượt 4 Tab, Hệ thống Chat (Khu vực 5s rate-limit, Thế giới 2 tin/ngày & 5 phút cooldown) |
 | **DOC-07** | [07_QUYET_DINH_CONG_NGHE_TECH_STACK.md](file:///D:/godless-fantasy/docs/07_QUYET_DINH_CONG_NGHE_TECH_STACK.md) | Quyết định công nghệ đồ họa (HD Pixel Art + 2D Lighting), Game Engine (Unity vs Godot), Kiến trúc Server-Authoritative & MCP Code Toolings |
 | **DOC-08** | [08_HUONG_DAN_CAI_DAT_MOI_TRUONG.md](file:///D:/godless-fantasy/docs/08_HUONG_DAN_CAI_DAT_MOI_TRUONG.md) | Hướng dẫn cài đặt môi trường phát triển (Pixelorama, SQLite 3, .NET 8 SDK, Unity 2D LTS/Unity 6 sang ổ D:\, Lộ trình Vertical Slice 5 bước) |
+
+---
+
+## 📂 BIÊN BẢN THẢO LUẬN & TIẾN ĐỘ ĐỊNH KỲ (PROJECT DISCUSSIONS)
+*Cập nhật định kỳ theo định dạng `discussion_sothutu_noidung.md`:*
+
+* 📄 **Thảo luận 01:** [discussion_01_skill_scroll_elements_combat_architecture.md](file:///D:/godless-fantasy/docs/discussions/discussion_01_skill_scroll_elements_combat_architecture.md) — *Kiến trúc Bí Kíp Cuộn Trục, 7 Hệ Thuộc Tính, 4 Chức Nghiệp & Xử lý tồn đọng kỹ thuật.*
+* 📄 **Thảo luận 02:** [discussion_02_hp_mp_regeneration_buff_system_and_class_perks.md](file:///D:/godless-fantasy/docs/discussions/discussion_02_hp_mp_regeneration_buff_system_and_class_perks.md) — *Hồi Máu Khắc Khổ 40s (chống buff bẩn), Hồi Mana 3s, Perk 4 Hệ, Archetype Buff số 5 & UI Buff Widget.*
+* 📄 **Thảo luận 03:** [discussion_03_support_skills_aoe_healing_and_ally_buffs.md](file:///D:/godless-fantasy/docs/discussions/discussion_03_support_skills_aoe_healing_and_ally_buffs.md) — *Kỹ Năng Hỗ Trợ, Mưa Hồi Máu/Mana Hệ Mộc Vùng Đất & Buff Đồng Đội.*
+
 
 ---
 

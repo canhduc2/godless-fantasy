@@ -35,8 +35,10 @@ namespace GodlessFantasy.Combat
             if (elemLower.Contains("hỏa") || elemLower.Contains("fire")) return new Color(1.0f, 0.42f, 0.10f); // Cam đỏ rực lửa
             if (elemLower.Contains("băng") || elemLower.Contains("ice") || elemLower.Contains("frost")) return new Color(0.20f, 0.85f, 1.0f); // Xanh băng tuyết
             if (elemLower.Contains("lôi") || elemLower.Contains("lightning") || elemLower.Contains("sấm")) return new Color(1.0f, 0.95f, 0.20f); // Vàng sấm sét
-            if (elemLower.Contains("thánh") || elemLower.Contains("holy") || elemLower.Contains("quang")) return new Color(1.0f, 0.90f, 0.45f); // Vàng kim thánh
-            if (elemLower.Contains("ma") || elemLower.Contains("dark") || elemLower.Contains("hắc")) return new Color(0.75f, 0.25f, 1.0f); // Tím ma pháp
+            if (elemLower.Contains("mộc") || elemLower.Contains("wood") || elemLower.Contains("tự nhiên") || elemLower.Contains("nature")) return new Color(0.20f, 0.92f, 0.35f); // Xanh mộc sinh mệnh
+            if (elemLower.Contains("phong") || elemLower.Contains("wind") || elemLower.Contains("khí")) return new Color(0.35f, 0.90f, 0.85f); // Xanh ngọc phong
+            if (elemLower.Contains("thánh") || elemLower.Contains("holy") || elemLower.Contains("quang") || elemLower.Contains("light")) return new Color(1.0f, 0.90f, 0.45f); // Vàng kim thánh
+            if (elemLower.Contains("ma") || elemLower.Contains("dark") || elemLower.Contains("hắc") || elemLower.Contains("tối")) return new Color(0.75f, 0.25f, 1.0f); // Tím ma pháp
             return fallback;
         }
 
@@ -340,6 +342,131 @@ namespace GodlessFantasy.Combat
             }
 
             Destroy(novaObj);
+        }
+
+        // ================= 5. HIỆU ỨNG BUFF, HỒI PHỤC & MƯA HỆ MỘC =================
+        public void SpawnSelfNovaVFX(Vector3 centerPos, string element)
+        {
+            Color elemCol = GetElementColor(element, new Color(0.2f, 0.95f, 0.4f));
+            GameObject novaObj = new GameObject($"NovaVFX_{element}");
+            novaObj.transform.position = centerPos;
+            StartCoroutine(NovaVisualOnlyRoutine(novaObj, centerPos, 2.5f, elemCol));
+        }
+
+        private IEnumerator NovaVisualOnlyRoutine(GameObject novaObj, Vector3 center, float radius, Color color)
+        {
+            var lr = novaObj.AddComponent<LineRenderer>();
+            lr.material = spriteMaterial;
+            lr.sortingOrder = 23;
+            lr.useWorldSpace = true;
+            lr.loop = true;
+            lr.positionCount = 32;
+
+            float elapsed = 0f;
+            float dur = 0.35f;
+            while (elapsed < dur)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / dur;
+                float currentR = Mathf.Lerp(0.3f, radius * 1.1f, t);
+                lr.startWidth = Mathf.Lerp(0.25f, 0.02f, t);
+                lr.endWidth = lr.startWidth;
+
+                Color c = new Color(color.r, color.g, color.b, 1f - t);
+                lr.startColor = c;
+                lr.endColor = c;
+
+                for (int i = 0; i < 32; i++)
+                {
+                    float angle = i * (Mathf.PI * 2f / 32f);
+                    lr.SetPosition(i, center + new Vector3(Mathf.Cos(angle) * currentR, Mathf.Sin(angle) * currentR, 0));
+                }
+                yield return null;
+            }
+            Destroy(novaObj);
+        }
+
+        public void SpawnSelfBuffVFX(Vector3 centerPos, string element)
+        {
+            Color elemCol = GetElementColor(element, Color.cyan);
+            GameObject buffObj = new GameObject($"BuffAura_{element}");
+            buffObj.transform.position = centerPos;
+            StartCoroutine(SelfBuffAuraRoutine(buffObj, centerPos, elemCol));
+        }
+
+        private IEnumerator SelfBuffAuraRoutine(GameObject buffObj, Vector3 center, Color color)
+        {
+            var lr = buffObj.AddComponent<LineRenderer>();
+            lr.material = spriteMaterial;
+            lr.sortingOrder = 24;
+            lr.useWorldSpace = true;
+            lr.loop = true;
+            lr.positionCount = 24;
+
+            float elapsed = 0f;
+            float dur = 0.65f;
+            while (elapsed < dur)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / dur;
+                float currentR = Mathf.Lerp(0.2f, 1.1f, t);
+                float yOffset = Mathf.Lerp(0f, 1.2f, t);
+
+                lr.startWidth = Mathf.Lerp(0.18f, 0.02f, t);
+                lr.endWidth = lr.startWidth;
+
+                Color c = new Color(color.r, color.g, color.b, (1f - t) * 0.9f);
+                lr.startColor = c;
+                lr.endColor = c;
+
+                for (int i = 0; i < 24; i++)
+                {
+                    float angle = i * (Mathf.PI * 2f / 24f);
+                    lr.SetPosition(i, center + new Vector3(Mathf.Cos(angle) * currentR, Mathf.Sin(angle) * currentR * 0.5f + yOffset, 0));
+                }
+                yield return null;
+            }
+            Destroy(buffObj);
+        }
+
+        public void SpawnHealingRain(Vector3 targetPos, float radius, float duration, string element)
+        {
+            Color elemCol = GetElementColor(element, new Color(0.25f, 0.95f, 0.45f));
+            GameObject rainObj = new GameObject($"HealingRain_{element}");
+            rainObj.transform.position = targetPos;
+            StartCoroutine(HealingRainRoutine(rainObj, targetPos, radius, duration, elemCol));
+        }
+
+        private IEnumerator HealingRainRoutine(GameObject rainObj, Vector3 targetPos, float radius, float duration, Color color)
+        {
+            // Vẽ vòng tròn ngọc bích phát sáng trên mặt đất
+            var lr = rainObj.AddComponent<LineRenderer>();
+            lr.material = spriteMaterial;
+            lr.sortingOrder = 15;
+            lr.useWorldSpace = true;
+            lr.loop = true;
+            lr.positionCount = 32;
+            lr.startWidth = 0.12f;
+            lr.endWidth = 0.12f;
+            lr.startColor = new Color(color.r, color.g, color.b, 0.75f);
+            lr.endColor = lr.startColor;
+
+            for (int i = 0; i < 32; i++)
+            {
+                float angle = i * (Mathf.PI * 2f / 32f);
+                lr.SetPosition(i, targetPos + new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0));
+            }
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 0.5f + 0.5f * Mathf.Sin(elapsed * 8f);
+                lr.startColor = new Color(color.r, color.g, color.b, Mathf.Lerp(0.4f, 0.85f, pulse));
+                lr.endColor = lr.startColor;
+                yield return null;
+            }
+            Destroy(rainObj);
         }
 
         // ================= FALLBACK SPRITE GENERATORS =================

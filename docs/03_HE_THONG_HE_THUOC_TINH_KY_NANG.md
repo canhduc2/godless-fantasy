@@ -93,14 +93,18 @@ Thế giới game bao gồm 4 Hệ Khởi Đầu (chọn khi tạo nhân vật) 
 
 ---
 
-## 2. SÁU THUỘC TÍNH NGUYÊN TỐ (ELEMENTS) & CƠ CHẾ RANDOM KHỞI ĐẦU
+## 2. BẢY THUỘC TÍNH NGUYÊN TỐ (7 ELEMENTS) & CƠ CHẾ RANDOM KHỞI ĐẦU
 
-Mọi nguồn ma lực và kỹ năng trong thế giới đều mang 1 trong 6 thuộc tính:
+Mọi nguồn ma lực và kỹ năng trong thế giới đều mang 1 trong 7 thuộc tính:
 
 ```
-[ ÁNH SÁNG ]    [ BÓNG TỐI ]    [ PHONG ]    [ MỘC ]    [ BĂNG ]    [ HỎA ]
-  (Light)         (Dark)        (Wind)      (Nature)     (Ice)       (Fire)
-   Vàng Kim        Tím Đen       Xanh Lơ     Xanh Lục   Xanh Băng    Đỏ Rực
++---------------------------------------------------------------------------------------------------------+
+|                                    7 THUỘC TÍNH NGUYÊN TỐ (7 ELEMENTS)                                  |
++-------------+-------------+-----------+-----------+-------------+------------+--------------------------+
+| 1. ÁNH SÁNG | 2. BÓNG TỐI | 3. PHONG  | 4. MỘC    | 5. BĂNG     | 6. HỎA     | 7. LÔI (SẤM SÉT)         |
+|   (Light)   |   (Dark)    |  (Wind)   |  (Nature) |   (Ice)     |   (Fire)   |      (Thunder)           |
+|  Vàng Kim   |   Tím Đen   |  Xanh Lơ  | Xanh Lục  |  Xanh Băng  |   Đỏ Rực   |     Tím Vàng Điện        |
++-------------+-------------+-----------+-----------+-------------+------------+--------------------------+
 ```
 
 ### 2.1. Triết Lý Thiết Kế Đồng Đẳng (No Rock-Paper-Scissors):
@@ -132,10 +136,15 @@ Mọi nguồn ma lực và kỹ năng trong thế giới đều mang 1 trong 6 t
 
 ### Quy Tắc Trang Bị Cuộn Trục Kỹ Năng (Skill Scroll Equip Rules):
 - Game **không giới hạn cấp độ** để học cuộn kỹ năng. Nhân vật cấp 1 vẫn có thể nhặt được cuộn kỹ năng phẩm S nếu may mắn.
-- **Tuy nhiên, điều kiện sử dụng cực kỳ nghiêm ngặt:**
-  1. Cuộn trục phải trùng khớp với **Hệ** của nhân vật (Ví dụ: Kị sĩ chỉ học cuộn Kiếm thuật; trừ Hệ Ẩn được học 2 hệ).
-  2. Cuộn trục phải tương thích với **Thuộc tính** của nhân vật.
-  3. Nhân vật phải có **Đủ lượng Mana tối đa và HP tối thiểu** đáp ứng yêu cầu kích hoạt của cuộn trục. (Nếu cuộn trục đòi hỏi 600 Mana mà nhân vật mới có 200 Mana thì không thể kích hoạt xuất chiêu).
+- **Tuy nhiên, điều kiện sử dụng cực kỳ nghiêm ngặt (Điều Kiện Kép):**
+  1. **Chức Nghiệp tương thích:** Cuộn trục phải trùng khớp với **Chức Nghiệp** của nhân vật (Kị Sĩ, Pháp Sư, Võ Sĩ, Xạ Thủ; hoặc Toàn Hệ). Trừ Hệ Ẩn - Kẻ Ngoại Đạo được học Pháp Sư + 1 hệ phụ ngẫu nhiên.
+  2. **Thuộc Tính tương thích:** Cuộn trục phải trùng khớp với **1 trong 7 Thuộc Tính Nguyên Tố** của nhân vật (Người hệ Hỏa chỉ học cuộn Hỏa, người hệ Băng chỉ học cuộn Băng...).
+  3. **Tài nguyên kích hoạt:** Nhân vật phải có **Đủ lượng Mana tối đa và HP tối thiểu** đáp ứng yêu cầu kích hoạt của cuộn trục.
+
+### Phân Định Đồ Họa: Cuộn Trục Túi Đồ vs Icon Hotbar Độc Nhất
+*(Xem chi tiết tại tài liệu [GDD_SKILL_SCROLL_ELEMENT_SYSTEM.md](file:///d:/godless-fantasy/docs/GDD_SKILL_SCROLL_ELEMENT_SYSTEM.md))*
+- **Trong Túi Đồ (Item Scroll):** Chỉ hiển thị **1 Phôi Cuộn Trục Duy Nhất (`ui_template_scroll.png`)** mang **1 trong 7 Ấn Ký Hệ (`rune_*`)**. Chỉ khi xem Tooltip mới biết Tên Chiêu, Phẩm Cấp (E..X), Sát Thương, Mana, Hồi Chiêu.
+- **Trên Phím Nóng Hotbar [1..4]:** Là **ĐỐI TƯỢNG HOÀN TOÀN KHÁC, ĐƯỢC LOAD RIÊNG**. Mỗi chiêu có **Icon Kỹ Năng Độc Nhất (`icon_skill_*`)**, được lồng vào **Khung Viền Vàng Kim Độc Nhất (`ui_frame_slot.png`)**, với Mana Badge hiển thị ở **PHÍA TRÊN** ô phím (`-{mana}mn`).
 
 ---
 

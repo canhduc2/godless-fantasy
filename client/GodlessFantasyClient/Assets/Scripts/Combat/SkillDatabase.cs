@@ -27,14 +27,17 @@ namespace GodlessFantasy.Combat
         public InventoryItem RegisterAndCreateSkillItem(string id, string name, string element, string tierRank,
                                                         Color tierColor, int manaCost, float cooldown, int baseDamage,
                                                         float intelScaling, int indicatorType, string hotbarIcon,
-                                                        string scrollIcon, string desc)
+                                                        string scrollIcon, string desc, float castRange = 0f,
+                                                        string requiredClass = "Toàn Hệ", string customVfxSprite = "",
+                                                        int skillCategory = 0)
         {
-            var scroll = new SkillScrollData(id, name, tierRank, tierColor, element, manaCost, cooldown, baseDamage, intelScaling, indicatorType, hotbarIcon, scrollIcon, desc);
+            var scroll = new SkillScrollData(id, name, tierRank, tierColor, element, manaCost, cooldown, baseDamage, intelScaling, indicatorType, hotbarIcon, scrollIcon, desc, castRange, requiredClass, customVfxSprite, skillCategory);
             registeredSkills.Add(scroll);
             SaveDatabaseToJson();
 
             // Đóng gói thành InventoryItem chuẩn để xuất hiện trong Túi Đồ
-            string stats = $"Sát thương: {baseDamage} + {Mathf.RoundToInt(intelScaling * 100)}% Trí Tuệ | Hồi: {cooldown:F1}s | Mana: {manaCost}";
+            string effectLabel = scroll.IsSupport ? scroll.CategoryName : "Sát thương";
+            string stats = $"[{requiredClass} · {element}] {effectLabel}: {baseDamage} + {Mathf.RoundToInt(intelScaling * 100)}% Trí Tuệ | Hồi: {cooldown:F1}s | Mana: {manaCost} | Tầm: {scroll.RangeFormattedText}";
             string actualIcon = !string.IsNullOrEmpty(scrollIcon) ? scrollIcon : hotbarIcon;
             var item = new InventoryItem(id, name, ItemType.SkillScroll, EquipSlot.None, tierRank, tierColor, actualIcon, stats, desc, 1, scroll);
             return item;

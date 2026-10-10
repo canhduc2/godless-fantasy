@@ -35,12 +35,7 @@ namespace GodlessFantasy.Combat
 
         public static void Spawn(Vector3 worldPos, int damage, bool isCrit = false)
         {
-            if (Instance == null)
-            {
-                var go = new GameObject("[FLOATING_DAMAGE_MANAGER]");
-                Instance = go.AddComponent<FloatingDamageManager>();
-            }
-
+            EnsureInstance();
             Color col = isCrit ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.25f, 0.25f);
             Instance.activePopups.Add(new DamagePopup
             {
@@ -51,6 +46,45 @@ namespace GodlessFantasy.Combat
                 maxLifetime = 0.9f,
                 velocityY = 1.2f
             });
+        }
+
+        public static void SpawnHeal(Vector3 worldPos, int amount, bool isMana = false)
+        {
+            EnsureInstance();
+            Color col = isMana ? new Color(0.20f, 0.85f, 1.0f) : new Color(0.25f, 0.95f, 0.35f);
+            string prefix = isMana ? $"+{amount} MP" : $"+{amount} HP";
+            Instance.activePopups.Add(new DamagePopup
+            {
+                worldPos = worldPos + new Vector3(Random.Range(-0.2f, 0.2f), 0.5f, 0),
+                text = prefix,
+                color = col,
+                lifetime = 1.0f,
+                maxLifetime = 1.0f,
+                velocityY = 1.0f
+            });
+        }
+
+        public void SpawnFloatingText(Vector3 worldPos, string text, Color color)
+        {
+            EnsureInstance();
+            activePopups.Add(new DamagePopup
+            {
+                worldPos = worldPos + new Vector3(Random.Range(-0.1f, 0.1f), 0.6f, 0),
+                text = text,
+                color = color,
+                lifetime = 1.2f,
+                maxLifetime = 1.2f,
+                velocityY = 0.9f
+            });
+        }
+
+        private static void EnsureInstance()
+        {
+            if (Instance == null)
+            {
+                var go = new GameObject("[FLOATING_DAMAGE_MANAGER]");
+                Instance = go.AddComponent<FloatingDamageManager>();
+            }
         }
 
         private void Update()

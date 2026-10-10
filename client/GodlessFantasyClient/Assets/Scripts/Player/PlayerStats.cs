@@ -127,30 +127,132 @@ namespace GodlessFantasy.Player
                 characterName = characterName.Substring(0, MaxNameLength);
             }
             health = GetComponent<Health>();
+
+            // Áp dụng thưởng chỉ số vĩnh viễn từ Perk Bẩm Sinh của Hệ
+            ApplyInherentClassPerkStats();
+        }
+
+        private float hpRegenTimer = 0f;
+        private float manaRegenTimer = 0f;
+
+        // Chu kỳ hồi máu khắc khổ: 40s (Kị sĩ: 30s, Võ sĩ: 35s, Pháp sư/Xạ thủ: 40s)
+        public float HpRegenInterval => (characterClass == "Kị Sĩ") ? 30.0f : (characterClass == "Võ Sĩ") ? 35.0f : 40.0f;
+        public int HpRegenAmount => (characterClass == "Kị Sĩ" || characterClass == "Võ Sĩ") ? 2 : 1;
+        public float HpRegenTimerProgress => Mathf.Clamp01(hpRegenTimer / HpRegenInterval);
+
+        // Chu kỳ hồi Mana: 3.0s (Pháp sư: +4, Các hệ khác: +2)
+        public float ManaRegenInterval => 3.0f;
+        public int ManaRegenAmount => (characterClass == "Pháp Sư") ? (4 + Mathf.FloorToInt(intelligence / 12f)) : 2;
+
+        // ================= HỆ THỐNG PERK BẨM SINH ĐỘC NHẤT THEO HỆ =================
+        public string InherentPerkName =>
+            (characterClass == "Kị Sĩ") ? "Trái Tim Thép" :
+            (characterClass == "Pháp Sư") ? "Học Giả Chân Kinh" :
+            (characterClass == "Võ Sĩ") ? "Bản Năng Dã Thú" : "Mắt Ưng Thần Tiễn";
+
+        public string InherentPerkDesc =>
+            (characterClass == "Kị Sĩ") ? "+50 HP Tối Đa · +15 Giáp · Hồi HP 30s (+2 HP)" :
+            (characterClass == "Pháp Sư") ? "+40 Mana Tối Đa · +20 Công Phép · Hồi Mana +4/3s" :
+            (characterClass == "Võ Sĩ") ? "+8% Bạo Kích · +12 ST Đòn Đánh Thường · Hồi HP 35s (+2 HP)" :
+            "+1.5m Tầm Đánh Thường (6.5m) · +0.5m/s Tốc Chạy";
+
+        public int InherentBonusMaxHp => (characterClass == "Kị Sĩ") ? 50 : 0;
+        public int InherentBonusMaxMana => (characterClass == "Pháp Sư") ? 40 : 0;
+        public int InherentBonusArmor => (characterClass == "Kị Sĩ") ? 15 : 0;
+        public int InherentBonusMagicAtk => (characterClass == "Pháp Sư") ? 20 : 0;
+        public float InherentBonusCritRate => (characterClass == "Võ Sĩ") ? 8.0f : 0f;
+        public int InherentBonusAttackDmg => (characterClass == "Võ Sĩ") ? 12 : 0;
+        public float InherentBonusBasicRange => (characterClass == "Xạ Thủ") ? 1.5f : 0f;
+        public float InherentBonusMoveSpeed => (characterClass == "Xạ Thủ") ? 0.5f : 0f;
+
+        private void ApplyInherentClassPerkStats()
+        {
+            if (InherentBonusMaxMana > 0)
+            {
+                maxMana += InherentBonusMaxMana;
+                currentMana = maxMana;
+            }
+            if (health != null && InherentBonusMaxHp > 0)
+            {
+                health.IncreaseMaxHealth(InherentBonusMaxHp);
+            }
+        }
+
+        // ================= HỆ THỐNG ACTIVE BUFF (ARCHETYPE SỐ 5) =================
+        [Serializable]
+        public class ActiveBuff
+        {
+            public string id;
+            public string name;
+            public string iconName;
+            public float duration;
+            public float remainingTime;
+            public int statType; // 1=Công Phép, 2=Giáp, 3=Tốc Chạy, 4=Bạo Kích
+            public float statValue;
+        }
+
+        private System.Collections.Generic.List<ActiveBuff> activeBuffs = new System.Collections.Generic.List<ActiveBuff>();
+        public System.Collections.Generic.List<ActiveBuff> ActiveBuffs => activeBuffs;
+
+        public void ApplyBuff(string id, string buffName, string iconName, float duration, int statType = 1, float statValue = 20f)
+        {
+            var existing = activeBuffs.Find(b => b.id == id);
+            if (existing != null)
+            {
+                existing.remainingTime = duration;
+            }
+            else
+            {
+                activeBuffs.Add(new ActiveBuff
+                {
+                    id = id,
+                    name = buffName,
+                    iconName = iconName,
+                    duration = duration,
+                    remainingTime = duration,
+                    statType = statType,
+                    statValue = statValue
+                });
+            }
+            Debug.Log($"<color=cyan>[BUFF SYSTEM]</color> Đã kích hoạt hiệu ứng '{buffName}' ({duration:F1}s)!");
         }
 
         private void Update()
         {
-            // Hồi phục HP & Mana tự nhiên mỗi giây
-            regenAccumulator += Time.deltaTime;
-            if (regenAccumulator >= 1.0f)
+            // 1. CƠ CHẾ HỒI MÁU KHẮC KHỔ (40 GIÂY / TICK, CHỐNG BUFF BẨN)
+            hpRegenTimer += Time.deltaTime;
+            if (hpRegenTimer >= HpRegenInterval)
             {
-                regenAccumulator -= 1.0f;
-
-                // Hồi Mana
-                if (currentMana < maxMana)
-                {
-                    RestoreMana(Mathf.RoundToInt(manaRegenPerSec));
-                }
-
-                // Hồi Máu
+                hpRegenTimer -= HpRegenInterval;
                 if (health != null && health.CurrentHealth < health.MaxHealth && !health.IsDead)
                 {
-                    HealPlayer(Mathf.RoundToInt(hpRegenPerSec), false);
+                    HealPlayer(HpRegenAmount, false);
                 }
             }
 
-            // Phím tắt nhanh: Q dùng bình máu, E dùng bình mana (chỉ dùng nếu không đứng gần nói chuyện với NPC)
+            // 2. CƠ CHẾ HỒI MANA (3 GIÂY / TICK)
+            manaRegenTimer += Time.deltaTime;
+            if (manaRegenTimer >= ManaRegenInterval)
+            {
+                manaRegenTimer -= ManaRegenInterval;
+                if (currentMana < maxMana)
+                {
+                    RestoreMana(ManaRegenAmount);
+                }
+            }
+
+            // 3. ĐẾM NGƯỢC THỜI GIAN ACTIVE BUFF
+            for (int i = activeBuffs.Count - 1; i >= 0; i--)
+            {
+                activeBuffs[i].remainingTime -= Time.deltaTime;
+                if (activeBuffs[i].remainingTime <= 0f)
+                {
+                    Debug.Log($"<color=yellow>[BUFF SYSTEM]</color> Hiệu ứng '{activeBuffs[i].name}' đã hết tác dụng!");
+                    activeBuffs.RemoveAt(i);
+                }
+            }
+
+            // Phím tắt nhanh: Q dùng bình máu, E dùng bình mana
             if (GameInput.GetHpPotionKeyDown())
             {
                 UseHpPotion();
