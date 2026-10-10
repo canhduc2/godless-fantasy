@@ -81,7 +81,19 @@ Thế giới game bao gồm 4 Hệ Khởi Đầu (chọn khi tạo nhân vật) 
 
 ---
 
-## 2. SÁU THUỘC TÍNH NGUYÊN TỐ (ELEMENTS)
+### 1.3. Giới Tính (Nam / Nữ) & Cơ Chế Ngoại Trang Cơ Bản (Base Body)
+- **Tùy chọn giới tính:** Cả 4 Hệ Khởi Đầu và Hệ Ẩn đều có tùy chọn giới tính **Nam (Male)** hoặc **Nữ (Female)**.
+- **Trạng thái "Không Mặc Gì" (Base Unarmored State):**
+  - Khi nhân vật mới tạo hoặc khi tháo toàn bộ giáp/ngoại trang, nhân vật **KHÔNG** ở trạng thái khỏa thân mà luôn hiển thị mặc định:
+    - **Áo ba lỗ + Quần cộc (Tank Top & Shorts)** áp dụng đồng nhất cho cả nhân vật Nam và Nữ.
+  - **Kiến trúc Layer Ngoại Trang (Cosmetic Layering Architecture):**
+    - `Layer 0 (Base Body):` Cơ thể nhân vật mặc áo ba lỗ + quần cộc.
+    - `Layer 1 (Equipment / Armor):` Trang bị giáp, áo choàng, nón, găng tay phủ lên trên.
+    - `Layer 2 (Cosmetics / Fashion):` Ngoại trang thời trang đè lên trang bị thật (nếu có).
+
+---
+
+## 2. SÁU THUỘC TÍNH NGUYÊN TỐ (ELEMENTS) & CƠ CHẾ RANDOM KHỞI ĐẦU
 
 Mọi nguồn ma lực và kỹ năng trong thế giới đều mang 1 trong 6 thuộc tính:
 
@@ -91,12 +103,20 @@ Mọi nguồn ma lực và kỹ năng trong thế giới đều mang 1 trong 6 t
    Vàng Kim        Tím Đen       Xanh Lơ     Xanh Lục   Xanh Băng    Đỏ Rực
 ```
 
-### Triết Lý Thiết Kế Đồng Đẳng (No Rock-Paper-Scissors):
+### 2.1. Triết Lý Thiết Kế Đồng Đẳng (No Rock-Paper-Scissors):
 - **Tuyệt đối không có bảng khắc chế hơn thua** (Không có Hỏa khắc Mộc hay Ánh Sáng khắc Bóng Tối làm tăng sát thương) để tránh tình trạng lệch meta và người chơi bị ép buộc đổi hệ.
 - **Sự khác biệt cốt lõi:**
   - **Màu sắc và hiệu ứng thị giác (VFX / Animation):** Mỗi hệ tỏa ra khí sắc đặc trưng.
   - **Danh xưng và phong cách âm thanh:** Tạo bản sắc nhập vai riêng cho nhân vật.
-  - **Khả năng chuyển đổi:** Người chơi có thể dùng **Rebirth Point (RP)** hoặc vật phẩm đá nguyên tố để đổi thuộc tính mà không mất đi sức mạnh nền tảng.
+
+### 2.2. Cơ Chế Thuộc Tính Khởi Đầu Ngẫu Nhiên & Đổi Thuộc Tính Bằng RP:
+- **Thuộc tính khởi đầu hoàn toàn ngẫu nhiên (Random Starting Attributes):**
+  - Khi nhân vật mới được tạo và giáng sinh vào thế giới, các thuộc tính nguyên tố và chỉ số tiềm năng cơ bản sẽ được **Random ngẫu nhiên**.
+  - Không nhân vật nào sinh ra có xuất phát điểm rập khuôn giống hệt nhau, tạo nên tính độc bản cho mỗi cá nhân.
+- **Cơ chế Tẩy / Đổi Thuộc Tính Bằng Rebirth Points (RP):**
+  - Người chơi hoàn toàn có thể **thay đổi lại thuộc tính ngẫu nhiên này bằng cách tiêu hao điểm Rebirth Point (RP)**.
+  - Đây là cơ chế cốt lõi để người chơi cày cuốc vòng lặp Chuyển Sinh, tích lũy RP để "tẩy luyện" (Re-roll) bộ thuộc tính và chỉ số hoàn mỹ nhất (Min-Max Build) theo phong cách chiến đấu của mình!
+
 
 ---
 
