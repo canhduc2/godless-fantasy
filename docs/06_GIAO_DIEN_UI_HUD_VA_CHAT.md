@@ -115,16 +115,23 @@ Cơ chế được kiểm duyệt và thực thi **100% tại World Server** (Ng
 
 ---
 
-## 4. CƠ CHẾ PHÍM TẮT TIỆN ÍCH (HOTKEYS MAPPING)
+## 4. CƠ CHẾ ĐIỀU KHIỂN CÔNG THÁI HỌC (ERGONOMIC CONTROLS & HOTKEYS)
 
-- **Phím Mũi Tên (`↑`, `↓`, `←`, `→` - Arrow Keys) [KHUYẾN NGHỊ MẶC ĐỊNH]** hoặc cụm `W`, `A`, `S`, `D`: Di chuyển nhân vật 4 hướng (Game hỗ trợ đồng thời cả 2 cụm phím).
-- `Shift`: Dash (Lướt nhanh tiêu hao Mana).
-- `1`, `2`, `3`, `4`: Giữ để ngắm kỹ năng, nhả để phóng chiêu.
-- `Chuột Phải`: Hủy chiêu thức đang ngắm (Kích hoạt bộ lọc chống lặp lệnh `CancelledAwaitRelease`).
-- `I`: Phím tắt mở nhanh Tab Kho Đồ.
-- `K`: Phím tắt mở nhanh Tab Kỹ Năng & Thuộc Tính.
-- `C`: Phím tắt mở nhanh Tab Trang Bị.
-- `Enter`: Mở nhanh khung gõ Chat.
+Tránh mâu thuẫn thao tác "vừa bấm mũi tên vừa cầm chuột ngắm chiêu", game áp dụng giải pháp công thái học chuẩn MOBA/ARPG:
+
+### 4.1. Phân Bổ 2 Tay Chuẩn Mực
+- **Tay Phải (Chuột) [KHUYẾN NGHỊ MẶC ĐỊNH]:**
+  - **Click Chuột (Click-to-Move):** Click trên địa hình để nhân vật tự tìm đường di chuyển tới đó (chuẩn phong cách LMHT / Dota / Diablo).
+  - **Rê Chuột:** Định hướng, xoay và liệng vùng kỹ năng (Indicator) tự do.
+  - **Click Chuột Phải:** Hủy ngay chiêu thức đang ngắm (không mất Mana).
+- **Tay Trái (Bàn Phím):**
+  - `1`, `2`, `3`, `4`: **Bấm lần 1** vào chế độ ngắm $\rightarrow$ Rê chuột căn góc $\rightarrow$ **Bấm tiếp lần 2** để xả chiêu! (Không cần đè giữ phím gây mỏi tay).
+  - `Shift`: Dash (Lướt nhanh tiêu hao 20 Mana).
+  - `W`, `A`, `S`, `D` hoặc `Arrow Keys (↑, ↓, ←, →)`: Phương án di chuyển phụ bằng bàn phím hỗ trợ song song cho ai thích bấm phím.
+  - `I`: Phím tắt mở nhanh Tab Kho Đồ.
+  - `K`: Phím tắt mở nhanh Tab Kỹ Năng & Thuộc Tính.
+  - `C`: Phím tắt mở nhanh Tab Trang Bị.
+  - `Enter`: Mở nhanh khung gõ Chat.
 
 ---
 

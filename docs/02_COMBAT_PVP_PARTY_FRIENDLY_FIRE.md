@@ -73,39 +73,55 @@
 
 ---
 
-## 4. CƠ CHẾ ĐIỀU KHIỂN & SỬ DỤNG KỸ NĂNG (TARGETING UX & INPUT)
+## 4. CƠ CHẾ ĐIỀU KHIỂN CÔNG THÁI HỌC (ERGONOMIC CONTROL & TARGETING UX)
 
-### 4.1. Phong Cách Định Hướng MOBA (Skillshot Targeting)
-- Thao tác:
-  1. Người chơi nhấn giữ phím kỹ năng (`1`, `2`, `3`, `4`).
-  2. Xuất hiện **Vùng chỉ thị kỹ năng (Indicator)**: Vòng tròn bán kính nổ, mũi tên định hướng, hoặc hình nón (cone).
-  3. Di chuyển chuột tới vị trí mục tiêu mong muốn.
-  4. **Thả phím (Key Release):** Xác nhận phóng kỹ năng tới tọa độ con trỏ chuột.
+### 4.1. Giải Pháp Công Thái Học: 2 Tay Chuẩn Mực (Keyboard Left - Mouse Right)
+Tránh xung đột thao tác "thiếu tay cầm chuột", game tối ưu trải nghiệm chiến đấu MOBA/ARPG chuẩn mực:
+- **Tay Phải (Chuột):** 
+  - **Click Chuột để di chuyển (Click-to-Move):** Click vào bản đồ để nhân vật tự tìm đường chạy tới (Phong cách LMHT / Dota / Diablo).
+  - **Rê chuột:** Định hướng vùng chiêu thức (Skill Indicator).
+  - **Click Chuột Phải:** Hủy ngay chế độ ngắm chiêu.
+- **Tay Trái (Bàn Phím):** 
+  - Đặt sẵn trên cụm phím kỹ năng `1`, `2`, `3`, `4` và ngón út trên `Shift` (Dash).
+  - (Cụm phím `W`, `A`, `S`, `D` hoặc Arrow Keys vẫn hoạt động song song như phương án di chuyển hỗ trợ phụ cho người thích bấm phím).
 
-### 4.2. Cơ Chế Hủy Chiêu Bằng Chuột Phải & Máy Trạng Thái Chống Lặp Lệnh (Input State Machine)
+---
 
-> **Vấn đề cốt lõi cần giải quyết:** Khi đang giữ phím số `1` để ngắm chiêu, người chơi đổi ý muốn hủy nên click Chuột Phải. Theo thói quen ngón tay, phím `1` lúc đó vẫn chưa kịp thả ra. Nếu code đọc input theo dạng `GetKeyDown` hoặc polling phím đang giữ, hệ thống sẽ nhầm là người chơi vừa muốn hủy rồi lại ngay lập tức ngắm chiêu mới!
-
-Để giải quyết triệt để, hệ thống sử dụng Finite State Machine (FSM) gồm 4 trạng thái:
+### 4.2. Cơ Chế Dùng Chiêu Nhấp Kép (Press-to-Aim $\rightarrow$ Press-Again-to-Cast)
+Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón tay và dễ kích hoạt nhầm, game áp dụng cơ chế **Nhấp Lần 1 để Ngắm $\rightarrow$ Nhấp Lần 2 để Phóng Chiêu**:
 
 ```
-    [ IDLE ]  ---(Nhấn giữ Phím 1/2/3/4)---> [ AIMING ]
-       ^                                         |
-       |                               (Click Chuột Phải để Hủy)
-       |                                         |
-       |                                         v
-       +---(Nhận sự kiện THẢ PHÍM)--- [ CANCELLED_AWAIT_RELEASE ]
-                                      (Khóa ngắm, phớt lờ trạng thái giữ!)
++-----------------------------------------------------------------------------------------+
+|                  LUỒNG THAO TÁC KỸ NĂNG NHẤP KÉP (TWO-TAP CASTING)                      |
++-----------------------------------------------------------------------------------------+
+|                                                                                         |
+|       [ BẤM PHÍM SKILL LẦN 1 ]  (Ví dụ: Bấm phím '1')                                   |
+|                  |                                                                      |
+|                  v                                                                      |
+|       [ VÀO CHẾ ĐỘ NGẮM CHIÊU (AIMING MODE) ]                                           |
+|       - Xuất hiện Vùng chỉ thị (Indicator) xoay và liệng theo hướng con trỏ chuột.     |
+|       - Người chơi KHÔNG CẦN GIỮ PHÍM, tay hoàn toàn thả lỏng thoải mái!                |
+|                  |                                                                      |
+|         +--------+------------------------------------+                                 |
+|         |                                             |                                 |
+|         v (Muốn Phóng Chiêu)                          v (Đổi ý muốn Hủy Chiêu)          |
+|  [ BẤM TIẾP PHÍM '1' LẦN 2 ]                  [ CLICK CHUỘT PHẢI ]                      |
+|         |                                             |                                 |
+|         v                                             v                                 |
+|  [ KÍCH HOẠT PHÓNG CHIÊU THÀNH CÔNG ]         [ HỦY NGẮM NGAY LẬP TỨC ]                 |
+|  - Nhân vật xả kỹ năng theo hướng chuột       - Tắt Indicator, không mất Mana,          |
+|  - Trở về trạng thái sẵn sàng bình thường.     - Trở về trạng thái sẵn sàng bình thường. |
++-----------------------------------------------------------------------------------------+
 ```
 
-#### Bảng Mô Tả Trạng Thái Kỹ Thuật (Input Logic Table)
+### 4.3. Bảng Máy Trạng Thái Điều Khiển (Input FSM Table)
 
 | Trạng thái | Điều kiện kích hoạt | Hành vi hệ thống | Chuyển trạng thái tiếp theo |
 | :--- | :--- | :--- | :--- |
-| **IDLE** | Đang đứng chờ | Chưa có indicator, nhận phím bấm bình thường. | Nhấn phím kỹ năng $\rightarrow$ **AIMING** |
-| **AIMING** | Phím kỹ năng đang được giữ | Hiển thị indicator theo vị trí con trỏ chuột. | - Thả phím kỹ năng $\rightarrow$ **CAST_SUCCESS**<br>- Click Chuột Phải $\rightarrow$ **CANCELLED_AWAIT_RELEASE** |
-| **CANCELLED_AWAIT_RELEASE** | Chuột phải vừa click khi phím kỹ năng chưa nhả | **Tắt ngay indicator**. Đặt cờ khóa `IsSkillLocked = true`. Hoàn toàn bỏ qua việc phím skill vẫn đang bị đè! | Nhận sự kiện phím skill **ĐƯỢC NHẢ RA HOÀN TOÀN (Key Up)** $\rightarrow$ Mở khóa, trở về **IDLE**. |
-| **CAST_SUCCESS** | Phím skill được thả tại tọa độ hợp lệ | Gửi gói tin lên Server: $\{SkillId, TargetVector, Timestamp\}$. Thực hiện hoạt ảnh thi triển. | Trở về **IDLE** sau khi hoạt ảnh kết thúc. |
+| **IDLE** | Đang đứng chờ / di chuyển | Chưa có indicator, nhận lệnh Click-to-Move hoặc phím bình thường. | Bấm phím `1`, `2`, `3`, hoặc `4` $\rightarrow$ **AIMING(Skill_X)** |
+| **AIMING(X)** | Vừa bấm phím Skill X lần 1 | Hiển thị indicator của Skill X xoay theo tọa độ con trỏ chuột. | - Bấm lại đúng phím **Skill X lần 2** $\rightarrow$ **CAST_SUCCESS**<br>- Click **Chuột Phải** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm sang phím **Skill Y khác** $\rightarrow$ Chuyển sang **AIMING(Skill_Y)** |
+| **CANCEL_SUCCESS** | Vừa Click Chuột Phải khi đang ngắm | Tắt ngay indicator, xóa bộ nhớ ngắm. Không tiêu hao Mana, không tính cooldown. | Trở về ngay **IDLE** |
+| **CAST_SUCCESS** | Bấm đúng phím Skill X lần 2 | Server xác nhận vị trí con trỏ chuột $\rightarrow$ Trừ Mana $\rightarrow$ Bắt đầu tính Cooldown $\rightarrow$ Phóng chiêu. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
 
 ---
 
