@@ -115,11 +115,12 @@ Nếu một người chơi **đã mang chức nghiệp Hệ Ẩn** mà trong tư
 > **1. KHÔNG ĐƯỢC CHUYỂN CHỨC NỮA:**  
 > Hệ thống sẽ từ chối nghi thức chuyển chức mới. Người chơi không thể đổi lại hệ ban đầu, không được re-roll lại hệ phụ thứ hai. Chức nghiệp Hệ Ẩn là bất biến.
 > 
-> **2. PHẦN THƯỞNG KHI VƯỢT QUA THỬ THÁCH LẦN NỮA: TẶNG 1 REBIRTH POINT (1 RP)**  
+> **2. PHẦN THƯỞNG KHI VƯỢT QUA THỬ THÁCH LẦN NỮA: TẶNG 1 REBIRTH POINT (1 RP) & DANH HIỆU HIẾM (RARE TITLE)**  
 > Nếu người chơi tiếp tục vượt qua mê cung cấm chú và đánh bại Hộ Vệ Cấm Pháp một lần nữa:
 > - Tương tác với [Bia Đá Ngoại Đạo] sẽ kích hoạt sự kiện: *"Kẻ Ngoại Đạo được Đền Thờ công nhận một lần nữa!"*.
 > - **Được gửi tặng trực tiếp: +1 Điểm Rebirth Point (1 RP)** vĩnh viễn vào tài khoản!
-> - **Không bị reset cấp độ, không bị xóa đồ** (đây là phần thưởng độc quyền cho kỳ tích vượt qua thánh địa hiếm có khó tìm lần nữa).
+> - **Được trao tặng DANH HIỆU HIẾM ĐỘC BẢN:** `[Chân Ngoại Đạo]` (The True Heretic) hoặc `[Kẻ Hai Lần Vượt Cấm Địa]` (The Twice-Forsaken) — cộng thêm **+40 Sức mạnh thuộc tính**, **+5% Tốc độ chạy**, và **+50 Mana tối đa** (giúp bù đắp một phần hình phạt -30% Mana của Hệ Ẩn).
+> - **Không bị reset cấp độ, không bị xóa đồ** (đây là phần thưởng danh giá độc quyền cho kỳ tích vượt qua thánh địa hiếm có khó tìm lần nữa).
 
 ---
 

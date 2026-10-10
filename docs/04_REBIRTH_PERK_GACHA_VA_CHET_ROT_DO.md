@@ -142,4 +142,5 @@ Người chơi có thể sở hữu Danh hiệu thông qua các thành tựu l�
 | **Bậc Thầy Chuyển Sinh (Once Reborn)**| Hoàn thành Rebirth lần đầu tiên | +5% HP, +5% Mana vĩnh viễn |
 | **Kẻ Săn Boss Cổ Đại (Ancient Slayer)**| Độc hành hạ gục Boss Thế Giới | +3% Tỉ lệ chí mạng, +15 Giáp |
 | **Kẻ Tội Lỗi Tái Thế (Godless Outcast)**| Chuyển chức thành công Hệ Ẩn | +5% Tốc độ di chuyển, +25 Sức mạnh thuộc tính |
+| **Chân Ngoại Đạo (The True Heretic)** | **[DANH HIỆU HIẾM]** Đã là Hệ Ẩn nhưng may mắn tìm lại và chinh phục Thánh Địa lần thứ 2+ | +40 Sức mạnh thuộc tính, +5% Tốc độ chạy, +50 Mana tối đa |
 | **Bất Tử Chiến Thần (Undying)** | Sống sót qua 50 cuộc giao tranh PvP ngoài Safe Zone | +40 Giáp phòng ngự |
