@@ -118,9 +118,12 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
 
 Để code và trải nghiệm mượt mà không bị lỗi thao tác, hệ thống khóa chặt 3 quy tắc sau:
 
-1. **Khóa Di Chuyển Khi Đang Ngắm (Aiming Locks Move-Click):**
-   - Khi đang ở trạng thái `AIMING(X)`: Thao tác **Click Chuột Trái** sẽ được hiểu là **Xác Nhận Thi Triển Kỹ Năng** (song song với việc bấm lại phím số `1`, `2`, `3`, `4`).
-   - Chuột Trái lúc này **tạm thời bị vô hiệu hóa chức năng tìm đường di chuyển** để tránh việc người chơi muốn chưởng nhưng nhân vật lại vô tình bước đi làm lệch góc ngắm.
+1. **Cơ Chế Kiting Song Hành (Run & Aim Concurrently — Chuột Trái Luôn Di Chuyển):**
+   - **Chuột Trái KHÔNG DÙNG ĐỂ BẮN**, mà **LUÔN DÀNH CHO DI CHUYỂN (Click-to-Move)** kể cả khi đang ở chế độ ngắm!
+   - Khi đang ngắm (`AIMING`): Người chơi click chuột trái xuống đất $\rightarrow$ Nhân vật vẫn chạy né tới điểm đó.
+   - **Tâm ngắm (Indicator) vẫn liên tục bám theo con trỏ chuột** theo thời gian thực (vector tính từ vị trí nhân vật đang chạy tới vị trí chuột).
+   - **Xác nhận phóng chiêu DUY NHẤT:** Người chơi bấm **ĐÚNG PHÍM SKILL ĐÓ LẦN THỨ 2**!
+   - **Xác thực Server tại thời điểm bấm phím lần 2 (Server-Authoritative Timing):** Ngay khi nhận tín hiệu bấm lần 2, Server kiểm tra tọa độ nhân vật tại thời điểm đó, tính toán tầm đánh (Attack Range), kiểm tra Mana và Cooldown. Đủ điều kiện $\rightarrow$ Xuất chiêu ngay từ vị trí hiện tại của nhân vật.
 2. **Quy Tắc Ưu Tiên Di Chuyển (WASD Overrides Click-to-Move):**
    - Click-to-Move và WASD hoạt động song song.
    - Nếu nhân vật đang tự động chạy theo Click-to-Move mà người chơi nhấn bất kỳ phím `W`, `A`, `S`, `D` nào $\rightarrow$ **Lệnh WASD ghi đè lập tức 100%**, hủy đường chạy tự động để người chơi né đòn tức thì với độ trễ 0ms!
@@ -145,9 +148,9 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
 | Trạng thái | Điều kiện kích hoạt | Hành vi hệ thống | Chuyển trạng thái tiếp theo |
 | :--- | :--- | :--- | :--- |
 | **IDLE** | Đang đứng chờ / di chuyển | Nhận Click Chuột Trái (di chuyển tìm đường), nhận WASD (chạy thủ công). | Bấm phím `1`, `2`, `3`, hoặc `4` $\rightarrow$ **AIMING(Skill_X)** |
-| **AIMING(X)** | Bấm phím Skill X lần 1 | Hiện Indicator xoay theo chuột. Khóa Click-to-Move. | - Bấm lại **Phím X** HOẶC **Click Chuột Trái** $\rightarrow$ **CAST_SUCCESS**<br>- Click **Chuột Phải** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm **Phím Y khác** $\rightarrow$ Đổi sang **AIMING(Skill_Y)** |
-| **CANCEL_SUCCESS** | Click Chuột Phải khi đang ngắm | Tắt ngay indicator, xóa bộ nhớ ngắm. Không mất Mana, không tính cooldown. Mở lại Click-to-Move. | Trở về ngay **IDLE** |
-| **CAST_SUCCESS** | Bấm Phím X lần 2 hoặc Click Trái | Server kiểm tra Mana & Cooldown $\rightarrow$ Trừ Mana $\rightarrow$ Thực hiện đòn đánh $\rightarrow$ Mở lại Click-to-Move. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
+| **AIMING(X)** | Bấm phím Skill X lần 1 | Hiện Indicator xoay theo chuột. Click Chuột Trái **vẫn di chuyển né đòn bình thường**, tâm ngắm tiếp tục bám theo chuột. | - Bấm lại **Đúng Phím Skill X lần 2** $\rightarrow$ **CAST_SUCCESS**<br>- Click **Chuột Phải** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm **Phím Y khác** $\rightarrow$ Đổi sang **AIMING(Skill_Y)** |
+| **CANCEL_SUCCESS** | Click Chuột Phải khi đang ngắm | Tắt ngay indicator, xóa bộ nhớ ngắm. Không mất Mana, không tính cooldown. Giữ nguyên di chuyển. | Trở về ngay **IDLE** |
+| **CAST_SUCCESS** | Bấm đúng Phím Skill X lần 2 | Server kiểm tra Tầm đánh & Mana tại thời điểm bấm $\rightarrow$ Trừ Mana $\rightarrow$ Thi triển đòn đánh. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
 
 ---
 

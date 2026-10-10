@@ -121,15 +121,13 @@ Tránh mâu thuẫn thao tác "vừa bấm mũi tên vừa cầm chuột ngắm 
 
 ### 4.1. Phân Bổ 2 Tay Chuẩn Mực
 - **Tay Phải (Chuột) [KHUYẾN NGHỊ MẶC ĐỊNH]:**
-  - **Chuột Trái:**
-    - Khi bình thường: **Click-to-Move** — Click trên địa hình để nhân vật tự tìm đường di chuyển tới đó (chuẩn phong cách LMHT / Dota / Diablo).
-    - Khi đang ngắm chiêu: **Xác nhận phóng chiêu** (thay thế hoặc song song với việc bấm lại phím skill lần 2).
-  - **Rê Chuột:** Định hướng, xoay và liệng vùng kỹ năng (Indicator) tự do.
-  - **Chuột Phải:** Hủy ngay chiêu thức đang ngắm (không mất Mana, không tính cooldown).
+  - **Chuột Trái:** **LUÔN LUÔN DÀNH CHO DI CHUYỂN (CLICK-TO-MOVE)** — Click trên địa hình để nhân vật tự tìm đường di chuyển tới đó. Kể cả khi đang trong chế độ ngắm skill, Click Chuột Trái vẫn giúp nhân vật chạy né/kite quái bình thường mà không bị ngắt ngắm hay phóng chiêu nhầm!
+  - **Rê Chuột:** Điều chỉnh hướng, góc bắn hoặc vùng kỹ năng (Indicator luôn bám theo chuột, ngay cả trong lúc nhân vật đang chạy).
+  - **Chuột Phải:** **HỦY CHẾ ĐỘ NGẮM** (không mất Mana, không tính cooldown).
 - **Tay Trái (Bàn Phím):**
-  - `1`, `2`, `3`, `4`: **Bấm lần 1** vào chế độ ngắm $\rightarrow$ Rê chuột căn góc $\rightarrow$ **Bấm tiếp lần 2** (hoặc Click Trái) để xả chiêu! (Không cần đè giữ phím gây mỏi tay).
+  - `1`, `2`, `3`, `4`: **Bấm lần 1** để BẬT chế độ ngắm $\rightarrow$ Di chuyển né đòn / căn góc $\rightarrow$ **Bấm LẠI ĐÚNG PHÍM ĐÓ LẦN 2** để XÁC NHẬN PHÓNG CHIÊU! *(Chuột Trái tuyệt đối không dùng để phóng chiêu nhằm bảo toàn 100% khả năng di chuyển linh hoạt)*.
   - `Shift`: Dash (Lướt thẳng theo **hướng con trỏ chuột**, tiêu hao 20 Mana, cooldown 3.5s).
-  - `W`, `A`, `S`, `D` (hoặc Arrow Keys): Di chuyển thủ công phụ (ghi đè ngay Click-to-Move khi bấm để né đòn tức thì).
+  - `W`, `A`, `S`, `D` (hoặc Arrow Keys): Di chuyển thủ công phụ (ghi đè Click-to-Move ngay khi bấm để né đòn tức thì).
   - `I`: Phím tắt mở nhanh Tab Kho Đồ.
   - `K`: Phím tắt mở nhanh Tab Kỹ Năng & Thuộc Tính.
   - `C`: Phím tắt mở nhanh Tab Trang Bị.
