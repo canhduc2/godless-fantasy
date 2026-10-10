@@ -27,6 +27,8 @@ namespace GodlessFantasy.Combat
         public int baseDamage = 45;
         [Range(0f, 3f)]
         public float intelligenceScaling = 0.85f;
+        [Tooltip("Tầm đánh / cự ly thi triển (mét). Nếu để 0 sẽ tự gán theo loại tâm ngắm.")]
+        public float castRange = 0f;
 
         [Header("Icon Hiển Thị Độc Lập (Fallback chuẩn)")]
         [Tooltip("Icon hiển thị khi gắn vào ô phím nóng [1..4]")]
@@ -40,7 +42,7 @@ namespace GodlessFantasy.Combat
 
         public SkillScrollData ToSkillScrollData()
         {
-            return new SkillScrollData(skillId, skillName, tierRank, tierColor, element, manaCost, cooldown, baseDamage, intelligenceScaling, indicatorType, hotbarIconName, scrollBagIconName, description);
+            return new SkillScrollData(skillId, skillName, tierRank, tierColor, element, manaCost, cooldown, baseDamage, intelligenceScaling, indicatorType, hotbarIconName, scrollBagIconName, description, castRange);
         }
     }
 
@@ -57,6 +59,7 @@ namespace GodlessFantasy.Combat
         public float cooldown;
         public int baseDamage;
         public float intelligenceScaling;
+        public float castRange;
         public string hotbarIconName;
         public string scrollBagIconName;
         public string description;
@@ -77,6 +80,7 @@ namespace GodlessFantasy.Combat
                 cooldown = skill.cooldown,
                 baseDamage = skill.baseDamage,
                 intelligenceScaling = skill.intelligenceScaling,
+                castRange = skill.castRange,
                 hotbarIconName = skill.iconName,
                 scrollBagIconName = skill.scrollIconName,
                 description = skill.description
@@ -86,7 +90,7 @@ namespace GodlessFantasy.Combat
         public SkillScrollData ToSkill()
         {
             Color c = new Color(tierR, tierG, tierB, 1f);
-            return new SkillScrollData(id, name, tierRank, c, element, manaCost, cooldown, baseDamage, intelligenceScaling, indicatorType, hotbarIconName, scrollBagIconName, description);
+            return new SkillScrollData(id, name, tierRank, c, element, manaCost, cooldown, baseDamage, intelligenceScaling, indicatorType, hotbarIconName, scrollBagIconName, description, castRange);
         }
     }
 }

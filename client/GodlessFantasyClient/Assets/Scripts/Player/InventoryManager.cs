@@ -133,23 +133,23 @@ namespace GodlessFantasy.Player
             EquipGearItem(ring);
 
             // 2. Sách Kỹ Năng (Cuộn Trục Bí Kíp)
-            var s1 = new InventoryItem("scroll_s1", "Bí Kíp: Cầu Ma Thuật", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_arcane", "ST: 25 + 100% INT | CD: 1.0s", "Bắn cầu ma thuật theo đường thẳng (Line Skillshot).", 1,
-                new SkillScrollData("scroll_arcane_bolt", "Cuộn Trục: Cầu Ma Thuật", "Phẩm D", new Color(0.3f, 0.85f, 0.4f), "Ma Pháp", 15, 1.0f, 25, 1.0f, 1, "icon_skill_arcane_bolt", "item_scroll_arcane", "Bắn cầu ma pháp xuyên thấu."));
+            var s1 = new InventoryItem("scroll_s1", "Bí Kíp: Cầu Ma Thuật", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_arcane", "ST: 25 + 100% INT | CD: 1.0s | Tầm: 8.0m", "Bắn cầu ma thuật theo đường thẳng (Line Skillshot).", 1,
+                new SkillScrollData("scroll_arcane_bolt", "Cuộn Trục: Cầu Ma Thuật", "Phẩm D", new Color(0.3f, 0.85f, 0.4f), "Ma Pháp", 15, 1.0f, 25, 1.0f, 1, "icon_skill_arcane_bolt", "item_scroll_arcane", "Bắn cầu ma pháp xuyên thấu.", 8.0f));
 
-            var s2 = new InventoryItem("scroll_s2", "Bí Kíp: Mưa Thiên Thạch", ItemType.SkillScroll, EquipSlot.None, "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_scroll_meteor", "ST: 40 + 120% INT | CD: 3.0s", "Thả khối thiên thạch nổ vùng đất (Ground AoE).", 1,
-                new SkillScrollData("scroll_meteor", "Cuộn Trục: Mưa Thiên Thạch", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa", 25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_meteor", "Thiên thạch giáng xuống diện rộng."));
+            var s2 = new InventoryItem("scroll_s2", "Bí Kíp: Mưa Thiên Thạch", ItemType.SkillScroll, EquipSlot.None, "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_scroll_meteor", "ST: 40 + 120% INT | CD: 3.0s | Tầm: 7.0m", "Thả khối thiên thạch nổ vùng đất (Ground AoE).", 1,
+                new SkillScrollData("scroll_meteor", "Cuộn Trục: Mưa Thiên Thạch", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa", 25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_meteor", "Thiên thạch giáng xuống diện rộng.", 7.0f));
 
-            var s3 = new InventoryItem("scroll_s3", "Bí Kíp: Sóng Lửa", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_flame", "ST: 30 + 80% INT | CD: 2.5s", "Quét bão lửa hình quạt 60 độ (Cone Sweep).", 1,
-                new SkillScrollData("scroll_flame_cone", "Cuộn Trục: Sóng Lửa", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa", 20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_flame", "Bão lửa thiêu rụi phía trước."));
+            var s3 = new InventoryItem("scroll_s3", "Bí Kíp: Sóng Lửa", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_flame", "ST: 30 + 80% INT | CD: 2.5s | Tầm: 4.5m", "Quét bão lửa hình quạt 60 độ (Cone Sweep).", 1,
+                new SkillScrollData("scroll_flame_cone", "Cuộn Trục: Sóng Lửa", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa", 20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_flame", "Bão lửa thiêu rụi phía trước.", 4.5f));
 
-            var s4 = new InventoryItem("scroll_s4", "Bí Kíp: Bộc Phá Thánh Điển", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_nova", "ST: 60 + 150% INT | CD: 5.0s", "Nổ hào quang 360 độ cực mạnh (Self Nova).", 1,
-                new SkillScrollData("scroll_divine_nova", "Cuộn Trục: Bộc Phá Thánh Điển", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Thánh", 35, 5.0f, 60, 1.5f, 4, "icon_skill_divine_nova", "item_scroll_nova", "Bùng nổ hào quang thần thánh."));
+            var s4 = new InventoryItem("scroll_s4", "Bí Kíp: Bộc Phá Thánh Điển", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_nova", "ST: 60 + 150% INT | CD: 5.0s | Tầm: 2.5m", "Nổ hào quang 360 độ cực mạnh (Self Nova).", 1,
+                new SkillScrollData("scroll_divine_nova", "Cuộn Trục: Bộc Phá Thánh Điển", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Thánh", 35, 5.0f, 60, 1.5f, 4, "icon_skill_divine_nova", "item_scroll_nova", "Bùng nổ hào quang thần thánh.", 2.5f));
 
-            var s5 = new InventoryItem("scroll_s5", "Bí Kíp: Băng Huyết Tiễn", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_frost", "ST: 48 + 130% INT | CD: 2.0s", "Mũi tên băng giá làm chậm mục tiêu.", 1,
-                new SkillScrollData("scroll_frost_arrow", "Cuộn Trục: Băng Huyết Tiễn", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng", 22, 2.0f, 48, 1.3f, 1, "item_scroll_frost", "item_scroll_frost", "Bắn tên băng sắc lẹm."));
+            var s5 = new InventoryItem("scroll_s5", "Bí Kíp: Băng Huyết Tiễn", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_frost", "ST: 48 + 130% INT | CD: 2.0s | Tầm: 8.0m", "Mũi tên băng giá làm chậm mục tiêu.", 1,
+                new SkillScrollData("scroll_frost_arrow", "Cuộn Trục: Băng Huyết Tiễn", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng", 22, 2.0f, 48, 1.3f, 1, "item_scroll_frost", "item_scroll_frost", "Bắn tên băng sắc lẹm.", 8.0f));
 
-            var s6 = new InventoryItem("scroll_s6", "Bí Kíp: Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_generic", "ST: 55 + 140% INT | CD: 4.0s", "Gọi sấm sét oanh tạc vùng đất chỉ định.", 1,
-                new SkillScrollData("scroll_thunder_burst", "Cuộn Trục: Lôi Thần Nộ", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Lôi", 32, 4.0f, 55, 1.4f, 2, "item_scroll_generic", "item_scroll_generic", "Tia sét thần sấm oanh tạc."));
+            var s6 = new InventoryItem("scroll_s6", "Bí Kíp: Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_generic", "ST: 55 + 140% INT | CD: 4.0s | Tầm: 7.0m", "Gọi sấm sét oanh tạc vùng đất chỉ định.", 1,
+                new SkillScrollData("scroll_thunder_burst", "Cuộn Trục: Lôi Thần Nộ", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Lôi", 32, 4.0f, 55, 1.4f, 2, "item_scroll_generic", "item_scroll_generic", "Tia sét thần sấm oanh tạc.", 7.0f));
 
             items.Add(s1);
             items.Add(s2);
@@ -303,7 +303,7 @@ namespace GodlessFantasy.Player
             }
 
             pendingDropItem = item;
-            dropCountdown = 5.0f; // Đếm ngược 5 giây đúng yêu cầu!
+            dropCountdown = 0f; // Bỏ thời gian chờ 5s theo yêu cầu user
             isDropModalOpen = true;
         }
 
