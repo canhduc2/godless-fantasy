@@ -117,6 +117,7 @@ namespace GodlessFantasy.Combat
         public SkillScrollData GetEquippedScroll(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= 4) return null;
+            if (equippedSlots[0] == null) InitializeDefaultScrolls();
             return equippedSlots[slotIndex];
         }
 

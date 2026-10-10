@@ -35,7 +35,16 @@ namespace GodlessFantasy.Indicator
         private GameObject selfNovaVisual;
 
         public bool IsAiming => currentType != IndicatorType.None;
-        public IndicatorType CurrentType => currentType;
+        public void SetSprites(Sprite arrow, Sprite circle, Sprite cone)
+        {
+            if (arrow != null && arrowVisual != null) arrowVisual.GetComponent<SpriteRenderer>().sprite = arrow;
+            if (circle != null)
+            {
+                if (groundCircleVisual != null) groundCircleVisual.GetComponent<SpriteRenderer>().sprite = circle;
+                if (selfNovaVisual != null) selfNovaVisual.GetComponent<SpriteRenderer>().sprite = circle;
+            }
+            if (cone != null && coneVisual != null) coneVisual.GetComponent<SpriteRenderer>().sprite = cone;
+        }
 
         private void Awake()
         {
@@ -46,9 +55,9 @@ namespace GodlessFantasy.Indicator
 
         private void BuildIndicators()
         {
-            Sprite arrowSp = Resources.Load<Sprite>("indicator_arrow");
-            Sprite circleSp = Resources.Load<Sprite>("indicator_ground_circle");
-            Sprite coneSp = Resources.Load<Sprite>("indicator_cone");
+            Sprite arrowSp = Resources.Load<Sprite>("indicator_arrow") ?? CreateFallbackArrow();
+            Sprite circleSp = Resources.Load<Sprite>("indicator_ground_circle") ?? Resources.Load<Sprite>("indicator_circle") ?? CreateFallbackCircle();
+            Sprite coneSp = Resources.Load<Sprite>("indicator_cone") ?? CreateFallbackCone();
 
             // 1. Arrow (Skill 1)
             arrowVisual = new GameObject("Arrow_Visual");
@@ -176,6 +185,83 @@ namespace GodlessFantasy.Indicator
             mouseWorldPos.z = 0;
             Vector2 toMouse = (Vector2)mouseWorldPos - (Vector2)transform.position;
             return (Vector2)transform.position + Vector2.ClampMagnitude(toMouse, skill2MaxCastRange);
+        }
+
+        private Sprite CreateFallbackArrow()
+        {
+            Texture2D tex = new Texture2D(32, 16, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Color clear = new Color(0, 0, 0, 0);
+            Color cyan = new Color(0.2f, 0.9f, 1f, 0.9f);
+            for (int x = 0; x < 32; x++)
+                for (int y = 0; y < 16; y++)
+                    tex.SetPixel(x, y, clear);
+
+            for (int x = 0; x < 24; x++)
+            {
+                tex.SetPixel(x, 7, cyan);
+                tex.SetPixel(x, 8, cyan);
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                tex.SetPixel(24 + i, 7 - i / 2, cyan);
+                tex.SetPixel(24 + i, 8 + i / 2, cyan);
+            }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, 32, 16), new Vector2(0f, 0.5f), 16f);
+        }
+
+        private Sprite CreateFallbackCircle()
+        {
+            int size = 64;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Vector2 center = new Vector2(size / 2f, size / 2f);
+            Color cyan = new Color(0.2f, 0.9f, 1f, 0.85f);
+            Color fill = new Color(0.2f, 0.9f, 1f, 0.15f);
+            Color clear = new Color(0, 0, 0, 0);
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), center);
+                    if (dist <= 30f && dist >= 27f) tex.SetPixel(x, y, cyan);
+                    else if (dist < 27f) tex.SetPixel(x, y, fill);
+                    else tex.SetPixel(x, y, clear);
+                }
+            }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
+        }
+
+        private Sprite CreateFallbackCone()
+        {
+            int size = 64;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Color orange = new Color(1f, 0.55f, 0.15f, 0.85f);
+            Color fill = new Color(1f, 0.55f, 0.15f, 0.2f);
+            Color clear = new Color(0, 0, 0, 0);
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    float dx = x;
+                    float dy = y - size / 2f;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float angle = Mathf.Abs(Mathf.Atan2(dy, dx) * Mathf.Rad2Deg);
+                    if (angle <= 30f && dist <= 60f)
+                    {
+                        if (dist >= 56f || angle >= 27f) tex.SetPixel(x, y, orange);
+                        else tex.SetPixel(x, y, fill);
+                    }
+                    else tex.SetPixel(x, y, clear);
+                }
+            }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0f, 0.5f), 16f);
         }
 
         private void OnDestroy()

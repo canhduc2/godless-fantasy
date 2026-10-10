@@ -156,23 +156,12 @@ namespace GodlessFantasy.Core
             pOverhead.Setup(OverheadType.Player, "Dũng Sĩ SquiRRels", "Lv.1 · Hỏa", 0.95f);
 
             // Tạo Indicator Mũi Tên Ngắm Chuẩn:
-            // - Gốc đuôi mũi tên bắt đầu ngay trước ngực nhân vật (+0.35f offset).
-            // - SortingOrder = 0 (NẰM DƯỚI NHÂN VẬT LAYER 10, ĐÚNG TƯ DUY CĂN BẢN!)
             GameObject indicatorObj = new GameObject("Indicator_Directional");
             indicatorObj.transform.parent = playerObj.transform;
             indicatorObj.transform.localPosition = Vector3.zero;
 
-            GameObject arrowVisual = new GameObject("Arrow_Visual");
-            arrowVisual.transform.parent = indicatorObj.transform;
-            arrowVisual.transform.localPosition = new Vector3(0.35f, 0, 0); // Bắt đầu từ trước ngực, không xuyên qua người!
-
-            var indSr = arrowVisual.AddComponent<SpriteRenderer>();
-            indSr.sprite = arrowSprite;
-            indSr.sortingOrder = 0; // LAYER 0: NẰM DƯỚI NHÂN VẬT (10) VÀ DƯỚI HIỆU ỨNG CHIÊU (20)
-
             var indRenderer = indicatorObj.AddComponent<IndicatorRenderer>();
-            SetPrivateField(indRenderer, "indicatorVisual", indicatorObj.transform);
-            SetPrivateField(indRenderer, "spriteRenderer", indSr);
+            if (arrowSprite != null) indRenderer.SetSprites(arrowSprite, Resources.Load<Sprite>("indicator_ground_circle"), Resources.Load<Sprite>("indicator_cone"));
 
             // Gán bộ điều khiển ngắm Two-Tap & Cuộn Trục Kỹ Năng Kéo Thả
             var pCombat = playerObj.AddComponent<SkillAimingController>();
