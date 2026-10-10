@@ -17,6 +17,7 @@ Toàn bộ hệ thống thiết kế game đã được module hóa chi tiết t
 5. 🔄 [**04_REBIRTH_PERK_GACHA_VA_CHET_ROT_DO.md**](file:///D:/godless-fantasy/docs/04_REBIRTH_PERK_GACHA_VA_CHET_ROT_DO.md) — Chuyển sinh Lv 100, Rebirth Vault (Rương 2 món lưu server tại tọa độ tử nạn), 5 Ô cường hóa vĩnh viễn không mất, Luật chết rơi 5% đồ, Vòng quay Perk Gacha & Danh hiệu.
 6. 🌍 [**05_THE_GIOI_MAP_NPC_QUAI_BOSS.md**](file:///D:/godless-fantasy/docs/05_THE_GIOI_MAP_NPC_QUAI_BOSS.md) — Thế giới mở World → Region → Chunk, Hệ thống NPC, Quái vật, Boss rơi cuộn kỹ năng ngẫu nhiên, Cơ chế kích hoạt chuyển chức Hệ Ẩn cực hiếm.
 7. 🖥️ [**06_GIAO_DIEN_UI_HUD_VA_CHAT.md**](file:///D:/godless-fantasy/docs/06_GIAO_DIEN_UI_HUD_VA_CHAT.md) — Thiết kế HUD chi tiết, Menu trượt 4 Tab, Hệ thống Chat (Khu vực 5s rate-limit, Thế giới 2 tin/ngày), **Hệ Thống Song Ngữ (Tiếng Việt Mặc định / English trong Cài đặt)**.
+8. 🛠️ [**07_QUYET_DINH_CONG_NGHE_TECH_STACK.md**](file:///D:/godless-fantasy/docs/07_QUYET_DINH_CONG_NGHE_TECH_STACK.md) — Quyết định công nghệ đồ họa (HD Pixel Art + 2D Lighting), Game Engine (Unity vs Godot), Kiến trúc Server-Authoritative & MCP Code Toolings.
 
 ---
 
