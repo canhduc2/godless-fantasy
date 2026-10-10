@@ -65,7 +65,7 @@ Game vận hành với mô hình kinh tế 3 tầng, phân tách rõ ràng giữ
 > **QUY TẮC CỐT LÕI:** Người chơi dùng **1 Rebirth Point (RP)** để cường hóa vĩnh viễn 1 ô bất kỳ. **Tổng cộng tối đa được chọn 5 ô trên toàn bộ nhân vật**.
 > 
 > Người chơi **HOÀN TOÀN TỰ DO LỰA CHỌN** vị trí gắn ấn bảo vệ trong cả 3 phân vùng:
-> 1. **Ô Trang Bị (Equipment Slots):** Vũ khí, Mũ, Áo, Quần, Giày (Ví dụ: Khóa vĩnh viễn ô Vũ khí để cầm vũ khí phẩm X không bao giờ sợ rớt).
+> 1. **Ô Trang Bị (7 Equipment Slots):** **Vũ khí, Mũ, Áo, Quần, Giày, Vòng cổ, Nhẫn** (Ví dụ: Khóa vĩnh viễn ô Vũ khí để cầm vũ khí phẩm X không bao giờ sợ rớt).
 > 2. **Ô Kỹ Năng (Active Skill Slots):** Ô 1, Ô 2, Ô 3, Ô 4 (Ví dụ: Khóa vĩnh viễn cuộn tuyệt kỹ phẩm S gắn ở Ô 1).
 > 3. **Ô Hành Trang Túi Đồ (Bag Inventory Slots):** Bất kỳ ô nào trong balo (Ví dụ: Ô số 1, số 7, số 12...).
 >
@@ -75,12 +75,14 @@ Game vận hành với mô hình kinh tế 3 tầng, phân tách rõ ràng giữ
 +-----------------------------------------------------------------------------------------+
 |                GIAO DIỆN CHỌN VỊ TRÍ 5 Ô BẢO VỆ VĨNH VIỄN (TỰ DO LỰA CHỌN)              |
 +-----------------------------------------------------------------------------------------+
-| [PHÂN VÙNG TRANG BỊ]        [PHÂN VÙNG KỸ NĂNG]            [PHÂN VÙNG HÀNH TRANG TÚI ĐỒ]|
-|  [🛡️ Vũ Khí]*                [✨ Ô Skill 1]*                 | 01 | 02 | 03*| 04 | 05 | 06|
-|  [  Mũ     ]                 [   Ô Skill 2 ]                 | 07 | 08 | 09 | 10*| 11 | 12|
-|  [  Áo     ]                 [   Ô Skill 3 ]                 | 13 | 14 | 15 | 16 | 17 | 18|
-|  [  Quần   ]                 [   Ô Skill 4 ]                 | 19 | 20 | 21 | 22 | 23 | 24|
-|  [  Giày   ]                                                                            |
+| [PHÂN VÙNG TRANG BỊ (7 Ô)]  [PHÂN VÙNG KỸ NĂNG]            [PHÂN VÙNG HÀNH TRANG TÚI ĐỒ]|
+|  [🛡️ Vũ Khí ]*               [✨ Ô Skill 1]*                 | 01 | 02 | 03*| 04 | 05 | 06|
+|  [   Mũ     ]                [   Ô Skill 2 ]                 | 07 | 08 | 09 | 10*| 11 | 12|
+|  [   Áo     ]                [   Ô Skill 3 ]                 | 13 | 14 | 15 | 16 | 17 | 18|
+|  [   Quần   ]                [   Ô Skill 4 ]                 | 19 | 20 | 21 | 22 | 23 | 24|
+|  [   Giày   ]                                                                           |
+|  [   Vòng Cổ]                                                                           |
+|  [   Nhẫn   ]                                                                           |
 |                                                                                         |
 |  * Ký hiệu [*]: Đã được người chơi CHỌN gắn ấn BẢO VỆ VĨNH VIỄN (Tổng: 5/5 Ô)           |
 +-----------------------------------------------------------------------------------------+
@@ -156,3 +158,35 @@ Dùng để bán lấy vàng nuôi nhân vật hoặc giao nộp cho Thợ Rèn 
    - Cho phép người chơi đổi màu hạt hiệu ứng kỹ năng sang 1 trong 6 thuộc tính khác mà không cần tẩy lại điểm gốc.
 2. **Ngọc Khóa Linh Hồn (Soulbind Talisman):**
    - Vật phẩm tiêu hao một lần: Khi gắn vào 1 món đồ trong túi, món đồ đó sẽ được bảo vệ 1 lần duy nhất khỏi luật rơi đồ 5% khi tử vong. Sau khi kích hoạt bảo vệ thành công, Ngọc sẽ vỡ vụn.
+
+---
+
+### 🔖 [MỤC NGOÀI LỀ 5.5] - HỆ THỐNG THÚ CƯNG (PET CUTE, KHÔNG CƯỠI, TĂNG CHỈ SỐ NHẸ)
+
+#### 1. Triết Lý Thiết Kế Cốt Lõi:
+> **PET SIÊU CUTE, NUÔI CHO VUI MẮT & TĂNG CHỈ SỐ HỖ TRỢ:**  
+> - **Hình tượng:** Thiết kế theo phong cách Chibi / Cute Pixel Art cực kỳ đáng yêu, lon ton chạy theo sau lưng chủ nhân.
+> - **Quy tắc 3 KHÔNG tuyệt đối:**
+>   1. **KHÔNG CƯỠI ĐƯỢC (No Mount):** Giữ nguyên tốc độ di chuyển kiting, dash né đòn thuần túy của nhân vật.
+>   2. **KHÔNG TẤN CÔNG ĐƯỢC (No Combat Attack):** Pet không cắn xé hay xả chiêu, tránh làm rối mắt màn hình và tránh bị dính sát thương oan từ Friendly Fire của đồng đội!
+>   3. **KHÔNG BỊ QUÁI/ĐỐI THỦ ĐÁNH CHẾT (Untargetable):** Pet là thực thể bất tử, đi theo làm cảnh và buff chỉ số.
+
+#### 2. Cơ Chế Ấp Trứng Random (Random Egg Hatching):
+- Người chơi nhặt được Trứng Thú Cưng (Pet Egg) từ quái thường hoặc Boss (hoặc nhặt ngẫu nhiên trên bản đồ).
+- Đem trứng ấp ngẫu nhiên: Hồi hộp chờ đợi trứng nở ra các loài pet đáng yêu với các bậc độ hiếm:
+  - **Thường (Common):** Sóc Nâu Cute, Gà Con Lũn Cũn, Cún Vàng Vẫy Đuôi.
+  - **Hiếm (Rare):** Mèo Mắt Hai Màu, Cáo Tuyết Đeo Nơ, Rùa Sỏi Mini.
+  - **Sử Thi (Epic):** Cú Mèo Đeo Kính Trí Tuệ, Gấu Trúc Nhỏ Gặm Trúc.
+  - **Huyền Thoại (Legendary / Mythic):** Sóc Hoàng Gia SquiRRel Đội Vương Miện, Rồng Con Tí Nị, Tinh Linh Lấp Lánh.
+
+#### 3. Cơ Chế Tăng Chỉ Số Bị Động (Passive Stat Boost) & Perk Vui Vẻ:
+- Mặc dù không trực tiếp đánh nhau, mỗi loài Pet sẽ **tăng nhẹ một chỉ số nhất định** cho người chơi khi được trang bị:
+  - *Sóc Nâu / Cáo Tuyết:* Tăng +2% ~ +4% Tốc độ di chuyển.
+  - *Rùa Sỏi Mini:* Tăng +10 ~ +25 Giáp cơ bản.
+  - *Cú Mèo Trí Tuệ:* Tăng +30 ~ +60 Max Mana.
+  - *Cún Lửa / Mèo Băng:* Tăng nhẹ +5 Sát thương thuộc tính tương ứng (Hỏa / Băng...).
+  - *Perk vui vẻ:* Tự động nhặt tiền lẻ rơi quanh chân, đứng yên 5 giây thì pet nằm ngủ hoặc nhảy múa tạo nét.
+- **Quy tắc an toàn:** Pet là bạn đồng hành vĩnh viễn, chết không bị rơi rụng, Chuyển Sinh không bị mất!
+
+
+

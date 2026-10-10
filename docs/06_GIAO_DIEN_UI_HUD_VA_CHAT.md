@@ -20,7 +20,7 @@ Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối
 |                                                                                       |
 | [MID-LEFT: MENU TRƯỢT]                                                                |
 | +---+                                                                                 |
-| | > | -> (Click mở Menu 4 Tab)                                                        |
+| | > | -> (Click mở Menu 5 Tab)                                                        |
 | +---+                                                                                 |
 |                                                                                       |
 |                                                                                       |
@@ -58,14 +58,15 @@ Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối
 ### 2.2. Nút Menu Trượt & Cửa Sổ Bảng Điều Khiển (Mid-Left Menu)
 - **Vị trí:** Chính giữa mép trái màn hình.
 - **Biểu tượng:** Nút hình tam giác hướng sang phải `>`.
-- **Hành vi:** Nhấn vào sẽ trượt ra một bảng Drawer mượt mà gồm **4 Tab chức năng**:
+- **Hành vi:** Nhấn vào sẽ trượt ra một bảng Drawer mượt mà gồm **5 Tab chức năng**:
 
 | Tab | Tên Tab | Nội dung hiển thị & Chức năng |
 | :---: | :--- | :--- |
-| **Tab 1** | **Trang Bị (Equipment)** | - Hiển thị 5 vị trí mặc đồ: **Vũ Khí, Mũ, Áo, Quần, Giày**.<br>- Xem chỉ số chi tiết của trang bị đang mang.<br>- Tháo/mặc đồ nhanh. |
+| **Tab 1** | **Trang Bị (Equipment)** | - Hiển thị 7 vị trí mặc đồ: **Vũ Khí, Mũ, Áo, Quần, Giày, Vòng Cổ, Nhẫn**.<br>- Xem chỉ số chi tiết của trang bị đang mang.<br>- Tháo/mặc đồ nhanh. |
 | **Tab 2** | **Kỹ Năng & Thuộc Tính** | - Hiển thị 4 ô cuộn trục kỹ năng đã gán và kho cuộn kỹ năng đã học.<br>- Bảng tăng điểm 3 chỉ số chính: **HP, Mana, Attribute Power**.<br>- Bảng tra cứu 3 chỉ số phụ: **Tốc độ, Giáp, Tỉ lệ chí mạng**.<br>- Quản lý Danh Hiệu (Titles) và Perk đang sở hữu. |
 | **Tab 3** | **Kho Đồ (Inventory)** | - Lưới túi đồ cá nhân (Mặc định 24 ô, hiển thị nút mở rộng thêm hàng).<br>- Đánh dấu đặc biệt **5 Ô Bảo Vệ Vĩnh Viễn** (có biểu tượng vương miện/hào quang khóa an toàn). |
-| **Tab 4** | **Cài Đặt (Settings)** | - **Cấu hình Ngôn Ngữ (Language):** Mặc định **Tiếng Việt**, có thể chuyển sang **English (Tiếng Anh)**.<br>- Tùy chỉnh Âm thanh, BGM, SFX.<br>- Tùy chỉnh Đồ họa, hiển thị tên, thanh máu đồng đội.<br>- Phím tắt điều khiển.<br>- Nút Đăng Xuất (Logout) / Thoát Game. |
+| **Tab 4** | **Thú Cưng (Pet & Trứng)** | - **Bộ sưu tập Pet (Pet Sanctuary):** Xem các thú cưng đã sở hữu, phân loại theo độ hiếm (Common $\rightarrow$ Mythic).<br>- **Lồng Ấp Trứng Random (Incubator):** Đặt trứng vào ấp, theo dõi tiến độ nhiệt lượng/thời gian nở ngẫu nhiên.<br>- **Nút Gọi / Thu hồi Pet:** Cho phép chọn 1 Pet xuất chiến đi theo sau lưng.<br>- Xem perk vui vẻ của Pet đang mang. |
+| **Tab 5** | **Cài Đặt (Settings)** | - **Cấu hình Ngôn Ngữ (Language):** Mặc định **Tiếng Việt**, có thể chuyển sang **English (Tiếng Anh)**.<br>- Tùy chỉnh Âm thanh, BGM, SFX.<br>- Tùy chỉnh Đồ họa, hiển thị tên, thanh máu đồng đội.<br>- Phím tắt điều khiển.<br>- Nút Đăng Xuất (Logout) / Thoát Game. |
 
 ---
 
