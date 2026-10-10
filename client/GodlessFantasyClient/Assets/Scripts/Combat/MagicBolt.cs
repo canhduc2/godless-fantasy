@@ -21,7 +21,7 @@ namespace GodlessFantasy.Combat
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
-            Destroy(gameObject, lifetime);
+            // Không hủy ở Awake để tránh làm mất prefab template!
         }
 
         public void Initialize(Vector2 direction, int boltDamage, string attacker)
@@ -38,6 +38,9 @@ namespace GodlessFantasy.Combat
             {
                 rb.linearVelocity = moveDirection * speed;
             }
+
+            // Tự động hủy đạn sau lifetime khi đã được phóng ra
+            Destroy(gameObject, lifetime);
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -51,6 +54,7 @@ namespace GodlessFantasy.Combat
             if (other.TryGetComponent<IDamageable>(out var target))
             {
                 target.TakeDamage(damage, shooterId);
+                FloatingDamageManager.Spawn(other.transform.position, damage);
                 Destroy(gameObject);
             }
         }

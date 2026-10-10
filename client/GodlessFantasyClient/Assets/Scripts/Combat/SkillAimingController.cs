@@ -41,6 +41,7 @@ namespace GodlessFantasy.Combat
         {
             if (indicatorRenderer == null) indicatorRenderer = GetComponentInChildren<IndicatorRenderer>();
             if (firePoint == null) firePoint = transform;
+            if (playerStats == null) playerStats = GetComponent<PlayerStats>();
         }
 
         private void Update()
@@ -96,17 +97,31 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[AIMING] Đã bật chế độ ngắm Skill {skillSlot}. Click chuột trái di chuyển né đòn thoải mái, bấm {skillSlot} lần nữa để xả chiêu, Chuột phải để hủy!");
         }
 
+        [SerializeField] private PlayerStats playerStats;
+
+        public PlayerStats Stats => playerStats;
+
         private void ConfirmAndCastSkill1()
         {
+            if (playerStats != null && !playerStats.ConsumeMana(15))
+            {
+                Debug.LogWarning("[SKILL 1] Không đủ Mana để thi triển (Cần 15 Mana)!");
+                ExitAimingState();
+                return;
+            }
+
             Vector2 aimDirection = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
+            int finalDamage = playerStats != null ? playerStats.GetSkill1TotalDamage(skill1Damage) : skill1Damage;
+            Vector3 spawnPos = firePoint.position + (Vector3)(aimDirection * 0.45f);
 
             // Bắn đạn ma thuật
             if (magicBoltPrefab != null)
             {
-                GameObject boltObj = Instantiate(magicBoltPrefab, firePoint.position, Quaternion.identity);
+                GameObject boltObj = Instantiate(magicBoltPrefab, spawnPos, Quaternion.identity);
+                boltObj.SetActive(true); // Kích hoạt bản sao đạn
                 if (boltObj.TryGetComponent<MagicBolt>(out var bolt))
                 {
-                    bolt.Initialize(aimDirection, skill1Damage, gameObject.name);
+                    bolt.Initialize(aimDirection, finalDamage, gameObject.name);
                 }
             }
             else
@@ -115,7 +130,7 @@ namespace GodlessFantasy.Combat
             }
 
             lastSkill1CastTime = Time.time;
-            Debug.Log($"[CAST SUCCESS] Đã phóng chiêu Skill 1! Hướng: {aimDirection}, Sát thương: {skill1Damage}");
+            Debug.Log($"[CAST SUCCESS] Đã phóng chiêu Cầu Ma Thuật! Hướng: {aimDirection}, Sát thương: {finalDamage}");
 
             ExitAimingState();
         }

@@ -164,3 +164,53 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
     - Tiêu hao: **20 Mana** mỗi lần lướt.
     - Thời gian hồi (Cooldown): **3.5 giây**.
   - Không chiếm bất kỳ ô nào trong 4 ô kỹ năng cuộn trục. Trong suốt 0.25s lướt, nhân vật không bị khựng hành động, nhưng vẫn nhận sát thương nếu va phải vùng sát thương AoE đang tồn tại.
+
+---
+
+## 6. QUY CHUẨN DI CHUYỂN 8 HƯỚNG & CHIẾN ĐẤU TỰ DO 360° (8-DIRECTIONAL MOVEMENT & 360° COMBAT)
+
+Để tối ưu hóa trải nghiệm chiến đấu thời gian thực (Real-time PvP), kiting né chiêu và dash trong không gian 2D Top-Down MMORPG, Studio thống nhất quy chuẩn kiến trúc điều khiển:
+
+```
+                  [ BẮC (UP) ]
+           TÂY BẮC \     |     / ĐÔNG BẮC
+                    \    |    /
+    [ TÂY (LEFT) ] --+-- (HERO) --+-- [ ĐÔNG (RIGHT) ]
+                    /    |    \
+           TÂY NAM /     |     \ ĐÔNG NAM
+                  [ NAM (DOWN) ]
+      
+     Di chuyển: 8 Hướng (Vector Normalized)
+     Ngắm Bắn Skill & Dash: Tự do 360° theo con trỏ chuột
+```
+
+### 6.1. Triển Khai Di Chuyển 8 Hướng (8-Directional Movement)
+- **8 Hướng di chuyển vật lý:** 
+  - 4 hướng chính: Trên (North), Dưới (South), Trái (West), Phải (East).
+  - 4 hướng chéo góc $45^\circ$: Đông Bắc (North-East), Tây Bắc (North-West), Đông Nam (South-East), Tây Nam (South-West).
+- **Chuẩn hóa Vector Vận Tốc (Normalized Movement Vector):**
+  - Bắt buộc thực hiện `direction = direction.normalized` trước khi nhân với `MoveSpeed`.
+  - Triệt tiêu hoàn toàn lỗi chạy chéo nhanh hơn chạy thẳng ($\sqrt{2} \approx 1.414\times$), đảm bảo tốc độ di chuyển luôn đồng nhất ở mọi hướng ($5.0\text{ m/s}$).
+- **Hỗ trợ Song Hành:** Cả Click-to-Move (tìm đường theo lưới 8 hướng) và phím WASD thủ công đều tuân thủ chặt chẽ 8 hướng này.
+
+### 6.2. Độc Lập Giữa Hướng Di Chuyển & Hướng Ngắm (Kiting / Decoupled Aiming)
+- Hướng di chuyển của thân thể và hướng ngắm kỹ năng là **hai hệ trục hoàn toàn độc lập**:
+  - Nhân vật có thể chạy lùi về phía Tây Bắc trong khi chuột và ánh mắt vẫn ngắm bắn thẳng về phía Đông Nam để xả chiêu vào kẻ địch truy đuổi (kỹ thuật Kiting đỉnh cao trong PvP).
+- **Sprite Hướng Mặt (Facing Direction):**
+  - Thân dưới bước đi theo 8 hướng di chuyển.
+  - Thân trên và vũ khí hướng về phía con trỏ chuột ($360^\circ$).
+
+### 6.3. Chiến Đấu & Skillshot Tự Do 360° (360° Freelance Aiming)
+- **Tuyệt đối KHÔNG ép góc kỹ năng vào 8 hướng:**
+  - Tâm ngắm mũi tên (Indicator) và mọi viên đạn ma thuật / kiếm khí bay ra (Projectiles) đều tính toán theo góc thực tế $\theta = \text{atan2}(\Delta y, \Delta x) \in [0^\circ, 360^\circ]$.
+  - Độ chính xác tuyệt đối theo con trỏ chuột, giúp người chơi phán đoán bước chạy (leading shot) và bắn tỉa cực kỳ sắc sảo.
+
+### 6.4. Dash Cơ Động Không Giới Hạn (Unrestricted 360° Dash)
+- Kỹ năng Lướt (Dash) bằng phím `Shift` hoặc `Space` lướt thẳng theo vector con trỏ chuột ở **góc tự do 360°**.
+- Giúp nhân vật bẻ hướng né đòn đột ngột theo bất kỳ góc nào mà không bị khựng lại theo góc lưới $45^\circ$.
+
+### 6.5. Quy Chuẩn Đồ Họa Hoạt Ảnh (Animation Pipeline)
+- **Quy chuẩn Sprite:** Khung tranh nhân vật thiết kế dạng Canvas 64x64px hỗ trợ bộ hoạt ảnh 8 hướng (Idle, Walk, Run, Cast, Hurt, Die).
+- **Tối ưu hóa giai đoạn đầu:**
+  - Tái sử dụng hoạt ảnh lật đối xứng trục X (Flip X) cho các hướng đối xứng (Đông $\leftrightarrow$ Tây, Đông Bắc $\leftrightarrow$ Tây Bắc, Đông Nam $\leftrightarrow$ Tây Nam) nhằm tiết kiệm 40% chi phí vẽ asset nhưng vẫn giữ trọn vẹn độ mượt mà.
+

@@ -13,8 +13,9 @@ namespace GodlessFantasy.Player
     {
         [Header("Target Tracking")]
         [SerializeField] private Transform target;
-        [SerializeField] private float smoothSpeed = 8.0f;
+        [SerializeField] private float smoothSpeed = 14.0f;
         [SerializeField] private Vector3 offset = new Vector3(0, 0, -10f);
+        [SerializeField] private float parallaxLookAheadWeight = 0.20f; // Độ ngả parallax theo hướng trỏ chuột
 
         [Header("Controlled Camera Zoom")]
         [SerializeField] private float minZoom = 2.8f;
@@ -32,7 +33,6 @@ namespace GodlessFantasy.Player
             {
                 cam.orthographic = true;
                 cam.orthographicSize = targetZoom;
-                // Đổi màu nền camera thành màu xanh đen huyền ảo (Dark Fantasy Void)
                 cam.backgroundColor = new Color(0.06f, 0.08f, 0.12f, 1f);
             }
         }
@@ -52,7 +52,18 @@ namespace GodlessFantasy.Player
                 return;
             }
 
-            Vector3 desiredPosition = target.position + offset;
+            // Parallax Dynamic Tracking: Camera luôn bám chặt tâm người chơi,
+            // đồng thời tạo hiệu ứng thị sai (parallax) trôi nhẹ theo hướng ngắm chuột!
+            Vector3 parallaxOffset = Vector3.zero;
+            if (cam != null)
+            {
+                Vector3 mouseWorld = cam.ScreenToWorldPoint(GameInput.GetMousePosition());
+                mouseWorld.z = target.position.z;
+                Vector3 mouseDelta = Vector3.ClampMagnitude(mouseWorld - target.position, 2.5f);
+                parallaxOffset = mouseDelta * parallaxLookAheadWeight;
+            }
+
+            Vector3 desiredPosition = target.position + parallaxOffset + offset;
             transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
         }
 

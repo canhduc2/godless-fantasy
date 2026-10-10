@@ -35,9 +35,12 @@ namespace GodlessFantasy.Player
         public bool IsDashing => isDashing;
         public float DashCooldownRemaining => Mathf.Max(0, (lastDashTime + dashCooldown) - Time.time);
 
+        [SerializeField] private SpriteRenderer spriteRenderer;
+
         private void Awake()
         {
             if (rb == null) rb = GetComponent<Rigidbody2D>();
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
             mainCamera = Camera.main;
             targetPosition = transform.position;
         }
@@ -45,6 +48,17 @@ namespace GodlessFantasy.Player
         private void Update()
         {
             if (isDashing) return;
+
+            // Độc lập hướng ngắm: Nhân vật luôn hướng mặt theo con trỏ chuột độc lập với hướng di chuyển
+            if (spriteRenderer != null)
+            {
+                if (mainCamera == null) mainCamera = Camera.main;
+                if (mainCamera != null)
+                {
+                    Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
+                    spriteRenderer.flipX = (mouseWorld.x < transform.position.x);
+                }
+            }
 
             HandleKeyboardMovement();
             HandleMouseMovement();

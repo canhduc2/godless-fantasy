@@ -78,9 +78,9 @@ namespace GodlessFantasy.Core
         {
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
-                return Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame;
+                return Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame;
 #endif
-            try { return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift); } catch { return false; }
+            try { return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift) || Input.GetKeyDown(KeyCode.Space); } catch { return false; }
         }
 
         public static bool GetSkill1KeyDown()
