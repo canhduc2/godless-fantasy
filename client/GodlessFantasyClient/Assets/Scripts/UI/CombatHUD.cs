@@ -995,9 +995,10 @@ namespace GodlessFantasy.UI
         }
 
         // ================= TAB 1: TRANG BỊ (CHÍNH XÁC THEO BẢN VẼ 2) =================
+        // ================= TAB 1: TRANG BỊ (CHÍNH XÁC 100% THEO WIREFRAME USER) =================
         private void DrawTabEquipment(Rect r)
         {
-            // Tiêu đề: Hệ - Thuộc tính - Level (Đúng quy ước: Hệ = Kị Sĩ/Pháp Sư..., Thuộc tính = Hỏa/Lôi...)
+            // Tiêu đề: Hệ - Thuộc tính - Level
             string charClass = playerStats != null ? playerStats.CharacterClass : "Kị Sĩ";
             string elem = playerStats != null ? playerStats.Element : "Hỏa";
             int lv = playerStats != null ? playerStats.Level : 1;
@@ -1009,14 +1010,14 @@ namespace GodlessFantasy.UI
             boldWhiteStyle.normal.textColor = Color.white;
 
             float slotBoxSize = 52f;
-            float leftColX = r.x + 10f;
-            float rightColX = r.x + r.width - slotBoxSize - 10f;
-            float centerBoxX = r.x + 75f;
-            float centerBoxY = r.y + 32f;
-            float centerBoxW = r.width - 150f;
-            float centerBoxH = 175f;
+            float leftColX = r.x + 8f;
+            float rightColX = r.x + r.width - slotBoxSize - 8f;
+            float centerBoxX = leftColX + slotBoxSize + 10f;
+            float centerBoxW = rightColX - 10f - centerBoxX; // Chiều rộng khung nhân vật giữa
+            float centerBoxY = r.y + 26f;
+            float centerBoxH = 160f;
 
-            // KHUNG GIỮA: ẢNH NHÂN VẬT LỚN (Đúng bản vẽ 2)
+            // KHUNG GIỮA: ẢNH NHÂN VẬT & TÊN
             Rect centerPortrait = new Rect(centerBoxX, centerBoxY, centerBoxW, centerBoxH);
             GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
             GUI.DrawTexture(centerPortrait, Texture2D.whiteTexture);
@@ -1027,49 +1028,36 @@ namespace GodlessFantasy.UI
             {
                 float pW = 80f;
                 float pH = 80f;
-                GUI.DrawTexture(new Rect(centerPortrait.x + (centerPortrait.width - pW) / 2f, centerPortrait.y + 20f, pW, pH), playerPortraitTex);
+                GUI.DrawTexture(new Rect(centerPortrait.x + (centerPortrait.width - pW) / 2f, centerPortrait.y + 14f, pW, pH), playerPortraitTex);
             }
             standardTextStyle.alignment = TextAnchor.LowerCenter;
+            standardTextStyle.fontSize = 11;
             standardTextStyle.normal.textColor = new Color(1f, 0.9f, 0.5f);
-            GUI.Label(new Rect(centerPortrait.x, centerPortrait.y, centerPortrait.width, centerPortrait.height - 10), $"{playerStats?.CharacterName ?? "Anh Hùng"}\n(Hiệp Sĩ Áo Ba Lỗ)", standardTextStyle);
+            GUI.Label(new Rect(centerPortrait.x, centerPortrait.y, centerPortrait.width, centerPortrait.height - 8), $"{playerStats?.CharacterName ?? "Dũng Sĩ SquiRRels"}\n(Hiệp Sĩ Áo Ba Lỗ)", standardTextStyle);
             standardTextStyle.normal.textColor = Color.white;
 
-            // CỘT TRÁI (3 Ô): MŨ, QUẦN, NHẪN (Đúng bản vẽ 2)
-            DrawEquipmentSlotButton(EquipSlot.Helmet, "Mũ", new Rect(leftColX, centerBoxY + 5, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Pants, "Quần", new Rect(leftColX, centerBoxY + 65, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Ring, "Nhẫn", new Rect(leftColX, centerBoxY + 125, slotBoxSize, slotBoxSize));
+            // CỘT TRÁI (3 Ô): MŨ, QUẦN, NHẪN (Cân xứng dọc theo khung giữa)
+            DrawEquipmentSlotButton(EquipSlot.Helmet, "Mũ", new Rect(leftColX, centerBoxY + 2, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Pants, "Quần", new Rect(leftColX, centerBoxY + 54, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Ring, "Nhẫn", new Rect(leftColX, centerBoxY + 106, slotBoxSize, slotBoxSize));
 
-            // CỘT PHẢI (4 Ô): ÁO, GIÀY, VÒNG CỔ, VŨ KHÍ (Đúng bản vẽ 2)
-            DrawEquipmentSlotButton(EquipSlot.Armor, "Áo", new Rect(rightColX, centerBoxY + 5, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Boots, "Giày", new Rect(rightColX, centerBoxY + 65, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Necklace, "Vòng Cổ", new Rect(rightColX, centerBoxY + 125, slotBoxSize, slotBoxSize));
+            // CỘT PHẢI (3 Ô): ÁO, GIÀY, VÒNG CỔ (Cân xứng dọc theo khung giữa)
+            DrawEquipmentSlotButton(EquipSlot.Armor, "Áo", new Rect(rightColX, centerBoxY + 2, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Boots, "Giày", new Rect(rightColX, centerBoxY + 54, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Necklace, "Vòng Cổ", new Rect(rightColX, centerBoxY + 106, slotBoxSize, slotBoxSize));
 
-            // VŨ KHÍ (Nằm phía dưới bên phải theo bản vẽ)
-            DrawEquipmentSlotButton(EquipSlot.Weapon, "Vũ Khí", new Rect(rightColX, centerBoxY + 195, slotBoxSize, slotBoxSize));
+            // VŨ KHÍ: NẰM NGAY CHÍNH GIỮA BÊN DƯỚI KHUNG NHÂN VẬT (Chuẩn xác theo ảnh User)
+            float weaponX = centerBoxX + (centerBoxW - slotBoxSize) / 2f;
+            float weaponY = centerBoxY + centerBoxH + 12f;
+            DrawEquipmentSlotButton(EquipSlot.Weapon, "Vũ Khí", new Rect(weaponX, weaponY, slotBoxSize, slotBoxSize));
 
-            // GÓC TRÁI DƯỚI: TIỀN, MA THẠCH, RP (Đúng bản vẽ 2 - Bản rộng 150px vừa vặn không thừa)
-            float curY = centerBoxY + 195f;
-            Rect curRect = new Rect(leftColX, curY, 150f, 64f);
-            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
-            GUI.DrawTexture(curRect, Texture2D.whiteTexture);
-            GUI.color = Color.white;
-            DrawDoubleGoldFrame(curRect, 1);
-
-            standardTextStyle.alignment = TextAnchor.MiddleLeft;
-            standardTextStyle.fontSize = 11;
-            int goldVal = playerStats != null ? playerStats.Gold : 1500;
-            int crystalVal = playerStats != null ? playerStats.MagicCrystals : 25;
-            int rpVal = playerStats != null ? playerStats.RebirthPoints : 2;
-
-            GUI.Label(new Rect(curRect.x + 8, curRect.y + 4, curRect.width - 12, 18), $"💰 Tiền: <color=#ffd700>{goldVal:N0}</color>", standardTextStyle);
-            GUI.Label(new Rect(curRect.x + 8, curRect.y + 23, curRect.width - 12, 18), $"💎 Ma Thạch: <color=#00e5ff>{crystalVal}</color>", standardTextStyle);
-            GUI.Label(new Rect(curRect.x + 8, curRect.y + 42, curRect.width - 12, 18), $"✨ RP: <color=#ff66cc>{rpVal} Điểm</color>", standardTextStyle);
-
-            // KHU VỰC THAO TÁC TRANG BỊ ĐANG CHỌN (MỞ RỘNG 202PX - KHÔNG BAO GIỜ BỊ TRUNCATE / XUỐNG DÒNG)
-            float actX = leftColX + 158f;
-            float actW = rightColX - actX - 8f;
-            Rect actBoxRect = new Rect(actX, curY, actW, 64f);
-            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
+            // KHU VỰC THAO TÁC TRANG BỊ ĐANG CHỌN (NẰM CHÍNH GIỮA DƯỚI VŨ KHÍ - Chuẩn xác theo ảnh User)
+            float actBoxW = 240f;
+            float actBoxH = 62f;
+            float actBoxX = r.x + (r.width - actBoxW) / 2f;
+            float actBoxY = weaponY + slotBoxSize + 12f;
+            Rect actBoxRect = new Rect(actBoxX, actBoxY, actBoxW, actBoxH);
+            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
             GUI.DrawTexture(actBoxRect, Texture2D.whiteTexture);
             GUI.color = Color.white;
             DrawDoubleGoldFrame(actBoxRect, 1);
@@ -1083,12 +1071,12 @@ namespace GodlessFantasy.UI
                 standardTextStyle.alignment = TextAnchor.MiddleCenter;
                 standardTextStyle.fontSize = 11;
                 standardTextStyle.wordWrap = false;
-                DrawAutoScrollText(new Rect(actBoxRect.x + 4, actBoxRect.y + 5, actBoxRect.width - 8, 18), $"Đang chọn: {selectedGear.itemName}", standardTextStyle, 30f, new Color(0.4f, 0.95f, 1f));
+                DrawAutoScrollText(new Rect(actBoxRect.x + 8, actBoxRect.y + 6, actBoxRect.width - 16, 18), $"Đang chọn: {selectedGear.itemName}", standardTextStyle, 30f, new Color(0.4f, 0.95f, 1f));
                 standardTextStyle.wordWrap = true;
                 standardTextStyle.normal.textColor = Color.white;
                 standardTextStyle.fontSize = 12;
 
-                Rect unequipBtnRect = new Rect(actBoxRect.x + 10, actBoxRect.y + 26, actBoxRect.width - 20, 30);
+                Rect unequipBtnRect = new Rect(actBoxRect.x + 16, actBoxRect.y + 27, actBoxRect.width - 32, 28);
                 if (DrawFantasyButton(unequipBtnRect, "THÁO RA TÚI ĐỒ", 11, true, new Color(1f, 0.45f, 0.45f)))
                 {
                     inventoryManager?.UnequipGearItem(selectedEquipSlot.Value);
@@ -1100,11 +1088,35 @@ namespace GodlessFantasy.UI
                 standardTextStyle.fontSize = 10;
                 standardTextStyle.normal.textColor = Color.gray;
                 string slotName = selectedEquipSlot.HasValue ? GetSlotVietnameseName(selectedEquipSlot.Value) : "Trang Bị";
-                GUI.Label(new Rect(actBoxRect.x + 4, actBoxRect.y + 14, actBoxRect.width - 8, 36), $"Ô [{slotName}]\nChưa có đồ mặc", standardTextStyle);
+                GUI.Label(new Rect(actBoxRect.x + 6, actBoxRect.y + 6, actBoxRect.width - 12, 20), $"Đang chọn: Ô [{slotName}] Trống", standardTextStyle);
+
+                Rect unequipBtnRect = new Rect(actBoxRect.x + 16, actBoxRect.y + 27, actBoxRect.width - 32, 28);
+                GUI.enabled = false;
+                DrawFantasyButton(unequipBtnRect, "THÁO RA TÚI ĐỒ", 11, false);
+                GUI.enabled = true;
+
                 standardTextStyle.normal.textColor = Color.white;
                 standardTextStyle.fontSize = 12;
             }
 
+            // DƯỚI CÙNG: THANH TIỀN TỆ KÉO DÀI FULL BẢN RỘNG (Tiền · Ma Thạch · RP - Chuẩn xác theo ảnh User)
+            float curBarY = r.y + r.height - 30f;
+            Rect curRect = new Rect(r.x + 8f, curBarY, r.width - 16f, 26f);
+            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
+            GUI.DrawTexture(curRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            DrawDoubleGoldFrame(curRect, 1);
+
+            standardTextStyle.alignment = TextAnchor.MiddleCenter;
+            standardTextStyle.fontSize = 11;
+            int goldVal = playerStats != null ? playerStats.Gold : 1500;
+            int crystalVal = playerStats != null ? playerStats.MagicCrystals : 25;
+            int rpVal = playerStats != null ? playerStats.RebirthPoints : 2;
+
+            float curColW = curRect.width / 3f;
+            GUI.Label(new Rect(curRect.x, curRect.y + 4, curColW, 18), $"💰 Tiền: <color=#ffd700>{goldVal:N0}</color>", standardTextStyle);
+            GUI.Label(new Rect(curRect.x + curColW, curRect.y + 4, curColW, 18), $"💎 Ma Thạch: <color=#00e5ff>{crystalVal}</color>", standardTextStyle);
+            GUI.Label(new Rect(curRect.x + curColW * 2f, curRect.y + 4, curColW, 18), $"✨ RP: <color=#ff66cc>{rpVal} Điểm</color>", standardTextStyle);
         }
 
         private void DrawEquipmentSlotButton(EquipSlot slot, string slotName, Rect r)
