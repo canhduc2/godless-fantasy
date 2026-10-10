@@ -155,3 +155,42 @@ Không vội vàng làm ngay thế giới MMORPG khổng lồ, chiến lược p
    - Tích chọn: **Microsoft Visual Studio Community** (hoặc tích Visual Studio Code).
    - Tích chọn: **Documentation** (tùy chọn).
 4. Bấm **Install** và chờ Unity tải trực tiếp vào ổ `D:\`!
+
+---
+
+## 7. MÔI TRƯỜNG TRIỂN KHAI SERVER CLOUD (PRODUCTION HOSTING & PM2)
+
+### 7.1. Cấu Hình Phần Cứng & Khả Năng Chịu Tải
+- **Hạ tầng máy chủ:** Cloud VPS cấu hình cao:
+  - **Bộ nhớ RAM:** 12 GB.
+  - **Vi xử lý (CPU):** Octa-Core (8 vCPU / 8 Cores).
+- **Đánh giá hiệu năng:** Server C# .NET 8 Headless (chạy CLI không giao diện) cực kỳ tiết kiệm tài nguyên (chỉ chiếm ~150MB – 400MB RAM khi chạy logic). Hạ tầng 12GB RAM / 8 Cores dư sức gánh từ **2.000 đến 5.000 người chơi đồng thời (CCU)** với tải CPU cực thấp (<10–15%).
+
+### 7.2. Cấu Hình Cổng Mạng (Network Port)
+- **Cổng dịch vụ game chính thức:** **Port 5454** (hỗ trợ cả TCP và UDP).
+- **Cấu hình Bind IP:** `0.0.0.0:5454` (Lắng nghe toàn cục trên mọi card mạng của máy chủ Cloud).
+- **Quy tắc Firewall (Inbound Rule):**
+  - Mở port `5454` trên Cloud Provider Security Groups (Source: `0.0.0.0/0`).
+  - Mở port qua UFW: `sudo ufw allow 5454/tcp && sudo ufw allow 5454/udp`.
+
+### 7.3. Bộ Quản Lý Tiến Trình Tự Động Hồi Sinh (Process Manager): PM2
+SquiRRels Studio chính thức lựa chọn **PM2** làm công cụ quản lý và duy trì hoạt động liên tục (24/7) cho Server CLI:
+
+```bash
+# 1. Biên dịch Server .NET 8 ra 1 file binary duy nhất
+dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+
+# 2. Khởi chạy Server qua PM2 với cơ chế tự khởi động lại khi crash (delay 3s)
+pm2 start ./publish/GodlessServer --name "godless-server" --restart-delay 3000
+
+# 3. Thiết lập tự khởi động cùng hệ điều hành khi máy Cloud bị reboot
+pm2 save
+pm2 startup
+```
+
+**Các lệnh giám sát vận hành Server hằng ngày:**
+- `pm2 status`: Xem trạng thái online, uptime, lượng RAM/CPU đang sử dụng.
+- `pm2 logs godless-server`: Xem log console và sự kiện chiến đấu theo thời gian thực.
+- `pm2 monit`: Mở dashboard giám sát trực quan tài nguyên CPU/RAM.
+- `pm2 restart godless-server`: Khởi động lại server khi cập nhật bản vá mới.
+
