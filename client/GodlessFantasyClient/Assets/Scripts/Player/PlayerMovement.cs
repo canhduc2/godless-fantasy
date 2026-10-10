@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using GodlessFantasy.Core;
 
 namespace GodlessFantasy.Player
 {
@@ -8,12 +9,13 @@ namespace GodlessFantasy.Player
     /// - Chuột trái: Click-to-Move (tự chạy đến vị trí click).
     /// - WASD: Ghi đè ngay lập tức để né đòn thủ công.
     /// - Shift: Dash nhanh theo hướng con trỏ chuột (Cooldown 3.5s).
+    /// - Hỗ trợ cả New Input System và Legacy Input mượt mà!
     /// </summary>
     public class PlayerMovement : MonoBehaviour
     {
         [Header("Movement Settings")]
         [SerializeField] private float moveSpeed = 5.0f;
-        [SerializeField] private float stoppingDistance = 0.1f;
+        [SerializeField] private float stoppingDistance = 0.15f;
 
         [Header("Dash Settings")]
         [SerializeField] private float dashSpeed = 16.0f;
@@ -73,10 +75,7 @@ namespace GodlessFantasy.Player
 
         private void HandleKeyboardMovement()
         {
-            float horizontal = Input.GetAxisRaw("Horizontal"); // A, D
-            float vertical = Input.GetAxisRaw("Vertical");     // W, S
-
-            Vector2 inputDir = new Vector2(horizontal, vertical).normalized;
+            Vector2 inputDir = GameInput.GetMovementVector();
 
             if (inputDir.sqrMagnitude > 0.01f)
             {
@@ -93,9 +92,10 @@ namespace GodlessFantasy.Player
         private void HandleMouseMovement()
         {
             // Click chuột trái để di chuyển (kể cả khi đang ngắm skill, chuột trái vẫn ra lệnh chạy)
-            if (Input.GetMouseButtonDown(0))
+            if (GameInput.GetLeftMouseButtonDown())
             {
-                Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                if (mainCamera == null) mainCamera = Camera.main;
+                Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
                 targetPosition = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
                 isMovingToTarget = true;
             }
@@ -103,7 +103,7 @@ namespace GodlessFantasy.Player
 
         private void HandleDashInput()
         {
-            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+            if (GameInput.GetDashKeyDown())
             {
                 if (Time.time >= lastDashTime + dashCooldown)
                 {
@@ -114,7 +114,8 @@ namespace GodlessFantasy.Player
 
         private void PerformDash()
         {
-            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            if (mainCamera == null) mainCamera = Camera.main;
+            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
             Vector2 dashDirection = ((Vector2)mouseWorldPos - rb.position).normalized;
 
             if (dashDirection.sqrMagnitude < 0.01f)

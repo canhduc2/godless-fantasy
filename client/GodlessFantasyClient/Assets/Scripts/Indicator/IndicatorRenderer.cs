@@ -1,4 +1,5 @@
 using UnityEngine;
+using GodlessFantasy.Core;
 
 namespace GodlessFantasy.Indicator
 {
@@ -51,7 +52,8 @@ namespace GodlessFantasy.Indicator
 
         private void UpdateAimDirection()
         {
-            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            if (mainCamera == null) mainCamera = Camera.main;
+            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
             Vector2 direction = ((Vector2)mouseWorldPos - (Vector2)transform.position).normalized;
 
             if (direction.sqrMagnitude > 0.001f)
@@ -63,7 +65,8 @@ namespace GodlessFantasy.Indicator
 
         public Vector2 GetAimDirection()
         {
-            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            if (mainCamera == null) mainCamera = Camera.main;
+            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
             return ((Vector2)mouseWorldPos - (Vector2)transform.position).normalized;
         }
     }

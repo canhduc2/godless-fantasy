@@ -5,11 +5,12 @@ using GodlessFantasy.Combat;
 namespace GodlessFantasy.UI
 {
     /// <summary>
-    /// HUD Hiển Thị Trực Quan Trong Bản Demo Vertical Slice:
-    /// - Vẽ thanh HP & Mana
-    /// - Hiển thị Cooldown Skill 1 và Dash
-    /// - Hướng dẫn phím điều khiển thời gian thực
-    /// - Hiển thị trạng thái hiện tại (Idle / Aiming / In Safe Zone)
+    /// Giao Diện HUD Chuẩn Thiết Kế Wireframe Của Studio:
+    /// - Góc Trái Trên: Thông Tin Nhân Vật (Avatar, HP, Mana, Tên).
+    /// - Giữa Màn Hình Trên: Dải Tin Tức Toàn Server (Server Announcement Banner).
+    /// - Góc Phải Trên: Minimap Vuông Vắn + Nút Chat Tròn Nhỏ Nằm Ngay Bên Cạnh.
+    /// - Giữa Mép Trái: Nút Menu Trượt Hình Tam Giác ▷.
+    /// - Giữa Dưới Cùng: 4 Ô Kỹ Năng Vuông Vắn (Bottom-Center Skill Bar).
     /// </summary>
     public class CombatHUD : MonoBehaviour
     {
@@ -18,159 +19,279 @@ namespace GodlessFantasy.UI
         [SerializeField] private SkillAimingController skillAimingController;
         [SerializeField] private Health playerHealth;
 
-        private GUIStyle titleStyle;
-        private GUIStyle statusStyle;
-        private GUIStyle infoStyle;
-        private GUIStyle boxStyle;
+        private Texture2D panelBgTex;
+        private Texture2D hpFillTex;
+        private Texture2D manaFillTex;
+        private Texture2D radarBgTex;
+
+        private GUIStyle boldWhiteStyle;
+        private GUIStyle smallWhiteStyle;
+        private GUIStyle serverNewsStyle;
+        private GUIStyle skillBoxStyle;
+        private GUIStyle triangleStyle;
         private bool isStyleInitialized = false;
+
+        private float serverNewsScrollX = 0f;
+        private string serverNewsText = "📢 [THÔNG BÁO TOÀN SERVER] Chào mừng anh em SquiRRels Studio đến với Alpha Test Godless Fantasy! Port 5454 · Server Authoritative · Friendly Fire 100% · Lệnh giao dịch: /trade <Tên>";
 
         private void Start()
         {
             if (playerMovement == null) playerMovement = FindFirstObjectByType<PlayerMovement>();
             if (skillAimingController == null) skillAimingController = FindFirstObjectByType<SkillAimingController>();
             if (playerHealth == null && playerMovement != null) playerHealth = playerMovement.GetComponent<Health>();
+
+            CreateTextures();
+        }
+
+        private void CreateTextures()
+        {
+            panelBgTex = MakeColorTex(new Color(0.07f, 0.09f, 0.15f, 0.90f));
+            hpFillTex = MakeColorTex(new Color(0.85f, 0.20f, 0.22f, 1f));
+            manaFillTex = MakeColorTex(new Color(0.18f, 0.55f, 0.95f, 1f));
+            radarBgTex = MakeColorTex(new Color(0.04f, 0.06f, 0.10f, 0.95f));
+        }
+
+        private Texture2D MakeColorTex(Color color)
+        {
+            Texture2D tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, color);
+            tex.Apply();
+            return tex;
         }
 
         private void InitStyles()
         {
-            if (isStyleInitialized) return;
+            if (isStyleInitialized && boldWhiteStyle != null && skillBoxStyle != null) return;
 
-            titleStyle = new GUIStyle(GUI.skin.label)
+            boldWhiteStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 18,
+                fontSize = 12,
                 fontStyle = FontStyle.Bold,
-                normal = { textColor = new Color(1f, 0.85f, 0.3f) }
-            };
-
-            statusStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 15,
-                fontStyle = FontStyle.Bold,
-                normal = { textColor = Color.cyan }
-            };
-
-            infoStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 13,
                 normal = { textColor = Color.white }
             };
 
-            boxStyle = new GUIStyle(GUI.skin.box);
+            smallWhiteStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.9f, 0.95f, 1f) }
+            };
+
+            serverNewsStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(1f, 0.90f, 0.45f) }
+            };
+
+            skillBoxStyle = new GUIStyle(GUI.skin.box)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white }
+            };
+
+            triangleStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 14,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.95f, 0.8f, 0.4f) }
+            };
 
             isStyleInitialized = true;
         }
 
         private void OnGUI()
         {
+            if (panelBgTex == null || hpFillTex == null || manaFillTex == null || radarBgTex == null)
+            {
+                CreateTextures();
+            }
+
             InitStyles();
 
-            // Khung góc trái trên cùng: Thông tin nhân vật
-            GUILayout.BeginArea(new Rect(20, 20, 360, 260), boxStyle);
-            GUILayout.Space(8);
-            GUILayout.Label("⚔️ GODLESS FANTASY — DEMO LÕI (VERTICAL SLICE)", titleStyle);
-            GUILayout.Label("SquiRRels Studio · Version 0.1.0", infoStyle);
-            GUILayout.Space(6);
+            DrawTopLeftBox();
+            DrawTopCenterServerNews();
+            DrawTopRightMinimapAndChat();
+            DrawMidLeftTriangleMenu();
+            DrawBottomCenterSkillBar();
+        }
 
-            // HP Bar
+        // ================= 1. GÓC TRÁI TRÊN: THÔNG TIN NHÂN VẬT =================
+        private void DrawTopLeftBox()
+        {
+            float w = 210f;
+            float h = 54f;
+            Rect panel = new Rect(16, 14, w, h);
+
+            GUI.DrawTexture(panel, panelBgTex);
+            DrawOutline(panel, new Color(0.75f, 0.62f, 0.28f, 0.8f), 1);
+
+            // Avatar Icon nhỏ 36x36
+            Rect av = new Rect(panel.x + 8, panel.y + 9, 36, 36);
+            GUI.color = new Color(0.12f, 0.16f, 0.25f);
+            GUI.DrawTexture(av, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            DrawOutline(av, new Color(0.85f, 0.7f, 0.3f), 1);
+            boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
+            GUI.Label(av, "⚔️", boldWhiteStyle);
+            boldWhiteStyle.alignment = TextAnchor.UpperLeft;
+
+            // Thanh Máu HP
             int hp = playerHealth != null ? playerHealth.CurrentHealth : 100;
             int maxHp = playerHealth != null ? playerHealth.MaxHealth : 100;
-            DrawBar("MÁU (HP)", hp, maxHp, new Color(0.85f, 0.2f, 0.2f));
+            DrawBar(panel.x + 50, panel.y + 9, 150, 15, hp, maxHp, hpFillTex, $"HP {hp}/{maxHp}");
 
-            GUILayout.Space(4);
-
-            // Mana Bar (Giả lập 100 max)
-            DrawBar("NĂNG LƯỢNG (MANA)", 80, 100, new Color(0.2f, 0.5f, 0.95f));
-
-            GUILayout.Space(8);
-
-            // Trạng thái chiến đấu
-            bool isAiming = skillAimingController != null && skillAimingController.IsAiming;
-            bool inSafe = playerHealth != null && playerHealth.IsInSafeZone;
-
-            if (inSafe)
-            {
-                GUI.color = Color.green;
-                GUILayout.Label("🛡️ VÙNG AN TOÀN (SAFE ZONE) — Miễn nhiễm sát thương PvP", statusStyle);
-                GUI.color = Color.white;
-            }
-            else
-            {
-                GUI.color = new Color(1f, 0.4f, 0.4f);
-                GUILayout.Label("⚔️ VÙNG CHIẾN ĐẤU (PVP) — Friendly Fire 100% Kích Hoạt!", statusStyle);
-                GUI.color = Color.white;
-            }
-
-            if (isAiming)
-            {
-                GUI.color = Color.yellow;
-                GUILayout.Label("🎯 ĐANG NGẮM SKILL 1: Chuột trái chạy né đòn, Bấm 1 để xả, Chuột phải để hủy!", statusStyle);
-                GUI.color = Color.white;
-            }
-            else
-            {
-                GUILayout.Label("🟢 TRẠNG THÁI: Tự do di chuyển (Idle)", infoStyle);
-            }
-
-            GUILayout.EndArea();
-
-            // Khung góc phải trên cùng: Bảng hướng dẫn phím bấm
-            GUILayout.BeginArea(new Rect(Screen.width - 340, 20, 320, 220), boxStyle);
-            GUILayout.Space(6);
-            GUILayout.Label("🎮 HƯỚNG DẪN ĐIỀU KHIỂN (CONTROLS)", titleStyle);
-            GUILayout.Space(4);
-            GUILayout.Label("• Chuột trái: Click-to-Move (Tự tìm đường)", infoStyle);
-            GUILayout.Label("• W / A / S / D: Ghi đè di chuyển thủ công", infoStyle);
-            GUILayout.Label("• Shift: Dash lướt thẳng theo hướng chuột", infoStyle);
-            GUILayout.Label("• Phím 1 (Lần 1): Bật chế độ ngắm (Aiming)", infoStyle);
-            GUILayout.Label("• Phím 1 (Lần 2): Xác nhận xả đạn ma thuật", infoStyle);
-            GUILayout.Label("• Chuột phải: Hủy ngắm lập tức (0 Mana/CD)", infoStyle);
-            GUILayout.EndArea();
-
-            // Khung góc dưới màn hình: Thanh Cooldown
-            DrawBottomCooldowns();
+            // Thanh Mana
+            DrawBar(panel.x + 50, panel.y + 29, 150, 15, 80, 100, manaFillTex, "MANA 80/100");
         }
 
-        private void DrawBar(string label, int current, int max, Color barColor)
+        private void DrawBar(float x, float y, float w, float h, int cur, int max, Texture2D fillTex, string text)
         {
-            GUILayout.Label($"{label}: {current} / {max}", infoStyle);
-            Rect rect = GUILayoutUtility.GetRect(320, 16);
-            GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
-            GUI.DrawTexture(rect, Texture2D.whiteTexture);
-
-            float fill = Mathf.Clamp01((float)current / max);
-            Rect fillRect = new Rect(rect.x, rect.y, rect.width * fill, rect.height);
-            GUI.color = barColor;
-            GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
+            Rect bg = new Rect(x, y, w, h);
+            GUI.color = new Color(0.06f, 0.08f, 0.12f, 0.9f);
+            GUI.DrawTexture(bg, Texture2D.whiteTexture);
             GUI.color = Color.white;
+
+            float fill = Mathf.Clamp01((float)cur / max);
+            Rect fRect = new Rect(x, y, w * fill, h);
+            GUI.DrawTexture(fRect, fillTex);
+            DrawOutline(bg, new Color(0.35f, 0.45f, 0.6f, 0.4f), 1);
+
+            GUI.Label(bg, text, smallWhiteStyle);
         }
 
-        private void DrawBottomCooldowns()
+        // ================= 2. GIỮA TRÊN CÙNG: DẢI TIN TỨC TOÀN SERVER =================
+        private void DrawTopCenterServerNews()
         {
-            float boxWidth = 360f;
-            float boxHeight = 70f;
-            Rect bottomRect = new Rect((Screen.width - boxWidth) / 2f, Screen.height - boxHeight - 20, boxWidth, boxHeight);
+            float bannerW = Mathf.Clamp(Screen.width - 480f, 320f, 540f);
+            float bannerH = 26f;
+            float bannerX = (Screen.width - bannerW) / 2f;
+            float bannerY = 14f;
 
-            GUILayout.BeginArea(bottomRect, boxStyle);
-            GUILayout.BeginHorizontal();
+            Rect bannerRect = new Rect(bannerX, bannerY, bannerW, bannerH);
+            GUI.DrawTexture(bannerRect, panelBgTex);
+            DrawOutline(bannerRect, new Color(0.85f, 0.7f, 0.3f, 0.85f), 1);
 
-            // Skill 1 Box
+            // Nếu đang ở chế độ Aiming -> đổi nội dung thành nhắc ngắm chiêu cực gọn!
+            if (skillAimingController != null && skillAimingController.IsAiming)
+            {
+                serverNewsStyle.normal.textColor = Color.cyan;
+                GUI.Label(bannerRect, "🎯 [ĐANG NGẮM SKILL 1]: Click Trái né đòn · Bấm 1 để xả đạn · Chuột Phải để hủy", serverNewsStyle);
+            }
+            else
+            {
+                serverNewsStyle.normal.textColor = new Color(1f, 0.88f, 0.45f);
+                GUI.Label(bannerRect, "tin tức toàn server: SquiRRels Studio · Godless Fantasy Alpha 0.1", serverNewsStyle);
+            }
+        }
+
+        // ================= 3. GÓC PHẢI TRÊN: MINIMAP + NÚT CHAT TRÒN =================
+        private void DrawTopRightMinimapAndChat()
+        {
+            float mapSize = 96f;
+            float mapX = Screen.width - mapSize - 16;
+            float mapY = 14;
+            Rect mapRect = new Rect(mapX, mapY, mapSize, mapSize);
+
+            // Nền Minimap
+            GUI.DrawTexture(mapRect, radarBgTex);
+            DrawOutline(mapRect, new Color(0.75f, 0.65f, 0.35f, 0.85f), 1);
+
+            // Tọa độ radar
+            float cx = mapX + mapSize / 2f;
+            float cy = mapY + mapSize / 2f;
+            GUI.color = new Color(0.2f, 0.3f, 0.45f, 0.4f);
+            GUI.DrawTexture(new Rect(mapX, cy, mapSize, 1), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(cx, mapY, 1, mapSize), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // Chấm Player (Vàng kim)
+            GUI.color = Color.yellow;
+            GUI.DrawTexture(new Rect(cx - 3, cy - 3, 6, 6), Texture2D.whiteTexture);
+
+            // Chấm Dummy Quái (Đỏ)
+            GUI.color = Color.red;
+            GUI.DrawTexture(new Rect(cx + 26, cy, 5, 5), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // Nhãn tên khu vực
+            smallWhiteStyle.normal.textColor = new Color(0.75f, 0.85f, 0.95f, 0.9f);
+            GUI.Label(new Rect(mapX, mapY + mapSize - 16, mapSize, 16), "Tân Thủ Thôn", smallWhiteStyle);
+
+            // NÚT TRÒ CHUYỆN HÌNH TRÒN NHỎ NẰM NGAY BÊN TRÁI MINIMAP (Y HỆT BẢN VẼ!)
+            float chatSize = 28f;
+            float chatX = mapX - chatSize - 10f;
+            float chatY = mapY + 6f;
+            Rect chatRect = new Rect(chatX, chatY, chatSize, chatSize);
+
+            GUI.DrawTexture(chatRect, panelBgTex);
+            DrawOutline(chatRect, new Color(0.85f, 0.72f, 0.35f, 0.9f), 1);
+            boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
+            GUI.Label(chatRect, "💬", boldWhiteStyle);
+            boldWhiteStyle.alignment = TextAnchor.UpperLeft;
+        }
+
+        // ================= 4. CHÍNH GIỮA MÉP TRÁI: NÚT TAM GIÁC ▷ MENU TRƯỢT =================
+        private void DrawMidLeftTriangleMenu()
+        {
+            float btnW = 20f;
+            float btnH = 34f;
+            float btnX = 4f;
+            float btnY = (Screen.height - btnH) / 2f;
+            Rect triRect = new Rect(btnX, btnY, btnW, btnH);
+
+            GUI.DrawTexture(triRect, panelBgTex);
+            DrawOutline(triRect, new Color(0.85f, 0.7f, 0.3f, 0.85f), 1);
+            GUI.Label(triRect, "▷", triangleStyle);
+        }
+
+        // ================= 5. CHÍNH GIỮA DƯỚI CÙNG: 4 Ô KỸ NĂNG VUÔNG VẮN =================
+        private void DrawBottomCenterSkillBar()
+        {
+            float slotSize = 48f;
+            float gap = 8f;
+            float totalW = (slotSize * 4) + (gap * 3);
+            float startX = (Screen.width - totalW) / 2f;
+            float startY = Screen.height - slotSize - 16f;
+
+            // Ô 1
+            bool isAiming = skillAimingController != null && skillAimingController.IsAiming;
             float s1Cd = skillAimingController != null ? skillAimingController.Skill1CooldownRemaining : 0f;
             bool s1Ready = s1Cd <= 0.05f;
-            GUI.color = s1Ready ? Color.cyan : Color.gray;
-            GUILayout.Box(s1Ready ? "[PHÍM 1]\nSkill Sẵn Sàng" : $"[PHÍM 1]\nHồi {s1Cd:F1}s", GUILayout.Width(160), GUILayout.Height(50));
+
+            Rect s1Rect = new Rect(startX, startY, slotSize, slotSize);
+            GUI.DrawTexture(s1Rect, panelBgTex);
+
+            Color s1Border = isAiming ? (Mathf.PingPong(Time.time * 5f, 1f) > 0.5f ? Color.cyan : Color.white) : (s1Ready ? new Color(0.85f, 0.7f, 0.3f) : Color.gray);
+            DrawOutline(s1Rect, s1Border, isAiming ? 2 : 1);
+
+            string s1Text = isAiming ? "NGẮM\n[1]" : (s1Ready ? "CHIÊU 1\n[1]" : $"{s1Cd:F1}s");
+            GUI.Label(s1Rect, s1Text, skillBoxStyle);
+
+            // Ô 2, 3, 4
+            for (int i = 2; i <= 4; i++)
+            {
+                Rect slotRect = new Rect(startX + (i - 1) * (slotSize + gap), startY, slotSize, slotSize);
+                GUI.DrawTexture(slotRect, panelBgTex);
+                DrawOutline(slotRect, new Color(0.35f, 0.4f, 0.5f, 0.5f), 1);
+                int reqLv = i == 2 ? 25 : (i == 3 ? 50 : 75);
+                GUI.Label(slotRect, $"🔒\nLv.{reqLv}", skillBoxStyle);
+            }
+        }
+
+        private void DrawOutline(Rect r, Color c, int width)
+        {
+            GUI.color = c;
+            GUI.DrawTexture(new Rect(r.x, r.y, r.width, width), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.x, r.y + r.height - width, r.width, width), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.x, r.y, width, r.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.x + r.width - width, r.y, width, r.height), Texture2D.whiteTexture);
             GUI.color = Color.white;
-
-            GUILayout.Space(10);
-
-            // Dash Box
-            float dashCd = playerMovement != null ? playerMovement.DashCooldownRemaining : 0f;
-            bool dashReady = dashCd <= 0.05f;
-            GUI.color = dashReady ? Color.green : Color.gray;
-            GUILayout.Box(dashReady ? "[SHIFT]\nDash Sẵn Sàng" : $"[SHIFT]\nHồi {dashCd:F1}s", GUILayout.Width(160), GUILayout.Height(50));
-            GUI.color = Color.white;
-
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
         }
     }
 }

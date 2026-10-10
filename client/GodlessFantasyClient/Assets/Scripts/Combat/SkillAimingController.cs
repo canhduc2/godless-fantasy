@@ -1,5 +1,6 @@
 using UnityEngine;
 using GodlessFantasy.Indicator;
+using GodlessFantasy.Core;
 
 namespace GodlessFantasy.Combat
 {
@@ -51,7 +52,7 @@ namespace GodlessFantasy.Combat
         private void HandleSkillInput()
         {
             // Bấm phím 1
-            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            if (GameInput.GetSkill1KeyDown())
             {
                 if (currentState == AimState.Idle)
                 {
@@ -76,7 +77,7 @@ namespace GodlessFantasy.Combat
         private void HandleCancelInput()
         {
             // Click chuột phải: Hủy ngắm ngay lập tức
-            if (currentState == AimState.Aiming && Input.GetMouseButtonDown(1))
+            if (currentState == AimState.Aiming && GameInput.GetRightMouseButtonDown())
             {
                 CancelAiming();
             }

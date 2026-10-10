@@ -7,13 +7,12 @@ using GodlessFantasy.UI;
 namespace GodlessFantasy.Core
 {
     /// <summary>
-    /// Tự động khởi tạo toàn bộ sàn đấu Vertical Slice khi bấm Play trong Unity:
-    /// - Nhân vật chính (Player) áo ba lỗ quần cộc hoặc giáp
-    /// - Tâm ngắm định hướng (Indicator)
-    /// - Đạn ma thuật (MagicBolt)
-    /// - Bù nhìn luyện võ (Target Dummy) trong Danger Zone và Safe Zone
-    /// - Vùng An Toàn (Safe Zone)
-    /// - Giao diện HUD chiến đấu
+    /// Tự động khởi tạo sàn đấu và bối cảnh chuẩn HD Pixel Art khi bấm Play trong Unity:
+    /// - Setup Camera theo dõi nhân vật, màu nền xanh đen Dark Fantasy, Zoom mượt mà.
+    /// - Tạo sàn đấu đá cổ đại (15x9 tiles) và Vùng An Toàn (Safe Zone).
+    /// - Nhân vật chính (Player Hero) sắc nét.
+    /// - Bù nhìn rơm thử đòn trong Danger Zone và Safe Zone.
+    /// - Giao diện HUD đúng 100% bản vẽ tay wireframe của Studio.
     /// </summary>
     public class DemoBootstrapper : MonoBehaviour
     {
@@ -24,7 +23,6 @@ namespace GodlessFantasy.Core
         {
             if (isInitialized) return;
 
-            // Kiểm tra xem đã có Player chưa
             if (FindFirstObjectByType<PlayerMovement>() != null)
             {
                 isInitialized = true;
@@ -43,9 +41,9 @@ namespace GodlessFantasy.Core
 
         private void BuildDemoArena()
         {
-            Debug.Log("<color=green>[SquiRRels Studio] Bắt đầu khởi tạo bản Demo Lõi Vertical Slice 5 Bước...</color>");
+            Debug.Log("<color=green>[SquiRRels Studio] Khởi tạo sàn đấu HD Pixel Art...</color>");
 
-            // 1. Tải các Sprite từ Resources
+            // 1. Tải Sprite từ Resources
             Sprite playerSprite = Resources.Load<Sprite>("player_male_base");
             Sprite dummySprite = Resources.Load<Sprite>("dummy");
             Sprite boltSprite = Resources.Load<Sprite>("magic_bolt");
@@ -53,30 +51,30 @@ namespace GodlessFantasy.Core
             Sprite stoneTile = Resources.Load<Sprite>("tile_stone");
             Sprite safeTile = Resources.Load<Sprite>("tile_safezone");
 
-            // 2. Tạo sàn đá (Floor Arena 11x7 tiles)
+            // 2. Tạo sàn đá (Floor Arena 15x9 tiles)
             Transform floorParent = new GameObject("Environment_Floor").transform;
             if (stoneTile != null)
             {
-                for (int x = -5; x <= 5; x++)
+                for (int x = -7; x <= 7; x++)
                 {
-                    for (int y = -3; y <= 3; y++)
+                    for (int y = -4; y <= 4; y++)
                     {
                         GameObject tileObj = new GameObject($"Tile_{x}_{y}");
                         tileObj.transform.parent = floorParent;
                         tileObj.transform.position = new Vector3(x, y, 0);
                         var sr = tileObj.AddComponent<SpriteRenderer>();
-                        sr.sprite = (x <= -3) && safeTile != null ? safeTile : stoneTile;
+                        sr.sprite = (x <= -4 && safeTile != null) ? safeTile : stoneTile;
                         sr.sortingOrder = -10;
                     }
                 }
             }
 
-            // 3. Tạo Vùng An Toàn (Safe Zone ở góc bên trái x <= -2.5)
+            // 3. Tạo Vùng An Toàn (Safe Zone bên trái)
             GameObject safeZoneObj = new GameObject("SafeZone_Village");
-            safeZoneObj.transform.position = new Vector3(-3.5f, 0, 0);
+            safeZoneObj.transform.position = new Vector3(-5.5f, 0, 0);
             var safeCol = safeZoneObj.AddComponent<BoxCollider2D>();
             safeCol.isTrigger = true;
-            safeCol.size = new Vector2(3.5f, 7.0f);
+            safeCol.size = new Vector2(4.5f, 9.0f);
             safeZoneObj.AddComponent<SafeZone>();
 
             // 4. Tạo Prefab Đạn Ma Thuật (MagicBolt)
@@ -92,7 +90,7 @@ namespace GodlessFantasy.Core
             boltRb.gravityScale = 0;
             boltTemplate.AddComponent<MagicBolt>();
 
-            // 5. Tạo Nhân Vật Chính (Player)
+            // 5. Tạo Nhân Vật Chính (Player Hero)
             GameObject playerObj = new GameObject("Player_Hero");
             playerObj.transform.position = Vector3.zero;
             var pSr = playerObj.AddComponent<SpriteRenderer>();
@@ -121,22 +119,36 @@ namespace GodlessFantasy.Core
 
             // Thêm bộ ngắm Two-Tap
             var pCombat = playerObj.AddComponent<SkillAimingController>();
-            // Gán các trường private thông qua Reflection để đảm bảo hoạt động trơn tru
             SetPrivateField(pCombat, "magicBoltPrefab", boltTemplate);
             SetPrivateField(pCombat, "indicatorRenderer", indRenderer);
             SetPrivateField(pCombat, "firePoint", playerObj.transform);
 
-            // 6. Tạo Bù Nhìn 1 (Trong Vùng PvP Ngoài Safe Zone để test đòn)
-            CreateDummy("Dummy_Target_PvP", new Vector3(3.5f, 0, 0), dummySprite, false);
+            // 6. Cấu hình Camera chính bám theo Player và hỗ trợ Zoom mượt mà
+            Camera mainCam = Camera.main;
+            if (mainCam != null)
+            {
+                mainCam.orthographic = true;
+                mainCam.orthographicSize = 3.6f;
+                mainCam.backgroundColor = new Color(0.06f, 0.08f, 0.12f, 1f); // Nền xanh đen Dark Fantasy huyền bí
 
-            // 7. Tạo Bù Nhìn 2 (Trong Vùng Safe Zone để test miễn nhiễm)
-            CreateDummy("Dummy_Target_SafeZone", new Vector3(-3.5f, 1.5f, 0), dummySprite, true);
+                if (!mainCam.TryGetComponent<CameraController>(out var camCtrl))
+                {
+                    camCtrl = mainCam.gameObject.AddComponent<CameraController>();
+                }
+                camCtrl.SetTarget(playerObj.transform);
+            }
 
-            // 8. Tạo Giao Diện HUD
+            // 7. Tạo Bù Nhìn 1 (Trong Danger Zone để test Friendly Fire / Sát thương thật)
+            CreateDummy("Dummy_PvP_Target", new Vector3(4.0f, 0, 0), dummySprite, false);
+
+            // 8. Tạo Bù Nhìn 2 (Trong Safe Zone để test Miễn Nhiễm Sát Thương)
+            CreateDummy("Dummy_SafeZone_Target", new Vector3(-5.5f, 1.5f, 0), dummySprite, true);
+
+            // 9. Tạo HUD hiển thị đúng bản vẽ Wireframe
             GameObject hudObj = new GameObject("Combat_HUD");
             hudObj.AddComponent<CombatHUD>();
 
-            Debug.Log("<color=green>[SquiRRels Studio] Khởi tạo bản Demo Vertical Slice thành công 100%! Bấm chuột trái để chạy, phím 1 để ngắm, Shift để lướt!</color>");
+            Debug.Log("<color=green>[SquiRRels Studio] Đã nạp thành công sàn đấu HD Pixel Art và Giao diện Wireframe chuẩn!</color>");
         }
 
         private void CreateDummy(string name, Vector3 position, Sprite sprite, bool isSafe)
