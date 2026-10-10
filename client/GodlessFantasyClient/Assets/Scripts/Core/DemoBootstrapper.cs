@@ -128,9 +128,9 @@ namespace GodlessFantasy.Core
             var pVisual = playerObj.AddComponent<CharacterVisualController8Dir>();
             var pBasicAttack = playerObj.AddComponent<BasicAttackController>();
 
-            // THANH MÁU TRÊN ĐẦU NGƯỜI CHƠI (Overhead Status Bar: Tên, Cấp, Hệ, Máu, Mana)
+            // THANH MÁU TRÊN ĐẦU NGƯỜI CHƠI (Overhead Status Bar: Danh Hiệu, Tên, Cấp, Hệ, Nguyên Tố, Máu, Mana)
             var pOverhead = playerObj.AddComponent<OverheadStatusBar>();
-            pOverhead.Setup(OverheadType.Player, "Dũng Sĩ SquiRRels", "Lv.1 · Hỏa", 0.95f);
+            pOverhead.Setup(OverheadType.Player, "Dũng Sĩ SquiRRels", "Lv.1 · Kị Sĩ · Hỏa", 1.05f);
 
             // Tạo Indicator Mũi Tên Ngắm Chuẩn:
             GameObject indicatorObj = new GameObject("Indicator_Directional");

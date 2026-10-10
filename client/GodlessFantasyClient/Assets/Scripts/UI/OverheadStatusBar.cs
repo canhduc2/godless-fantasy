@@ -32,6 +32,7 @@ namespace GodlessFantasy.UI
         private Camera mainCam;
         private static Texture2D whiteTex;
         private static GUIStyle nameStyle;
+        private static GUIStyle titleStyle;
         private static GUIStyle hpNumberStyle;
 
         private float displayedHpPercent = 1.0f;
@@ -103,11 +104,39 @@ namespace GodlessFantasy.UI
             float barH = (entityType == OverheadType.Player) ? 6f : 5f;
             float startX = guiX - barW / 2f;
 
-            // 1. DÒNG TÊN & CẤP ĐỘ (Bản rộng 190px, tuyệt đối không bị truncate, đổ bóng sắc nét chống mờ răng cưa)
-            string nameString = $"{displayName} [{titleOrLevel}]";
+            // 0. DÒNG DANH HIỆU TRÊN CÙNG (TITLE LABEL - CHO NGƯỜI CHƠI)
+            if (entityType == OverheadType.Player && playerStats != null && playerStats.EquippedTitle != null)
+            {
+                var curTitle = playerStats.EquippedTitle;
+                string cleanTitle = curTitle.name.Trim('[', ']');
+                string titleText = $"« {cleanTitle} »";
+                float titleW = 240f;
+                float titleH = 16f;
+                Rect titleRect = new Rect(guiX - titleW / 2f, guiY - 40f, titleW, titleH);
+
+                titleStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+                GUI.Label(new Rect(titleRect.x + 1, titleRect.y + 1, titleRect.width, titleRect.height), titleText, titleStyle);
+
+                titleStyle.normal.textColor = curTitle.titleColor;
+                GUI.Label(titleRect, titleText, titleStyle);
+            }
+
+            // 1. DÒNG TÊN & CẤP ĐỘ / HỆ / NGUYÊN TỐ (Bản rộng 240px thoáng đãng)
+            string nameString;
+            if (entityType == OverheadType.Player && playerStats != null)
+            {
+                string pClass = playerStats.CharacterClass;
+                string pElem = playerStats.Element;
+                int pLv = playerStats.Level;
+                nameString = $"{displayName} [Lv.{pLv} · {pClass} · {pElem}]";
+            }
+            else
+            {
+                nameString = $"{displayName} [{titleOrLevel}]";
+            }
             Color nameColor = GetNameColor();
 
-            float plateW = 190f;
+            float plateW = 240f;
             float plateH = 20f;
             Rect namePlateRect = new Rect(guiX - plateW / 2f, guiY - 24f, plateW, plateH);
 
@@ -210,6 +239,18 @@ namespace GodlessFantasy.UI
                     fontSize = 12,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
+                };
+            }
+
+            if (titleStyle == null)
+            {
+                titleStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 11,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = false,
+                    clipping = TextClipping.Overflow
                 };
             }
 

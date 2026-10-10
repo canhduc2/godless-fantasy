@@ -132,32 +132,31 @@ namespace GodlessFantasy.Player
             EquipGearItem(neck);
             EquipGearItem(ring);
 
-            // 2. Sách Kỹ Năng (Cuộn Trục Bí Kíp) - Phân định rõ rệt HỆ và THUỘC TÍNH
-            // Bộ 4 chiêu phù hợp hoàn hảo với nhân vật mặc định (Hệ Kị Sĩ, Thuộc Tính Hỏa):
-            var s1 = new InventoryItem("scroll_s1", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] ST: 25 + 100% INT | CD: 1.0s | Tầm: 8.0m", "Phóng kiếm khí hỏa diễm theo đường thẳng (Line Skillshot).", 1,
-                new SkillScrollData("scroll_fire_slash", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "Hỏa", 15, 1.0f, 25, 1.0f, 1, "icon_skill_flame_cone", "item_scroll_fire", "Phóng kiếm khí hỏa diễm theo đường thẳng.", 8.0f, "Kị Sĩ"));
+            // 2. Sách Kỹ Năng (Cuộn Trục Bí Kíp) - Tên chuyên nghiệp, ngắn gọn & chuẩn hệ
+            var s1 = new InventoryItem("scroll_s1", "Hỏa Kiếm Khí", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_fire", "• [Kị Sĩ · Hỏa] | ST: 25 + 100% INT | CD: 1.0s | Tầm: 8.0m", "Phóng kiếm khí hỏa diễm theo đường thẳng (Line Skillshot).", 1,
+                new SkillScrollData("scroll_fire_slash", "Hỏa Kiếm Khí", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "Hỏa", 15, 1.0f, 25, 1.0f, 1, "icon_skill_flame_cone", "item_scroll_fire", "Phóng kiếm khí hỏa diễm theo đường thẳng.", 8.0f, "Kị Sĩ"));
 
-            var s2 = new InventoryItem("scroll_s2", "Bí Kíp [Hệ Kị Sĩ]: Liệt Hỏa Oanh Kích", ItemType.SkillScroll, EquipSlot.None, "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] ST: 40 + 120% INT | CD: 3.0s | Tầm: 7.0m", "Giáng luồng lửa thiêu rụi vùng đất (Ground AoE).", 1,
-                new SkillScrollData("scroll_fire_ground", "Bí Kíp [Hệ Kị Sĩ]: Liệt Hỏa Oanh Kích", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa", 25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_fire", "Giáng luồng lửa thiêu rụi vùng đất.", 7.0f, "Kị Sĩ"));
+            var s2 = new InventoryItem("scroll_s2", "Liệt Hỏa Oanh Kích", ItemType.SkillScroll, EquipSlot.None, "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_scroll_fire", "• [Kị Sĩ · Hỏa] | ST: 40 + 120% INT | CD: 3.0s | Tầm: 7.0m", "Giáng luồng lửa thiêu rụi vùng đất (Ground AoE).", 1,
+                new SkillScrollData("scroll_fire_ground", "Liệt Hỏa Oanh Kích", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa", 25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_fire", "Giáng luồng lửa thiêu rụi vùng đất.", 7.0f, "Kị Sĩ"));
 
-            var s3 = new InventoryItem("scroll_s3", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Toàn Phong", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] ST: 30 + 80% INT | CD: 2.5s | Tầm: 4.5m", "Quét bão lửa hình quạt 60 độ phía trước (Cone Sweep).", 1,
-                new SkillScrollData("scroll_fire_sweep", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Toàn Phong", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa", 20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_fire", "Quét bão lửa hình quạt 60 độ phía trước.", 4.5f, "Kị Sĩ"));
+            var s3 = new InventoryItem("scroll_s3", "Hỏa Long Toàn Phong", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_fire", "• [Kị Sĩ · Hỏa] | ST: 30 + 80% INT | CD: 2.5s | Tầm: 4.5m", "Quét bão lửa hình quạt 60 độ phía trước (Cone Sweep).", 1,
+                new SkillScrollData("scroll_fire_sweep", "Hỏa Long Toàn Phong", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa", 20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_fire", "Quét bão lửa hình quạt 60 độ phía trước.", 4.5f, "Kị Sĩ"));
 
-            var s4 = new InventoryItem("scroll_s4", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Kim Cang", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] Buff: +25% Công/Giáp | CD: 5.0s | Tự Thân", "Kích hoạt hào quang rồng lửa hộ thể (Self Buff).", 1,
-                new SkillScrollData("scroll_fire_buff", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Kim Cang", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Hỏa", 30, 5.0f, 50, 1.5f, 5, "icon_skill_divine_nova", "item_scroll_fire", "Kích hoạt hào quang rồng lửa hộ thể.", 0.0f, "Kị Sĩ", "", 3));
+            var s4 = new InventoryItem("scroll_s4", "Hỏa Long Kim Cang", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_fire", "• [Kị Sĩ · Hỏa] | Buff: +25% Công/Giáp (15s) | CD: 5.0s", "Kích hoạt hào quang rồng lửa hộ thể (Self Buff).", 1,
+                new SkillScrollData("scroll_fire_buff", "Hỏa Long Kim Cang", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Hỏa", 30, 5.0f, 50, 1.5f, 5, "icon_skill_divine_nova", "item_scroll_fire", "Kích hoạt hào quang rồng lửa hộ thể.", 0.0f, "Kị Sĩ", "", 3));
 
-            // Các cuộn trục mẫu của Hệ khác / Thuộc Tính khác để kiểm tra cơ chế KHÓA CHẶT:
-            var s5 = new InventoryItem("scroll_s5", "Bí Kíp [Hệ Pháp Sư]: Mưa Thiên Thạch", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_fire", "[Hệ: Pháp Sư · Hỏa] ST: 55 + 140% INT | CD: 4.0s | Tầm: 7.0m", "Thả thiên thạch ma đạo (Kị Sĩ KHÔNG THỂ DÙNG vì sai Hệ!).", 1,
-                new SkillScrollData("scroll_mage_meteor", "Bí Kíp [Hệ Pháp Sư]: Mưa Thiên Thạch", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Hỏa", 32, 4.0f, 55, 1.4f, 2, "icon_skill_meteor", "item_scroll_fire", "Bí kíp độc quyền của Pháp Sư.", 7.0f, "Pháp Sư"));
+            // Các cuộn trục mẫu của Hệ khác / Thuộc Tính khác:
+            var s5 = new InventoryItem("scroll_s5", "Mưa Thiên Thạch", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_fire", "• [Pháp Sư · Hỏa] | ST: 55 + 140% INT | CD: 4.0s | Tầm: 7.0m", "Thả thiên thạch ma đạo (Kị Sĩ không thể dùng vì sai hệ).", 1,
+                new SkillScrollData("scroll_mage_meteor", "Mưa Thiên Thạch", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Hỏa", 32, 4.0f, 55, 1.4f, 2, "icon_skill_meteor", "item_scroll_fire", "Bí kíp độc quyền của Pháp Sư.", 7.0f, "Pháp Sư"));
 
-            var s6 = new InventoryItem("scroll_s6", "Bí Kíp [Hệ Kị Sĩ]: Băng Hàn Kiếm", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_ice", "[Hệ: Kị Sĩ · Băng] ST: 48 + 130% INT | CD: 2.0s | Tầm: 8.0m", "Kiếm khí băng tuyết (Người chơi Hỏa KHÔNG THỂ DÙNG vì khác Thuộc Tính!).", 1,
-                new SkillScrollData("scroll_knight_frost", "Bí Kíp [Hệ Kị Sĩ]: Băng Hàn Kiếm", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng", 22, 2.0f, 48, 1.3f, 1, "item_scroll_ice", "item_scroll_ice", "Bí kíp thuộc tính Băng.", 8.0f, "Kị Sĩ"));
+            var s6 = new InventoryItem("scroll_s6", "Băng Hàn Kiếm", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_ice", "• [Kị Sĩ · Băng] | ST: 48 + 130% INT | CD: 2.0s | Tầm: 8.0m", "Kiếm khí băng tuyết (Người chơi Hỏa không thể dùng vì khác thuộc tính).", 1,
+                new SkillScrollData("scroll_knight_frost", "Băng Hàn Kiếm", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng", 22, 2.0f, 48, 1.3f, 1, "item_scroll_ice", "item_scroll_ice", "Bí kíp thuộc tính Băng.", 8.0f, "Kị Sĩ"));
 
-            var s7 = new InventoryItem("scroll_s7", "Bí Kíp [Hệ Pháp Sư]: Mưa Sinh Mệnh", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_wood", "[Hệ: Pháp Sư · Mộc] Hồi HP: 35 | CD: 6.0s | Tầm: 7.0m", "Mưa xanh hồi phục sinh lực (Hệ Mộc của Pháp Sư).", 1,
-                new SkillScrollData("scroll_mage_life_rain", "Bí Kíp [Hệ Pháp Sư]: Mưa Sinh Mệnh", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Mộc", 28, 6.0f, 35, 1.0f, 2, "icon_skill_arcane_bolt", "item_scroll_wood", "Mưa sinh mệnh phục hồi sinh lực.", 7.0f, "Pháp Sư", "", 1));
+            var s7 = new InventoryItem("scroll_s7", "Mưa Sinh Mệnh", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_wood", "• [Pháp Sư · Mộc] | Hồi HP: 35 | CD: 6.0s | Tầm: 7.0m", "Mưa xanh hồi phục sinh lực (Chỉ Pháp Sư mới dùng được).", 1,
+                new SkillScrollData("scroll_mage_life_rain", "Mưa Sinh Mệnh", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Mộc", 28, 6.0f, 35, 1.0f, 2, "icon_skill_arcane_bolt", "item_scroll_wood", "Mưa sinh mệnh phục hồi sinh lực.", 7.0f, "Pháp Sư", "", 1));
 
-            var s8 = new InventoryItem("scroll_s8", "Bí Kíp [Toàn Hệ]: Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_thunder", "[Toàn Hệ · Lôi] ST: 45 + 110% INT | CD: 3.5s | Tầm: 7.0m", "Sấm sét giáng từ trời cao (Bí kíp thuộc tính Lôi).", 1,
-                new SkillScrollData("scroll_all_thunder", "Bí Kíp [Toàn Hệ]: Lôi Thần Nộ", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Lôi", 25, 3.5f, 45, 1.1f, 2, "icon_skill_meteor", "item_scroll_thunder", "Sấm sét giáng diện rộng.", 7.0f, "Toàn Hệ"));
+            var s8 = new InventoryItem("scroll_s8", "Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_thunder", "• [Toàn Hệ · Lôi] | ST: 45 + 110% INT | CD: 3.5s | Tầm: 7.0m", "Sấm sét giáng từ trời cao (Bí kíp Toàn Hệ).", 1,
+                new SkillScrollData("scroll_all_thunder", "Lôi Thần Nộ", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Lôi", 25, 3.5f, 45, 1.1f, 2, "icon_skill_meteor", "item_scroll_thunder", "Sấm sét giáng diện rộng.", 7.0f, "Toàn Hệ"));
 
             items.Add(s1);
             items.Add(s2);

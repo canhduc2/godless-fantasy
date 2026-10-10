@@ -119,9 +119,11 @@ namespace GodlessFantasy.Combat
             {
                 damageStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 15,
+                    fontSize = 14,
                     fontStyle = FontStyle.Bold,
-                    alignment = TextAnchor.MiddleCenter
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = false,
+                    clipping = TextClipping.Overflow
                 };
             }
 
@@ -134,16 +136,21 @@ namespace GodlessFantasy.Combat
                 Color c = p.color;
                 c.a = alpha;
 
-                // Tọa độ GUI (Y đảo ngược)
+                // Tọa độ GUI (Y đảo ngược) với kích thước tự động co giãn theo độ dài văn bản
                 float guiY = Screen.height - screenPos.y;
-                Rect r = new Rect(screenPos.x - 50, guiY - 15, 100, 30);
+                Vector2 textSize = damageStyle.CalcSize(new GUIContent(p.text));
+                float textW = Mathf.Max(60f, textSize.x + 24f);
+                float textH = Mathf.Max(24f, textSize.y + 6f);
+                Rect r = new Rect(screenPos.x - textW * 0.5f, guiY - textH * 0.5f, textW, textH);
 
-                // Vẽ viền đen bóng đổ
-                damageStyle.normal.textColor = new Color(0, 0, 0, alpha * 0.9f);
+                // Vẽ viền đen bóng đổ 4 hướng siêu sắc nét
+                damageStyle.normal.textColor = new Color(0, 0, 0, alpha * 0.95f);
                 GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), p.text, damageStyle);
                 GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), p.text, damageStyle);
+                GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), p.text, damageStyle);
+                GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), p.text, damageStyle);
 
-                // Vẽ chữ màu chính (Đỏ rực / Vàng kim)
+                // Vẽ chữ màu chính
                 damageStyle.normal.textColor = c;
                 GUI.Label(r, p.text, damageStyle);
             }

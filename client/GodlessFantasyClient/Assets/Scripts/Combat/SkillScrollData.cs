@@ -121,7 +121,7 @@ namespace GodlessFantasy.Combat
             {
                 if (!string.Equals(requiredClass, playerClass, StringComparison.OrdinalIgnoreCase))
                 {
-                    failureReason = $"Sai Hệ! Cuộn yêu cầu [Hệ {requiredClass}], bạn đang là [Hệ {playerClass}]";
+                    failureReason = $"Sai Hệ! Cuộn yêu cầu [{requiredClass}], bạn đang là [{playerClass}]";
                     return false;
                 }
             }

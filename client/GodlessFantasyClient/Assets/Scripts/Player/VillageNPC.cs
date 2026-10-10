@@ -46,10 +46,14 @@ namespace GodlessFantasy.Player
             IsPlayerNearAnyNPC = isPlayerNearby;
             IsAnyNPCDialogueOpen = showDialogue;
 
-            // BẤM PHÍM E ĐỂ NÓI CHUYỆN KHI LẠI GẦN
+            // BẤM PHÍM E HOẶC ESC ĐỂ ĐÓNG/MỞ HỘP THOẠI
             if (isPlayerNearby && Core.GameInput.GetInteractKeyDown())
             {
                 showDialogue = !showDialogue;
+            }
+            if (showDialogue && Input.GetKeyDown(KeyCode.Escape))
+            {
+                showDialogue = false;
             }
         }
 
@@ -102,29 +106,24 @@ namespace GodlessFantasy.Player
 
             if (showDialogue)
             {
-                // Lớp 3 (Depth 0): Hộp thoại NPC hiển thị ngang hàng các Modal
+                // Lớp 3 (Depth 0): Hộp thoại NPC hiển thị ngay CHÍNH GIỮA MÀN HÌNH (tránh hoàn toàn việc chồng chéo lên thanh chiêu thức)
                 GUI.depth = FantasyUITheme.DepthModal;
-                float boxW = 380f;
-                float boxH = 110f;
+                float boxW = 460f;
+                float boxH = 145f;
                 float boxX = (Screen.width - boxW) / 2f;
-                float boxY = Screen.height - boxH - 90f;
+                float boxY = (Screen.height - boxH) / 2f; // Chính giữa tâm màn hình tuyệt đối
 
                 Rect r = new Rect(boxX, boxY, boxW, boxH);
-                GUI.color = new Color(0.06f, 0.08f, 0.14f, 0.96f);
+                GUI.color = new Color(0.04f, 0.06f, 0.11f, 0.98f);
                 GUI.DrawTexture(r, Texture2D.whiteTexture);
-                GUI.color = new Color(0.85f, 0.70f, 0.28f);
-                // Viền vàng
-                GUI.DrawTexture(new Rect(r.x, r.y, r.width, 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(r.x, r.y + r.height - 2, r.width, 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(r.x, r.y, 2, r.height), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(r.x + r.width - 2, r.y, 2, r.height), Texture2D.whiteTexture);
                 GUI.color = Color.white;
+                FantasyUITheme.DrawDoubleGoldFrame(r, 2);
 
                 var titleStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 12,
+                    fontSize = 13,
                     fontStyle = FontStyle.Bold,
-                    normal = { textColor = new Color(1f, 0.85f, 0.35f) }
+                    normal = { textColor = new Color(1f, 0.88f, 0.35f) }
                 };
                 var bodyStyle = new GUIStyle(GUI.skin.label)
                 {
@@ -133,13 +132,19 @@ namespace GodlessFantasy.Player
                     normal = { textColor = Color.white }
                 };
 
-                GUI.Label(new Rect(r.x + 12, r.y + 8, r.width - 40, 20), $"📜 {npcName} (Trưởng Làng Tân Thủ)", titleStyle);
-                if (GUI.Button(new Rect(r.x + r.width - 28, r.y + 6, 22, 20), "X"))
+                GUI.Label(new Rect(r.x + 14, r.y + 10, r.width - 50, 22), $"📜 {npcName} (Trưởng Làng Tân Thủ)", titleStyle);
+                if (GUI.Button(new Rect(r.x + r.width - 32, r.y + 8, 24, 22), "✕"))
                 {
                     showDialogue = false;
                 }
 
-                GUI.Label(new Rect(r.x + 12, r.y + 30, r.width - 24, 70), dialogue, bodyStyle);
+                GUI.Label(new Rect(r.x + 14, r.y + 36, r.width - 28, 70), dialogue, bodyStyle);
+
+                // Nút đóng tiện lợi góc dưới
+                if (GUI.Button(new Rect(r.x + r.width - 110, r.y + r.height - 30, 96, 22), "Đóng [ESC]"))
+                {
+                    showDialogue = false;
+                }
             }
         }
     }

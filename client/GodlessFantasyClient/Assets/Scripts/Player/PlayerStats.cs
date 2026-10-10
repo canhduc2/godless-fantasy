@@ -230,7 +230,54 @@ namespace GodlessFantasy.Player
                     statValue = statValue
                 });
             }
-            Debug.Log($"<color=cyan>[BUFF SYSTEM]</color> Đã kích hoạt hiệu ứng '{buffName}' ({duration:F1}s)!");
+            Debug.Log($"<color=cyan>[BUFF SYSTEM]</color> Đã kích hoạt hiệu ứng '{buffName}' ({duration:F1}s) - Trị giá: +{statValue}%!");
+        }
+
+        public float GetDamageBuffMultiplier()
+        {
+            float mult = 0f;
+            if (activeBuffs != null)
+            {
+                for (int i = 0; i < activeBuffs.Count; i++)
+                {
+                    var b = activeBuffs[i];
+                    if (b != null && b.remainingTime > 0f)
+                    {
+                        if (b.statType == 1) mult += (b.statValue / 100f);
+                    }
+                }
+            }
+            return mult;
+        }
+
+        public float GetDefenseBuffMultiplier()
+        {
+            float mult = 0f;
+            if (activeBuffs != null)
+            {
+                for (int i = 0; i < activeBuffs.Count; i++)
+                {
+                    var b = activeBuffs[i];
+                    if (b != null && b.remainingTime > 0f)
+                    {
+                        if (b.statType == 2) mult += (b.statValue / 100f);
+                    }
+                }
+            }
+            return mult;
+        }
+
+        /// <summary>
+        /// Tính sát thương đòn đánh thường chuẩn xác (STR, INT, Perk, Title và nhân hệ số BUFF).
+        /// </summary>
+        public int CalculateBasicAttackDamage()
+        {
+            int baseDmg = 16 + Mathf.RoundToInt(intelligence * 0.4f + strength * 0.3f);
+            baseDmg += InherentBonusAttackDmg;
+            baseDmg += TitleBonusPhysAtk;
+            float buffMult = GetDamageBuffMultiplier();
+            int totalDmg = Mathf.RoundToInt(baseDmg * (1f + buffMult));
+            return Mathf.Max(1, totalDmg);
         }
 
         private void Update()

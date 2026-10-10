@@ -221,10 +221,19 @@ namespace GodlessFantasy.Combat
             Vector3 startPos = transform.position + Vector3.up * 0.1f;
             Vector3 endPos = target.position;
 
-            // Tính sát thương cơ bản: 16 + 40% INT + 30% STR
-            int intVal = (playerStats != null) ? playerStats.Intelligence : 12;
-            int strVal = (playerStats != null) ? playerStats.Strength : 8;
-            int damage = baseDamage + Mathf.RoundToInt(intVal * 0.4f + strVal * 0.3f);
+            // Tính sát thương cơ bản và nhân trực tiếp hệ số BUFF từ PlayerStats:
+            bool isBuffed = (playerStats != null && playerStats.GetDamageBuffMultiplier() > 0f);
+            int damage;
+            if (playerStats != null)
+            {
+                damage = playerStats.CalculateBasicAttackDamage();
+            }
+            else
+            {
+                int intVal = 12;
+                int strVal = 8;
+                damage = baseDamage + Mathf.RoundToInt(intVal * 0.4f + strVal * 0.3f);
+            }
 
             // Tạo đạn năng lượng ma pháp bay từ người chơi tới mục tiêu
             GameObject bolt = new GameObject("BasicAttack_Missile");
@@ -232,8 +241,9 @@ namespace GodlessFantasy.Combat
 
             var sr = bolt.AddComponent<SpriteRenderer>();
             sr.sprite = Resources.Load<Sprite>("magic_bolt") ?? Resources.Load<Sprite>("indicator_ground_circle");
-            sr.color = new Color(0.2f, 0.9f, 1f, 0.95f);
-            bolt.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+            // Khi có Buff Công, đạn chuyển sang màu vàng cam bốc lửa
+            sr.color = isBuffed ? new Color(1f, 0.65f, 0.15f, 0.98f) : new Color(0.2f, 0.9f, 1f, 0.95f);
+            bolt.transform.localScale = isBuffed ? new Vector3(0.65f, 0.65f, 1f) : new Vector3(0.5f, 0.5f, 1f);
             sr.sortingOrder = 22;
 
             float speed = 18f;
@@ -260,7 +270,7 @@ namespace GodlessFantasy.Combat
             if (target != null && h != null && !h.IsDead)
             {
                 h.TakeDamage(damage, "Player_Hero");
-                FloatingDamageManager.Spawn(target.position + Vector3.up * 0.35f, damage, false);
+                FloatingDamageManager.Spawn(target.position + Vector3.up * 0.35f, damage, isCrit: isBuffed);
             }
         }
 

@@ -290,7 +290,8 @@ namespace GodlessFantasy.Combat
             }
 
             int intel = playerStats != null ? playerStats.Intelligence : 12;
-            int totalDamage = scroll.baseDamage + Mathf.RoundToInt(intel * scroll.intelligenceScaling);
+            float buffMult = (playerStats != null) ? playerStats.GetDamageBuffMultiplier() : 0f;
+            int totalDamage = Mathf.RoundToInt((scroll.baseDamage + Mathf.RoundToInt(intel * scroll.intelligenceScaling)) * (1f + buffMult));
 
             // Thi triển theo Archetype của Cuộn Trục
             switch (scroll.indicatorType)
@@ -333,13 +334,17 @@ namespace GodlessFantasy.Combat
                 if (playerStats != null) playerStats.RestoreMana(scroll.baseDamage);
                 FloatingDamageManager.SpawnHeal(transform.position, scroll.baseDamage, true);
             }
-            else // Cường Hóa (Buff Stat)
+            else // Cường Hóa (Buff Stat: +25% ST Đánh Thường & Kỹ Năng)
             {
+                string cleanName = scroll.scrollName;
+                if (cleanName.Contains(":")) cleanName = cleanName.Substring(cleanName.IndexOf(':') + 1).Trim();
+                else if (cleanName.Contains("]")) cleanName = cleanName.Substring(cleanName.IndexOf(']') + 1).Trim();
+
                 if (playerStats != null)
                 {
-                    playerStats.ApplyBuff(scroll.id, scroll.scrollName, scroll.iconName, 15.0f, 1, 25f);
+                    playerStats.ApplyBuff(scroll.id, cleanName, scroll.iconName, 15.0f, 1, 25f);
                 }
-                FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 0.8f, $"BUFF: {scroll.scrollName} (15s)", Color.cyan);
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 0.9f, $"🔥 {cleanName} (+25% ST)!", new Color(1f, 0.75f, 0.2f));
             }
             Debug.Log($"<color=cyan>[BUFF CAST]</color> Đã kích hoạt Buff '{scroll.scrollName}' ({scroll.element})!");
         }
