@@ -61,6 +61,16 @@ Thế giới game bao gồm 4 Hệ Khởi Đầu (chọn khi tạo nhân vật) 
      - **Mana tối đa toàn thân bị giảm cố định 30%** so với công thức chuẩn của nhân vật.
      - **Tiêu hao Mana của tất cả kỹ năng Pháp Sư tăng thêm 45%** (chi phí đắt đỏ để kích hoạt hiệu ứng cấm chiêu).
 
+#### Ưu Thế Độc Quyền: Cơ Chế Tuần Trang Hóa ("Giả Heo Ăn Thịt Hổ") - Tiêu Hao RP:
+- **Bản chất chiến thuật:** Nếu để lộ danh xưng "Hệ Ẩn" hay "Kẻ Ngoại Đạo", đối thủ sẽ lập tức cảnh giác đề phòng, kéo đồng đội đến vây bắt hoặc chủ động giữ khoảng cách né chiêu cấm mana. Do đó, Hệ Ẩn sở hữu cơ chế độc quyền **Tuần Trang Hóa (Disguise System)**:
+  - Cho phép người chơi Hệ Ẩn **tự do chọn hiển thị công khai 1 hệ cơ bản** (Kị Sĩ, Xạ Thủ, Pháp Sư, hoặc Võ Sĩ) thay vì để lộ chữ "Hệ Ẩn" cho thiên hạ thấy!
+  - **Chi phí kích hoạt:** **Tiêu tốn 1 Điểm Rebirth Point (1 RP)** cho mỗi lần thiết lập hoặc đổi lớp ngụy trang sang hệ khác tại giao diện nhân vật.
+  - **Phạm vi đánh lừa thị giác:**
+    - Thanh thông tin trên đầu nhân vật (Nameplate): Đối thủ nhìn vào chỉ thấy ví dụ `Pháp Sư · Hỏa · Lv. 45` hoặc `Kị Sĩ · Băng · Lv. 45`.
+    - Giao diện soi thông tin mục tiêu (Inspect Profile) của người chơi khác.
+    - Huy hiệu chức nghiệp hiển thị khi nhắn tin trên kênh Chat (Local/World).
+  - **Lối chơi "Giả Heo Ăn Hổ":** Đánh lừa tâm lý, khiến đối phương chủ quan tưởng mình là "mồi ngon" dễ bắt nạt và lao vào áp sát... Đến khi người chơi Hệ Ẩn bất ngờ tung chiêu thức kết hợp của cả 2 hệ và áp hiệu ứng Khóa Mana (Silence) 2.5s thì đối thủ mới nhận ra đã rơi vào bẫy của Kẻ Ngoại Đạo!
+
 #### Khả Năng Rebirth Sau Khi Trở Thành Hệ Ẩn:
 - Nhân vật sau khi chuyển chức Hệ Ẩn sẽ bắt đầu hành trình từ Level 1.
 - **KHI ĐẠT LEVEL 100, NHÂN VẬT HỆ ẨN VẪN THỰC HIỆN REBIRTH (CHUYỂN SINH) NHƯ BÌNH THƯỜNG!**
