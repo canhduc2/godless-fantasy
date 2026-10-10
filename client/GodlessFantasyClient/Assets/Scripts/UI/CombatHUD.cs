@@ -419,7 +419,7 @@ namespace GodlessFantasy.UI
             int hp = playerHealth != null ? playerHealth.CurrentHealth : 100;
             int maxHp = playerHealth != null ? playerHealth.MaxHealth : 100;
             Rect hpRect = new Rect(rightColX, panel.y + 23, rightColW, 14);
-            DrawInteractiveBar(hpRect, hp, maxHp, hpFillTex, $"HP {hp}/{maxHp} [Bấm Q: +35]", () => {
+            DrawInteractiveBar(hpRect, hp, maxHp, hpFillTex, $"HP {hp}/{maxHp} [Bấm Q]", () => {
                 if (playerStats != null) playerStats.UseHpPotion();
             });
 
@@ -427,7 +427,7 @@ namespace GodlessFantasy.UI
             int mana = playerStats != null ? playerStats.CurrentMana : 80;
             int maxMana = playerStats != null ? playerStats.MaxMana : 100;
             Rect manaRect = new Rect(rightColX, panel.y + 39, rightColW, 14);
-            DrawInteractiveBar(manaRect, mana, maxMana, manaFillTex, $"MANA {mana}/{maxMana} [Bấm E: +30]", () => {
+            DrawInteractiveBar(manaRect, mana, maxMana, manaFillTex, $"MANA {mana}/{maxMana} [Bấm E]", () => {
                 if (playerStats != null) playerStats.UseManaPotion();
             });
 
