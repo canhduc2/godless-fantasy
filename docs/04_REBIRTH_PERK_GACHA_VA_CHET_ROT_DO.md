@@ -32,7 +32,8 @@ Khi nhân vật đạt Level 100, chức năng **Chuyển Sinh (Rebirth)** sẽ 
 > **⭐ QUY TẮC REBIRTH DÀNH CHO HỆ ẨN (HERETIC):**  
 > Nhân vật sau khi đã chuyển chức thành công sang **Hệ Ẩn (The Heretic)**, trong quá trình chơi cày cuốc thăng cấp lại lên Level 100 **VẪN ĐƯỢC PHÉP THỰC HIỆN REBIRTH NHƯ BÌNH THƯỜNG!**  
 > - **Giữ nguyên vĩnh viễn:** Chức nghiệp Hệ Ẩn cùng 2 Perk bẩm sinh `[Kẻ Ngoại Đạo]` & `[Kẻ Tội Lỗi]` (không bị reset mất chức nghiệp).  
-> - **Nhận trọn vẹn quyền lợi Rebirth:** Nhận điểm Rebirth Point (RP) để gacha Perk mới hoặc đổi thuộc tính, tạo Rebirth Vault lưu 2 món đồ tại tọa độ tử nạn, và bảo lưu nguyên vẹn 5 ô cường hóa vĩnh viễn.
+> - **Nhận trọn vẹn quyền lợi Rebirth:** Nhận điểm Rebirth Point (RP) để gacha Perk mới hoặc đổi thuộc tính, tạo Rebirth Vault lưu 2 món đồ tại tọa độ tử nạn, và bảo lưu nguyên vẹn 5 ô cường hóa vĩnh viễn.  
+> - **Thưởng Tái Ngộ Thánh Địa (+1 RP):** Nếu nhân vật Hệ Ẩn may mắn gặp lại Thánh Địa Bị Lãng Quên lần thứ 2+ và vượt qua thử thách, sẽ không chuyển chức nữa mà được tặng ngay **+1 Điểm Rebirth Point (1 RP)** vĩnh viễn mà không bị reset level hay mất đồ!
 
 ---
 

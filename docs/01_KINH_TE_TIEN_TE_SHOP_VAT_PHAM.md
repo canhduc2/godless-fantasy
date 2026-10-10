@@ -12,7 +12,7 @@ Game vận hành với mô hình kinh tế 3 tầng, phân tách rõ ràng giữ
 | Loại tiền tệ | Ký hiệu | Cách kiếm được | Công dụng chính | Tính chất khi chết / Rebirth |
 | :--- | :---: | :--- | :--- | :--- |
 | **Vàng (Gold / Coin)** | 🪙 | - Nhặt rơi từ quái, boss<br>- Bán vật phẩm cho NPC<br>- Giao dịch giữa người chơi<br>- Hoàn thành nhiệm vụ | - Mua vật phẩm tiêu hao (máu/mana/cuộn)<br>- Chi phí sửa chữa/chế tác tại Thợ Rèn<br>- Mở rộng ô túi đồ (Inventory Slots)<br>- Mở rộng rương làng (Storage) | - **Rơi 5%** số lượng mang theo nếu chết ngoài Safe Zone.<br>- **Bị xóa 100%** khi thực hiện Rebirth. |
-| **Điểm Chuyển Sinh (Rebirth Points - RP)** | 💠 | - Đạt Cấp 100 và thực hiện Chuyển Sinh (Rebirth) thành công (1 lần = số điểm quy định). | - Quay Perk Gacha (Kỹ năng bị động)<br>- Cường hóa vĩnh viễn 1 ô đồ (Tối đa 5 ô, tốn 1 RP/ô)<br>- Chuyển đổi 6 Thuộc tính nhân vật | - **Lưu vĩnh viễn trên Server**, không bao giờ mất khi chết hay Rebirth tiếp theo. |
+| **Điểm Chuyển Sinh (Rebirth Points - RP)** | 💠 | - Đạt Cấp 100 và thực hiện Chuyển Sinh (Rebirth) thành công.<br>- Vượt qua Thánh Địa Hệ Ẩn lần 2+ (dành cho người đã là Hệ Ẩn: nhận +1 RP). | - Quay Perk Gacha (Kỹ năng bị động)<br>- Cường hóa vĩnh viễn 1 ô đồ (Tối đa 5 ô, tốn 1 RP/ô)<br>- Chuyển đổi 6 Thuộc tính nhân vật | - **Lưu vĩnh viễn trên Server**, không bao giờ mất khi chết hay Rebirth tiếp theo. |
 | **Ma Thạch / Tinh Thể Boss (Boss Shards)** | 💎 | - Đánh bại Boss thế giới, Boss Dungeon | - Đổi các công thức chế tác trang bị hiếm<br>- Ghép vật phẩm đặc biệt tại NPC Ẩn | - Tính là vật phẩm trong túi, có nguy cơ rơi 5% khi chết ngoài Safe Zone nếu không đặt ở ô an toàn. |
 
 ---

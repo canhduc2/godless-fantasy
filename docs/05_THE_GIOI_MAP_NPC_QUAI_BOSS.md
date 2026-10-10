@@ -109,6 +109,18 @@ Chuyển chức sang Hệ Ẩn là bí mật lớn nhất thế giới Godless F
 +-------------------------------------------------------------------------------------+
 ```
 
+### 3.1. Quy Tắc Gặp Lại Thánh Địa Lần Nữa (Repeat Encounter Rule)
+Nếu một người chơi **đã mang chức nghiệp Hệ Ẩn** mà trong tương lai (sau khi Rebirth hoặc đi khám phá thế giới) may mắn bắt gặp lại cửa sổ thời gian hiếm và mở được Cánh Cổng Thánh Địa Bị Lãng Quên lần thứ hai (hoặc các lần tiếp theo):
+
+> **1. KHÔNG ĐƯỢC CHUYỂN CHỨC NỮA:**  
+> Hệ thống sẽ từ chối nghi thức chuyển chức mới. Người chơi không thể đổi lại hệ ban đầu, không được re-roll lại hệ phụ thứ hai. Chức nghiệp Hệ Ẩn là bất biến.
+> 
+> **2. PHẦN THƯỞNG KHI VƯỢT QUA THỬ THÁCH LẦN NỮA: TẶNG 1 REBIRTH POINT (1 RP)**  
+> Nếu người chơi tiếp tục vượt qua mê cung cấm chú và đánh bại Hộ Vệ Cấm Pháp một lần nữa:
+> - Tương tác với [Bia Đá Ngoại Đạo] sẽ kích hoạt sự kiện: *"Kẻ Ngoại Đạo được Đền Thờ công nhận một lần nữa!"*.
+> - **Được gửi tặng trực tiếp: +1 Điểm Rebirth Point (1 RP)** vĩnh viễn vào tài khoản!
+> - **Không bị reset cấp độ, không bị xóa đồ** (đây là phần thưởng độc quyền cho kỳ tích vượt qua thánh địa hiếm có khó tìm lần nữa).
+
 ---
 
 ## 4. TỔNG QUAN HỆ THỐNG NPC THẾ GIỚI (MASTER NPC LIST)
