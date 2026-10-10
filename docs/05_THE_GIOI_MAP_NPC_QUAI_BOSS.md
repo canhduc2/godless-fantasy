@@ -94,6 +94,19 @@ Chuyển chức sang Hệ Ẩn là bí mật lớn nhất thế giới Godless F
 |      * ĐẶC BIỆT: KHÔNG NHẬN ĐƯỢC ĐIỂM REBIRTH POINT (Thứ nhận lại là Sức Mạnh Ẩn!) |
 |      * 5 Ô ĐƯỢC BẢO VỆ VĨNH VIỄN (nếu đã có từ trước) VẪN NGUYÊN VẸN KHÔNG MẤT!    |
 +-------------------------------------------------------------------------------------+
+                                           |
+                                           v
++-------------------------------------------------------------------------------------+
+|                  BƯỚC 4: TIẾN TRÌNH & VẪN REBIRTH BÌNH THƯỜNG SAU ĐÓ                |
+|  - Nhân vật bắt đầu hành trình mới từ Level 1 với tư cách là HỆ ẨN (HERETIC).       |
+|  - Cày cuốc thăng cấp từ Lv 1 -> 100 như bình thường.                               |
+|  - KHI ĐẠT LEVEL 100: NHÂN VẬT VẪN THỰC HIỆN REBIRTH NHƯ BÌNH THƯỜNG!               |
+|      * Nhận điểm Rebirth Point (RP) bình thường (dùng quay Perk, đổi thuộc tính...). |
+|      * Được chọn 2 món cất vào Rebirth Vault lưu server bình thường.                |
+|      * Giữ nguyên chức nghiệp HỆ ẨN và 2 Perk bẩm sinh [Kẻ Ngoại Đạo], [Kẻ Tội Lỗi] |
+|        (không bị mất Hệ Ẩn khi Rebirth).                                            |
+|      * 5 Ô bảo vệ vĩnh viễn tiếp tục được giữ nguyên.                               |
++-------------------------------------------------------------------------------------+
 ```
 
 ---

@@ -61,6 +61,14 @@ Thế giới game bao gồm 4 Hệ Khởi Đầu (chọn khi tạo nhân vật) 
      - **Mana tối đa toàn thân bị giảm cố định 30%** so với công thức chuẩn của nhân vật.
      - **Tiêu hao Mana của tất cả kỹ năng Pháp Sư tăng thêm 45%** (chi phí đắt đỏ để kích hoạt hiệu ứng cấm chiêu).
 
+#### Khả Năng Rebirth Sau Khi Trở Thành Hệ Ẩn:
+- Nhân vật sau khi chuyển chức Hệ Ẩn sẽ bắt đầu hành trình từ Level 1.
+- **KHI ĐẠT LEVEL 100, NHÂN VẬT HỆ ẨN VẪN THỰC HIỆN REBIRTH (CHUYỂN SINH) NHƯ BÌNH THƯỜNG!**
+  - Giữ nguyên vĩnh viễn chức nghiệp Hệ Ẩn cùng 2 Perk bẩm sinh `[Kẻ Ngoại Đạo]` & `[Kẻ Tội Lỗi]`.
+  - Nhận điểm Rebirth Point (RP) bình thường để quay Perk gacha và cường hóa chỉ số.
+  - Được chọn cất 2 món vào Rương Chuyển Sinh (Rebirth Vault) tại vị trí tử nạn.
+  - Giữ nguyên 5 ô bảo vệ vĩnh viễn.
+
 ---
 
 ## 2. SÁU THUỘC TÍNH NGUYÊN TỐ (ELEMENTS)
