@@ -29,7 +29,7 @@
 - **Công cụ được chọn:** **Pixelorama** (Phần mềm vẽ Pixel Art chuyên nghiệp, mã nguồn mở, miễn phí 100%).
 - **Link tải phiên bản mới nhất:** [https://github.com/Orama-Interactive/Pixelorama/releases](https://github.com/Orama-Interactive/Pixelorama/releases)
 - **Ưu điểm vượt trội:**
-  - Dung lượng siêu nhẹ (~40MB), chạy ngay không cần cài đặt.
+  - Dung lượng siêu nhẹ (~140MB), chạy ngay không cần cài đặt.
   - Hỗ trợ timeline animation, xuất Sprite Sheet tự động, bảng màu palette và layer phong phú, tương thích xuất thẳng sang Unity 2D.
 
 ---

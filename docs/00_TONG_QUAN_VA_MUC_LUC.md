@@ -17,6 +17,7 @@
 | **DOC-05** | [05_THE_GIOI_MAP_NPC_QUAI_BOSS.md](file:///D:/godless-fantasy/docs/05_THE_GIOI_MAP_NPC_QUAI_BOSS.md) | Kiến trúc Thế giới World → Region → Chunk, Hệ thống NPC đầy đủ, Quái vật, Boss rơi đồ ngẫu nhiên, Cơ chế kích hoạt chuyển chức Hệ Ẩn cực hiếm |
 | **DOC-06** | [06_GIAO_DIEN_UI_HUD_VA_CHAT.md](file:///D:/godless-fantasy/docs/06_GIAO_DIEN_UI_HUD_VA_CHAT.md) | Wireframe chi tiết HUD Top/Bottom/Left, Menu trượt 4 Tab, Hệ thống Chat (Khu vực 5s rate-limit, Thế giới 2 tin/ngày & 5 phút cooldown) |
 | **DOC-07** | [07_QUYET_DINH_CONG_NGHE_TECH_STACK.md](file:///D:/godless-fantasy/docs/07_QUYET_DINH_CONG_NGHE_TECH_STACK.md) | Quyết định công nghệ đồ họa (HD Pixel Art + 2D Lighting), Game Engine (Unity vs Godot), Kiến trúc Server-Authoritative & MCP Code Toolings |
+| **DOC-08** | [08_HUONG_DAN_CAI_DAT_MOI_TRUONG.md](file:///D:/godless-fantasy/docs/08_HUONG_DAN_CAI_DAT_MOI_TRUONG.md) | Hướng dẫn cài đặt môi trường phát triển (Pixelorama, SQLite 3, .NET 8 SDK, Unity 2D LTS/Unity 6 sang ổ D:\, Lộ trình Vertical Slice 5 bước) |
 
 ---
 
