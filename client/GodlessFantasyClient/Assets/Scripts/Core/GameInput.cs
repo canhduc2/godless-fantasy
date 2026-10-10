@@ -91,5 +91,50 @@ namespace GodlessFantasy.Core
 #endif
             try { return Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1); } catch { return false; }
         }
+
+        public static bool GetSkill2KeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2); } catch { return false; }
+        }
+
+        public static bool GetSkill3KeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3); } catch { return false; }
+        }
+
+        public static bool GetSkill4KeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.digit4Key.wasPressedThisFrame || Keyboard.current.numpad4Key.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4); } catch { return false; }
+        }
+
+        public static bool GetHpPotionKeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.qKey.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.Q); } catch { return false; }
+        }
+
+        public static bool GetManaPotionKeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.eKey.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.E); } catch { return false; }
+        }
     }
 }

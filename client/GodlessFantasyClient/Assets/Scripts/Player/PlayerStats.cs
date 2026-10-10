@@ -82,11 +82,11 @@ namespace GodlessFantasy.Player
             }
 
             // Phím tắt nhanh: Q dùng bình máu, E dùng bình mana
-            if (Input.GetKeyDown(KeyCode.Q))
+            if (GameInput.GetHpPotionKeyDown())
             {
                 UseHpPotion();
             }
-            if (Input.GetKeyDown(KeyCode.E))
+            if (GameInput.GetManaPotionKeyDown())
             {
                 UseManaPotion();
             }

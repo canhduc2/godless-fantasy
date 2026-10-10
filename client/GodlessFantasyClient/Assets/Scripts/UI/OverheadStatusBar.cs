@@ -112,14 +112,14 @@ namespace GodlessFantasy.UI
             // 2. KHUNG NỀN THANH MÁU
             Rect hpBgRect = new Rect(startX, guiY, barW, barH);
             GUI.color = new Color(0.08f, 0.10f, 0.14f, 0.95f);
-            GUI.DrawTexture(hpBgRect, whiteTex);
+            GUI.DrawTexture(hpBgRect, Texture2D.whiteTexture);
 
             // 3. VỆT TRẮNG TỤT MÁU TRỄ (Lag Drop)
             if (displayedHpPercent > 0.001f)
             {
                 Rect lagRect = new Rect(startX, guiY, barW * displayedHpPercent, barH);
                 GUI.color = new Color(1f, 0.9f, 0.7f, 0.8f);
-                GUI.DrawTexture(lagRect, whiteTex);
+                GUI.DrawTexture(lagRect, Texture2D.whiteTexture);
             }
 
             // 4. MÁU HIỆN TẠI (HP Fill)
@@ -128,7 +128,7 @@ namespace GodlessFantasy.UI
             {
                 Rect hpFillRect = new Rect(startX, guiY, barW * realHpPercent, barH);
                 GUI.color = GetHpColor();
-                GUI.DrawTexture(hpFillRect, whiteTex);
+                GUI.DrawTexture(hpFillRect, Texture2D.whiteTexture);
             }
 
             // 5. VIỀN VÀNG / ĐEN CHO THANH MÁU
@@ -145,14 +145,14 @@ namespace GodlessFantasy.UI
 
                 // Nền mana
                 GUI.color = new Color(0.05f, 0.08f, 0.15f, 0.9f);
-                GUI.DrawTexture(manaBgRect, whiteTex);
+                GUI.DrawTexture(manaBgRect, Texture2D.whiteTexture);
 
                 // Mana fill
                 float manaPercent = Mathf.Clamp01((float)playerStats.CurrentMana / playerStats.MaxMana);
                 if (manaPercent > 0.001f)
                 {
                     GUI.color = new Color(0.20f, 0.65f, 1f, 1f); // Xanh lam rực rỡ
-                    GUI.DrawTexture(new Rect(startX, manaY, barW * manaPercent, manaH), whiteTex);
+                    GUI.DrawTexture(new Rect(startX, manaY, barW * manaPercent, manaH), Texture2D.whiteTexture);
                 }
 
                 // Viền mana
@@ -186,10 +186,10 @@ namespace GodlessFantasy.UI
 
         private void DrawOutline(Rect r, int width)
         {
-            GUI.DrawTexture(new Rect(r.x, r.y, r.width, width), whiteTex);
-            GUI.DrawTexture(new Rect(r.x, r.y + r.height - width, r.width, width), whiteTex);
-            GUI.DrawTexture(new Rect(r.x, r.y, width, r.height), whiteTex);
-            GUI.DrawTexture(new Rect(r.x + r.width - width, r.y, width, r.height), whiteTex);
+            GUI.DrawTexture(new Rect(r.x, r.y, r.width, width), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.x, r.y + r.height - width, r.width, width), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.x, r.y, width, r.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.x + r.width - width, r.y, width, r.height), Texture2D.whiteTexture);
         }
 
         private static void InitStyles()
