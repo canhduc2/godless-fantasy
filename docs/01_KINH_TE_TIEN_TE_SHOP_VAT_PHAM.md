@@ -43,6 +43,10 @@ Game vận hành với mô hình kinh tế 3 tầng, phân tách rõ ràng giữ
     - **Cooldown theo mục tiêu (2 phút / 1 người):** Khi người chơi gửi lệnh `/trade <Tên>` đến người chơi B, nếu người B từ chối hoặc lời mời hết hạn (30 giây), người gửi phải đợi **2 PHÚT (120 GIÂY)** mới được phép gửi lại lời mời giao dịch cho **CÙNG NGƯỜI ĐÓ**.
     - **Mục đích:** Chống triệt để hành vi "Spam trade" khủng bố 1 người chơi cụ thể, chống làm phiền đối phương lúc đang ngắm chiêu hoặc né đòn.
     - **Cooldown toàn cục nhẹ (10 giây):** Giữa 2 lần gõ lệnh `/trade` tới 2 người khác nhau phải cách nhau tối thiểu 10 giây (chống bot spam chạy vòng lặp gửi trade hàng loạt cho cả làng).
+  - **Tùy chọn Quyền Riêng Tư: Cài Đặt Tự Động Từ Chối Giao Dịch (Trade Privacy Setting):**
+    - Trong mục Cài Đặt (Tab 5 Settings), người chơi có thể tích chọn: **`[x] Tự động từ chối mọi yêu cầu giao dịch (Auto-Decline Trade)`**.
+    - Khi tính năng này được kích hoạt, bất kỳ người chơi nào gõ lệnh `/trade <Tên>` thì hệ thống sẽ tự động chặn và thông báo lại cho người gửi: *"Mục tiêu đang bật chế độ Từ Chối Giao Dịch!"*.
+    - Màn hình của người nhận hoàn toàn không xuất hiện popup hay âm thanh thông báo nào, giúp người chơi yên tâm tập trung vào combat, săn boss hoặc tránh bị quấy rối lúc đang livestream.
   - Hệ thống tự động gửi hộp thoại mời giao dịch (Trade Request Popup) đến mục tiêu. Nếu đối phương bấm Đồng Ý, cửa sổ giao dịch 2 bên (Two-Way Trade Window) lập tức mở ra.
 
 - **Phạm vi vật phẩm được phép đưa lên bàn giao dịch (Scope of Tradable Items):**

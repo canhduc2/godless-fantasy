@@ -66,7 +66,7 @@ Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối
 | **Tab 2** | **Kỹ Năng & Thuộc Tính** | - Hiển thị 4 ô cuộn trục kỹ năng đã gán và kho cuộn kỹ năng đã học.<br>- Bảng tăng điểm 3 chỉ số chính: **HP, Mana, Attribute Power**.<br>- Bảng tra cứu 3 chỉ số phụ: **Tốc độ, Giáp, Tỉ lệ chí mạng**.<br>- Quản lý Danh Hiệu (Titles) và Perk đang sở hữu. |
 | **Tab 3** | **Kho Đồ (Inventory)** | - Lưới túi đồ cá nhân (Mặc định 24 ô, hiển thị nút mở rộng thêm hàng).<br>- Đánh dấu đặc biệt **5 Ô Bảo Vệ Vĩnh Viễn** (có biểu tượng vương miện/hào quang khóa an toàn). |
 | **Tab 4** | **Thú Cưng (Pet & Trứng)** | - **Bộ sưu tập Pet (Pet Sanctuary):** Xem các thú cưng đã sở hữu, phân loại theo độ hiếm (Common $\rightarrow$ Mythic).<br>- **Lồng Ấp Trứng Random (Incubator):** Đặt trứng vào ấp, theo dõi tiến độ nhiệt lượng/thời gian nở ngẫu nhiên.<br>- **Nút Gọi / Thu hồi Pet:** Cho phép chọn 1 Pet xuất chiến đi theo sau lưng.<br>- Xem perk vui vẻ của Pet đang mang. |
-| **Tab 5** | **Cài Đặt (Settings)** | - **Cấu hình Ngôn Ngữ (Language):** Mặc định **Tiếng Việt**, có thể chuyển sang **English (Tiếng Anh)**.<br>- Tùy chỉnh Âm thanh, BGM, SFX.<br>- Tùy chỉnh Đồ họa, hiển thị tên, thanh máu đồng đội.<br>- Phím tắt điều khiển.<br>- Nút Đăng Xuất (Logout) / Thoát Game. |
+| **Tab 5** | **Cài Đặt (Settings)** | - **Cấu hình Ngôn Ngữ (Language):** Mặc định **Tiếng Việt**, có thể chuyển sang **English (Tiếng Anh)**.<br>- **Quyền Riêng Tư (Privacy):** Tùy chọn bật/tắt **`[x] Tự động từ chối mọi yêu cầu giao dịch (/trade)`**.<br>- Tùy chỉnh Âm thanh, BGM, SFX.<br>- Tùy chỉnh Đồ họa, hiển thị tên, thanh máu đồng đội.<br>- Phím tắt điều khiển.<br>- Nút Đăng Xuất (Logout) / Thoát Game. |
 
 ---
 
