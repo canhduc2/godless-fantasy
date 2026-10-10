@@ -248,7 +248,28 @@ Dùng để bán lấy vàng nuôi nhân vật hoặc giao nộp cho Thợ Rèn 
   - *Cú Mèo Trí Tuệ:* Tăng +30 ~ +60 Max Mana.
   - *Cún Lửa / Mèo Băng:* Tăng nhẹ +5 Sát thương thuộc tính tương ứng (Hỏa / Băng...).
   - *Perk vui vẻ:* Tự động nhặt tiền lẻ rơi quanh chân, đứng yên 5 giây thì pet nằm ngủ hoặc nhảy múa tạo nét.
-- **Quy tắc an toàn:** Pet là bạn đồng hành vĩnh viễn, chết không bị rơi rụng, Chuyển Sinh không bị mất!
+
+#### 4. Bản Chất Của Pet & Ngoại Lệ Rebirth Duy Nhất:
+- **Pet là một loại Vật Phẩm đặc biệt (Pet Item):**
+  - Có thể trang bị (Summon) để xuất hiện chạy lon ton sau lưng, hoặc tháo ra cất gọn vào hành trang Túi Đồ.
+  - **NGOẠI LỆ DUY NHẤT KHÔNG BỊ THANH TRỪNG BỞI REBIRTH:** Pet là loại vật phẩm duy nhất trong toàn bộ thế giới game **KHÔNG BAO GIỜ BỊ XÓA HAY RESET KHI CHUYỂN SINH (REBIRTH LV 100)**! Dù đang mang trên người, trong túi hay trong kho, Pet vẫn vĩnh viễn đồng hành sang kiếp sau.
+  - **Bất tử tuyệt đối:** Pet không có thanh máu, không thể bị quái hay người chơi giết chết.
+- **Quản lý khi sở hữu nhiều Pet:**
+  - Có thể cất vào Rương cá nhân tại Làng.
+  - Có thể bán cho NPC hoặc giao dịch cho người chơi khác qua lệnh `/trade` (chỉ khi Pet đã tháo ra cất trong hành trang).
+
+#### 5. Cơ Chế Thả Pet Đi (Phóng Sinh) & Quy Trình Bảo Vệ 1 Phút Chống Bấm Nhầm:
+- Người chơi có thể chọn **Thả Pet đi (Release Pet)** để nhận lại một ít Vàng an ủi (Consolation Gold).
+- **Quy trình bảo vệ chống bấm nhầm 2 lớp cực kỳ an toàn (Anti-Accidental Security Flow):**
+  1. **Bước 1 - Gõ văn bản xác thực:**
+     - Hệ thống yêu cầu người chơi phải gõ chính xác từng ký tự:
+       - Bản Tiếng Việt: **`TÔI XÁC NHẬN`**
+       - Bản English: **`I CONFIRM`**
+  2. **Bước 2 - Bắt buộc đợi thời gian đếm ngược ĐỦ 1 PHÚT (60 GIÂY):**
+     - Sau khi gõ đúng cụm từ, hệ thống bắt đầu bộ đếm ngược 60 giây.
+     - Trong suốt 60 giây này, nút **[HỦY PHÓNG SINH]** luôn hiển thị sáng rõ. Nếu người chơi đổi ý hoặc tiếc nuối, chỉ cần bấm Hủy là Pet lập tức an toàn trở lại túi đồ!
+     - Chỉ khi hết trọn vẹn 60 giây mà không bấm Hủy, Pet mới chính thức được thả về tự nhiên và người chơi nhận được số Vàng an ủi tương ứng.
+
 
 
 
