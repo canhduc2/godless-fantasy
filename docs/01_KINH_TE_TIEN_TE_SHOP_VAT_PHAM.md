@@ -58,31 +58,40 @@ Game vận hành với mô hình kinh tế 3 tầng, phân tách rõ ràng giữ
 
 ---
 
-## 4. HỆ THỐNG HÀNH TRANG & MỞ RỘNG Ô CHỨA (INVENTORY & STORAGE)
+## 4. HỆ THỐNG HÀNH TRANG & CƠ CHẾ TỰ DO CHỌN 5 Ô BẢO VỆ VĨNH VIỄN
+
+### 4.1. Cơ Chế Tự Do Chọn 5 Ô Cường Hóa Bảo Vệ Vĩnh Viễn
+> **QUY TẮC CỐT LÕI:** Người chơi dùng **1 Rebirth Point (RP)** để cường hóa vĩnh viễn 1 ô bất kỳ. **Tổng cộng tối đa được chọn 5 ô trên toàn bộ nhân vật**.
+> 
+> Người chơi **HOÀN TOÀN TỰ DO LỰA CHỌN** vị trí gắn ấn bảo vệ trong cả 3 phân vùng:
+> 1. **Ô Trang Bị (Equipment Slots):** Vũ khí, Mũ, Áo, Quần, Giày (Ví dụ: Khóa vĩnh viễn ô Vũ khí để cầm vũ khí phẩm X không bao giờ sợ rớt).
+> 2. **Ô Kỹ Năng (Active Skill Slots):** Ô 1, Ô 2, Ô 3, Ô 4 (Ví dụ: Khóa vĩnh viễn cuộn tuyệt kỹ phẩm S gắn ở Ô 1).
+> 3. **Ô Hành Trang Túi Đồ (Bag Inventory Slots):** Bất kỳ ô nào trong balo (Ví dụ: Ô số 1, số 7, số 12...).
+>
+> *(Ví dụ cách phân bổ tự do: 1 Ô Vũ khí + 2 Ô Kỹ năng + 2 Ô Túi đồ = Đủ 5 Ô bảo vệ tối đa)*.
 
 ```
-[ GIAO DIỆN HÀNH TRANG - MẶC ĐỊNH 24 Ô ]
-+----+----+----+----+----+----+
-| S1*| S2*| S3*| S4*| S5*| 06 |  <- * (S1 đến S5): Có thể cường hóa thành Ô BẢO VỆ VĨNH VIỄN
-+----+----+----+----+----+----+
-| 07 | 08 | 09 | 10 | 11 | 12 |
-+----+----+----+----+----+----+
-| 13 | 14 | 15 | 16 | 17 | 18 |
-+----+----+----+----+----+----+
-| 19 | 20 | 21 | 22 | 23 | 24 |
-+----+----+----+----+----+----+
-[+] Mở thêm Hàng 5 (Ô 25-30): Yêu cầu Túi Vải Thô + 5.000 Vàng
-[+] Mở thêm Hàng 6 (Ô 31-36): Yêu cầu Túi Da Thú + 20.000 Vàng
-[+] Mở thêm Hàng 7 (Ô 37-42): Yêu cầu Túi Ma Thuật + 100.000 Vàng
++-----------------------------------------------------------------------------------------+
+|                GIAO DIỆN CHỌN VỊ TRÍ 5 Ô BẢO VỆ VĨNH VIỄN (TỰ DO LỰA CHỌN)              |
++-----------------------------------------------------------------------------------------+
+| [PHÂN VÙNG TRANG BỊ]        [PHÂN VÙNG KỸ NĂNG]            [PHÂN VÙNG HÀNH TRANG TÚI ĐỒ]|
+|  [🛡️ Vũ Khí]*                [✨ Ô Skill 1]*                 | 01 | 02 | 03*| 04 | 05 | 06|
+|  [  Mũ     ]                 [   Ô Skill 2 ]                 | 07 | 08 | 09 | 10*| 11 | 12|
+|  [  Áo     ]                 [   Ô Skill 3 ]                 | 13 | 14 | 15 | 16 | 17 | 18|
+|  [  Quần   ]                 [   Ô Skill 4 ]                 | 19 | 20 | 21 | 22 | 23 | 24|
+|  [  Giày   ]                                                                            |
+|                                                                                         |
+|  * Ký hiệu [*]: Đã được người chơi CHỌN gắn ấn BẢO VỆ VĨNH VIỄN (Tổng: 5/5 Ô)           |
++-----------------------------------------------------------------------------------------+
 ```
 
-### 4.1. Quy Cách Túi Đồ Cá Nhân (Bag Slots)
+### 4.2. Quy Cách Túi Đồ Cá Nhân (Bag Slots)
 - **Số ô khởi đầu:** 24 ô (Lưới 4 hàng x 6 cột).
 - **Giới hạn mở rộng tối đa:** 60 ô (10 hàng x 6 cột).
 - **Cơ chế mở rộng ô chứa:**
-  - Người chơi không được mở tự do tất cả cùng lúc mà phải mở theo từng hàng (6 ô/lần).
-  - Điều kiện mở rộng: Cần đạt mốc Level tương ứng + Tiêu tốn lượng Vàng quy định + Vật phẩm mở rộng túi (mua từ NPC hoặc rớt từ quái).
-- **Trọng lượng:** Để tối ưu trải nghiệm chiến đấu MMORPG cổ điển, game quản lý theo **Số Ô (Slot-based)**, không dùng cân nặng gây ức chế, nhưng vật phẩm cùng loại sẽ có giới hạn xếp chồng (Stack limit: Thảo dược 99, Thuốc máu 20, Trang bị/Cuộn trục 1 ô/món).
+  - Mở rộng theo từng hàng (6 ô/lần).
+  - Điều kiện: Đạt Level yêu cầu + Tiêu tốn Vàng + Vật phẩm Túi da / Túi ma thuật.
+- **Quy tắc xếp chồng:** Slot-based. Dược phẩm stack 20, Thảo dược/Rác stack 99, Trang bị/Cuộn trục chiếm 1 ô/món.
 
 ### 4.2. Rương Đồ Cá Nhân Tại Làng (Bank Storage)
 - Nằm cố định tại NPC Thủ Kho ở các Safe Zone.

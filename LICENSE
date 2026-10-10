@@ -1,0 +1,83 @@
+Godless Fantasy Source-Available License (GF-SAL) v1.0
+Copyright (c) 2026 Squirrels Studio
+All rights reserved except for the limited permissions expressly granted below.
+
+1. Definitions
+"Project" means Godless Fantasy and the source code, scripts, configuration files, documentation, and other materials distributed by the copyright holder under this License.
+"Copyright Holder" means Squirrels Studio, together with any other rights holders who expressly apply this License to their contributions.
+"Non-Commercial Use" means use for personal learning, research, experimentation, and non-commercial community contributions that do not generate revenue or provide a commercial advantage.
+"Commercial Use" means any use primarily intended for or directed toward commercial advantage or monetary compensation, including selling or licensing the Project, operating a paid game service, charging for access, monetizing a modified version, or incorporating the Project into a commercial product or service.
+
+2. Permission to Use, Study, and Modify
+Subject to the terms of this License, the Copyright Holder grants you a limited, worldwide, non-exclusive, non-transferable, royalty-free license to:
+- View and study the source code.
+- Download and run the Project for Non-Commercial Use.
+- Modify the source code for Non-Commercial Use.
+- Create and share modified versions for Non-Commercial Use.
+- Submit contributions to the Project.
+
+These permissions do not transfer ownership of the Project or any intellectual property rights to you.
+
+3. Attribution Requirements
+When you redistribute the Project, a modified version, or substantial portions of its source code, you must:
+- Retain all existing copyright notices, author credits, and license notices.
+- Include a copy of this License.
+- Clearly identify your modifications.
+- Credit the original project and its original author in the accompanying documentation, repository, or other reasonable attribution location.
+
+The required attribution must include, at minimum:
+- Original project: Godless Fantasy
+- Original author: Squirrels Studio
+- Source repository: https://github.com/canhduc2/godless-fantasy
+
+You must not falsely claim authorship of the original Project or misrepresent your relationship with the Copyright Holder.
+
+4. Commercial Use Requires Separate Permission
+You may not engage in Commercial Use of the Project, in whole or in substantial part, without obtaining prior written permission from the Copyright Holder or the applicable rights holder.
+
+Without such permission, you may not:
+- Sell the Project, its source code, or modified versions.
+- Operate a commercial game server or paid service based on the Project.
+- Charge users for access to the Project or its gameplay services.
+- Monetize a redistributed or modified version of the Project.
+- Incorporate the Project into a commercial product or service.
+- Use the Project or its assets in a commercial offering in a manner prohibited by the applicable asset license.
+
+A separate commercial license may establish different terms, fees, attribution requirements, and permitted uses.
+
+5. Redistribution
+You may redistribute unmodified or modified copies only for Non-Commercial Use and only if you comply with this License.
+Redistribution does not grant recipients any right to engage in Commercial Use.
+You may not impose additional restrictions that remove the permissions granted by this License to recipients of your redistributed copy.
+
+6. Project Name and Trademarks
+This License does not grant permission to use the Godless Fantasy name, logo, branding, or other trademarks to imply official endorsement, affiliation, or sponsorship.
+You may refer to the Project by name for identification and attribution purposes.
+
+7. Third-Party Materials
+Third-party libraries, tools, assets, fonts, audio, and other materials may be governed by separate licenses.
+This License does not override those licenses or grant rights that the Copyright Holder does not own or have authority to grant.
+You are responsible for complying with the applicable terms for third-party materials.
+
+8. Contributions
+Unless a separate written agreement states otherwise, contributions you intentionally submit for inclusion in the Project are provided under this License to the extent you have the rights to license them.
+You retain ownership of your original contributions. You must not submit material that you do not have permission to contribute.
+
+9. No Warranty
+The Project is provided "AS IS", without warranties or conditions of any kind, to the maximum extent permitted by applicable law.
+The Copyright Holder is not liable for claims or damages arising from the use of the Project, except where such exclusion is prohibited by applicable law.
+
+10. Termination
+Your permissions under this License terminate automatically if you materially violate its terms.
+Where permitted by applicable law, your permissions may be reinstated if the violation is remedied within a reasonable period after you become aware of it or receive written notice of it.
+Termination does not eliminate obligations or liabilities arising before termination.
+
+11. Governing Law
+This License is subject to applicable law. Any governing law or dispute-resolution provision should be specified separately where legally appropriate.
+
+12. Contact and Additional Permissions
+For commercial licensing, additional permissions, or other licensing inquiries, contact:
+0206canh2@gmail.com
+https://github.com/canhduc2/godless-fantasy
+
+By using, modifying, or redistributing the Project, you agree to comply with the applicable terms of this License.

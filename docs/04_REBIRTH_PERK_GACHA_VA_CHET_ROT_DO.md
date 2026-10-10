@@ -45,28 +45,34 @@ Khi nhân vật đạt Level 100, chức năng **Chuyển Sinh (Rebirth)** sẽ 
 
 ---
 
-## 3. CƠ CHẾ 5 Ô CƯỜNG HÓA VĨNH VIỄN (PERMANENT PROTECTED SLOTS)
+## 3. CƠ CHẾ TỰ DO CHỌN 5 Ô CƯỜNG HÓA VĨNH VIỄN (PERMANENT PROTECTED SLOTS)
 
 Để cân bằng giữa sự khốc liệt của PvP và bảo vệ nỗ lực cày cuốc của game thủ, Godless Fantasy giới thiệu cơ chế **Khóa Ô Vĩnh Viễn Bằng Điểm Rebirth**:
 
 ```
-+-------------------------------------------------------------------------+
-|                  CƠ CHẾ BẢO VỆ 5 Ô VĨNH VIỄN (MAX 5 SLOTS)               |
-+-------------------------------------------------------------------------+
-| - Chi phí: 1 Điểm Rebirth Point (RP) mở khóa 1 Ô Bảo Vệ.                |
-| - Giới hạn tối đa: Đúng 5 Ô cho toàn bộ nhân vật (Không thể vượt quá). |
-| - Phạm vi áp dụng (Người chơi tự do chọn loại ô muốn bảo vệ):            |
-|     * Ô Trang Bị (Vũ khí, Mũ, Áo, Quần, Giày)                           |
-|     * Ô Kỹ Năng (Ô 1, 2, 3, 4)                                          |
-|     * Ô Hành Trang Túi Đồ (Slot túi chỉ định)                           |
-| - Hiệu lực bảo vệ:                                                      |
-|     [1] KHI CHẾT NGOÀI SAFE ZONE: Đồ trong 5 ô này KHÔNG BAO GIỜ RƠI!   |
-|     [2] KHI CHUYỂN SINH (REBIRTH): Đồ trong 5 ô này KHÔNG BỊ XÓA!       |
-|     [3] KHI CHUYỂN CHỨC: Đồ trong 5 ô này VẪN ĐƯỢC GIỮ NGUYÊN!          |
-+-------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------+
+|                  CƠ CHẾ BẢO VỆ 5 Ô VĨNH VIỄN - TỰ DO LỰA CHỌN (MAX 5 SLOTS)             |
++-----------------------------------------------------------------------------------------+
+| - Chi phí: 1 Điểm Rebirth Point (RP) mở khóa 1 Ô Bảo Vệ.                                |
+| - Giới hạn tối đa: Đúng 5 Ô cho toàn bộ nhân vật (Không thể vượt quá).                 |
+| - QUYỀN CHỌN TỰ DO CỦA NGƯỜI CHƠI (Tự do phân bổ trong 3 nhóm):                         |
+|     [1] Ô TRANG BỊ: Có thể chọn ô Vũ khí, Mũ, Áo, Quần hoặc Giày.                      |
+|     [2] Ô KỸ NĂNG: Có thể chọn ô Kỹ Năng 1, 2, 3 hoặc 4.                                |
+|     [3] Ô HÀNH TRANG: Có thể chọn bất kỳ ô cụ thể nào trong Túi Đồ cá nhân.             |
+|                                                                                         |
+| - VÍ DỤ PHÂN BỔ TÙY CHỌN:                                                               |
+|     * Người chơi A (Ưu tiên vũ khí & skill): 1 Ô Vũ khí + 2 Ô Kỹ năng + 2 Ô Túi đồ.     |
+|     * Người chơi B (Ưu tiên bộ kỹ năng): 4 Ô Kỹ năng + 1 Ô Vũ khí.                      |
+|     * Người chơi C (Ưu tiên bảo toàn tài sản buôn bán): 5 Ô trong Túi Đồ.               |
+|                                                                                         |
+| - HIỆU LỰC BẢO VỆ TUYỆT ĐỐI:                                                            |
+|     [+] KHI CHẾT NGOÀI SAFE ZONE: Đồ/Kỹ năng trong 5 ô này KHÔNG BAO GIỜ RƠI (0% DROP)!|
+|     [+] KHI CHUYỂN SINH (REBIRTH): Đồ/Kỹ năng trong 5 ô này KHÔNG BỊ XÓA!               |
+|     [+] KHI CHUYỂN CHỨC: Đồ/Kỹ năng trong 5 ô này VẪN ĐƯỢC GIỮ NGUYÊN!                  |
++-----------------------------------------------------------------------------------------+
 ```
 
-*Lưu ý kỹ thuật:* Hệ thống bảo vệ theo **Vị Trí Của Ô (Slot ID)** chứ không bảo vệ theo từng ID món đồ cụ thể. Khi người chơi thay một món đồ mới vào ô đã được cường hóa bảo vệ, món đồ mới đó nghiễm nhiên thừa hưởng quyền miễn nhiễm rớt đồ.
+*Lưu ý kỹ thuật:* Hệ thống bảo vệ theo **Vị Trí Của Ô (Slot ID)** chứ không bảo vệ theo từng ID món đồ cụ thể. Khi người chơi thay một món đồ/kỹ năng mới vào ô đã được cường hóa bảo vệ, món đồ mới đó nghiễm nhiên thừa hưởng quyền miễn nhiễm rớt đồ. Người chơi có thể gỡ bỏ ấn bảo vệ khỏi ô này để chuyển sang ô khác (có thể kèm điều kiện tiêu tốn lượng Vàng nhỏ tại Đền Chuyển Sinh).
 
 ---
 

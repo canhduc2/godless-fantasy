@@ -23,3 +23,15 @@ Toàn bộ hệ thống thiết kế game đã được module hóa chi tiết t
 ## 👥 CREDITS & BẢN QUYỀN
 - **Studio:** Squirrels Studio
 - **Dự án:** Godless Fantasy
+- **Tác giả:** [canhduc2](https://github.com/canhduc2)
+
+---
+
+## ⚖️ LICENSE & ĐIỀU KHOẢN SỬ DỤNG
+*Godless Fantasy* is a **source-available** project, not an OSI-approved open-source project.
+
+- **Source Code:** [Godless Fantasy Source-Available License (GF-SAL) v1.0](file:///D:/godless-fantasy/LICENSE).
+- **Original Creative Assets:** [Creative Commons CC BY-NC-SA 4.0](file:///D:/godless-fantasy/ASSETS-LICENSE.md), unless otherwise stated.
+- **Third-Party Notices:** [THIRD-PARTY-NOTICES.md](file:///D:/godless-fantasy/THIRD-PARTY-NOTICES.md).
+- Attribution is required when redistributing covered materials.
+- **Commercial use requires prior written permission from Squirrels Studio.** Contact: `0206canh2@gmail.com`.
