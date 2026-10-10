@@ -1,7 +1,7 @@
 # ĐẶC TẢ HỆ THỐNG: GIAO DIỆN NGƯỜI DÙNG (UI/HUD) & HỆ THỐNG TRÒ CHUYỆN (CHAT)
 **Mã tài liệu:** DOC-06  
 **Dự án:** Godless Fantasy  
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 
 ---
 

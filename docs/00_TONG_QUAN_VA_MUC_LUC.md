@@ -1,6 +1,6 @@
 # TỔNG QUAN TÀI LIỆU ĐẶC TẢ THIẾT KẾ GAME (GDD & TDD)
 ## DỰ ÁN: GODLESS FANTASY (2D TOP-DOWN MMORPG)
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 **Phiên bản tài liệu:** v1.0.0  
 **Ngày phát hành:** 2026-10-10  
 

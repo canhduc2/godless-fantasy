@@ -1,7 +1,7 @@
 # ĐẶC TẢ HỆ THỐNG: CHUYỂN SINH (REBIRTH), RƯƠNG THẾ GIỚI, 5 Ô BẢO VỆ, CHẾT RƠI ĐỒ, PERK GACHA & TITLE
 **Mã tài liệu:** DOC-04  
 **Dự án:** Godless Fantasy  
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 
 ---
 

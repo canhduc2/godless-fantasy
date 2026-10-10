@@ -1,6 +1,6 @@
 # ⚔️ Godless Fantasy (2D Top-Down MMORPG)
 
-> **Phát triển bởi:** **Squirrels Studio**  
+> **Phát triển bởi:** **SquiRRels Studio**  
 > **Thể loại:** 2D Top-Down Open-World MMORPG  
 > **Đặc trưng:** Hardcore Open PvP, Friendly Fire Logic, Level 1–100 Infinite Rebirth, Secret Classes, Controlled Full-Loot Risk & Song Ngữ (Tiếng Việt mặc định / English).
 
@@ -22,7 +22,7 @@ Toàn bộ hệ thống thiết kế game đã được module hóa chi tiết t
 ---
 
 ## 👥 CREDITS & BẢN QUYỀN
-- **Studio:** Squirrels Studio
+- **Studio:** SquiRRels Studio
 - **Dự án:** Godless Fantasy
 - **Tác giả:** [canhduc2](https://github.com/canhduc2)
 
@@ -35,4 +35,4 @@ Toàn bộ hệ thống thiết kế game đã được module hóa chi tiết t
 - **Original Creative Assets:** [Creative Commons CC BY-NC-SA 4.0](file:///D:/godless-fantasy/ASSETS-LICENSE.md), unless otherwise stated.
 - **Third-Party Notices:** [THIRD-PARTY-NOTICES.md](file:///D:/godless-fantasy/THIRD-PARTY-NOTICES.md).
 - Attribution is required when redistributing covered materials.
-- **Commercial use requires prior written permission from Squirrels Studio.** Contact: `0206canh2@gmail.com`.
+- **Commercial use requires prior written permission from SquiRRels Studio.** Contact: `0206canh2@gmail.com`.

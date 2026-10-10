@@ -1,7 +1,7 @@
 # ĐẶC TẢ HỆ THỐNG: THẾ GIỚI MỞ, NPC, QUÁI VẬT, BOSS & BÍ MẬT CHUYỂN CHỨC HỆ ẨN
 **Mã tài liệu:** DOC-05  
 **Dự án:** Godless Fantasy  
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 
 ---
 

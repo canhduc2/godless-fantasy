@@ -1,8 +1,8 @@
 # TÀI LIỆU ĐẶC TẢ CÔNG NGHỆ (TECH STACK & ARCHITECTURE DECISION RECORD - ADR)
 ## DỰ ÁN: GODLESS FANTASY (2D TOP-DOWN MMORPG)
 **Mã tài liệu:** DOC-07  
-**Studio phát triển:** Squirrels Studio  
-**Phiên bản:** v1.0.0  
+**Studio phát triển:** SquiRRels Studio  
+**Phiên bản:** v1.1.0  
 
 ---
 
@@ -25,27 +25,30 @@
   - **Sprite Atlas:** Gom toàn bộ icon trang bị, skill cuộn trục vào các tấm Atlas 2048x2048 để giảm số lượng Draw Call xuống tối thiểu (< 30 Draw Calls trên toàn màn hình).
   - **GPU Instancing:** Cho phép render hàng nghìn quái vật và hiệu ứng cây cối cùng lúc mà không tụt FPS.
 
-### 2.2. Công Cụ Sản Xuất Asset Khuyến Nghị
-- **Vẽ Pixel & Animation:** Aseprite (hoặc Photoshop / Krita).
-- **Bộ Tileset thế giới:** Hỗ trợ Auto-tile 47-tiles (để vẽ đường đi, vách đá, sông suối tự động bo góc mượt mà).
+### 2.2. Công Cụ Vẽ Chính Thức: Pixelorama
+- **Công cụ được chọn:** **Pixelorama** (Phần mềm vẽ Pixel Art chuyên nghiệp, mã nguồn mở, miễn phí 100%).
+- **Link tải phiên bản mới nhất:** [https://github.com/Orama-Interactive/Pixelorama/releases](https://github.com/Orama-Interactive/Pixelorama/releases)
+- **Ưu điểm vượt trội:**
+  - Dung lượng siêu nhẹ (~40MB), chạy ngay không cần cài đặt.
+  - Hỗ trợ timeline animation, xuất Sprite Sheet tự động, bảng màu palette và layer phong phú, tương thích xuất thẳng sang Unity 2D.
 
 ---
 
-## 3. SO SÁNH & QUYẾT ĐỊNH GAME ENGINE & CODE STACK
+## 3. QUYẾT ĐỊNH GAME ENGINE & HỆ THỐNG DATABASE
 
-Vì anh đã 4 năm chưa dùng lại Unity, chúng ta có 2 phương án hàng đầu được cân nhắc:
+### 3.1. Game Engine: Unity 2D LTS (C#)
+- **Engine chính:** **Unity 2D LTS (Long Term Support)** với **Universal Render Pipeline (URP 2D)**.
+- **Lý do lựa chọn:**
+  - Hệ sinh thái 2D mạnh mẽ nhất ngành công nghiệp: Tilemap Palette, 2D Lights, Sprite Shape, 2D Animation.
+  - Ngôn ngữ C# hướng đối tượng mạnh mẽ, dễ viết code sạch và tối ưu hiệu năng.
+  - Antigravity AI hỗ trợ 10/10: Có thể tự động viết toàn bộ script C#, PlayerController, StateMachine, UI HUD và Network Sync.
 
-| Tiêu chí | Phương án A: UNITY 2D (C#) [KHUYẾN NGHỊ HÀNG ĐẦU] | Phương án B: GODOT 4 (C#) [PHƯƠNG ÁN SIÊU NHẸ] |
-| :--- | :--- | :--- |
-| **Độ quen thuộc** | Anh đã từng có nền tảng Unity (dù 4 năm trước), em sẽ gánh toàn bộ code C# và hướng dẫn chi tiết từng nút bấm trên Editor mới. | Engine mới toanh, cần làm quen khái niệm Node/Scene của Godot. |
-| **Dung lượng & Cài đặt** | Unity Hub + Editor (~4 - 6 GB). | **Siêu nhẹ: File chạy chỉ ~60MB**, giải nén là chạy ngay không cần cài đặt. |
-| **Hệ thống 2D & Ánh sáng**| **URP 2D Renderer** cực xịn: ánh sáng 2D, shadow caster, bloom, post-processing có sẵn chuẩn công nghiệp. | 2D Engine thuần túy rất mượt, ánh sáng 2D ổn nhưng ít package hỗ trợ MMORPG hơn. |
-| **Giải pháp Multiplayer** | Rất dồi dào: **Mirror Networking**, **Fish-Net**, hoặc **WebSocket/KCP tự viết**. Hàng nghìn tutorial và template MMORPG 2D. | Tự viết WebSocket / ENet hoặc dùng Nakama. |
-| **Mức độ hỗ trợ của AI** | **Cực đại 10/10**: AI viết C# Unity siêu chuẩn xác, bao gồm PlayerController, Pathfinding NavMesh 2D, Inventory UI, Animator, Network Manager. | **Rất tốt 9/10**: AI viết C# Godot mượt mà. |
-
-> 💡 **KẾT LUẬN ĐỀ XUẤT:** 
-> - **Lựa chọn 1 (Toàn diện nhất):** Dùng **Unity 2D (C#)** phiên bản LTS (2022.3 LTS hoặc 2023 LTS) kết hợp **Universal Render Pipeline (URP 2D)**. Em sẽ viết toàn bộ code C# kiến trúc theo mô hình sạch (Clean Architecture / MVC), anh chỉ việc mở project lên và kéo thả prefab theo hướng dẫn.
-> - **Lựa chọn 2 (Nếu máy anh muốn siêu nhẹ, không muốn cài Unity nặng):** Dùng **Godot 4 (C#)** — chạy ngay lập tức trong 30 giây.
+### 3.2. Database: SQLite 3 (All-In-One Architecture)
+- **Database chính:** **SQLite 3**.
+- **Lý do lựa chọn:**
+  - **All-in-one & Serverless:** Không cần cài đặt các dịch vụ cơ sở dữ liệu cồng kềnh (như MySQL hay PostgreSQL), toàn bộ Database nằm gọn trong 1 file `.db` duy nhất.
+  - **Tốc độ cực nhanh & An toàn tuyệt đối:** Hỗ trợ ACID Transactions, đảm bảo an toàn tuyệt đối cho cơ chế Rebirth Vault (lưu rương 2 món) và trừ đồ khi chết 5%.
+  - **Dễ dàng sao lưu (Backup) & Di động:** Chỉ cần copy 1 file `.db` là có thể mang sang bất kỳ máy chủ nào.
 
 ---
 
@@ -57,11 +60,11 @@ Vì anh đã 4 năm chưa dùng lại Unity, chúng ta có 2 phương án hàng 
 |-- CLIENT (Unity 2D / C#)
 |   |-- Core/
 |   |   |-- StateMachine/       -> FSM: Idle, Aiming, Casting, Dead
-|   |   |-- Input/              -> Mouse Click-to-Move, WASD Override, Shift Dash
+|   |   |-- Input/              -> Mouse Click-to-Move, WASD Override, Shift Dash (Cursor Vector)
 |   |   |-- Movement/           -> Pathfinding A* (NavMesh2D / Grid)
 |   |-- Combat/
-|   |   |-- Targeting/          -> IndicatorRenderer (Arrow, AoE Circle, Arc)
-|   |   |-- SkillManager/       -> Two-Tap Casting Controller
+|   |   |-- Targeting/          -> IndicatorRenderer (Directional Arrow, Ground AoE Circle)
+|   |   |-- SkillManager/       -> Two-Tap Casting Controller (Press 1 Aim -> Press 1 Cast)
 |   |-- UI/
 |   |   |-- HUD/                -> Realtime Portrait, HP/Mana Bars, Level Label
 |   |   |-- SlideMenu/          -> Equipment, Skills, Inventory (5 Protected Slots), Settings
@@ -70,42 +73,85 @@ Vì anh đã 4 năm chưa dùng lại Unity, chúng ta có 2 phương án hàng 
 |
 |-- WORLD SERVER (C# .NET Core / Headless Server)
 |   |-- Simulation/             -> Tick-based Game Loop (20 - 30 ticks/sec)
-|   |-- Validation/             -> Movement anti-speedhack, Combat Range Validator
-|   |-- CombatEngine/           -> Friendly Fire Resolver, Damage Matrix
+|   |-- Validation/             -> Movement anti-speedhack, Combat Range Validator (At Key-Press 2)
+|   |-- CombatEngine/           -> Friendly Fire Resolver, Damage Matrix, Safe Zone Guard
 |   |-- Persistence/
 |   |   |-- RebirthVaultManager -> Server-stored Vault at Death Coordinates
 |   |   |-- InventoryService    -> 5 Protected Slots, 5% Loot Drop Calculator
 |   |   |-- GachaEngine/        -> Perk Gacha & Random Seed Verification
-|   |-- Database/               -> PostgreSQL / SQLite (Lưu trữ nhân vật & rương)
+|   |-- Database/               -> SQLite 3 (Lưu trữ SQLite All-in-One: Character & Vaults)
 ```
 
 ---
 
-## 5. HỖ TRỢ MCP (MODEL CONTEXT PROTOCOL) & TOOLING PHÁT TRIỂN
+## 5. LỘ TRÌNH TRIỂN KHAI VERTICAL SLICE (ZERO TO PLAYABLE)
 
-Để biến Antigravity thành trợ lý toàn năng pair-programming cùng anh, hệ thống MCP và công cụ tích hợp bao gồm:
+Không vội vàng làm ngay thế giới MMORPG khổng lồ, chiến lược phát triển bắt đầu bằng một **Bản Demo Lõi (Vertical Slice)** tinh gọn để hoàn thiện cảm giác chơi (Game Feel):
 
-1. **MCP File & Code Generator:**
-   - Tự động sinh mã nguồn C# chuẩn theo ScriptableObject, Component, và Clean Architecture.
-   - Viết sẵn các class dữ liệu JSON/ScriptableObject cho 7 phẩm cấp (X-E), 6 thuộc tính, 5 hệ.
-2. **MCP Database & Server Inspector:**
-   - Kiểm tra trực tiếp dữ liệu nhân vật, rương Rebirth Vault, lịch sử rơi đồ và chat log.
-3. **Automated Unit Testing & Simulation:**
-   - Viết các bài test logic độc lập (Test riêng công thức rơi đồ 5%, test Friendly Fire, test FSM Aiming) mà không cần phải bật giao diện game lên mới kiểm tra được.
+```
++-----------------------------------------------------------------------------------------+
+|                  LỘ TRÌNH 5 BƯỚC VERTICAL SLICE (CORE COMBAT LOOP)                      |
++-----------------------------------------------------------------------------------------+
+| [BƯỚC 1] Nhân vật di chuyển mượt mà:                                                    |
+|          - Click Chuột Trái để di chuyển (Click-to-Move).                               |
+|          - Phím W, A, S, D ghi đè ngay lập tức để né đòn thủ công.                      |
+|                                                                                         |
+| [BƯỚC 2] Kỹ năng Dash cơ động:                                                          |
+|          - Nhấn Shift để lướt thẳng theo hướng con trỏ chuột (tiêu hao 20 Mana, 3.5s CD)|
+|                                                                                         |
+| [BƯỚC 3] Cơ chế ngắm & xả chiêu Two-Tap:                                                |
+|          - Bấm phím 1 lần đầu: Bật chế độ ngắm (tâm ngắm lia theo chuột).               |
+|          - Vừa chạy né đòn (Click Trái), tâm ngắm vẫn bám chuột liên tục.               |
+|          - Bấm phím 1 lần nữa: Xác nhận thi triển đòn đánh.                             |
+|          - Click Chuột Phải: Hủy ngắm ngay lập tức.                                     |
+|                                                                                         |
+| [BƯỚC 4] Combat cơ bản & Friendly Fire:                                                 |
+|          - Đặt 2 nhân vật vào map (cùng nhóm hoặc khác nhóm).                           |
+|          - Chưởng trúng nhau nhận 100% sát thương thật (Friendly Fire).                 |
+|          - Đi vào vùng Safe Zone: Miễn nhiễm sát thương PvP.                            |
+|                                                                                         |
+| [BƯỚC 5] Kết nối Server Authoritative & Multiplayer thử nghiệm:                         |
+|          - Server đồng bộ vị trí, kiểm tra tầm đánh, trừ mana và xác nhận trúng đòn.    |
+|                                                                                         |
+| => KHI VÒNG LẶP CHIẾN ĐẤU ĐÃ VUI & ỔN ĐỊNH: Mới mở rộng sang Balo, Boss, Rebirth & Map!  |
++-----------------------------------------------------------------------------------------+
+```
 
 ---
 
-## 6. LỘ TRÌNH BẮT ĐẦU CODE THỰC TẾ (ROADMAP: ZERO TO PLAYABLE)
+## 6. HƯỚNG DẪN TẢI & CHỌN VỊ TRÍ CÀI ĐẶT CÔNG CỤ (DOWNLOAD & SETUP GUIDE)
 
-- **Giai đoạn 1 (Khởi động dự án):**
-  - Cài đặt công cụ nền tảng (Unity Hub / Editor hoặc Godot theo lựa chọn của anh).
-  - Khởi tạo repo cấu trúc thư mục chuẩn.
-- **Giai đoạn 2 (Vertical Slice Gameplay - Em trực tiếp viết code):**
-  - Code Player Controller: Di chuyển Click-to-Move + WASD ghi đè.
-  - Code Kỹ Năng: State Machine bấm 1 ngắm $\rightarrow$ di chuột $\rightarrow$ bấm 1 chưởng $\rightarrow$ chuột phải hủy.
-  - Code Dash: Phím Shift lướt theo hướng chuột.
-- **Giai đoạn 3 (UI & Hệ thống Dữ liệu):**
-  - Dựng HUD, Menu 4 Tab, Inventory 24 ô + 5 ô khóa bảo vệ.
-- **Giai đoạn 4 (Multiplayer & World Logic):**
-  - Đồng bộ 2 người chơi qua Server, kiểm tra Friendly Fire chưởng lẫn nhau.
-  - Rebirth Cấp 100 & Rương Rebirth Vault.
+### 6.1. Tải & Cài Đặt C# .NET SDK
+- **Mục đích:** Biên dịch và chạy mã nguồn C#, Unit Test và Server Core.
+- **Phiên bản khuyến nghị:** **.NET 8.0 SDK (LTS)**.
+- **Link tải chính thức:** [https://dotnet.microsoft.com/en-us/download/dotnet/8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- **Gói tải:** Chọn mục **"SDK x64"** cho Windows.
+- **Vị trí cài đặt:** Bộ cài .NET rất nhẹ (~200MB), anh cứ bấm cài đặt theo vị trí mặc định (`C:\Program Files\dotnet`) để các công cụ và terminal tự động nhận diện PATH.
+
+---
+
+### 6.2. Tải & Cài Đặt Unity 2D LTS (Cách Chuyển Vị Trí Cài Đặt Sang Ổ D:\)
+
+Để tránh làm đầy ổ `C:\`, anh thực hiện cài đặt Unity sang ổ `D:\` như sau:
+
+#### Bước 1: Tải Unity Hub
+- Link tải chính thức: [https://unity.com/download](https://unity.com/download)
+- Cài đặt file `UnityHubSetup.exe` vào máy.
+
+#### Bước 2: Cấu hình đổi ổ đĩa cài đặt sang ổ D:\ trong Unity Hub
+1. Mở **Unity Hub**.
+2. Bấm vào biểu tượng **Bánh răng (Preferences)** ở góc trên bên trái.
+3. Chọn mục **Installs** trong thanh menu bên trái:
+   - **Installs location:** Đổi đường dẫn thành: `D:\Unity\Editor`
+   - **Downloads location:** Đổi đường dẫn thành: `D:\Unity\Downloads`
+4. Bấm **Save**.
+
+#### Bước 3: Tải phiên bản Unity 2D LTS
+1. Trong Unity Hub, vào tab **Installs** $\rightarrow$ Bấm nút **Install Editor**.
+2. Chọn phiên bản có nhãn **LTS (Long Term Support)**:
+   - Khuyến nghị: **Unity 2022.3 LTS** (hoặc Unity 6 LTS).
+   - *(Hoặc truy cập trang lưu trữ chính thức: [https://unity.com/releases/editor/archive](https://unity.com/releases/editor/archive) và bấm nút "Install with Unity Hub")*.
+3. Ở bước chọn Modules đi kèm:
+   - Tích chọn: **Microsoft Visual Studio Community** (hoặc tích Visual Studio Code).
+   - Tích chọn: **Documentation** (tùy chọn).
+4. Bấm **Install** và chờ Unity tải trực tiếp vào ổ `D:\`!

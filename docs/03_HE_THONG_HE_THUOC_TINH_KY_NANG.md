@@ -1,7 +1,7 @@
 # ĐẶC TẢ HỆ THỐNG: 5 HỆ CHIẾN ĐẤU, 6 THUỘC TÍNH, TIẾN TRÌNH & KỸ NĂNG
 **Mã tài liệu:** DOC-03  
 **Dự án:** Godless Fantasy  
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 
 ---
 

@@ -12,4 +12,4 @@ Godless Fantasy may incorporate or reference third-party libraries, tools, and a
 
 ---
 
-*For inquiries regarding third-party licensing or rights management, contact Squirrels Studio at `0206canh2@gmail.com`.*
+*For inquiries regarding third-party licensing or rights management, contact SquiRRels Studio at `0206canh2@gmail.com`.*

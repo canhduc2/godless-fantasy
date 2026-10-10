@@ -1,7 +1,7 @@
 # ĐẶC TẢ HỆ THỐNG: COMBAT, PVP TỰ DO, FRIENDLY FIRE & TỔ ĐỘI
 **Mã tài liệu:** DOC-02  
 **Dự án:** Godless Fantasy  
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 
 ---
 

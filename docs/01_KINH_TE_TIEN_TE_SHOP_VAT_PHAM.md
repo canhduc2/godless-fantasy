@@ -1,7 +1,7 @@
 # ĐẶC TẢ HỆ THỐNG: KINH TẾ, TIỀN TỆ, SHOP, HÀNH TRANG & VẬT PHẨM
 **Mã tài liệu:** DOC-01  
 **Dự án:** Godless Fantasy  
-**Studio phát triển:** Squirrels Studio  
+**Studio phát triển:** SquiRRels Studio  
 
 ---
 
