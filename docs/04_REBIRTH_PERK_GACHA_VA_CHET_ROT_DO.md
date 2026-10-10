@@ -141,6 +141,9 @@ Người chơi có thể sở hữu Danh hiệu thông qua các thành tựu l�
 | **Sứ Giả Khởi Nguyên (The Pioneer)** | Đạt Cấp độ 25 | +20 HP, +10 Mana |
 | **Bậc Thầy Chuyển Sinh (Once Reborn)**| Hoàn thành Rebirth lần đầu tiên | +5% HP, +5% Mana vĩnh viễn |
 | **Kẻ Săn Boss Cổ Đại (Ancient Slayer)**| Độc hành hạ gục Boss Thế Giới | +3% Tỉ lệ chí mạng, +15 Giáp |
-| **Kẻ Tội Lỗi Tái Thế (Godless Outcast)**| Chuyển chức thành công Hệ Ẩn | +5% Tốc độ di chuyển, +25 Sức mạnh thuộc tính |
-| **Chân Ngoại Đạo (The True Heretic)** | **[DANH HIỆU HIẾM]** Đã là Hệ Ẩn nhưng may mắn tìm lại và chinh phục Thánh Địa lần thứ 2+ | +40 Sức mạnh thuộc tính, +5% Tốc độ chạy, +50 Mana tối đa |
+| **Kẻ Tội Lỗi Tái Thế (Godless Outcast)**| Chuyển chức thành công Hệ Ẩn (Lần 1) | +5% Tốc độ di chuyển, +25 Sức mạnh thuộc tính |
+| **Chân Ngoại Đạo I (True Heretic I)** | Chinh phục lại Thánh Địa lần 2 | +30 Sức mạnh thuộc tính, +3% Tốc độ chạy, +30 Mana tối đa |
+| **Kẻ Nghịch Mệnh II (Defier of Fate II)**| Chinh phục lại Thánh Địa lần 3 | +45 Sức mạnh thuộc tính, +4% Tốc độ chạy, +50 Mana tối đa, +10 Giáp |
+| **Kẻ Vượt Cấm Địa III (Sanctum Breaker III)**| Chinh phục lại Thánh Địa lần 4 | +60 Sức mạnh thuộc tính, +5% Tốc độ chạy, +70 Mana tối đa, +20 Giáp |
+| **Chúa Tể Ngoại Đạo IV (Sovereign Heretic IV)**| Chinh phục lại Thánh Địa lần 5 (Max Cap)| +75 Sức mạnh thuộc tính, +6% Tốc độ chạy, +90 Mana tối đa, +30 Giáp, +2% Chí mạng |
 | **Bất Tử Chiến Thần (Undying)** | Sống sót qua 50 cuộc giao tranh PvP ngoài Safe Zone | +40 Giáp phòng ngự |

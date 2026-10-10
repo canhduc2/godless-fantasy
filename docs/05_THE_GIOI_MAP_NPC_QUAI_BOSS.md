@@ -115,12 +115,24 @@ Nếu một người chơi **đã mang chức nghiệp Hệ Ẩn** mà trong tư
 > **1. KHÔNG ĐƯỢC CHUYỂN CHỨC NỮA:**  
 > Hệ thống sẽ từ chối nghi thức chuyển chức mới. Người chơi không thể đổi lại hệ ban đầu, không được re-roll lại hệ phụ thứ hai. Chức nghiệp Hệ Ẩn là bất biến.
 > 
-> **2. PHẦN THƯỞNG KHI VƯỢT QUA THỬ THÁCH LẦN NỮA: TẶNG 1 REBIRTH POINT (1 RP) & DANH HIỆU HIẾM (RARE TITLE)**  
-> Nếu người chơi tiếp tục vượt qua mê cung cấm chú và đánh bại Hộ Vệ Cấm Pháp một lần nữa:
-> - Tương tác với [Bia Đá Ngoại Đạo] sẽ kích hoạt sự kiện: *"Kẻ Ngoại Đạo được Đền Thờ công nhận một lần nữa!"*.
-> - **Được gửi tặng trực tiếp: +1 Điểm Rebirth Point (1 RP)** vĩnh viễn vào tài khoản!
-> - **Được trao tặng DANH HIỆU HIẾM ĐỘC BẢN:** `[Chân Ngoại Đạo]` (The True Heretic) hoặc `[Kẻ Hai Lần Vượt Cấm Địa]` (The Twice-Forsaken) — cộng thêm **+40 Sức mạnh thuộc tính**, **+5% Tốc độ chạy**, và **+50 Mana tối đa** (giúp bù đắp một phần hình phạt -30% Mana của Hệ Ẩn).
-> - **Không bị reset cấp độ, không bị xóa đồ** (đây là phần thưởng danh giá độc quyền cho kỳ tích vượt qua thánh địa hiếm có khó tìm lần nữa).
+> **2. PHẦN THƯỞNG: CỘNG +1 REBIRTH POINT & NÂNG CẤP BẬC DANH HIỆU (PROGRESSIVE TITLES)**  
+> Mỗi lần vượt qua thử thách Thánh Địa thành công từ lần 2 trở đi, người chơi sẽ nhận **+1 Điểm Rebirth Point (1 RP)** và danh hiệu được **tiến hóa theo từng bậc (Lần 2 -> 3 -> 4 -> 5)**.
+> 
+> *Nguyên tắc cân bằng chỉ số (Tránh buff quá bẩn / Anti-Power Creep):*  
+> - Người chơi chỉ được kích hoạt (đeo) **1 Danh Hiệu duy nhất** tại một thời điểm (Bậc mới thay thế bậc cũ, không cộng dồn chồng chéo).  
+> - Các chỉ số tăng có mức độ vừa phải, hỗ trợ bù trừ nhẹ cho điểm yếu của Hệ Ẩn chứ không tạo ra chênh lệch một chiều phá vỡ cân bằng PvP.  
+> - **Chạm trần ở Lần 5 (Max Cap):** Từ lần thứ 6 trở đi vẫn nhận +1 RP nhưng danh hiệu không tăng thêm chỉ số để giữ vững môi trường thi đấu lành mạnh.
+
+#### Bảng Tiến Hóa Danh Hiệu Tái Chinh Phục Thánh Địa:
+
+| Lần chinh phục | Danh Hiệu Tiến Hóa (Title) | Chỉ Số Thưởng Kèm (Cân Bằng) | Thưởng Điểm RP |
+| :---: | :--- | :--- | :---: |
+| **Lần 1** | *Nghi thức Chuyển Chức: Hệ Ẩn* | Nhận 2 Perk: Kẻ Ngoại Đạo & Kẻ Tội Lỗi (-30% Max Mana) | 0 RP |
+| **Lần 2** | `[Chân Ngoại Đạo I]` *(True Heretic I)* | +30 Sức mạnh thuộc tính, +3% Tốc độ chạy, +30 Mana tối đa | **+1 RP** |
+| **Lần 3** | `[Kẻ Nghịch Mệnh II]` *(Defier of Fate II)* | +45 Sức mạnh thuộc tính, +4% Tốc độ chạy, +50 Mana tối đa, +10 Giáp | **+1 RP** |
+| **Lần 4** | `[Kẻ Vượt Cấm Địa III]` *(Sanctum Breaker III)* | +60 Sức mạnh thuộc tính, +5% Tốc độ chạy, +70 Mana tối đa, +20 Giáp | **+1 RP** |
+| **Lần 5 (Trần Tối Đa)** | `[Chúa Tể Ngoại Đạo IV]` *(Sovereign Heretic IV)* | +75 Sức mạnh thuộc tính, +6% Tốc độ chạy, +90 Mana tối đa, +30 Giáp, +2% Chí mạng | **+1 RP** |
+| **Lần 6 trở đi** | *Giữ nguyên danh hiệu Bậc 5* | Giữ nguyên chỉ số Bậc 5 (Khóa trần chỉ số chống lạm phát) | **+1 RP / lần** |
 
 ---
 
