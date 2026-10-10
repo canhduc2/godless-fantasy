@@ -161,10 +161,14 @@ Không vội vàng làm ngay thế giới MMORPG khổng lồ, chiến lược p
 ## 7. MÔI TRƯỜNG TRIỂN KHAI SERVER CLOUD (PRODUCTION HOSTING & PM2)
 
 ### 7.1. Cấu Hình Phần Cứng & Khả Năng Chịu Tải
-- **Hạ tầng máy chủ:** Cloud VPS cấu hình cao:
-  - **Bộ nhớ RAM:** 12 GB.
-  - **Vi xử lý (CPU):** Octa-Core (8 vCPU / 8 Cores).
-- **Đánh giá hiệu năng:** Server C# .NET 8 Headless (chạy CLI không giao diện) cực kỳ tiết kiệm tài nguyên (chỉ chiếm ~150MB – 400MB RAM khi chạy logic). Hạ tầng 12GB RAM / 8 Cores dư sức gánh từ **2.000 đến 5.000 người chơi đồng thời (CCU)** với tải CPU cực thấp (<10–15%).
+- **Hạ tầng máy chủ:** Cloud VPS kiến trúc ARM64 hiện đại (ví dụ: Oracle Cloud Ampere A1 / AWS Graviton):
+  - **Kiến trúc CPU:** **ARM64 (aarch64)** — Tiết kiệm điện, đa luồng hiệu năng cao, tối ưu hóa cực đỉnh trên .NET 8.
+  - **Bộ nhớ RAM:** **12 GB** (Cực kỳ rộng rãi, thoải mái chạy game server và bộ đệm SQLite).
+  - **Vi xử lý (CPU):** **2 Cores ARM64**.
+- **Đánh giá hiệu năng:** .NET 8 hỗ trợ **native ARM64** với tập lệnh SIMD/NEON cực nhanh:
+  - 1 Core phụ trách Simulation Loop & Combat Validation (20–30 ticks/s).
+  - 1 Core phụ trách Network I/O (gói tin mạng) & SQLite Async Write.
+  - Hạ tầng 2 Cores ARM64 / 12GB RAM gánh cực kỳ mượt mà từ **500 đến 1.000 người chơi đồng thời (CCU)** — hoàn hảo cho mọi đợt thử nghiệm Alpha/Beta của SquiRRels Studio!
 
 ### 7.2. Cấu Hình Cổng Mạng (Network Port)
 - **Cổng dịch vụ game chính thức:** **Port 5454** (hỗ trợ cả TCP và UDP).
@@ -177,8 +181,8 @@ Không vội vàng làm ngay thế giới MMORPG khổng lồ, chiến lược p
 SquiRRels Studio chính thức lựa chọn **PM2** làm công cụ quản lý và duy trì hoạt động liên tục (24/7) cho Server CLI:
 
 ```bash
-# 1. Biên dịch Server .NET 8 ra 1 file binary duy nhất
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+# 1. Biên dịch Server .NET 8 ra 1 file binary NATIVE cho chip ARM64 (linux-arm64)
+dotnet publish -c Release -r linux-arm64 --self-contained -p:PublishSingleFile=true -o ./publish
 
 # 2. Khởi chạy Server qua PM2 với cơ chế tự khởi động lại khi crash (delay 3s)
 pm2 start ./publish/GodlessServer --name "godless-server" --restart-delay 3000
