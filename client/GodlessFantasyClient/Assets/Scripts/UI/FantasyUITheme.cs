@@ -158,16 +158,17 @@ namespace GodlessFantasy.UI
             squareIconStyle.margin = new RectOffset(0, 0, 0, 0);
             squareIconStyle.contentOffset = Vector2.zero;
             float textOffset = isPressed ? 1f : 0f;
+            float yNudge = (iconText == "+") ? 1.5f : 0f;
 
             // Đổ bóng sắc nét
             squareIconStyle.normal.textColor = new Color(0.04f, 0.05f, 0.08f, 0.95f);
-            GUI.Label(new Rect(r.x + 1 + textOffset, r.y + 1 + textOffset, r.width, r.height), iconText, squareIconStyle);
+            GUI.Label(new Rect(r.x + 1 + textOffset, r.y + 1 + textOffset + yNudge, r.width, r.height), iconText, squareIconStyle);
 
             // Màu chính
             Color fg = !isEnabled ? Color.gray
                      : iconColor ?? (isHighlighted ? ColorTextGold : isHovered ? Color.white : ColorTextGold);
             squareIconStyle.normal.textColor = fg;
-            GUI.Label(new Rect(r.x + textOffset, r.y + textOffset, r.width, r.height), iconText, squareIconStyle);
+            GUI.Label(new Rect(r.x + textOffset, r.y + textOffset + yNudge, r.width, r.height), iconText, squareIconStyle);
 
             if (isHovered && Event.current.type == EventType.MouseDown && Event.current.button == 0)
             {

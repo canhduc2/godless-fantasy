@@ -742,21 +742,36 @@ namespace GodlessFantasy.UI
                 Texture2D frameSlotTex = LoadTextureSafe("ui_frame_slot");
                 if (frameSlotTex != null) GUI.DrawTexture(iconRect, frameSlotTex);
 
-                // Tên buff & thời gian
-                float textX = iconRect.xMax + 6f;
-                float textW = cardW - 38f;
+                // Thời gian đếm ngược (CHUYỂN SANG BÊN PHẢI THEO YÊU CẦU USER)
+                float timeW = 44f;
+                float timeX = cardRect.xMax - timeW - 6f;
+                Rect timeRect = new Rect(timeX, cardRect.y + 4f, timeW, 14f);
 
-                boldWhiteStyle.alignment = TextAnchor.UpperLeft;
+                standardTextStyle.alignment = TextAnchor.MiddleRight;
+                standardTextStyle.fontSize = 10;
+                standardTextStyle.fontStyle = FontStyle.Bold;
+                standardTextStyle.normal.textColor = (buff.remainingTime <= 3.0f) ? new Color(1f, 0.35f, 0.35f) : new Color(1f, 0.90f, 0.45f);
+                GUI.Label(timeRect, $"{buff.remainingTime:0.0}s", standardTextStyle);
+                standardTextStyle.fontStyle = FontStyle.Normal;
+
+                // Tên buff (nằm giữa icon và thời gian, chữ chạy mượt mà nếu dài)
+                float textX = iconRect.xMax + 6f;
+                float nameW = Mathf.Max(50f, timeX - textX - 4f);
+                Rect nameRect = new Rect(textX, cardRect.y + 3f, nameW, 14f);
+
+                boldWhiteStyle.alignment = TextAnchor.MiddleLeft;
                 boldWhiteStyle.fontSize = 10;
                 boldWhiteStyle.normal.textColor = new Color(0.40f, 0.92f, 1.0f);
-                string bName = buff.name.Length > 14 ? (buff.name.Substring(0, 12) + "..") : buff.name;
-                GUI.Label(new Rect(textX, cardRect.y + 3, textW, 14), bName, boldWhiteStyle);
+                DrawAutoScrollText(nameRect, buff.name, boldWhiteStyle, 25f, new Color(0.40f, 0.92f, 1.0f));
 
-                // Thời gian đếm ngược
-                standardTextStyle.alignment = TextAnchor.LowerLeft;
+                // Dòng hiệu ứng bổ trợ phía dưới
+                float subW = cardRect.width - (textX - cardRect.x) - 6f;
+                Rect subRect = new Rect(textX, cardRect.y + 16f, subW, 13f);
+                standardTextStyle.alignment = TextAnchor.MiddleLeft;
                 standardTextStyle.fontSize = 9;
-                standardTextStyle.normal.textColor = (buff.remainingTime <= 3.0f) ? new Color(1f, 0.4f, 0.4f) : new Color(1f, 0.88f, 0.45f);
-                GUI.Label(new Rect(textX, cardRect.y + 16, textW, 14), $"{buff.remainingTime:0.0}s", standardTextStyle);
+                standardTextStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
+                string effectTag = buff.statValue > 0 ? $"+{buff.statValue:0}% Sát Thương" : "Buff Tự Thân";
+                GUI.Label(subRect, effectTag, standardTextStyle);
                 standardTextStyle.normal.textColor = Color.white;
 
                 // Thanh tiến trình nhỏ dưới đáy card
@@ -1009,13 +1024,14 @@ namespace GodlessFantasy.UI
             boldWhiteStyle.alignment = TextAnchor.UpperLeft;
             boldWhiteStyle.normal.textColor = Color.white;
 
-            float slotBoxSize = 52f;
+            float slotBoxSize = 50f;
+            float slotGap = 10f; // Khoảng cách 10px rõ ràng giữa các ô, không bị dính sát vào nhau
             float leftColX = r.x + 8f;
             float rightColX = r.x + r.width - slotBoxSize - 8f;
             float centerBoxX = leftColX + slotBoxSize + 10f;
             float centerBoxW = rightColX - 10f - centerBoxX; // Chiều rộng khung nhân vật giữa
-            float centerBoxY = r.y + 26f;
-            float centerBoxH = 160f;
+            float centerBoxY = r.y + 24f;
+            float centerBoxH = slotBoxSize * 3f + slotGap * 2f + 4f; // 174px
 
             // KHUNG GIỮA: ẢNH NHÂN VẬT & TÊN
             Rect centerPortrait = new Rect(centerBoxX, centerBoxY, centerBoxW, centerBoxH);
@@ -1028,7 +1044,7 @@ namespace GodlessFantasy.UI
             {
                 float pW = 80f;
                 float pH = 80f;
-                GUI.DrawTexture(new Rect(centerPortrait.x + (centerPortrait.width - pW) / 2f, centerPortrait.y + 14f, pW, pH), playerPortraitTex);
+                GUI.DrawTexture(new Rect(centerPortrait.x + (centerPortrait.width - pW) / 2f, centerPortrait.y + 18f, pW, pH), playerPortraitTex);
             }
             standardTextStyle.alignment = TextAnchor.LowerCenter;
             standardTextStyle.fontSize = 11;
@@ -1036,31 +1052,31 @@ namespace GodlessFantasy.UI
             GUI.Label(new Rect(centerPortrait.x, centerPortrait.y, centerPortrait.width, centerPortrait.height - 8), $"{playerStats?.CharacterName ?? "Dũng Sĩ SquiRRels"}\n(Hiệp Sĩ Áo Ba Lỗ)", standardTextStyle);
             standardTextStyle.normal.textColor = Color.white;
 
-            // CỘT TRÁI (3 Ô): MŨ, QUẦN, NHẪN (Cân xứng dọc theo khung giữa)
-            DrawEquipmentSlotButton(EquipSlot.Helmet, "Mũ", new Rect(leftColX, centerBoxY + 2, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Pants, "Quần", new Rect(leftColX, centerBoxY + 54, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Ring, "Nhẫn", new Rect(leftColX, centerBoxY + 106, slotBoxSize, slotBoxSize));
+            // CỘT TRÁI (3 Ô): MŨ, QUẦN, NHẪN (CÓ KHOẢNG CÁCH 10PX RÕ RÀNG GIỮA CÁC Ô)
+            float slot1Y = centerBoxY + 2f;
+            float slot2Y = slot1Y + slotBoxSize + slotGap;
+            float slot3Y = slot2Y + slotBoxSize + slotGap;
 
-            // CỘT PHẢI (3 Ô): ÁO, GIÀY, VÒNG CỔ (Cân xứng dọc theo khung giữa)
-            DrawEquipmentSlotButton(EquipSlot.Armor, "Áo", new Rect(rightColX, centerBoxY + 2, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Boots, "Giày", new Rect(rightColX, centerBoxY + 54, slotBoxSize, slotBoxSize));
-            DrawEquipmentSlotButton(EquipSlot.Necklace, "Vòng Cổ", new Rect(rightColX, centerBoxY + 106, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Helmet, "Mũ", new Rect(leftColX, slot1Y, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Pants, "Quần", new Rect(leftColX, slot2Y, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Ring, "Nhẫn", new Rect(leftColX, slot3Y, slotBoxSize, slotBoxSize));
+
+            // CỘT PHẢI (3 Ô): ÁO, GIÀY, VÒNG CỔ (CÓ KHOẢNG CÁCH 10PX RÕ RÀNG GIỮA CÁC Ô)
+            DrawEquipmentSlotButton(EquipSlot.Armor, "Áo", new Rect(rightColX, slot1Y, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Boots, "Giày", new Rect(rightColX, slot2Y, slotBoxSize, slotBoxSize));
+            DrawEquipmentSlotButton(EquipSlot.Necklace, "Vòng Cổ", new Rect(rightColX, slot3Y, slotBoxSize, slotBoxSize));
 
             // VŨ KHÍ: NẰM NGAY CHÍNH GIỮA BÊN DƯỚI KHUNG NHÂN VẬT (Chuẩn xác theo ảnh User)
             float weaponX = centerBoxX + (centerBoxW - slotBoxSize) / 2f;
             float weaponY = centerBoxY + centerBoxH + 12f;
             DrawEquipmentSlotButton(EquipSlot.Weapon, "Vũ Khí", new Rect(weaponX, weaponY, slotBoxSize, slotBoxSize));
 
-            // KHU VỰC THAO TÁC TRANG BỊ ĐANG CHỌN (NẰM CHÍNH GIỮA DƯỚI VŨ KHÍ - Chuẩn xác theo ảnh User)
+            // KHU VỰC THAO TÁC TRANG BỊ ĐANG CHỌN (NẰM CHÍNH GIỮA DƯỚI VŨ KHÍ - Không viền container, chỉ label + nút)
             float actBoxW = 240f;
             float actBoxH = 62f;
             float actBoxX = r.x + (r.width - actBoxW) / 2f;
             float actBoxY = weaponY + slotBoxSize + 12f;
             Rect actBoxRect = new Rect(actBoxX, actBoxY, actBoxW, actBoxH);
-            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
-            GUI.DrawTexture(actBoxRect, Texture2D.whiteTexture);
-            GUI.color = Color.white;
-            DrawDoubleGoldFrame(actBoxRect, 1);
 
             InventoryItem selectedGear = selectedEquipSlot.HasValue && inventoryManager != null
                 ? inventoryManager.GetEquippedGear(selectedEquipSlot.Value)
@@ -1321,8 +1337,16 @@ namespace GodlessFantasy.UI
                             itemTipBody += $"• Chức Nghiệp: <color=#ffaa00>[{item.scrollData.requiredClass}]</color> | Thuộc Tính: <color=#00e5ff>[{item.scrollData.element}]</color> {useStatus}\n";
                             itemTipBody += $"• Tiêu hao: {item.scrollData.manaCost} Mana | Hồi: {item.scrollData.cooldown:F1}s | Tầm đánh: <color=#00e5ff>{item.scrollData.RangeFormattedText}</color>\n";
                         }
-                        if (!string.IsNullOrEmpty(item.statsInfo)) itemTipBody += $"• {item.statsInfo}\n";
-                        itemTipBody += $"• {item.description}";
+                        if (!string.IsNullOrEmpty(item.statsInfo))
+                        {
+                            string cleanStats = item.statsInfo.TrimStart('•', ' ', '-');
+                            itemTipBody += $"• {cleanStats}\n";
+                        }
+                        if (!string.IsNullOrEmpty(item.description))
+                        {
+                            string cleanDesc = item.description.TrimStart('•', ' ', '-');
+                            itemTipBody += $"• {cleanDesc}";
+                        }
 
                         SetTooltip(item.itemName, itemTipBody, new Vector2(Event.current.mousePosition.x + 16f, Event.current.mousePosition.y + 16f));
                     }
@@ -1749,11 +1773,12 @@ namespace GodlessFantasy.UI
             pY += 20f;
 
             var curTitle = playerStats?.EquippedTitle;
+            string cleanCurTitle = curTitle != null ? curTitle.name.Trim('[', ']') : "";
             string curTitleDesc = curTitle != null 
-                ? $"Đang đeo: <color=#{ColorUtility.ToHtmlStringRGB(curTitle.titleColor)}>★ [{curTitle.name}]</color> — {curTitle.statDesc}" 
+                ? $"Đang đeo: ★ [{cleanCurTitle}] — {curTitle.statDesc}" 
                 : "Đang đeo: (Chưa đeo danh hiệu)";
             standardTextStyle.fontSize = 11;
-            GUI.Label(new Rect(0, pY, viewRect.width, 18), curTitleDesc, standardTextStyle);
+            DrawAutoScrollText(new Rect(0, pY, viewRect.width, 18), curTitleDesc, standardTextStyle, 30f, curTitle != null ? curTitle.titleColor : Color.gray);
             pY += 22f;
 
             var titles = playerStats?.TitleList;
@@ -1768,10 +1793,10 @@ namespace GodlessFantasy.UI
                 {
                     var tItem = titles[t];
                     float rowY = titleBox.y + 4f + t * 30f;
-                    string tColorHex = ColorUtility.ToHtmlStringRGB(tItem.titleColor);
-                    string tLabel = $"<color=#{tColorHex}>★ [{tItem.name}]</color> — <color=#dddddd>{tItem.statDesc}</color>";
+                    string cleanTName = tItem.name.Trim('[', ']');
+                    string tLabel = $"★ [{cleanTName}] — {tItem.statDesc}";
                     standardTextStyle.fontSize = 10;
-                    GUI.Label(new Rect(titleBox.x + 8, rowY + 5, titleBox.width - 86, 20), tLabel, standardTextStyle);
+                    DrawAutoScrollText(new Rect(titleBox.x + 8, rowY + 5, titleBox.width - 86, 20), tLabel, standardTextStyle, 30f, tItem.titleColor);
 
                     bool isCurrent = curTitle != null && curTitle.id == tItem.id;
                     string btnTxt = isCurrent ? "THÁO" : "ĐEO";
@@ -1800,8 +1825,7 @@ namespace GodlessFantasy.UI
 
             standardTextStyle.fontStyle = FontStyle.Normal;
             standardTextStyle.fontSize = 10;
-            standardTextStyle.normal.textColor = new Color(0.85f, 0.9f, 0.95f);
-            GUI.Label(new Rect(x + 28, y + 15, w - 28, 16), desc, standardTextStyle);
+            DrawAutoScrollText(new Rect(x + 28, y + 15, w - 28, 16), desc, standardTextStyle, 30f, new Color(0.85f, 0.9f, 0.95f));
             standardTextStyle.fontSize = 12;
             standardTextStyle.normal.textColor = Color.white;
         }

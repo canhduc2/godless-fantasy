@@ -110,7 +110,7 @@ namespace GodlessFantasy.UI
                 var curTitle = playerStats.EquippedTitle;
                 string cleanTitle = curTitle.name.Trim('[', ']');
                 string titleText = $"« {cleanTitle} »";
-                float titleW = 240f;
+                float titleW = 340f;
                 float titleH = 16f;
                 Rect titleRect = new Rect(guiX - titleW / 2f, guiY - 40f, titleW, titleH);
 
@@ -121,7 +121,7 @@ namespace GodlessFantasy.UI
                 GUI.Label(titleRect, titleText, titleStyle);
             }
 
-            // 1. DÒNG TÊN & CẤP ĐỘ / HỆ / NGUYÊN TỐ (Bản rộng 240px thoáng đãng)
+            // 1. DÒNG TÊN & CẤP ĐỘ / HỆ / NGUYÊN TỐ (Bản rộng 340px thoáng đãng tuyệt đối không gãy dòng)
             string nameString;
             if (entityType == OverheadType.Player && playerStats != null)
             {
@@ -136,7 +136,7 @@ namespace GodlessFantasy.UI
             }
             Color nameColor = GetNameColor();
 
-            float plateW = 240f;
+            float plateW = 340f;
             float plateH = 20f;
             Rect namePlateRect = new Rect(guiX - plateW / 2f, guiY - 24f, plateW, plateH);
 
@@ -238,7 +238,9 @@ namespace GodlessFantasy.UI
                 {
                     fontSize = 12,
                     fontStyle = FontStyle.Bold,
-                    alignment = TextAnchor.MiddleCenter
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = false,
+                    clipping = TextClipping.Overflow
                 };
             }
 
