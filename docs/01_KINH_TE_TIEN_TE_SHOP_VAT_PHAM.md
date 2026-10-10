@@ -32,10 +32,64 @@ Game vận hành với mô hình kinh tế 3 tầng, phân tách rõ ràng giữ
   - **Chuyển Đổi Thuộc Tính:** Tiêu tốn 2 RP / 1 lần đổi nguyên tố đại diện.
   - **Tuần Trang Hóa Chức Nghiệp (Dành riêng Hệ Ẩn):** Tiêu tốn 1 RP / 1 lần thiết lập hoặc đổi hệ ngụy trang công khai ("Giả heo ăn hổ").
 
-### 2.3. Hệ Thống Chợ / Giao Dịch Người Chơi (P2P Trading)
-- Cho phép 2 người chơi đứng cạnh nhau mở cửa sổ trao đổi trực tiếp (Direct Trade).
-- Có tính năng ký gửi hàng hóa tại NPC Đấu Giá Sư ở các Đại Đô Thành (thu phí sàn 5% Vàng).
-- Quy tắc an toàn: Không cho phép giao dịch khi đang trong trạng thái Chiến Đấu (Combat Mode) hoặc ngoài Safe Zone nếu bị đánh ngắt quãng.
+### 2.3. Hệ Thống Giao Dịch Người Chơi (P2P Trading) & Lệnh `/trade`
+- **Giao dịch nhanh qua lệnh Chat (Slash Command):**
+  - Người chơi chỉ cần mở khung chat và gõ lệnh:
+    ```
+    /trade <Tên_Nhân_Vật>
+    ```
+    *(Ví dụ: `/trade Knight_01`, `/trade Shadow!`, `/trade Mage#99`)*.
+  - Hệ thống tự động gửi hộp thoại mời giao dịch (Trade Request Popup) đến mục tiêu. Nếu đối phương bấm Đồng Ý, cửa sổ giao dịch 2 bên (Two-Way Trade Window) lập tức mở ra.
+
+- **Phạm vi vật phẩm được phép đưa lên bàn giao dịch (Scope of Tradable Items):**
+  - **CHỈ ĐƯỢC GIAO DỊCH VẬT PHẨM TRONG HÀNH TRANG TÚI ĐỒ (Bag Inventory Only):**
+    - ❌ **Tuyệt đối không được giao dịch trang bị đang mặc trên người** (7 ô: Vũ khí, Mũ, Áo, Quần, Giày, Vòng cổ, Nhẫn). Người chơi bắt buộc phải tháo trang bị cất vào túi đồ trước mới có thể giao dịch.
+    - ❌ **Tuyệt đối không giao dịch cuộn kỹ năng đang gắn trên 4 ô skill.**
+    - ❌ **Tuyệt đối không giao dịch vật phẩm nằm trong các ô đã gắn ấn "Bảo Vệ Vĩnh Viễn"** hoặc vật phẩm đã bị gắn Khóa Linh Hồn (Soulbound).
+    - ❌ **Tuyệt đối không giao dịch Thú Cưng (Pet) đang kích hoạt xuất chiến.**
+
+- **Cơ Chế Kiểm Soát Lỗi Toàn Diện & Chống Gian Lận / Chống Dupe Đồ (Error Handling & Anti-Duping Matrix):**
+  1. **Kiểm tra sức chứa túi đồ (Inventory Space Full Validation):**
+     - Trước khi hoàn tất, Server tính toán: `Số ô trống túi người B >= Số vật phẩm người A chuyển giao` (và ngược lại).
+     - Nếu túi đồ của bất kỳ bên nào không đủ chỗ chứa $\rightarrow$ Hệ thống lập tức hủy lệnh và hiện thông báo lỗi: *"Giao dịch thất bại: Hành trang của đối phương không đủ ô trống để nhận đồ!"*. Tuyệt đối không để đồ rớt ra sàn.
+  2. **Cơ chế Hủy Khóa tự động khi sửa đổi (Auto-Unlock on Modify / Anti-Scam):**
+     - Sau khi Người A bấm [Khóa Giao Dịch], nếu Người A tự ý thêm/bớt bất kỳ vật phẩm hoặc số lượng Vàng nào $\rightarrow$ **Trạng thái Khóa của CẢ HAI BÊN lập tức bị hủy bỏ (Reset về Chưa Khóa)**.
+     - Điều này ngăn chặn 100% chiêu trò gian lận "tráo đồ rác" hoặc "rút bớt số 0 của vàng" vào giây cuối cùng.
+  3. **Giao dịch nguyên tử trên Server (Atomic Database Transaction - Chống Dupe đồ):**
+     - Toàn bộ thao tác chuyển giao tài sản được bọc trong một **SQLite Transaction duy nhất (ACID)** trên Server:
+       ```sql
+       BEGIN TRANSACTION;
+       -- 1. Trừ vật phẩm & Vàng của Player A -> Cộng cho Player B
+       -- 2. Trừ vật phẩm & Vàng của Player B -> Cộng cho Player A
+       COMMIT; -- Hoặc ROLLBACK nếu có bất kỳ lỗi nào!
+       ```
+     - Nếu có sự cố đứt mạng đột ngột, crash game, hoặc lỗi ghi đĩa giữa chừng $\rightarrow$ Server tự động **Rollback 100%**. Vật phẩm của ai vẫn nằm nguyên vẹn trong túi người đó, triệt tiêu hoàn toàn nguy cơ nhân bản đồ (Dupe Item).
+  4. **Kiểm tra trạng thái thời gian thực (Disconnection, Distance & Combat Break):**
+     - Nếu một trong hai bên:
+       - Di chuyển xa nhau quá 15m.
+       - Bị ngắt kết nối mạng (Disconnect / Alt+F4).
+       - Bị quái vật hoặc người chơi khác đánh trúng (dính Combat Mode).
+       - Bấm nút [Hủy / Đóng Cửa Sổ].
+       $\rightarrow$ Giao dịch lập tức tự động **HỦY BỎ AN TOÀN**, mọi vật phẩm trên bàn giao dịch được hoàn trả ngay lập tức về hành trang ban đầu.
+  5. **Xác thực quyền sở hữu và số lượng vật phẩm (Item Ownership Verification):**
+     - Tại thời điểm bấm Xác Nhận cuối cùng, Server kiểm tra lại ID vật phẩm và số lượng thực tế trong DB xem người chơi có thực sự sở hữu món đồ đó không (chống hack can thiệp client-side).
+
+
+---
+
+### 2.4. Quy Tắc Đặt Tên Nhân Vật Chuẩn Của Godless Fantasy (Naming Rules)
+Để đảm bảo các câu lệnh Chat (như `/trade <Tên>`) hoạt động chính xác tuyệt đối mà không bị lỗi phân tích cú pháp, quy tắc đặt tên được quy định nghiêm ngặt:
+
+1. **Tuyệt đối không chứa dấu cách (No Spaces):** Tên nhân vật phải viết liền (dùng dấu gạch dưới `_` thay thế dấu cách).
+2. **Tên độc nhất toàn Server (Unique Name):** Không cho phép đặt trùng tên với bất kỳ người chơi nào khác trên toàn hệ thống database.
+3. **Tập ký tự hợp lệ được phép sử dụng:**
+   - Chữ cái: `a` – `z`, `A` – `Z`
+   - Chữ số: `0` – `9`
+   - Ký tự gạch dưới: `_`
+   - Ký tự đặc biệt cho phép: `!`, `@`, `#`, `,`
+   - *Biểu thức chính quy kiểm tra (Regex):* `^[a-zA-Z0-9_!@#,]{3,16}$`
+4. **Độ dài tên:** Tối thiểu **3 ký tự**, tối đa **16 ký tự**.
+
 
 ---
 
