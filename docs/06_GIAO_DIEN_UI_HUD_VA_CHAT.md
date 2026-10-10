@@ -117,7 +117,7 @@ Cơ chế được kiểm duyệt và thực thi **100% tại World Server** (Ng
 
 ## 4. CƠ CHẾ PHÍM TẮT TIỆN ÍCH (HOTKEYS MAPPING)
 
-- `W`, `A`, `S`, `D`: Di chuyển nhân vật 4 hướng.
+- **Phím Mũi Tên (`↑`, `↓`, `←`, `→` - Arrow Keys) [KHUYẾN NGHỊ MẶC ĐỊNH]** hoặc cụm `W`, `A`, `S`, `D`: Di chuyển nhân vật 4 hướng (Game hỗ trợ đồng thời cả 2 cụm phím).
 - `Shift`: Dash (Lướt nhanh tiêu hao Mana).
 - `1`, `2`, `3`, `4`: Giữ để ngắm kỹ năng, nhả để phóng chiêu.
 - `Chuột Phải`: Hủy chiêu thức đang ngắm (Kích hoạt bộ lọc chống lặp lệnh `CancelledAwaitRelease`).
