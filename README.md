@@ -2,7 +2,7 @@
 
 > **Phát triển bởi:** **Squirrels Studio**  
 > **Thể loại:** 2D Top-Down Open-World MMORPG  
-> **Đặc trưng:** Hardcore Open PvP, Friendly Fire Logic, Level 1–100 Infinite Rebirth, Secret Classes & Controlled Full-Loot Risk.
+> **Đặc trưng:** Hardcore Open PvP, Friendly Fire Logic, Level 1–100 Infinite Rebirth, Secret Classes, Controlled Full-Loot Risk & Song Ngữ (Tiếng Việt mặc định / English).
 
 ---
 
@@ -16,7 +16,7 @@ Toàn bộ hệ thống thiết kế game đã được module hóa chi tiết t
 4. 🔮 [**03_HE_THONG_HE_THUOC_TINH_KY_NANG.md**](file:///D:/godless-fantasy/docs/03_HE_THONG_HE_THUOC_TINH_KY_NANG.md) — 5 Hệ chiến đấu (gồm Hệ Ẩn), 6 Thuộc tính ma lực, Tiến trình Cấp 1–100 mở 4 ô kỹ năng, Phím Shift Dash, Phân cấp cuộn trục X–E.
 5. 🔄 [**04_REBIRTH_PERK_GACHA_VA_CHET_ROT_DO.md**](file:///D:/godless-fantasy/docs/04_REBIRTH_PERK_GACHA_VA_CHET_ROT_DO.md) — Chuyển sinh Lv 100, Rebirth Vault (Rương 2 món lưu server tại tọa độ tử nạn), 5 Ô cường hóa vĩnh viễn không mất, Luật chết rơi 5% đồ, Vòng quay Perk Gacha & Danh hiệu.
 6. 🌍 [**05_THE_GIOI_MAP_NPC_QUAI_BOSS.md**](file:///D:/godless-fantasy/docs/05_THE_GIOI_MAP_NPC_QUAI_BOSS.md) — Thế giới mở World → Region → Chunk, Hệ thống NPC, Quái vật, Boss rơi cuộn kỹ năng ngẫu nhiên, Cơ chế kích hoạt chuyển chức Hệ Ẩn cực hiếm.
-7. 🖥️ [**06_GIAO_DIEN_UI_HUD_VA_CHAT.md**](file:///D:/godless-fantasy/docs/06_GIAO_DIEN_UI_HUD_VA_CHAT.md) — Thiết kế HUD chi tiết, Menu trượt 4 Tab, Hệ thống Chat (Khu vực 5s rate-limit, Thế giới 2 tin/ngày & cách nhau 5 phút).
+7. 🖥️ [**06_GIAO_DIEN_UI_HUD_VA_CHAT.md**](file:///D:/godless-fantasy/docs/06_GIAO_DIEN_UI_HUD_VA_CHAT.md) — Thiết kế HUD chi tiết, Menu trượt 4 Tab, Hệ thống Chat (Khu vực 5s rate-limit, Thế giới 2 tin/ngày), **Hệ Thống Song Ngữ (Tiếng Việt Mặc định / English trong Cài đặt)**.
 
 ---
 

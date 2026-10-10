@@ -65,7 +65,7 @@ Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối
 | **Tab 1** | **Trang Bị (Equipment)** | - Hiển thị 5 vị trí mặc đồ: **Vũ Khí, Mũ, Áo, Quần, Giày**.<br>- Xem chỉ số chi tiết của trang bị đang mang.<br>- Tháo/mặc đồ nhanh. |
 | **Tab 2** | **Kỹ Năng & Thuộc Tính** | - Hiển thị 4 ô cuộn trục kỹ năng đã gán và kho cuộn kỹ năng đã học.<br>- Bảng tăng điểm 3 chỉ số chính: **HP, Mana, Attribute Power**.<br>- Bảng tra cứu 3 chỉ số phụ: **Tốc độ, Giáp, Tỉ lệ chí mạng**.<br>- Quản lý Danh Hiệu (Titles) và Perk đang sở hữu. |
 | **Tab 3** | **Kho Đồ (Inventory)** | - Lưới túi đồ cá nhân (Mặc định 24 ô, hiển thị nút mở rộng thêm hàng).<br>- Đánh dấu đặc biệt **5 Ô Bảo Vệ Vĩnh Viễn** (có biểu tượng vương miện/hào quang khóa an toàn). |
-| **Tab 4** | **Cài Đặt (Settings)** | - Tùy chỉnh Âm thanh, BGM, SFX.<br>- Tùy chỉnh Đồ họa, hiển thị tên, thanh máu đồng đội.<br>- Phím tắt điều khiển.<br>- Nút Đăng Xuất (Logout) / Thoát Game. |
+| **Tab 4** | **Cài Đặt (Settings)** | - **Cấu hình Ngôn Ngữ (Language):** Mặc định **Tiếng Việt**, có thể chuyển sang **English (Tiếng Anh)**.<br>- Tùy chỉnh Âm thanh, BGM, SFX.<br>- Tùy chỉnh Đồ họa, hiển thị tên, thanh máu đồng đội.<br>- Phím tắt điều khiển.<br>- Nút Đăng Xuất (Logout) / Thoát Game. |
 
 ---
 
@@ -125,3 +125,50 @@ Cơ chế được kiểm duyệt và thực thi **100% tại World Server** (Ng
 - `K`: Phím tắt mở nhanh Tab Kỹ Năng & Thuộc Tính.
 - `C`: Phím tắt mở nhanh Tab Trang Bị.
 - `Enter`: Mở nhanh khung gõ Chat.
+
+---
+
+## 5. HỆ THỐNG ĐA NGÔN NGỮ (LOCALIZATION - SONG NGỮ ANH / VIỆT)
+
+Game hỗ trợ chính thức kiến trúc **Song Ngữ Toàn Diện (Bilingual Support)**:
+
+```
++-------------------------------------------------------------------------+
+|                  CẤU HÌNH NGÔN NGỮ (LANGUAGE SETTINGS)                  |
++-------------------------------------------------------------------------+
+| [●] TIẾNG VIỆT (MẶC ĐỊNH - DEFAULT)                                     |
+| [ ] ENGLISH (TIẾNG ANH - TÙY CHỌN TRONG CÀI ĐẶT)                        |
+|                                                                         |
+| -> Chuyển đổi tức thì trong Tab 4 (Settings), không cần khởi động lại!  |
++-------------------------------------------------------------------------+
+```
+
+### 5.1. Quy Chuẩn Bản Địa Hóa (Localization Rules)
+1. **Ngôn ngữ mặc định:** **Tiếng Việt (`vi-VN`)** — Toàn bộ tân thủ khi cài đặt hoặc lần đầu vào game sẽ hiển thị giao diện tiếng Việt.
+2. **Tùy chọn chuyển đổi:** **English (`en-US`)** — Người chơi có thể tự do chuyển sang tiếng Anh bất kỳ lúc nào trong **Tab 4 (Cài đặt / Settings)**.
+3. **Cơ chế Hot-Reload (Chuyển đổi tức thì):**
+   - Khi chọn ngôn ngữ mới trong Settings, hệ thống Client tự động phát sự kiện `OnLanguageChanged` để cập nhật lại toàn bộ Text trên UI, mô tả trang bị, tooltip kỹ năng ngay lập tức mà **không yêu cầu người chơi phải thoát game hay khởi động lại client**.
+
+### 5.2. Bảng Đối Chiếu Thuật Ngữ Song Ngữ Chuẩn (Glossary Matrix)
+
+| Thuật ngữ Tiếng Việt (Default) | English Term (In Settings) | Phân loại |
+| :--- | :--- | :--- |
+| **Kị Sĩ** | Knight | Hệ chiến đấu |
+| **Xạ Thủ** | Archer | Hệ chiến đấu |
+| **Pháp Sư** | Mage | Hệ chiến đấu |
+| **Võ Sĩ** | Brawler | Hệ chiến đấu |
+| **Hệ Ẩn / Kẻ Ngoại Đạo** | The Heretic | Chức nghiệp ẩn |
+| **Kẻ Tội Lỗi** | The Sinner | Perk bẩm sinh hệ ẩn |
+| **Chuyển Sinh** | Rebirth | Cơ chế tiến trình |
+| **Rương Chuyển Sinh** | Rebirth Vault | Rương thế giới |
+| **Điểm Chuyển Sinh** | Rebirth Points (RP) | Tiền tệ cao cấp |
+| **Ô Bảo Vệ Vĩnh Viễn** | Permanent Protected Slot | Cơ chế an toàn |
+| **Vùng An Toàn** | Safe Zone | Khu vực bản đồ |
+| **Sát Thương Đồng Minh** | Friendly Fire | Cơ chế chiến đấu |
+| **Lướt Nhanh** | Dash (Shift) | Kỹ năng cơ động |
+| **Ánh Sáng / Bóng Tối / Phong / Mộc / Băng / Hỏa** | Light / Dark / Wind / Nature / Ice / Fire | 6 Thuộc tính ma lực |
+| **Phẩm cấp: E $\rightarrow$ X** | Common $\rightarrow$ Godless | Phân cấp trang bị & cuộn trục |
+
+### 5.3. Yêu Cầu Kỹ Thuật Phông Chữ (Typography / Unicode)
+- Sử dụng bảng mã **UTF-8 tiêu chuẩn**.
+- Toàn bộ Text Asset và Font Asset trong Unity (Text Mesh Pro) phải được nướng sẵn (bake SDF) đầy đủ bảng ký tự tiếng Việt có dấu (bao gồm cả hoa và thường: `ă, â, đ, ê, ô, ơ, ư...`) nhằm triệt tiêu hoàn toàn lỗi hiển thị ô vuông (missing glyph) khi hiển thị tiếng Việt.

@@ -39,3 +39,8 @@
 
 5. **Thế Giới Mở Khổng Lồ (Data-Driven World Streaming):**
    - Kiến trúc World Map → Region → Chunk đảm bảo bản đồ cực kỳ rộng lớn, hỗ trợ khám phá không giới hạn mà không gây sập tải server hay client.
+
+6. **Hỗ Trợ Song Ngữ Toàn Diện (Bilingual Support - Anh / Việt):**
+   - Mặc định là **Tiếng Việt**, có thể chuyển sang **English (Tiếng Anh)** trong Tab Cài Đặt (Settings).
+   - Cơ chế đổi ngôn ngữ tức thì (Hot-swap), không cần khởi động lại game.
+
