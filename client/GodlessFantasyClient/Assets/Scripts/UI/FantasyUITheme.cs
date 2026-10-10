@@ -50,16 +50,57 @@ namespace GodlessFantasy.UI
         public static readonly Color ColorTextCyan = new Color(0.20f, 0.92f, 1.0f, 1.0f);
         public static readonly Color ColorTextRed = new Color(1.0f, 0.45f, 0.45f, 1.0f);
 
-        private static GUIStyle labelStyle;
+        private static GUIStyle squareIconStyle;
+        private static GUIStyle rectBtnStyle;
+        private static GUIStyle tickerBadgeStyle;
+        private static GUIStyle tickerTextStyle;
 
-        private static void EnsureStyle()
+        private static void EnsureStyles()
         {
-            if (labelStyle == null)
+            if (squareIconStyle == null)
             {
-                labelStyle = new GUIStyle(GUI.skin.label)
+                squareIconStyle = new GUIStyle(GUI.skin.label)
                 {
                     alignment = TextAnchor.MiddleCenter,
-                    fontStyle = FontStyle.Bold
+                    fontStyle = FontStyle.Bold,
+                    padding = new RectOffset(0, 0, 0, 0),
+                    margin = new RectOffset(0, 0, 0, 0),
+                    contentOffset = Vector2.zero,
+                    wordWrap = false,
+                    clipping = TextClipping.Overflow
+                };
+            }
+            if (rectBtnStyle == null)
+            {
+                rectBtnStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontStyle = FontStyle.Bold,
+                    padding = new RectOffset(0, 0, 0, 0),
+                    margin = new RectOffset(0, 0, 0, 0),
+                    contentOffset = Vector2.zero,
+                    wordWrap = false,
+                    clipping = TextClipping.Overflow
+                };
+            }
+            if (tickerBadgeStyle == null)
+            {
+                tickerBadgeStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 10,
+                    wordWrap = false
+                };
+            }
+            if (tickerTextStyle == null)
+            {
+                tickerTextStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleLeft,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 11,
+                    wordWrap = false
                 };
             }
         }
@@ -67,10 +108,11 @@ namespace GodlessFantasy.UI
         // ================= 1. NÚT VUÔNG ICON VIỀN VÀNG CHỐT GÓC (CHUẨN ẢNH MẪU USER) =================
         /// <summary>
         /// Vẽ nút bấm ô vuông viền vàng, 4 chốt góc, nền xanh than ma thuật với icon/ký tự nổi khối (Ví dụ nút [+], [-], [⚙]).
+        /// Căn giữa tuyệt đối (Absolute Center) cả ngang lẫn dọc, chống lệch tuyệt đối.
         /// </summary>
         public static bool DrawSquareIconButton(Rect r, string iconText, int fontSize = 14, bool isEnabled = true, bool isHighlighted = false, Color? iconColor = null)
         {
-            EnsureStyle();
+            EnsureStyles();
             bool isHovered = isEnabled && r.Contains(Event.current.mousePosition);
             bool isPressed = isHovered && Event.current.type == EventType.MouseDown && Event.current.button == 0;
 
@@ -108,19 +150,24 @@ namespace GodlessFantasy.UI
             }
             GUI.color = Color.white;
 
-            // 5. Icon/Ký tự ở giữa với đổ bóng đen nổi khối
-            labelStyle.fontSize = fontSize;
+            // 5. Icon/Ký tự ở giữa với đổ bóng đen nổi khối (Căn giữa tuyệt đối chính tâm nút)
+            squareIconStyle.alignment = TextAnchor.MiddleCenter;
+            squareIconStyle.fontStyle = FontStyle.Bold;
+            squareIconStyle.fontSize = fontSize;
+            squareIconStyle.padding = new RectOffset(0, 0, 0, 0);
+            squareIconStyle.margin = new RectOffset(0, 0, 0, 0);
+            squareIconStyle.contentOffset = Vector2.zero;
             float textOffset = isPressed ? 1f : 0f;
 
             // Đổ bóng sắc nét
-            labelStyle.normal.textColor = new Color(0.04f, 0.05f, 0.08f, 0.95f);
-            GUI.Label(new Rect(r.x + 1 + textOffset, r.y + 1 + textOffset, r.width, r.height), iconText, labelStyle);
+            squareIconStyle.normal.textColor = new Color(0.04f, 0.05f, 0.08f, 0.95f);
+            GUI.Label(new Rect(r.x + 1 + textOffset, r.y + 1 + textOffset, r.width, r.height), iconText, squareIconStyle);
 
             // Màu chính
             Color fg = !isEnabled ? Color.gray
                      : iconColor ?? (isHighlighted ? ColorTextGold : isHovered ? Color.white : ColorTextGold);
-            labelStyle.normal.textColor = fg;
-            GUI.Label(new Rect(r.x + textOffset, r.y + textOffset, r.width, r.height), iconText, labelStyle);
+            squareIconStyle.normal.textColor = fg;
+            GUI.Label(new Rect(r.x + textOffset, r.y + textOffset, r.width, r.height), iconText, squareIconStyle);
 
             if (isHovered && Event.current.type == EventType.MouseDown && Event.current.button == 0)
             {
@@ -135,7 +182,7 @@ namespace GodlessFantasy.UI
         /// </summary>
         public static bool DrawSquarePlusButton(Rect r, bool canAdd = true)
         {
-            return DrawSquareIconButton(r, "+", 13, canAdd, canAdd, canAdd ? ColorTextGold : Color.gray) && canAdd;
+            return DrawSquareIconButton(r, "+", 14, canAdd, canAdd, canAdd ? ColorTextGold : Color.gray) && canAdd;
         }
 
         // ================= 2. NÚT CHỮ NHẬT FANTASY CHUẨN =================
@@ -144,7 +191,7 @@ namespace GodlessFantasy.UI
         /// </summary>
         public static bool DrawButton(Rect r, string text, int fontSize = 12, bool isHighlighted = false, Color? textColorOverride = null)
         {
-            EnsureStyle();
+            EnsureStyles();
             bool isHovered = r.Contains(Event.current.mousePosition);
 
             // Nền
@@ -175,14 +222,19 @@ namespace GodlessFantasy.UI
             }
             GUI.color = Color.white;
 
-            // Text có đổ bóng đen mảnh
-            labelStyle.fontSize = fontSize;
-            labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.90f);
-            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), text, labelStyle);
+            // Text có đổ bóng đen mảnh (Căn giữa tuyệt đối)
+            rectBtnStyle.alignment = TextAnchor.MiddleCenter;
+            rectBtnStyle.fontStyle = FontStyle.Bold;
+            rectBtnStyle.fontSize = fontSize;
+            rectBtnStyle.padding = new RectOffset(0, 0, 0, 0);
+            rectBtnStyle.contentOffset = Vector2.zero;
+
+            rectBtnStyle.normal.textColor = new Color(0f, 0f, 0f, 0.90f);
+            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), text, rectBtnStyle);
 
             Color txtCol = textColorOverride ?? (isHighlighted ? ColorTextGold : isHovered ? Color.white : ColorTextGold);
-            labelStyle.normal.textColor = txtCol;
-            GUI.Label(r, text, labelStyle);
+            rectBtnStyle.normal.textColor = txtCol;
+            GUI.Label(r, text, rectBtnStyle);
 
             if (isHovered && Event.current.type == EventType.MouseDown && Event.current.button == 0)
             {
@@ -198,7 +250,7 @@ namespace GodlessFantasy.UI
         /// </summary>
         public static void DrawMarqueeTicker(Rect r, string badgeText, string marqueeContent, float speed = 65f, Color? badgeColor = null)
         {
-            EnsureStyle();
+            EnsureStyles();
 
             // 1. Nền tối 100% đặc
             GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.98f);
@@ -223,12 +275,10 @@ namespace GodlessFantasy.UI
             GUI.color = Color.white;
             DrawOutline(badgeRect, ColorBorderInner, 1);
 
-            labelStyle.fontSize = 10;
-            labelStyle.alignment = TextAnchor.MiddleCenter;
-            labelStyle.normal.textColor = Color.black;
-            GUI.Label(new Rect(badgeRect.x + 1, badgeRect.y + 1, badgeRect.width, badgeRect.height), badgeText, labelStyle);
-            labelStyle.normal.textColor = badgeColor ?? ColorTextGold;
-            GUI.Label(badgeRect, badgeText, labelStyle);
+            tickerBadgeStyle.normal.textColor = Color.black;
+            GUI.Label(new Rect(badgeRect.x + 1, badgeRect.y + 1, badgeRect.width, badgeRect.height), badgeText, tickerBadgeStyle);
+            tickerBadgeStyle.normal.textColor = badgeColor ?? ColorTextGold;
+            GUI.Label(badgeRect, badgeText, tickerBadgeStyle);
 
             // 3. Viewport cắt viền chữ chạy (GUI.BeginGroup tự động clip không tràn ra ngoài)
             float clipX = r.x + badgeW + 8f;
@@ -237,21 +287,19 @@ namespace GodlessFantasy.UI
 
             GUI.BeginGroup(clipRect);
 
-            labelStyle.alignment = TextAnchor.MiddleLeft;
-            labelStyle.fontSize = 11;
-
+            tickerTextStyle.fontSize = 11;
             GUIContent content = new GUIContent(marqueeContent);
-            float textW = labelStyle.CalcSize(content).x;
+            float textW = tickerTextStyle.CalcSize(content).x;
             float travelDistance = clipW + textW + 80f; // 80px khoảng cách ngắt nhịp giữa các lượt lặp
             float currentOffset = clipW - ((Time.time * speed) % travelDistance);
 
             // Đổ bóng chữ đen mảnh
-            labelStyle.normal.textColor = new Color(0f, 0f, 0f, 0.90f);
-            GUI.Label(new Rect(currentOffset + 1, 1, textW, r.height), marqueeContent, labelStyle);
+            tickerTextStyle.normal.textColor = new Color(0f, 0f, 0f, 0.90f);
+            GUI.Label(new Rect(currentOffset + 1, 1, textW, r.height), marqueeContent, tickerTextStyle);
 
             // Chữ hiển thị chính màu trắng vàng dịu mắt
-            labelStyle.normal.textColor = new Color(0.96f, 0.94f, 0.85f);
-            GUI.Label(new Rect(currentOffset, 0, textW, r.height), marqueeContent, labelStyle);
+            tickerTextStyle.normal.textColor = new Color(0.96f, 0.94f, 0.85f);
+            GUI.Label(new Rect(currentOffset, 0, textW, r.height), marqueeContent, tickerTextStyle);
 
             GUI.EndGroup();
         }

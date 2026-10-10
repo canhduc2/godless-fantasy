@@ -310,7 +310,7 @@ namespace GodlessFantasy.UI
 
             // Kiểm tra chuột có nằm trên vùng UI không để tránh Click-to-Move xuyên màn hình
             Vector2 mousePos = Event.current.mousePosition;
-            bool isMouseOverUI = (mousePos.x < 330 && mousePos.y < 115) ||
+            bool isMouseOverUI = (mousePos.x < 322 && mousePos.y < 115) ||
                                  (mousePos.x > Screen.width - 200 && mousePos.y < 160) ||
                                  (mousePos.y > Screen.height - 100) ||
                                  (isDrawerOpen && mousePos.x < 495) ||
@@ -348,7 +348,7 @@ namespace GodlessFantasy.UI
         // ================= 1. BẢNG THÔNG TIN NHÂN VẬT GÓC TRÁI TRÊN =================
         private void DrawTopLeftPlayerPanel()
         {
-            float panelW = 380f; // Mở rộng 380px thoải mái, không bao giờ bị truncate
+            float panelW = 320f; // Thu gọn lùi sát viền phải (320px), ôm sát mép phải chữ Tiềm Năng: 5 đúng ảnh khoanh trắng của User
             float panelH = 96f;
             Rect panel = new Rect(16, 14, panelW, panelH);
 
@@ -378,7 +378,7 @@ namespace GodlessFantasy.UI
             statBadgeStyle.alignment = TextAnchor.MiddleCenter;
             GUI.Label(lvBadge, $"Lv.{lv}", statBadgeStyle);
 
-            // DÒNG 1: CHỨC NGHIỆP & TÊN (Đúng quy tắc đặc tả, không bao giờ bị truncate)
+            // DÒNG 1: CHỨC NGHIỆP & TÊN (Đúng quy tắc đặc tả, vừa vặn không truncate)
             string charName = playerStats != null ? playerStats.CharacterName : "Dũng Sĩ SquiRRels";
             boldWhiteStyle.alignment = TextAnchor.UpperLeft;
             boldWhiteStyle.fontSize = 12;
@@ -391,7 +391,7 @@ namespace GodlessFantasy.UI
             // Thanh Máu HP
             int hp = playerHealth != null ? playerHealth.CurrentHealth : 100;
             int maxHp = playerHealth != null ? playerHealth.MaxHealth : 100;
-            Rect hpRect = new Rect(panel.x + 66, panel.y + 26, panelW - 76, 16);
+            Rect hpRect = new Rect(panel.x + 66, panel.y + 26, panelW - 74, 16);
             DrawInteractiveBar(hpRect, hp, maxHp, hpFillTex, $"HP {hp}/{maxHp} [Bấm Q: +35]", () => {
                 if (playerStats != null) playerStats.UseHpPotion();
             });
@@ -399,21 +399,21 @@ namespace GodlessFantasy.UI
             // Thanh Mana
             int mana = playerStats != null ? playerStats.CurrentMana : 80;
             int maxMana = playerStats != null ? playerStats.MaxMana : 100;
-            Rect manaRect = new Rect(panel.x + 66, panel.y + 46, panelW - 76, 16);
+            Rect manaRect = new Rect(panel.x + 66, panel.y + 46, panelW - 74, 16);
             DrawInteractiveBar(manaRect, mana, maxMana, manaFillTex, $"MANA {mana}/{maxMana} [Bấm E: +30]", () => {
                 if (playerStats != null) playerStats.UseManaPotion();
             });
 
-            // DÒNG DƯỚI: ĐƯA HỆ (HỎA) XUỐNG DƯỚI, BỎ (FIRE), CÙNG DÒNG VỚI CHỈ SỐ
+            // DÒNG DƯỚI: ĐƯA HỆ (HỎA) XUỐNG DƯỚI, BỎ (FIRE), VỪA KHÍT TỚI MÉP VIỀN PHẢI
             int str = playerStats != null ? playerStats.Strength : 8;
             int intel = playerStats != null ? playerStats.Intelligence : 12;
             int vit = playerStats != null ? playerStats.Vitality : 10;
             int agi = playerStats != null ? playerStats.Agility : 9;
-            statBadgeStyle.alignment = TextAnchor.MiddleCenter; // Căn chính giữa cân đối, triệt tiêu khoảng trắng thừa bên phải
+            statBadgeStyle.alignment = TextAnchor.MiddleLeft;
             statBadgeStyle.fontSize = 11;
             statBadgeStyle.wordWrap = false;
             statBadgeStyle.clipping = TextClipping.Overflow;
-            GUI.Label(new Rect(panel.x + 66, panel.y + 68, panelW - 76, 20), $"Hệ: <color=#ff6633>{elem}</color> | INT: {intel} · STR: {str} · VIT: {vit} · AGI: {agi} | Tiềm Năng: {playerStats?.AvailableStatPoints ?? 0}", statBadgeStyle);
+            GUI.Label(new Rect(panel.x + 66, panel.y + 68, panelW - 74, 20), $"Hệ: <color=#ff6633>{elem}</color> | INT: {intel} · STR: {str} · VIT: {vit} · AGI: {agi} | Tiềm Năng: {playerStats?.AvailableStatPoints ?? 0}", statBadgeStyle);
         }
 
         private void DrawInteractiveBar(Rect r, int cur, int max, Texture2D fillTex, string text, Action onClick)
@@ -1310,20 +1310,35 @@ namespace GodlessFantasy.UI
             int agiVal = playerStats?.Agility ?? 9;
             bool canAdd = (playerStats != null && playerStats.AvailableStatPoints > 0);
 
-            // Cột 1: Trí Tuệ & Sức Mạnh (Sử dụng Template Nút Vuông Viền Vàng Hoàng Kim FantasyUITheme chuẩn mẫu User)
+            // Bảng 2 Cột Đối Xứng Hoàn Hảo (Symmetrical Two-Column Stat Card)
+            float colW = statBox.width * 0.5f;
+            float btnSize = 22f;
+
+            // Vạch chia cột tinh tế ở giữa
+            DrawOutline(new Rect(statBox.x + colW, statBox.y + 8, 1, 58), new Color(0.40f, 0.45f, 0.55f, 0.25f), 1);
+
             standardTextStyle.fontSize = 12;
-            GUI.Label(new Rect(statBox.x + 12, statBox.y + 8, 110, 20), $"Trí Tuệ: <color=#00e5ff><b>{intVal}</b></color>", standardTextStyle);
-            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 126, statBox.y + 5, 24, 24), canAdd)) playerStats?.AddIntelligence();
+            standardTextStyle.alignment = TextAnchor.MiddleLeft;
 
-            GUI.Label(new Rect(statBox.x + 12, statBox.y + 40, 110, 20), $"Sức Mạnh: <color=#ff7755><b>{strVal}</b></color>", standardTextStyle);
-            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 126, statBox.y + 37, 24, 24), canAdd)) playerStats?.AddStrength();
+            // CỘT 1 (Bên trái): Trí Tuệ & Sức Mạnh
+            float col1X = statBox.x + 14f;
+            float col1BtnX = statBox.x + colW - btnSize - 14f;
 
-            // Cột 2: Thể Lực & Nhanh Nhẹn
-            GUI.Label(new Rect(statBox.x + 205, statBox.y + 8, 110, 20), $"Thể Lực: <color=#55ff55><b>{vitVal}</b></color>", standardTextStyle);
-            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 320, statBox.y + 5, 24, 24), canAdd)) playerStats?.AddVitality();
+            GUI.Label(new Rect(col1X, statBox.y + 8, 110, 22), $"Trí Tuệ: <color=#00e5ff><b>{intVal}</b></color>", standardTextStyle);
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(col1BtnX, statBox.y + 8, btnSize, btnSize), canAdd)) playerStats?.AddIntelligence();
 
-            GUI.Label(new Rect(statBox.x + 205, statBox.y + 40, 110, 20), $"Nhanh Nhẹn: <color=#ffdd44><b>{agiVal}</b></color>", standardTextStyle);
-            if (FantasyUITheme.DrawSquarePlusButton(new Rect(statBox.x + 320, statBox.y + 37, 24, 24), canAdd)) playerStats?.AddAgility();
+            GUI.Label(new Rect(col1X, statBox.y + 40, 110, 22), $"Sức Mạnh: <color=#ff7755><b>{strVal}</b></color>", standardTextStyle);
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(col1BtnX, statBox.y + 40, btnSize, btnSize), canAdd)) playerStats?.AddStrength();
+
+            // CỘT 2 (Bên phải): Thể Lực & Nhanh Nhẹn
+            float col2X = statBox.x + colW + 14f;
+            float col2BtnX = statBox.x + statBox.width - btnSize - 14f;
+
+            GUI.Label(new Rect(col2X, statBox.y + 8, 110, 22), $"Thể Lực: <color=#55ff55><b>{vitVal}</b></color>", standardTextStyle);
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(col2BtnX, statBox.y + 8, btnSize, btnSize), canAdd)) playerStats?.AddVitality();
+
+            GUI.Label(new Rect(col2X, statBox.y + 40, 110, 22), $"Nhanh Nhẹn: <color=#ffdd44><b>{agiVal}</b></color>", standardTextStyle);
+            if (FantasyUITheme.DrawSquarePlusButton(new Rect(col2BtnX, statBox.y + 40, btnSize, btnSize), canAdd)) playerStats?.AddAgility();
             pY += 82f;
 
             // 2. PHẦN GIỮA: DANH SÁCH CÁC KỸ NĂNG ĐANG SỬ DỤNG
