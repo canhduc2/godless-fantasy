@@ -297,9 +297,13 @@ namespace GodlessFantasy.Combat
         private void CastLineSkillshot(SkillScrollData scroll, int dmg)
         {
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
-            Vector3 spawnPos = firePoint.position + (Vector3)(aimDir * 0.45f);
+            Vector3 spawnPos = firePoint != null ? firePoint.position + (Vector3)(aimDir * 0.45f) : transform.position + (Vector3)(aimDir * 0.45f);
 
-            if (magicBoltPrefab != null)
+            if (SkillVFXManager.Instance != null)
+            {
+                SkillVFXManager.Instance.SpawnLineProjectile(spawnPos, aimDir, dmg, scroll, gameObject.name);
+            }
+            else if (magicBoltPrefab != null)
             {
                 GameObject boltObj = Instantiate(magicBoltPrefab, spawnPos, Quaternion.identity);
                 boltObj.SetActive(true);
@@ -317,19 +321,24 @@ namespace GodlessFantasy.Combat
             Vector3 targetPos = indicatorRenderer != null ? indicatorRenderer.GetGroundTargetPosition() : transform.position;
             float aoeRadius = 1.9f;
 
-            Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, aoeRadius);
-            int hitCount = 0;
-            foreach (var col in hits)
+            if (SkillVFXManager.Instance != null)
             {
-                if (col.gameObject == gameObject) continue;
-                if (col.TryGetComponent<IDamageable>(out var target))
+                SkillVFXManager.Instance.SpawnGroundAoEImpact(targetPos, aoeRadius, dmg, scroll, gameObject.name);
+            }
+            else
+            {
+                Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, aoeRadius);
+                foreach (var col in hits)
                 {
-                    target.TakeDamage(dmg, gameObject.name);
-                    FloatingDamageManager.Spawn(col.transform.position, dmg, true);
-                    hitCount++;
+                    if (col.gameObject == gameObject) continue;
+                    if (col.TryGetComponent<IDamageable>(out var target))
+                    {
+                        target.TakeDamage(dmg, gameObject.name);
+                        FloatingDamageManager.Spawn(col.transform.position, dmg, true);
+                    }
                 }
             }
-            Debug.Log($"[CAST] Thả '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
+            Debug.Log($"[CAST] Thả '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})! Bán kính: {aoeRadius}m. Sát thương: {dmg}");
         }
 
         // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep - Tầm 4.5m, góc 60 độ khớp 100% Visual Indicator)
@@ -338,45 +347,57 @@ namespace GodlessFantasy.Combat
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
             float coneRange = 4.5f;
             float halfAngle = 30.0f;
+            Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position;
 
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, coneRange);
-            int hitCount = 0;
-            foreach (var col in hits)
+            if (SkillVFXManager.Instance != null)
             {
-                if (col.gameObject == gameObject) continue;
-                Vector2 toTarget = (col.transform.position - transform.position);
-                float angle = Vector2.Angle(aimDir, toTarget.normalized);
-
-                if (angle <= halfAngle)
+                SkillVFXManager.Instance.SpawnConeSweep(spawnPos, aimDir, coneRange, halfAngle, dmg, scroll, gameObject.name);
+            }
+            else
+            {
+                Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, coneRange);
+                foreach (var col in hits)
                 {
-                    if (col.TryGetComponent<IDamageable>(out var target))
+                    if (col.gameObject == gameObject) continue;
+                    Vector2 toTarget = (col.transform.position - transform.position);
+                    float angle = Vector2.Angle(aimDir, toTarget.normalized);
+
+                    if (angle <= halfAngle)
                     {
-                        target.TakeDamage(dmg, gameObject.name);
-                        FloatingDamageManager.Spawn(col.transform.position, dmg, false);
-                        hitCount++;
+                        if (col.TryGetComponent<IDamageable>(out var target))
+                        {
+                            target.TakeDamage(dmg, gameObject.name);
+                            FloatingDamageManager.Spawn(col.transform.position, dmg, false);
+                        }
                     }
                 }
             }
-            Debug.Log($"[CAST] Quét '{scroll.scrollName}' hình quạt! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
+            Debug.Log($"[CAST] Quét '{scroll.scrollName}' hình quạt! Sát thương: {dmg}");
         }
 
         // 4. Bộc Phá Hào Quang 360 Độ (Self Nova - Bán kính chuẩn 2.5m khớp 100% Visual Indicator)
         private void CastSelfNova(SkillScrollData scroll, int dmg)
         {
             float novaRadius = 2.5f;
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, novaRadius);
-            int hitCount = 0;
-            foreach (var col in hits)
+
+            if (SkillVFXManager.Instance != null)
             {
-                if (col.gameObject == gameObject) continue;
-                if (col.TryGetComponent<IDamageable>(out var target))
+                SkillVFXManager.Instance.SpawnSelfNova(transform.position, novaRadius, dmg, scroll, gameObject.name);
+            }
+            else
+            {
+                Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, novaRadius);
+                foreach (var col in hits)
                 {
-                    target.TakeDamage(dmg, gameObject.name);
-                    FloatingDamageManager.Spawn(col.transform.position, dmg, true);
-                    hitCount++;
+                    if (col.gameObject == gameObject) continue;
+                    if (col.TryGetComponent<IDamageable>(out var target))
+                    {
+                        target.TakeDamage(dmg, gameObject.name);
+                        FloatingDamageManager.Spawn(col.transform.position, dmg, true);
+                    }
                 }
             }
-            Debug.Log($"[CAST] Nổ '{scroll.scrollName}' 360 độ quanh người! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
+            Debug.Log($"[CAST] Nổ '{scroll.scrollName}' 360 độ quanh người! Sát thương: {dmg}");
         }
 
         private void CancelAiming()

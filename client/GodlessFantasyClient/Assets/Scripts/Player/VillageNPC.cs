@@ -73,26 +73,30 @@ namespace GodlessFantasy.Player
                 Vector3 screenPos = cam.WorldToScreenPoint(transform.position + new Vector3(0, 1.25f, 0));
                 if (screenPos.z > 0)
                 {
-                    float promptW = 160f;
+                    string promptText = "[ BẤM E ĐỂ NÓI CHUYỆN 💬 ]";
+                    var promptStyle = new GUIStyle(GUI.skin.label)
+                    {
+                        fontSize = 11,
+                        fontStyle = FontStyle.Bold,
+                        alignment = TextAnchor.MiddleCenter,
+                        wordWrap = false,
+                        clipping = TextClipping.Overflow,
+                        normal = { textColor = new Color(1f, 0.88f, 0.35f) }
+                    };
+                    Vector2 promptSize = promptStyle.CalcSize(new GUIContent(promptText));
+                    float promptW = Mathf.Max(195f, promptSize.x + 24f);
                     float promptH = 22f;
                     Rect promptRect = new Rect(screenPos.x - promptW / 2f, Screen.height - screenPos.y - 14, promptW, promptH);
 
                     // Không vẽ đè lên Menu trượt / Modal / Cài đặt khi đang mở
                     if (CombatHUD.IsAnyModalBlockingScreen(promptRect.x + promptRect.width / 2f, promptRect.y + promptRect.height / 2f)) return;
 
-                    GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.85f);
+                    GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.90f);
                     GUI.DrawTexture(promptRect, Texture2D.whiteTexture);
-                    GUI.color = new Color(1f, 0.88f, 0.35f);
-
-                    var promptStyle = new GUIStyle(GUI.skin.label)
-                    {
-                        fontSize = 11,
-                        fontStyle = FontStyle.Bold,
-                        alignment = TextAnchor.MiddleCenter,
-                        normal = { textColor = new Color(1f, 0.88f, 0.35f) }
-                    };
-                    GUI.Label(promptRect, "[ BẤM E ĐỂ NÓI CHUYỆN 💬 ]", promptStyle);
                     GUI.color = Color.white;
+                    FantasyUITheme.DrawDoubleGoldFrame(promptRect, 1);
+
+                    GUI.Label(promptRect, promptText, promptStyle);
                 }
             }
 

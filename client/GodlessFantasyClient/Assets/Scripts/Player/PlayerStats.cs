@@ -16,8 +16,9 @@ namespace GodlessFantasy.Player
     {
         [Header("Character Identity (Định Danh & Cấp Độ)")]
         [SerializeField] private string characterName = "Dũng Sĩ SquiRRels";
+        [SerializeField] private string characterClass = "Kị Sĩ";
         [SerializeField] private int level = 1;
-        [SerializeField] private string element = "Hỏa (Fire)";
+        [SerializeField] private string element = "Hỏa";
 
         [Header("Core Attributes (Thuộc Tính Cơ Bản)")]
         [SerializeField] private int strength = 8;
@@ -41,9 +42,29 @@ namespace GodlessFantasy.Player
         private InventoryManager inventoryManager;
         private float regenAccumulator = 0f;
 
-        public string CharacterName => characterName;
+        public const int MaxNameLength = 20;
+
+        public string CharacterName
+        {
+            get => characterName;
+            set
+            {
+                if (string.IsNullOrEmpty(value)) characterName = "Dũng Sĩ";
+                else if (value.Length > MaxNameLength) characterName = value.Substring(0, MaxNameLength);
+                else characterName = value;
+            }
+        }
+        public string CharacterClass => string.IsNullOrEmpty(characterClass) ? "Kị Sĩ" : characterClass;
         public int Level => level;
-        public string Element => element;
+        public string Element
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(element)) return "Hỏa";
+                if (element.Contains("(")) return element.Substring(0, element.IndexOf('(')).Trim();
+                return element;
+            }
+        }
 
         public int Strength => strength;
         public int Intelligence => intelligence;
@@ -101,6 +122,10 @@ namespace GodlessFantasy.Player
 
         private void Awake()
         {
+            if (!string.IsNullOrEmpty(characterName) && characterName.Length > MaxNameLength)
+            {
+                characterName = characterName.Substring(0, MaxNameLength);
+            }
             health = GetComponent<Health>();
         }
 

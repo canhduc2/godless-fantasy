@@ -55,40 +55,15 @@ namespace GodlessFantasy.Core
             Sprite grassTile = Resources.Load<Sprite>("tile_grass");
             Sprite petSprite = Resources.Load<Sprite>("pet_squirrel");
 
-            // 2. Xây Dựng Bản Đồ Thế Giới Rộng Lớn (44 x 24 ô)
-            // - Phía Tây (x: -22 đến -5): Làng Tân Thủ An Toàn (Sanctuary Safe Zone).
-            // - Ở Giữa (x: -4 đến -2): Cổng Làng & Ranh Giới (Boundary Gate).
-            // - Phía Đông (x: -1 đến 22): Rừng Rậm & Bãi Quái (Wilderness Danger Zone).
-            Transform floorParent = new GameObject("Environment_Floor").transform;
-
-            for (int x = -22; x <= 22; x++)
-            {
-                for (int y = -12; y <= 12; y++)
-                {
-                    GameObject tileObj = new GameObject($"Tile_{x}_{y}");
-                    tileObj.transform.parent = floorParent;
-                    tileObj.transform.position = new Vector3(x, y, 0);
-
-                    var sr = tileObj.AddComponent<SpriteRenderer>();
-                    sr.sortingOrder = -10; // Nền luôn nằm sâu nhất (-10)
-
-                    if (x <= -6)
-                    {
-                        // Làng Tân Thủ: Nền đá thánh viền vàng
-                        sr.sprite = (safeTile != null) ? safeTile : stoneTile;
-                    }
-                    else if (x >= 2)
-                    {
-                        // Rừng rậm bãi quái: Xen kẽ đá cổ và cỏ xanh rêu
-                        sr.sprite = ((x + y) % 3 == 0 && grassTile != null) ? grassTile : stoneTile;
-                    }
-                    else
-                    {
-                        // Con đường đá trung tâm nối làng với rừng
-                        sr.sprite = stoneTile;
-                    }
-                }
-            }
+            // 2. Xây Dựng Bản Đồ Thế Giới Khối Địa Hình (Block-Based Terrain Engine)
+            // Cho phép vẽ khối địa hình trực tiếp (F2) và tự động tải/lưu map dạng JSON không cần code!
+            var mapMgr = gameObject.AddComponent<BlockMapManager>();
+            mapMgr.InitializeMap(-22, 22, -12, 12);
+            gameObject.AddComponent<TerrainPainterTool>();
+            gameObject.AddComponent<ItemCreatorModal>();
+            gameObject.AddComponent<ItemDatabase>();
+            gameObject.AddComponent<SkillDatabase>();
+            gameObject.AddComponent<SkillVFXManager>();
 
             // 3. Vùng An Toàn (Safe Zone Trigger bao trọn Làng Tân Thủ)
             GameObject safeZoneObj = new GameObject("SafeZone_Village");
@@ -150,6 +125,7 @@ namespace GodlessFantasy.Core
             var pHealth = playerObj.AddComponent<Health>();
             var pStats = playerObj.AddComponent<PlayerStats>();
             var pInventory = playerObj.AddComponent<InventoryManager>();
+            var pVisual = playerObj.AddComponent<CharacterVisualController8Dir>();
 
             // THANH MÁU TRÊN ĐẦU NGƯỜI CHƠI (Overhead Status Bar: Tên, Cấp, Hệ, Máu, Mana)
             var pOverhead = playerObj.AddComponent<OverheadStatusBar>();

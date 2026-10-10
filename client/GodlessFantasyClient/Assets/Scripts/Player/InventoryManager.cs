@@ -39,6 +39,14 @@ namespace GodlessFantasy.Player
         public InventoryItem PendingDropItem => pendingDropItem;
         public float DropCountdown => dropCountdown;
 
+        public void AddItem(InventoryItem item)
+        {
+            if (item != null)
+            {
+                items.Add(item);
+            }
+        }
+
         private void Awake()
         {
             EnsureReferences();
