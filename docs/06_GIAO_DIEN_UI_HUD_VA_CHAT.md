@@ -121,13 +121,15 @@ Tránh mâu thuẫn thao tác "vừa bấm mũi tên vừa cầm chuột ngắm 
 
 ### 4.1. Phân Bổ 2 Tay Chuẩn Mực
 - **Tay Phải (Chuột) [KHUYẾN NGHỊ MẶC ĐỊNH]:**
-  - **Click Chuột (Click-to-Move):** Click trên địa hình để nhân vật tự tìm đường di chuyển tới đó (chuẩn phong cách LMHT / Dota / Diablo).
+  - **Chuột Trái:**
+    - Khi bình thường: **Click-to-Move** — Click trên địa hình để nhân vật tự tìm đường di chuyển tới đó (chuẩn phong cách LMHT / Dota / Diablo).
+    - Khi đang ngắm chiêu: **Xác nhận phóng chiêu** (thay thế hoặc song song với việc bấm lại phím skill lần 2).
   - **Rê Chuột:** Định hướng, xoay và liệng vùng kỹ năng (Indicator) tự do.
-  - **Click Chuột Phải:** Hủy ngay chiêu thức đang ngắm (không mất Mana).
+  - **Chuột Phải:** Hủy ngay chiêu thức đang ngắm (không mất Mana, không tính cooldown).
 - **Tay Trái (Bàn Phím):**
-  - `1`, `2`, `3`, `4`: **Bấm lần 1** vào chế độ ngắm $\rightarrow$ Rê chuột căn góc $\rightarrow$ **Bấm tiếp lần 2** để xả chiêu! (Không cần đè giữ phím gây mỏi tay).
-  - `Shift`: Dash (Lướt nhanh tiêu hao 20 Mana).
-  - `W`, `A`, `S`, `D` hoặc `Arrow Keys (↑, ↓, ←, →)`: Phương án di chuyển phụ bằng bàn phím hỗ trợ song song cho ai thích bấm phím.
+  - `1`, `2`, `3`, `4`: **Bấm lần 1** vào chế độ ngắm $\rightarrow$ Rê chuột căn góc $\rightarrow$ **Bấm tiếp lần 2** (hoặc Click Trái) để xả chiêu! (Không cần đè giữ phím gây mỏi tay).
+  - `Shift`: Dash (Lướt thẳng theo **hướng con trỏ chuột**, tiêu hao 20 Mana, cooldown 3.5s).
+  - `W`, `A`, `S`, `D` (hoặc Arrow Keys): Di chuyển thủ công phụ (ghi đè ngay Click-to-Move khi bấm để né đòn tức thì).
   - `I`: Phím tắt mở nhanh Tab Kho Đồ.
   - `K`: Phím tắt mở nhanh Tab Kỹ Năng & Thuộc Tính.
   - `C`: Phím tắt mở nhanh Tab Trang Bị.

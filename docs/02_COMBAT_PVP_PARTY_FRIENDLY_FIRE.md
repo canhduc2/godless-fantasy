@@ -114,24 +114,50 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
 +-----------------------------------------------------------------------------------------+
 ```
 
-### 4.3. Bảng Máy Trạng Thái Điều Khiển (Input FSM Table)
+### 4.3. Ba Quy Tắc Thiết Kế Tránh Xung Đột Input (Input Conflict Resolution)
 
-| Trạng thái | Điều kiện kích hoạt | Hành vi hệ thống | Chuyển trạng thái tiếp theo |
-| :--- | :--- | :--- | :--- |
-| **IDLE** | Đang đứng chờ / di chuyển | Chưa có indicator, nhận lệnh Click-to-Move hoặc phím bình thường. | Bấm phím `1`, `2`, `3`, hoặc `4` $\rightarrow$ **AIMING(Skill_X)** |
-| **AIMING(X)** | Vừa bấm phím Skill X lần 1 | Hiển thị indicator của Skill X xoay theo tọa độ con trỏ chuột. | - Bấm lại đúng phím **Skill X lần 2** $\rightarrow$ **CAST_SUCCESS**<br>- Click **Chuột Phải** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm sang phím **Skill Y khác** $\rightarrow$ Chuyển sang **AIMING(Skill_Y)** |
-| **CANCEL_SUCCESS** | Vừa Click Chuột Phải khi đang ngắm | Tắt ngay indicator, xóa bộ nhớ ngắm. Không tiêu hao Mana, không tính cooldown. | Trở về ngay **IDLE** |
-| **CAST_SUCCESS** | Bấm đúng phím Skill X lần 2 | Server xác nhận vị trí con trỏ chuột $\rightarrow$ Trừ Mana $\rightarrow$ Bắt đầu tính Cooldown $\rightarrow$ Phóng chiêu. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
+Để code và trải nghiệm mượt mà không bị lỗi thao tác, hệ thống khóa chặt 3 quy tắc sau:
+
+1. **Khóa Di Chuyển Khi Đang Ngắm (Aiming Locks Move-Click):**
+   - Khi đang ở trạng thái `AIMING(X)`: Thao tác **Click Chuột Trái** sẽ được hiểu là **Xác Nhận Thi Triển Kỹ Năng** (song song với việc bấm lại phím số `1`, `2`, `3`, `4`).
+   - Chuột Trái lúc này **tạm thời bị vô hiệu hóa chức năng tìm đường di chuyển** để tránh việc người chơi muốn chưởng nhưng nhân vật lại vô tình bước đi làm lệch góc ngắm.
+2. **Quy Tắc Ưu Tiên Di Chuyển (WASD Overrides Click-to-Move):**
+   - Click-to-Move và WASD hoạt động song song.
+   - Nếu nhân vật đang tự động chạy theo Click-to-Move mà người chơi nhấn bất kỳ phím `W`, `A`, `S`, `D` nào $\rightarrow$ **Lệnh WASD ghi đè lập tức 100%**, hủy đường chạy tự động để người chơi né đòn tức thì với độ trễ 0ms!
+3. **Phân Biệt Rõ 3 Nhóm Kỹ Năng (Skill Targeting Archetypes):**
+   - **Kỹ năng Định Hướng (Directional Skillshots):** Kiếm khí, mũi tên, cầu phép $\rightarrow$ Hiển thị dải mũi tên từ nhân vật hướng về vector con trỏ chuột.
+   - **Kỹ năng Chọn Tọa Độ Mặt Đất (Ground-Targeted AoE):** Mưa thiên thạch, vòng cấm chú, bẫy $\rightarrow$ Hiển thị vòng tròn tâm tại con trỏ chuột; nếu trỏ chuột vượt quá tầm tối đa (Max Range), tâm AoE sẽ bị ghim chặt tại ranh giới vòng tròn Max Range.
+   - **Kỹ năng Tự Thân / Mục Tiêu Đơn (Self / Single-Target):** Khiên chắn, hồi phục, chém áp sát $\rightarrow$ Hiển thị vòng hào quang quanh bản thân hoặc viền khóa mục tiêu hợp lệ.
 
 ---
 
-## 5. KỸ NĂNG CƠ ĐỘNG MẶC ĐỊNH: DASH (LƯỚT NHANH)
+### 4.4. Hệ Thống Phản Hồi Thị Giác Cảnh Báo Friendly Fire (Visual Feedback)
+- **Vòng Phạm Vi Tối Đa (Max Range Border):** Luôn hiển thị bán kính tác dụng lớn nhất của kỹ năng.
+- **Màu Sắc Chỉ Thị Trực Quan:**
+  - **Màu Xanh Lam / Xanh Lục (Hợp lệ):** Đủ Mana, trong tầm tác dụng, sẵn sàng phóng chiêu.
+  - **Màu Đỏ Rực (Cảnh báo):** Không đủ Mana, đang hồi chiêu, hoặc góc ngắm bị vật cản che khuất.
+  - **Cảnh Báo Friendly Fire:** Khi vòng AoE hoặc dải đường đạn giao thoa với vùng đứng của **Đồng Đội trong Party**, vòng tròn dưới chân đồng đội sẽ nhấp nháy viền đỏ cảnh báo nguy cơ ăn đòn oan!
 
-- **Phím kích hoạt:** Phím `Shift` (hoặc hướng di chuyển kết hợp).
-- **Đặc tính:**
-  - Là kỹ năng bẩm sinh có sẵn ngay từ cấp 1 của mọi hệ, **không chiếm bất kỳ ô nào trong 4 ô kỹ năng**.
-  - Lướt nhanh một khoảng cách cố định (khoảng 4.5 mét) theo hướng di chuyển hiện tại của nhân vật.
-  - **Tiêu hao:** Tốn **20 Mana** mỗi lần lướt.
-  - **Thời gian hồi (Cooldown):** 3.5 giây.
-  - Cho phép người chơi né nhanh các đường đạn nguy hiểm, lướt qua chưởng của đồng đội hoặc trốn chạy khỏi kẻ địch.
-  - Trong thời gian lướt không bị khựng di chuyển, nhưng vẫn nhận sát thương nếu va chạm với vùng nổ diện rộng đang tồn tại.
+---
+
+### 4.5. Bảng Máy Trạng Thái Điều Khiển Hoàn Chỉnh (Input FSM Table)
+
+| Trạng thái | Điều kiện kích hoạt | Hành vi hệ thống | Chuyển trạng thái tiếp theo |
+| :--- | :--- | :--- | :--- |
+| **IDLE** | Đang đứng chờ / di chuyển | Nhận Click Chuột Trái (di chuyển tìm đường), nhận WASD (chạy thủ công). | Bấm phím `1`, `2`, `3`, hoặc `4` $\rightarrow$ **AIMING(Skill_X)** |
+| **AIMING(X)** | Bấm phím Skill X lần 1 | Hiện Indicator xoay theo chuột. Khóa Click-to-Move. | - Bấm lại **Phím X** HOẶC **Click Chuột Trái** $\rightarrow$ **CAST_SUCCESS**<br>- Click **Chuột Phải** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm **Phím Y khác** $\rightarrow$ Đổi sang **AIMING(Skill_Y)** |
+| **CANCEL_SUCCESS** | Click Chuột Phải khi đang ngắm | Tắt ngay indicator, xóa bộ nhớ ngắm. Không mất Mana, không tính cooldown. Mở lại Click-to-Move. | Trở về ngay **IDLE** |
+| **CAST_SUCCESS** | Bấm Phím X lần 2 hoặc Click Trái | Server kiểm tra Mana & Cooldown $\rightarrow$ Trừ Mana $\rightarrow$ Thực hiện đòn đánh $\rightarrow$ Mở lại Click-to-Move. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
+
+---
+
+## 5. KỸ NĂNG CƠ ĐỘNG MẶC ĐỊNH: DASH (LƯỚT THEO HƯỚNG CHUỘT)
+
+- **Phím kích hoạt:** Phím `Shift` (Ngón út tay trái).
+- **Cơ chế lướt đỉnh cao:**
+  - **Lướt theo hướng con trỏ chuột (Cursor Vector):** Nhân vật lướt thẳng về phía con trỏ chuột đang chỉ (thay vì chỉ lướt theo hướng mặt), cho phép thực hiện kỹ thuật vừa chạy lùi vừa lướt né đòn hoặc lướt xuyên góc bất ngờ.
+  - **Thông số kỹ thuật:**
+    - Cự ly lướt: Cố định 4.5 mét.
+    - Tiêu hao: **20 Mana** mỗi lần lướt.
+    - Thời gian hồi (Cooldown): **3.5 giây**.
+  - Không chiếm bất kỳ ô nào trong 4 ô kỹ năng cuộn trục. Trong suốt 0.25s lướt, nhân vật không bị khựng hành động, nhưng vẫn nhận sát thương nếu va phải vùng sát thương AoE đang tồn tại.
