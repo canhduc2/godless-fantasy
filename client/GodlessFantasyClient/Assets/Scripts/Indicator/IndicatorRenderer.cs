@@ -67,31 +67,31 @@ namespace GodlessFantasy.Indicator
             aSr.sprite = arrowSp;
             aSr.sortingOrder = 0; // Layer 0: DƯỚI NHÂN VẬT
 
-            // 2. Ground Circle (Skill 2)
+            // 2. Ground Circle (Skill 2: Mưa Thiên Thạch - Bán kính 1.9m)
             groundCircleVisual = new GameObject("GroundCircle_Visual");
             groundCircleVisual.transform.parent = null; // Tách rời để di chuyển độc lập theo chuột
             var gSr = groundCircleVisual.AddComponent<SpriteRenderer>();
             gSr.sprite = circleSp;
             gSr.sortingOrder = 0; // DƯỚI NHÂN VẬT
-            groundCircleVisual.transform.localScale = new Vector3(1.6f, 1.6f, 1f);
+            groundCircleVisual.transform.localScale = new Vector3(2.0f, 2.0f, 1f); // Bán kính chuẩn 1.9m
 
-            // 3. Cone (Skill 3)
+            // 3. Cone (Skill 3: Sóng Lửa - Tầm quét 4.5m, góc 60 độ)
             coneVisual = new GameObject("Cone_Visual");
             coneVisual.transform.parent = transform;
             coneVisual.transform.localPosition = new Vector3(0.2f, 0, 0);
             var cSr = coneVisual.AddComponent<SpriteRenderer>();
             cSr.sprite = coneSp;
             cSr.sortingOrder = 0; // DƯỚI NHÂN VẬT
-            coneVisual.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
+            coneVisual.transform.localScale = new Vector3(2.4f, 2.4f, 1f); // Tầm chuẩn 4.5m
 
-            // 4. Self Nova Circle (Skill 4)
+            // 4. Self Nova Circle (Skill 4: Bộc Phá Thánh Điển - Bán kính chuẩn 2.5m khớp 100% Hitbox)
             selfNovaVisual = new GameObject("SelfNova_Visual");
             selfNovaVisual.transform.parent = transform;
             selfNovaVisual.transform.localPosition = Vector3.zero;
             var sSr = selfNovaVisual.AddComponent<SpriteRenderer>();
             sSr.sprite = circleSp;
             sSr.sortingOrder = 0; // DƯỚI NHÂN VẬT
-            selfNovaVisual.transform.localScale = new Vector3(2.2f, 2.2f, 1f);
+            selfNovaVisual.transform.localScale = new Vector3(2.66f, 2.66f, 1f); // Bán kính chuẩn 2.5m khớp 100% Hitbox!
         }
 
         private void Update()
@@ -163,11 +163,10 @@ namespace GodlessFantasy.Indicator
                 groundCircleVisual.transform.position = clampedPos;
             }
 
-            // Hào quang nổ quanh thân nhấp nháy (Skill 4)
+            // Hào quang nổ quanh thân (Skill 4: Bộc Phá Thánh Điển) giữ đúng bán kính chuẩn 2.5m
             if (currentType == IndicatorType.SelfNova && selfNovaVisual != null)
             {
-                float pulse = 2.2f + Mathf.PingPong(Time.time * 2f, 0.2f);
-                selfNovaVisual.transform.localScale = new Vector3(pulse, pulse, 1f);
+                selfNovaVisual.transform.localScale = new Vector3(2.66f, 2.66f, 1f);
             }
         }
 

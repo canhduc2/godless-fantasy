@@ -203,7 +203,8 @@ namespace GodlessFantasy.Combat
             {
                 if (currentAimingSlot == slot)
                 {
-                    ConfirmAndCastSkill(slot);
+                    // Cơ chế đảo ngược theo yêu cầu: Ấn tiếp lần 2 cùng phím là HỦY NGẮM
+                    CancelAiming();
                 }
                 else
                 {
@@ -214,9 +215,18 @@ namespace GodlessFantasy.Combat
 
         private void HandleCancelInput()
         {
-            if (currentState == AimState.Aiming && GameInput.GetRightMouseButtonDown())
+            if (currentState == AimState.Aiming)
             {
-                CancelAiming();
+                // Chuột Phải: TUNG CHIÊU
+                if (GameInput.GetRightMouseButtonDown())
+                {
+                    ConfirmAndCastSkill(currentAimingSlot);
+                }
+                // ESC: Hủy ngắm
+                else if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    CancelAiming();
+                }
             }
         }
 
@@ -234,7 +244,7 @@ namespace GodlessFantasy.Combat
                 indicatorRenderer.ShowIndicator(scroll.indicatorType);
             }
 
-            Debug.Log($"[AIMING] Đang ngắm {scroll.scrollName} [Ô {slot}]. Bấm [{slot}] lần 2 để xả chiêu!");
+            Debug.Log($"[AIMING] Đang ngắm {scroll.scrollName} [Ô {slot}]. Chuột Phải để tung chiêu · Bấm [{slot}] hoặc ESC để hủy!");
         }
 
         private void ConfirmAndCastSkill(int slot)
@@ -296,11 +306,11 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[CAST] Phóng '{scroll.scrollName}'! Sát thương: {dmg}");
         }
 
-        // 2. Thả Vòng Tròn Đất (Ground AoE)
+        // 2. Thả Vòng Tròn Đất (Ground AoE - Bán kính 1.9m khớp 100% Visual Indicator)
         private void CastGroundAoE(SkillScrollData scroll, int dmg)
         {
             Vector3 targetPos = indicatorRenderer != null ? indicatorRenderer.GetGroundTargetPosition() : transform.position;
-            float aoeRadius = 2.2f;
+            float aoeRadius = 1.9f;
 
             Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, aoeRadius);
             int hitCount = 0;
@@ -317,12 +327,12 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[CAST] Thả '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
         }
 
-        // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep)
+        // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep - Tầm 4.5m, góc 60 độ khớp 100% Visual Indicator)
         private void CastConeSweep(SkillScrollData scroll, int dmg)
         {
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
-            float coneRange = 5.0f;
-            float halfAngle = 35.0f;
+            float coneRange = 4.5f;
+            float halfAngle = 30.0f;
 
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, coneRange);
             int hitCount = 0;
@@ -345,10 +355,10 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[CAST] Quét '{scroll.scrollName}' hình quạt! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
         }
 
-        // 4. Bộc Phá Hào Quang 360 Độ (Self Nova)
+        // 4. Bộc Phá Hào Quang 360 Độ (Self Nova - Bán kính chuẩn 2.5m khớp 100% Visual Indicator)
         private void CastSelfNova(SkillScrollData scroll, int dmg)
         {
-            float novaRadius = 4.5f;
+            float novaRadius = 2.5f;
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, novaRadius);
             int hitCount = 0;
             foreach (var col in hits)
@@ -366,7 +376,7 @@ namespace GodlessFantasy.Combat
 
         private void CancelAiming()
         {
-            Debug.Log("[CANCEL] Đã hủy ngắm bằng chuột phải! Không mất Mana.");
+            Debug.Log("[CANCEL] Đã hủy ngắm chiêu! Không mất Mana.");
             ExitAimingState();
         }
 

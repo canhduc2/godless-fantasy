@@ -78,21 +78,23 @@
 ### 4.1. Giải Pháp Công Thái Học: 2 Tay Chuẩn Mực (Keyboard Left - Mouse Right)
 Tránh xung đột thao tác "thiếu tay cầm chuột", game tối ưu trải nghiệm chiến đấu MOBA/ARPG chuẩn mực:
 - **Tay Phải (Chuột):** 
-  - **Click Chuột để di chuyển (Click-to-Move):** Click vào bản đồ để nhân vật tự tìm đường chạy tới (Phong cách LMHT / Dota / Diablo).
+  - **Click Chuột Trái để di chuyển (Click-to-Move):** Click vào bản đồ để nhân vật tự tìm đường chạy tới (Phong cách LMHT / Dota / Diablo). Kể cả khi đang ngắm, Click Trái vẫn di chuyển né đòn.
   - **Rê chuột:** Định hướng vùng chiêu thức (Skill Indicator).
-  - **Click Chuột Phải:** Hủy ngay chế độ ngắm chiêu.
+  - **Click Chuột Phải: TUNG CHIÊU NGAY LẬP TỨC (CAST SKILL)** theo hướng/tọa độ ngắm.
 - **Tay Trái (Bàn Phím):** 
   - Đặt sẵn trên cụm phím kỹ năng `1`, `2`, `3`, `4` và ngón út trên `Shift` (Dash).
+  - **Bấm phím lần 1:** Bật ngắm chiêu thức.
+  - **Bấm phím lần 2 (hoặc phím ESC):** HỦY NGẮM chiêu thức (không mất Mana, không hồi chiêu).
   - (Cụm phím `W`, `A`, `S`, `D` hoặc Arrow Keys vẫn hoạt động song song như phương án di chuyển hỗ trợ phụ cho người thích bấm phím).
 
 ---
 
-### 4.2. Cơ Chế Dùng Chiêu Nhấp Kép (Press-to-Aim $\rightarrow$ Press-Again-to-Cast)
-Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón tay và dễ kích hoạt nhầm, game áp dụng cơ chế **Nhấp Lần 1 để Ngắm $\rightarrow$ Nhấp Lần 2 để Phóng Chiêu**:
+### 4.2. Cơ Chế Điều Khiển Ngắm & Tung Chiêu (Aim With Key -> Cast With Right-Click / Cancel With Re-Press)
+Để tối ưu hóa công thái học và thao tác chuẩn xác trong giao tranh tốc độ cao:
 
 ```
 +-----------------------------------------------------------------------------------------+
-|                  LUỒNG THAO TÁC KỸ NĂNG NHẤP KÉP (TWO-TAP CASTING)                      |
+|                  LUỒNG THAO TÁC KỸ NĂNG CÔNG THÁI HỌC (AIM & CAST SCHEME)               |
 +-----------------------------------------------------------------------------------------+
 |                                                                                         |
 |       [ BẤM PHÍM SKILL LẦN 1 ]  (Ví dụ: Bấm phím '1')                                   |
@@ -100,12 +102,12 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
 |                  v                                                                      |
 |       [ VÀO CHẾ ĐỘ NGẮM CHIÊU (AIMING MODE) ]                                           |
 |       - Xuất hiện Vùng chỉ thị (Indicator) xoay và liệng theo hướng con trỏ chuột.     |
-|       - Người chơi KHÔNG CẦN GIỮ PHÍM, tay hoàn toàn thả lỏng thoải mái!                |
+|       - Chuột Trái vẫn click chạy né đòn thoải mái!                                     |
 |                  |                                                                      |
 |         +--------+------------------------------------+                                 |
 |         |                                             |                                 |
-|         v (Muốn Phóng Chiêu)                          v (Đổi ý muốn Hủy Chiêu)          |
-|  [ BẤM TIẾP PHÍM '1' LẦN 2 ]                  [ CLICK CHUỘT PHẢI ]                      |
+|         v (Xác nhận Tung Chiêu)                       v (Hủy Bỏ Ngắm Chiêu)             |
+|  [ CLICK CHUỘT PHẢI ]                        [ BẤM LẠI PHÍM SKILL LẦN 2 (HOẶC ESC) ]   |
 |         |                                             |                                 |
 |         v                                             v                                 |
 |  [ KÍCH HOẠT PHÓNG CHIÊU THÀNH CÔNG ]         [ HỦY NGẮM NGAY LẬP TỨC ]                 |
@@ -122,15 +124,16 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
    - **Chuột Trái KHÔNG DÙNG ĐỂ BẮN**, mà **LUÔN DÀNH CHO DI CHUYỂN (Click-to-Move)** kể cả khi đang ở chế độ ngắm!
    - Khi đang ngắm (`AIMING`): Người chơi click chuột trái xuống đất $\rightarrow$ Nhân vật vẫn chạy né tới điểm đó.
    - **Tâm ngắm (Indicator) vẫn liên tục bám theo con trỏ chuột** theo thời gian thực (vector tính từ vị trí nhân vật đang chạy tới vị trí chuột).
-   - **Xác nhận phóng chiêu DUY NHẤT:** Người chơi bấm **ĐÚNG PHÍM SKILL ĐÓ LẦN THỨ 2**!
-   - **Xác thực Server tại thời điểm bấm phím lần 2 (Server-Authoritative Timing):** Ngay khi nhận tín hiệu bấm lần 2, Server kiểm tra tọa độ nhân vật tại thời điểm đó, tính toán tầm đánh (Attack Range), kiểm tra Mana và Cooldown. Đủ điều kiện $\rightarrow$ Xuất chiêu ngay từ vị trí hiện tại của nhân vật.
+   - **Xác nhận tung chiêu:** Người chơi nhấp **CHUỘT PHẢI**! Hướng đạn/vùng nổ được tính chính xác từ tọa độ nhân vật tới vị trí con trỏ tại thời điểm nhấp.
+   - **Hủy ngắm:** Người chơi nhấp **LẠI ĐÚNG PHÍM SKILL LẦN 2** hoặc bấm phím **ESC**.
 2. **Quy Tắc Ưu Tiên Di Chuyển (WASD Overrides Click-to-Move):**
    - Click-to-Move và WASD hoạt động song song.
    - Nếu nhân vật đang tự động chạy theo Click-to-Move mà người chơi nhấn bất kỳ phím `W`, `A`, `S`, `D` nào $\rightarrow$ **Lệnh WASD ghi đè lập tức 100%**, hủy đường chạy tự động để người chơi né đòn tức thì với độ trễ 0ms!
-3. **Phân Biệt Rõ 3 Nhóm Kỹ Năng (Skill Targeting Archetypes):**
-   - **Kỹ năng Định Hướng (Directional Skillshots):** Kiếm khí, mũi tên, cầu phép $\rightarrow$ Hiển thị dải mũi tên từ nhân vật hướng về vector con trỏ chuột.
-   - **Kỹ năng Chọn Tọa Độ Mặt Đất (Ground-Targeted AoE):** Mưa thiên thạch, vòng cấm chú, bẫy $\rightarrow$ Hiển thị vòng tròn tâm tại con trỏ chuột; nếu trỏ chuột vượt quá tầm tối đa (Max Range), tâm AoE sẽ bị ghim chặt tại ranh giới vòng tròn Max Range.
-   - **Kỹ năng Tự Thân / Mục Tiêu Đơn (Self / Single-Target):** Khiên chắn, hồi phục, chém áp sát $\rightarrow$ Hiển thị vòng hào quang quanh bản thân hoặc viền khóa mục tiêu hợp lệ.
+3. **Phân Biệt Rõ 4 Nhóm Kỹ Năng & Đồng Bộ Hitbox Khớp 1:1 Với Visual:**
+   - **Kỹ năng 1: Định Hướng Tuyến Tính (Line Skillshot):** Mũi tên neon chỉ báo xoay 360 độ, tầm xa 8.0m.
+   - **Kỹ năng 2: Thả Vòng Tròn Mặt Đất (Ground-Targeted AoE):** Vòng tròn bán kính 1.9m, tầm thả 6.0m, khớp chuẩn xác phạm vi sát thương nổ đè.
+   - **Kỹ năng 3: Quét Quạt Hình Nón (Cone Sweep):** Quạt lửa góc 60 độ (bán góc 30 độ), tầm vươn 4.5m.
+   - **Kỹ năng 4: Bộc Phá Tự Thân 360 Độ (Self Nova):** Vòng hào quang quanh tâm nhân vật bán kính 2.5m, gây sát thương quét sạch kẻ địch trong bán kính đúng 2.5m.
 
 ---
 
@@ -148,9 +151,9 @@ Thay vì bắt người chơi phải đè giữ nút kỹ năng gây mỏi ngón
 | Trạng thái | Điều kiện kích hoạt | Hành vi hệ thống | Chuyển trạng thái tiếp theo |
 | :--- | :--- | :--- | :--- |
 | **IDLE** | Đang đứng chờ / di chuyển | Nhận Click Chuột Trái (di chuyển tìm đường), nhận WASD (chạy thủ công). | Bấm phím `1`, `2`, `3`, hoặc `4` $\rightarrow$ **AIMING(Skill_X)** |
-| **AIMING(X)** | Bấm phím Skill X lần 1 | Hiện Indicator xoay theo chuột. Click Chuột Trái **vẫn di chuyển né đòn bình thường**, tâm ngắm tiếp tục bám theo chuột. | - Bấm lại **Đúng Phím Skill X lần 2** $\rightarrow$ **CAST_SUCCESS**<br>- Click **Chuột Phải** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm **Phím Y khác** $\rightarrow$ Đổi sang **AIMING(Skill_Y)** |
-| **CANCEL_SUCCESS** | Click Chuột Phải khi đang ngắm | Tắt ngay indicator, xóa bộ nhớ ngắm. Không mất Mana, không tính cooldown. Giữ nguyên di chuyển. | Trở về ngay **IDLE** |
-| **CAST_SUCCESS** | Bấm đúng Phím Skill X lần 2 | Server kiểm tra Tầm đánh & Mana tại thời điểm bấm $\rightarrow$ Trừ Mana $\rightarrow$ Thi triển đòn đánh. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
+| **AIMING(X)** | Bấm phím Skill X lần 1 | Hiện Indicator xoay theo chuột. Click Chuột Trái **vẫn di chuyển né đòn bình thường**, tâm ngắm tiếp tục bám theo chuột. | - Click **Chuột Phải** $\rightarrow$ **CAST_SUCCESS**<br>- Bấm lại **Đúng Phím Skill X lần 2** hoặc **ESC** $\rightarrow$ **CANCEL_SUCCESS**<br>- Bấm **Phím Y khác** $\rightarrow$ Đổi sang **AIMING(Skill_Y)** |
+| **CANCEL_SUCCESS** | Bấm lại Phím Skill X lần 2 hoặc ESC | Tắt ngay indicator, xóa bộ nhớ ngắm. Không mất Mana, không tính cooldown. Giữ nguyên di chuyển. | Trở về ngay **IDLE** |
+| **CAST_SUCCESS** | Click Chuột Phải khi đang ngắm | Server kiểm tra Tầm đánh & Mana tại thời điểm nhấp $\rightarrow$ Trừ Mana $\rightarrow$ Thi triển đòn đánh. | Trở về **IDLE** sau khi hoạt ảnh thi triển hoàn tất. |
 
 ---
 

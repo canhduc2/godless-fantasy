@@ -124,15 +124,21 @@ Tránh mâu thuẫn thao tác "vừa bấm mũi tên vừa cầm chuột ngắm 
 - **Tay Phải (Chuột) [KHUYẾN NGHỊ MẶC ĐỊNH]:**
   - **Chuột Trái:** **LUÔN LUÔN DÀNH CHO DI CHUYỂN (CLICK-TO-MOVE)** — Click trên địa hình để nhân vật tự tìm đường di chuyển tới đó. Kể cả khi đang trong chế độ ngắm skill, Click Chuột Trái vẫn giúp nhân vật chạy né/kite quái bình thường mà không bị ngắt ngắm hay phóng chiêu nhầm!
   - **Rê Chuột:** Điều chỉnh hướng, góc bắn hoặc vùng kỹ năng (Indicator luôn bám theo chuột, ngay cả trong lúc nhân vật đang chạy).
-  - **Chuột Phải:** **HỦY CHẾ ĐỘ NGẮM** (không mất Mana, không tính cooldown).
+  - **Chuột Phải:** **XÁC NHẬN TUNG CHIÊU (CAST SKILL)** — Khi đang ở chế độ ngắm kỹ năng, nhấp Chuột Phải sẽ xả chiêu ngay lập tức vào hướng/tọa độ con trỏ!
 - **Tay Trái (Bàn Phím):**
-  - `1`, `2`, `3`, `4`: **Bấm lần 1** để BẬT chế độ ngắm $\rightarrow$ Di chuyển né đòn / căn góc $\rightarrow$ **Bấm LẠI ĐÚNG PHÍM ĐÓ LẦN 2** để XÁC NHẬN PHÓNG CHIÊU! *(Chuột Trái tuyệt đối không dùng để phóng chiêu nhằm bảo toàn 100% khả năng di chuyển linh hoạt)*.
-  - `Shift`: Dash (Lướt thẳng theo **hướng con trỏ chuột**, tiêu hao 20 Mana, cooldown 3.5s).
+  - `1`, `2`, `3`, `4`: **Bấm lần 1** để BẬT chế độ ngắm $\rightarrow$ Di chuyển né đòn / căn góc $\rightarrow$ **Bấm LẠI ĐÚNG PHÍM ĐÓ LẦN 2 (hoặc bấm ESC)** để **HỦY NGẮM**! *(Không mất Mana, không tính cooldown)*.
+  - `Shift`: Dash (Lướt thẳng theo **hướng con trỏ chuột**, tiêu hao 15 Mana, cooldown 3.5s).
   - `W`, `A`, `S`, `D` (hoặc Arrow Keys): Di chuyển thủ công phụ (ghi đè Click-to-Move ngay khi bấm để né đòn tức thì).
   - `I`: Phím tắt mở nhanh Tab Kho Đồ.
   - `K`: Phím tắt mở nhanh Tab Kỹ Năng & Thuộc Tính.
   - `C`: Phím tắt mở nhanh Tab Trang Bị.
   - `Enter`: Mở nhanh khung gõ Chat.
+
+### 4.2. Trải Nghiệm Người Dùng (UX) Khảo Sát & Tháo Gỡ Trang Bị (Equipment Inspection UX)
+- **Không tháo đồ bừa bãi khi click:** Nhấp chuột trái vào ô trang bị đang mặc (Mũ, Quần, Nhẫn, Áo, Giày, Vòng Cổ, Vũ Khí) sẽ **CHỌN (SELECT)** món đồ đó để xem, tuyệt đối **không tự ý tháo đồ ra ngay**.
+- **Hiệu ứng chọn nổi bật (Visual Selection Effect):** Ô trang bị được chọn sẽ phát sáng hào quang chuyển động mượt mà (Gold - Cyan Pulse) kèm 4 chốt góc viền hoa văn vàng nổi để người chơi vừa chiêm ngưỡng Sprite Pixel Art của vật phẩm vừa đọc thông số.
+- **Nút Tháo Rời Riêng Biệt `[THÁO RA TÚI ĐỒ]`:** Bảng điều khiển trang bị bố trí một nút bấm chuyên dụng; người chơi chủ động bấm vào nút này (hoặc bấm Chuột Phải vào ô) để tháo trang bị cất về Túi Đồ an toàn.
+- **Tọa độ Tooltip Thông Minh (Smart Adjacent Positioning):** Bảng thông tin vật phẩm (Tooltip) luôn tự động né sang cạnh ô và neo lệch khỏi con trỏ chuột, đảm bảo không bao giờ che khuất Icon vật phẩm hoặc hình ảnh nhân vật trung tâm.
 
 ---
 

@@ -274,6 +274,30 @@ namespace GodlessFantasy.Player
             dropCountdown = 0f;
         }
 
+        // ================= TIÊU DÙNG VẬT PHẨM (BÌNH DƯỢC, VẬT PHẨM TIÊU HAO) =================
+        public bool ConsumeItem(string itemId, int count = 1)
+        {
+            var item = items.Find(it => it.id == itemId);
+            if (item != null && item.quantity >= count)
+            {
+                item.quantity -= count;
+                Debug.Log($"<color=orange>[TIÊU HAO] Đã dùng {count}x '{item.itemName}'. Còn lại trong túi: {item.quantity}</color>");
+                if (item.quantity <= 0)
+                {
+                    items.Remove(item);
+                    Debug.Log($"<color=red>[HẾT VẬT PHẨM] '{item.itemName}' đã hết và được dọn khỏi ô hành trang!</color>");
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public int GetItemCount(string itemId)
+        {
+            var item = items.Find(it => it.id == itemId);
+            return item != null ? item.quantity : 0;
+        }
+
         // ================= THÚ CƯNG (THÁO RA / THẢ) =================
         public void TogglePetSummon(InventoryItem petItem)
         {

@@ -38,6 +38,7 @@ namespace GodlessFantasy.Player
         [SerializeField] private int manaPotionCount = 5;
 
         private Health health;
+        private InventoryManager inventoryManager;
         private float regenAccumulator = 0f;
 
         public string CharacterName => characterName;
@@ -161,12 +162,17 @@ namespace GodlessFantasy.Player
                 return;
             }
 
-            if (hpPotionCount > 0)
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            if (inventoryManager == null) inventoryManager = FindAnyObjectByType<InventoryManager>();
+
+            int countInBag = inventoryManager != null ? inventoryManager.GetItemCount("item_hp_pot") : hpPotionCount;
+            if (countInBag > 0)
             {
-                hpPotionCount--;
+                if (inventoryManager != null) inventoryManager.ConsumeItem("item_hp_pot", 1);
+                hpPotionCount = inventoryManager != null ? inventoryManager.GetItemCount("item_hp_pot") : hpPotionCount - 1;
                 int healAmount = 35;
                 HealPlayer(healAmount, true);
-                Debug.Log($"[POTION] Đã uống Bình Máu! Hồi {healAmount} HP. Còn lại: {hpPotionCount} bình.");
+                Debug.Log($"[POTION] Đã uống Bình Máu! Hồi {healAmount} HP. Còn lại trong túi: {hpPotionCount} bình.");
             }
             else
             {
@@ -182,13 +188,18 @@ namespace GodlessFantasy.Player
                 return;
             }
 
-            if (manaPotionCount > 0)
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            if (inventoryManager == null) inventoryManager = FindAnyObjectByType<InventoryManager>();
+
+            int countInBag = inventoryManager != null ? inventoryManager.GetItemCount("item_mp_pot") : manaPotionCount;
+            if (countInBag > 0)
             {
-                manaPotionCount--;
+                if (inventoryManager != null) inventoryManager.ConsumeItem("item_mp_pot", 1);
+                manaPotionCount = inventoryManager != null ? inventoryManager.GetItemCount("item_mp_pot") : manaPotionCount - 1;
                 int manaAmount = 30;
                 RestoreMana(manaAmount);
                 FloatingDamageManager.Spawn(transform.position, manaAmount, false);
-                Debug.Log($"[POTION] Đã uống Bình Mana! Hồi {manaAmount} MP. Còn lại: {manaPotionCount} bình.");
+                Debug.Log($"[POTION] Đã uống Bình Mana! Hồi {manaAmount} MP. Còn lại trong túi: {manaPotionCount} bình.");
             }
             else
             {

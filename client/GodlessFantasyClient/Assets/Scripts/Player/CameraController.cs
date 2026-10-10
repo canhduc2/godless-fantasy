@@ -19,12 +19,12 @@ namespace GodlessFantasy.Player
 
         [Header("Controlled Camera Zoom")]
         [SerializeField] private float minZoom = 2.8f;
-        [SerializeField] private float maxZoom = 5.2f;
-        [SerializeField] private float zoomSensitivity = 1.0f;
+        [SerializeField] private float maxZoom = 8.5f;
+        [SerializeField] private float zoomSensitivity = 1.2f;
         [SerializeField] private float zoomSmoothSpeed = 10.0f;
 
         private Camera cam;
-        private float targetZoom = 3.6f;
+        private float targetZoom = 5.0f;
 
         private void Awake()
         {

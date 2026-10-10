@@ -89,23 +89,25 @@ namespace GodlessFantasy.UI
 
             InitStyles();
 
-            float guiX = screenPos.x;
-            float guiY = Screen.height - screenPos.y;
+            float guiX = Mathf.Round(screenPos.x);
+            float guiY = Mathf.Round(Screen.height - screenPos.y);
 
             // Kích thước thanh trên đầu
-            float barW = (entityType == OverheadType.Player) ? 68f : 56f;
+            float barW = (entityType == OverheadType.Player) ? 76f : 60f;
             float barH = (entityType == OverheadType.Player) ? 6f : 5f;
             float startX = guiX - barW / 2f;
 
-            // 1. DÒNG TÊN & CẤP ĐỘ (Chữ hiển thị sắc nét, bình thường, không hiệu ứng pixel vỡ)
+            // 1. DÒNG TÊN & CẤP ĐỘ (Bản rộng 190px, tuyệt đối không bị truncate, đổ bóng sắc nét chống mờ răng cưa)
             string nameString = $"{displayName} [{titleOrLevel}]";
             Color nameColor = GetNameColor();
 
-            Rect namePlateRect = new Rect(guiX - 70, guiY - 20, 140, 16);
-            // Nền đen mờ nhẹ giúp chữ nổi bật tự nhiên
-            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.70f);
-            GUI.DrawTexture(namePlateRect, Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            float plateW = 190f;
+            float plateH = 20f;
+            Rect namePlateRect = new Rect(guiX - plateW / 2f, guiY - 24f, plateW, plateH);
+
+            // Đổ bóng đen 1px giúp nét chữ nổi khối sắc sảo trên mọi bối cảnh sàn gạch
+            nameStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+            GUI.Label(new Rect(namePlateRect.x + 1, namePlateRect.y + 1, namePlateRect.width, namePlateRect.height), nameString, nameStyle);
 
             nameStyle.normal.textColor = nameColor;
             GUI.Label(namePlateRect, nameString, nameStyle);
