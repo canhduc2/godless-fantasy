@@ -20,10 +20,8 @@ namespace GodlessFantasy.Indicator
     public class IndicatorRenderer : MonoBehaviour
     {
         [Header("Max Ranges")]
-        [SerializeField] private float skill1Range = 8.0f;
         [SerializeField] private float skill2MaxCastRange = 7.0f;
-        [SerializeField] private float skill3ConeRange = 5.0f;
-        [SerializeField] private float skill4NovaRadius = 4.5f;
+        public float Skill2MaxCastRange => skill2MaxCastRange;
 
         private IndicatorType currentType = IndicatorType.None;
         private Camera mainCamera;

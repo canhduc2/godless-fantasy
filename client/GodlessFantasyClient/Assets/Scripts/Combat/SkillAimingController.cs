@@ -17,7 +17,7 @@ namespace GodlessFantasy.Combat
     /// - Mỗi kỹ năng là một Cuộn Trục Kỹ Năng (Bí Kíp) thực thụ thuộc hành trang.
     /// - Người chơi có thể KÉO THẢ (Drag & Drop) cuộn trục giữa túi đồ và 4 ô phím tắt [1], [2], [3], [4]!
     /// - Khi đổi cuộn trục, biểu tượng, sát thương, tầm ngắm và cooldown của ô đó tự động cập nhật.
-    /// - Hỗ trợ chuẩn MOBA Two-Tap: Bấm lần 1 bật ngắm -> Bấm lần 2 xả chiêu -> Chuột phải hủy.
+    /// 
     /// </summary>
     public class SkillAimingController : MonoBehaviour
     {
@@ -77,33 +77,33 @@ namespace GodlessFantasy.Combat
             if (equippedSlots[0] == null)
             {
                 equippedSlots[0] = new SkillScrollData(
-                    "scroll_arcane_bolt", "Cuộn Trục: Cầu Ma Thuật", "Phẩm D", new Color(0.3f, 0.85f, 0.4f), "Ma Pháp",
-                    15, 1.0f, 25, 1.0f, 1, "icon_skill_arcane_bolt", "item_scroll_arcane",
-                    "Phóng cầu ma pháp xuyên thấu theo đường thẳng. Tiêu hao ít mana, hồi nhanh.");
+                    "scroll_fire_slash", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "Hỏa",
+                    15, 1.0f, 25, 1.0f, 1, "icon_skill_flame_cone", "item_scroll_fire",
+                    "Phóng kiếm khí hỏa diễm theo đường thẳng. Tiêu hao ít mana, hồi nhanh.", 8.0f, "Kị Sĩ");
             }
 
             if (equippedSlots[1] == null)
             {
                 equippedSlots[1] = new SkillScrollData(
-                    "scroll_meteor", "Cuộn Trục: Mưa Thiên Thạch", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa",
-                    25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_meteor",
-                    "Triệu hồi khối thiên thạch giáng xuống vùng đất chỉ định gây nổ AoE diện rộng.");
+                    "scroll_fire_ground", "Bí Kíp [Hệ Kị Sĩ]: Liệt Hỏa Oanh Kích", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa",
+                    25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_fire",
+                    "Giáng luồng bão lửa thiêu rụi vùng đất chỉ định gây nổ diện rộng.", 7.0f, "Kị Sĩ");
             }
 
             if (equippedSlots[2] == null)
             {
                 equippedSlots[2] = new SkillScrollData(
-                    "scroll_flame_cone", "Cuộn Trục: Sóng Lửa", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa",
-                    20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_flame",
-                    "Quét luồng bão lửa hình quạt 60 độ về phía trước, thiêu rụi nhiều mục tiêu.");
+                    "scroll_fire_sweep", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Toàn Phong", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa",
+                    20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_fire",
+                    "Quét bão lửa hình quạt 60 độ về phía trước thiêu rụi nhiều mục tiêu.", 4.5f, "Kị Sĩ");
             }
 
             if (equippedSlots[3] == null)
             {
                 equippedSlots[3] = new SkillScrollData(
-                    "scroll_divine_nova", "Cuộn Trục: Bộc Phá Thánh Điển", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Thánh",
-                    35, 5.0f, 60, 1.5f, 4, "icon_skill_divine_nova", "item_scroll_nova",
-                    "Bùng nổ vòng hào quang thánh quang 360 độ cực mạnh quét sạch kẻ địch xung quanh.");
+                    "scroll_fire_buff", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Kim Cang", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Hỏa",
+                    30, 5.0f, 50, 1.5f, 5, "icon_skill_divine_nova", "item_scroll_fire",
+                    "Kích hoạt hào quang rồng lửa hộ thể tăng giáp và công phép.", 0.0f, "Kị Sĩ", "", 3);
             }
 
             // Kho bí kíp trong Túi Đồ để người chơi trải nghiệm Kéo Thả (Drag & Drop)
@@ -186,6 +186,17 @@ namespace GodlessFantasy.Combat
             if (scroll == null)
             {
                 Debug.LogWarning($"[Ô {slot} TRỐNG] Hãy mở Menu Túi Đồ/Kỹ Năng để kéo cuộn trục vào ô này!");
+                return;
+            }
+
+            // KIỂM TRA ĐIỀU KIỆN KÉP NGHIÊM NGẶT: HỆ -> HỆ, THUỘC TÍNH -> THUỘC TÍNH
+            string pClass = playerStats != null ? playerStats.CharacterClass : "Kị Sĩ";
+            string pElem = playerStats != null ? playerStats.Element : "Hỏa";
+            if (!scroll.CanPlayerUse(pClass, pElem, out string lockReason))
+            {
+                Debug.LogWarning($"[KHÓA KỸ NĂNG] Ô [{slot}]: {lockReason}");
+                Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : transform.position + Vector3.up * 1.5f;
+                FloatingDamageManager.Instance?.SpawnFloatingText(spawnPos, $"⛔ {lockReason}", new Color(1f, 0.35f, 0.35f));
                 return;
             }
 

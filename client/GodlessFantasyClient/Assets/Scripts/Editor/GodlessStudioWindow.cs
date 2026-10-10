@@ -297,20 +297,23 @@ namespace GodlessFantasy.Editor
                 {
                     id = skillId,
                     name = skillName,
+                    requiredClass = "Toàn Hệ",
                     element = skillElement,
                     tierRank = skillTierRank,
                     tierR = skillTierColor.r,
                     tierG = skillTierColor.g,
                     tierB = skillTierColor.b,
                     indicatorType = skillIndicatorType,
+                    skillCategory = 0,
                     manaCost = skillMana,
                     cooldown = skillCooldown,
                     baseDamage = skillBaseDmg,
-                    intelScaling = skillScaling,
+                    intelligenceScaling = skillScaling,
                     castRange = skillCastRange,
-                    hotbarIcon = skillHotbarIconName,
-                    scrollIcon = skillScrollIconName,
-                    desc = skillDesc
+                    hotbarIconName = skillHotbarIconName,
+                    scrollBagIconName = skillScrollIconName,
+                    customVfxSprite = "",
+                    description = skillDesc
                 };
 
                 string json = JsonUtility.ToJson(skillData, true);

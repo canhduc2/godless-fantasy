@@ -25,7 +25,7 @@ namespace GodlessFantasy.Core
         {
             if (isInitialized) return;
 
-            if (FindFirstObjectByType<PlayerMovement>() != null)
+            if (FindAnyObjectByType<PlayerMovement>() != null)
             {
                 isInitialized = true;
                 return;
@@ -215,7 +215,7 @@ namespace GodlessFantasy.Core
             CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Làng", "SafeZone", new Vector3(-14.0f, 2.0f, 0), dummySprite, true);
 
             // 10. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
-            if (FindFirstObjectByType<FloatingDamageManager>() == null)
+            if (FindAnyObjectByType<FloatingDamageManager>() == null)
             {
                 new GameObject("[FLOATING_DAMAGE_MANAGER]").AddComponent<FloatingDamageManager>();
             }

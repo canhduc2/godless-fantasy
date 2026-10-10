@@ -28,6 +28,8 @@
 * 📄 **Thảo luận 01:** [discussion_01_skill_scroll_elements_combat_architecture.md](file:///D:/godless-fantasy/docs/discussions/discussion_01_skill_scroll_elements_combat_architecture.md) — *Kiến trúc Bí Kíp Cuộn Trục, 7 Hệ Thuộc Tính, 4 Chức Nghiệp & Xử lý tồn đọng kỹ thuật.*
 * 📄 **Thảo luận 02:** [discussion_02_hp_mp_regeneration_buff_system_and_class_perks.md](file:///D:/godless-fantasy/docs/discussions/discussion_02_hp_mp_regeneration_buff_system_and_class_perks.md) — *Hồi Máu Khắc Khổ 40s (chống buff bẩn), Hồi Mana 3s, Perk 4 Hệ, Archetype Buff số 5 & UI Buff Widget.*
 * 📄 **Thảo luận 03:** [discussion_03_support_skills_aoe_healing_and_ally_buffs.md](file:///D:/godless-fantasy/docs/discussions/discussion_03_support_skills_aoe_healing_and_ally_buffs.md) — *Kỹ Năng Hỗ Trợ, Mưa Hồi Máu/Mana Hệ Mộc Vùng Đất & Buff Đồng Đội.*
+* 📄 **Thảo luận 04:** [discussion_04_class_vs_element_lockout_title_and_pet_evolution.md](file:///D:/godless-fantasy/docs/discussions/discussion_04_class_vs_element_lockout_title_and_pet_evolution.md) — *Phân biệt tuyệt đối Hệ (Class) vs Thuộc Tính (Element), Khóa kỹ năng 2 lớp, Hệ Thống Danh Hiệu (Title System) & Thú Cưng Tiến Hóa 3 Giai Đoạn.*
+* 📄 **Thảo luận 05:** [discussion_05_food_drink_potions_and_consumables_system.md](file:///D:/godless-fantasy/docs/discussions/discussion_05_food_drink_potions_and_consumables_system.md) — *Hệ Thống Thức Ăn, Đồ Uống, Dược Phẩm (Potions HP/Mana) & Cơ Chế Phím Tắt Tự Động Thông Minh [Q] Ăn / [E] Uống.*
 
 
 ---

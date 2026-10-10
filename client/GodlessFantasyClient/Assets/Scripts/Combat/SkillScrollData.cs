@@ -109,18 +109,39 @@ namespace GodlessFantasy.Combat
         /// - Phải đúng Chức Nghiệp (Kị Sĩ, Pháp Sư, Võ Sĩ, Xạ Thủ) hoặc Toàn Hệ.
         /// - Phải đúng Thuộc Tính Nguyên Tố (1 trong 7 hệ: Ánh Sáng, Bóng Tối, Phong, Mộc, Băng, Hỏa, Lôi).
         /// </summary>
+        /// <summary>
+        /// Kiểm tra nghiêm ngặt điều kiện trang bị / phát huy bí kíp:
+        /// 1. HỆ (Class): Kị Sĩ, Pháp Sư, Võ Sĩ, Xạ Thủ (hoặc Toàn Hệ). Người thuộc Hệ nào CHỈ DÙNG ĐƯỢC cuộn của Hệ đó!
+        /// 2. THUỘC TÍNH (Element): Hỏa, Băng, Lôi, Ánh Sáng, Bóng Tối, Phong, Mộc. Người mang Thuộc Tính nào CHỈ PHÁT HUY ĐƯỢC skill của Thuộc Tính đó!
+        /// </summary>
         public bool CanPlayerUse(string playerClass, string playerElement, out string failureReason)
         {
-            if (!string.IsNullOrEmpty(requiredClass) && requiredClass != "Toàn Hệ" && !string.Equals(requiredClass, playerClass, StringComparison.OrdinalIgnoreCase))
+            // 1. Kiểm tra HỆ
+            if (!string.IsNullOrEmpty(requiredClass) && requiredClass != "Toàn Hệ")
             {
-                failureReason = $"Sai Chức Nghiệp! Yêu cầu: {requiredClass} (Hiện tại: {playerClass})";
-                return false;
+                if (!string.Equals(requiredClass, playerClass, StringComparison.OrdinalIgnoreCase))
+                {
+                    failureReason = $"Sai Hệ! Cuộn yêu cầu [Hệ {requiredClass}], bạn đang là [Hệ {playerClass}]";
+                    return false;
+                }
             }
 
-            if (!string.IsNullOrEmpty(element) && !string.Equals(element, playerElement, StringComparison.OrdinalIgnoreCase))
+            // 2. Kiểm tra THUỘC TÍNH
+            if (!string.IsNullOrEmpty(element) && element != "Vô Hệ" && element != "Toàn Hệ")
             {
-                failureReason = $"Khác Thuộc Tính Hệ! Yêu cầu: {element} (Hiện tại: {playerElement})";
-                return false;
+                bool isMatch = string.Equals(element, playerElement, StringComparison.OrdinalIgnoreCase);
+                // Xử lý đồng nghĩa Quang / Ánh Sáng và Ám / Bóng Tối
+                if (!isMatch)
+                {
+                    if ((element == "Ánh Sáng" || element == "Quang") && (playerElement == "Ánh Sáng" || playerElement == "Quang")) isMatch = true;
+                    else if ((element == "Bóng Tối" || element == "Ám") && (playerElement == "Bóng Tối" || playerElement == "Ám")) isMatch = true;
+                }
+
+                if (!isMatch)
+                {
+                    failureReason = $"Khác Thuộc Tính! Cuộn yêu cầu [{element}], bạn mang [{playerElement}]";
+                    return false;
+                }
             }
 
             failureReason = null;

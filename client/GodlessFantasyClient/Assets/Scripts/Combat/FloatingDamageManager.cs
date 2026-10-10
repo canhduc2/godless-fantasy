@@ -64,6 +64,12 @@ namespace GodlessFantasy.Combat
             });
         }
 
+        public static void ShowFloatingText(Vector3 worldPos, string text, Color color)
+        {
+            EnsureInstance();
+            Instance.SpawnFloatingText(worldPos, text, color);
+        }
+
         public void SpawnFloatingText(Vector3 worldPos, string text, Color color)
         {
             EnsureInstance();

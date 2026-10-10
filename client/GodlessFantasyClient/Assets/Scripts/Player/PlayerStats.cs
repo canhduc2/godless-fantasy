@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using GodlessFantasy.Combat;
 using GodlessFantasy.Core;
@@ -30,17 +31,12 @@ namespace GodlessFantasy.Player
         [SerializeField] private int maxMana = 100;
         [SerializeField] private int currentMana = 80;
 
-        [Header("Regeneration Rates (Hồi Phục Tự Nhiên)")]
-        [SerializeField] private float hpRegenPerSec = 2.0f;
-        [SerializeField] private float manaRegenPerSec = 4.0f;
-
         [Header("Potion Bag (Bình Dược Liệu)")]
         [SerializeField] private int hpPotionCount = 5;
         [SerializeField] private int manaPotionCount = 5;
 
         private Health health;
         private InventoryManager inventoryManager;
-        private float regenAccumulator = 0f;
 
         public const int MaxNameLength = 20;
 
@@ -63,6 +59,23 @@ namespace GodlessFantasy.Player
                 if (string.IsNullOrEmpty(element)) return "Hỏa";
                 if (element.Contains("(")) return element.Substring(0, element.IndexOf('(')).Trim();
                 return element;
+            }
+        }
+
+        public void SetCharacterClass(string newClass)
+        {
+            if (!string.IsNullOrEmpty(newClass))
+            {
+                characterClass = newClass;
+                ApplyInherentClassPerkStats();
+            }
+        }
+
+        public void SetElement(string newElement)
+        {
+            if (!string.IsNullOrEmpty(newElement))
+            {
+                element = newElement;
             }
         }
 
@@ -130,6 +143,9 @@ namespace GodlessFantasy.Player
 
             // Áp dụng thưởng chỉ số vĩnh viễn từ Perk Bẩm Sinh của Hệ
             ApplyInherentClassPerkStats();
+
+            // Khởi tạo danh sách Danh Hiệu (Titles)
+            InitTitles();
         }
 
         private float hpRegenTimer = 0f;
@@ -280,59 +296,112 @@ namespace GodlessFantasy.Player
             OnManaChanged?.Invoke(currentMana, maxMana);
         }
 
-        public void UseHpPotion()
+        /// <summary>
+        /// Phím [Q]: Auto sử dụng Thức Ăn hoặc Bình Máu (Không phân biệt thuốc hay đồ ăn, cứ là món hồi máu / thức ăn là auto ăn)
+        /// </summary>
+        public void UseFoodOrHpRecovery()
         {
             if (health == null || health.IsDead) return;
             if (health.CurrentHealth >= health.MaxHealth)
             {
-                Debug.Log("[POTION] Máu đã đầy, không cần dùng Bình Máu!");
+                Debug.Log("[HỒI MÁU] Máu đã đầy, không cần dùng thức ăn hay bình máu!");
                 return;
             }
 
             if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
             if (inventoryManager == null) inventoryManager = FindAnyObjectByType<InventoryManager>();
 
-            int countInBag = inventoryManager != null ? inventoryManager.GetItemCount("item_hp_pot") : hpPotionCount;
-            if (countInBag > 0)
+            // Tìm trong túi món hồi máu/thức ăn: item_hp_pot, item_roast_meat, item_bread...
+            InventoryItem foodItem = null;
+            if (inventoryManager != null)
             {
-                if (inventoryManager != null) inventoryManager.ConsumeItem("item_hp_pot", 1);
-                hpPotionCount = inventoryManager != null ? inventoryManager.GetItemCount("item_hp_pot") : hpPotionCount - 1;
-                int healAmount = 35;
-                HealPlayer(healAmount, true);
-                Debug.Log($"[POTION] Đã uống Bình Máu! Hồi {healAmount} HP. Còn lại trong túi: {hpPotionCount} bình.");
+                foodItem = inventoryManager.Items.Find(it => it.itemType == ItemType.Consumable && 
+                    (it.id.Contains("hp") || it.id.Contains("food") || it.id.Contains("meat") || it.id.Contains("bread")));
+            }
+
+            if (foodItem != null && inventoryManager.ConsumeItem(foodItem.id, 1))
+            {
+                int healHp = 35;
+                int bonusMana = 0;
+                if (foodItem.id.Contains("meat") || foodItem.id.Contains("food"))
+                {
+                    healHp = 30;
+                    bonusMana = 20;
+                }
+
+                HealPlayer(healHp, true);
+                if (bonusMana > 0) RestoreMana(bonusMana);
+
+                string iconMsg = foodItem.id.Contains("meat") ? "🍗" : "❤️";
+                FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 1.2f, $"{iconMsg} Đã dùng {foodItem.itemName} (+{healHp} HP)", new Color(0.2f, 0.95f, 0.35f));
+                Debug.Log($"<color=green>[THỨC ĂN/THUỐC]</color> Đã dùng '{foodItem.itemName}' (+{healHp} HP, +{bonusMana} MP).");
             }
             else
             {
-                Debug.LogWarning("[POTION] Đã hết Bình Máu trong hành trang!");
+                // Fallback nếu không có item trong bag nhưng còn biến đếm
+                if (hpPotionCount > 0)
+                {
+                    hpPotionCount--;
+                    HealPlayer(35, true);
+                    Debug.Log($"[THUỐC] Đã uống Bình Máu cơ bản! Còn {hpPotionCount} bình.");
+                }
+                else
+                {
+                    FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 1.2f, "❌ Đã hết Thức Ăn & Bình Máu!", new Color(1f, 0.35f, 0.35f));
+                    Debug.LogWarning("[HỒI MÁU] Đã hết thức ăn và bình máu trong hành trang!");
+                }
             }
         }
 
-        public void UseManaPotion()
+        public void UseHpPotion() => UseFoodOrHpRecovery();
+
+        /// <summary>
+        /// Phím [E]: Auto sử dụng Nước Uống hoặc Bình Mana (Không phân biệt thuốc hay nước uống, cứ là món hồi mana / nước uống là auto uống)
+        /// </summary>
+        public void UseDrinkOrManaRecovery()
         {
             if (currentMana >= maxMana)
             {
-                Debug.Log("[POTION] Mana đã đầy, không cần dùng Bình Mana!");
+                Debug.Log("[HỒI MANA] Mana đã đầy, không cần dùng nước uống hay bình mana!");
                 return;
             }
 
             if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
             if (inventoryManager == null) inventoryManager = FindAnyObjectByType<InventoryManager>();
 
-            int countInBag = inventoryManager != null ? inventoryManager.GetItemCount("item_mp_pot") : manaPotionCount;
-            if (countInBag > 0)
+            // Tìm trong túi món hồi mana/nước uống: item_mp_pot, item_water, item_drink, item_tea...
+            InventoryItem drinkItem = null;
+            if (inventoryManager != null)
             {
-                if (inventoryManager != null) inventoryManager.ConsumeItem("item_mp_pot", 1);
-                manaPotionCount = inventoryManager != null ? inventoryManager.GetItemCount("item_mp_pot") : manaPotionCount - 1;
-                int manaAmount = 30;
-                RestoreMana(manaAmount);
-                FloatingDamageManager.Spawn(transform.position, manaAmount, false);
-                Debug.Log($"[POTION] Đã uống Bình Mana! Hồi {manaAmount} MP. Còn lại trong túi: {manaPotionCount} bình.");
+                drinkItem = inventoryManager.Items.Find(it => it.itemType == ItemType.Consumable && 
+                    (it.id.Contains("mp") || it.id.Contains("mana") || it.id.Contains("water") || it.id.Contains("drink") || it.id.Contains("tea")));
+            }
+
+            if (drinkItem != null && inventoryManager.ConsumeItem(drinkItem.id, 1))
+            {
+                int manaRestore = 35;
+                RestoreMana(manaRestore);
+                FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 1.2f, $"💧 Đã uống {drinkItem.itemName} (+{manaRestore} MP)", new Color(0.2f, 0.75f, 1f));
+                Debug.Log($"<color=cyan>[NƯỚC UỐNG/MANA]</color> Đã uống '{drinkItem.itemName}' (+{manaRestore} MP).");
             }
             else
             {
-                Debug.LogWarning("[POTION] Đã hết Bình Mana trong hành trang!");
+                if (manaPotionCount > 0)
+                {
+                    manaPotionCount--;
+                    RestoreMana(30);
+                    FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 1.2f, "💧 +30 MP", new Color(0.2f, 0.75f, 1f));
+                    Debug.Log($"[MANA] Đã uống Bình Mana cơ bản! Còn {manaPotionCount} bình.");
+                }
+                else
+                {
+                    FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 1.2f, "❌ Đã hết Nước Uống & Bình Mana!", new Color(1f, 0.35f, 0.35f));
+                    Debug.LogWarning("[HỒI MANA] Đã hết nước uống và bình mana trong hành trang!");
+                }
             }
         }
+
+        public void UseManaPotion() => UseDrinkOrManaRecovery();
 
         private void HealPlayer(int amount, bool showPopup)
         {
@@ -354,6 +423,88 @@ namespace GodlessFantasy.Player
         public int GetSkill1TotalDamage(int baseDamage = 25)
         {
             return baseDamage + intelligence;
+        }
+
+        // ================= HỆ THỐNG DANH HIỆU (CHARACTER TITLE SYSTEM) =================
+        [SerializeField] private string equippedTitleId = "title_rookie";
+        private List<CharacterTitle> titleList = new List<CharacterTitle>();
+
+        public CharacterTitle EquippedTitle => TitleList.Find(t => t.id == equippedTitleId);
+        public List<CharacterTitle> TitleList
+        {
+            get
+            {
+                if (titleList == null || titleList.Count == 0) InitTitles();
+                return titleList;
+            }
+        }
+
+        public int TitleBonusHp => EquippedTitle != null ? EquippedTitle.bonusHp : 0;
+        public int TitleBonusArmor => EquippedTitle != null ? EquippedTitle.bonusArmor : 0;
+        public int TitleBonusMagicAtk => EquippedTitle != null ? EquippedTitle.bonusMagicAtk : 0;
+        public int TitleBonusPhysAtk => EquippedTitle != null ? EquippedTitle.bonusPhysAtk : 0;
+        public float TitleBonusSpeed => EquippedTitle != null ? EquippedTitle.bonusSpeed : 0f;
+
+        public void EquipTitle(string titleId)
+        {
+            var t = TitleList.Find(x => x.id == titleId);
+            if (t != null && t.isUnlocked)
+            {
+                equippedTitleId = titleId;
+                Debug.Log($"<color=yellow>[DANH HIỆU]</color> Đã đeo danh hiệu: {t.name}");
+                FloatingDamageManager.Instance?.SpawnFloatingText(transform.position + Vector3.up * 1.6f, $"✨ Đã Đeo: {t.name}", t.titleColor);
+            }
+        }
+
+        public void UnequipTitle()
+        {
+            equippedTitleId = "";
+            Debug.Log("<color=yellow>[DANH HIỆU]</color> Đã tháo danh hiệu!");
+        }
+
+        public void InitTitles()
+        {
+            if (titleList.Count > 0) return;
+            titleList.Add(new CharacterTitle("title_rookie", "[Tân Thủ Khai Hoang]", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "🏆", "+30 Máu Tối Đa · +5 Giáp", 30, 5, 0, 0, 0f, true));
+            titleList.Add(new CharacterTitle("title_knight", "[Kị Sĩ Tiên Phong]", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "🛡️", "+15 Giáp Vật Lý · +10 Kháng Phép", 0, 15, 0, 0, 0f, true));
+            titleList.Add(new CharacterTitle("title_archmage", "[Ma Đạo Tôn Sư]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🔮", "+25 Công Phép · +20 Mana Tối Đa", 0, 0, 25, 0, 0f, true));
+            titleList.Add(new CharacterTitle("title_brawler", "[Bá Vương Quyền Cước]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🥊", "+15 ST Đánh Thường · +5% Bạo Kích", 0, 0, 0, 15, 0f, true));
+            titleList.Add(new CharacterTitle("title_archer", "[Thần Tiễn Bách Phát]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🏹", "+0.5 m/s Tốc Chạy · +1.0m Tầm Đánh", 0, 0, 0, 0, 0.5f, true));
+            titleList.Add(new CharacterTitle("title_conqueror", "[Chiến Thần Vô Địch]", "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "👑", "+50 Máu · +20 Công Phép · +15 Giáp", 50, 15, 20, 0, 0f, true));
+        }
+    }
+
+    [Serializable]
+    public class CharacterTitle
+    {
+        public string id;
+        public string name;
+        public string rarity;
+        public Color titleColor;
+        public string iconEmoji;
+        public string statDesc;
+        public int bonusHp;
+        public int bonusArmor;
+        public int bonusMagicAtk;
+        public int bonusPhysAtk;
+        public float bonusSpeed;
+        public bool isUnlocked;
+
+        public CharacterTitle(string id, string name, string rarity, Color titleColor, string iconEmoji, string statDesc,
+                              int bonusHp = 0, int bonusArmor = 0, int bonusMagicAtk = 0, int bonusPhysAtk = 0, float bonusSpeed = 0f, bool isUnlocked = true)
+        {
+            this.id = id;
+            this.name = name;
+            this.rarity = rarity;
+            this.titleColor = titleColor;
+            this.iconEmoji = iconEmoji;
+            this.statDesc = statDesc;
+            this.bonusHp = bonusHp;
+            this.bonusArmor = bonusArmor;
+            this.bonusMagicAtk = bonusMagicAtk;
+            this.bonusPhysAtk = bonusPhysAtk;
+            this.bonusSpeed = bonusSpeed;
+            this.isUnlocked = isUnlocked;
         }
     }
 }

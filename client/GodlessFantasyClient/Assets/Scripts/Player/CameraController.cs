@@ -47,7 +47,7 @@ namespace GodlessFantasy.Player
         {
             if (target == null)
             {
-                var player = FindFirstObjectByType<PlayerMovement>();
+                var player = FindAnyObjectByType<PlayerMovement>();
                 if (player != null) target = player.transform;
                 return;
             }

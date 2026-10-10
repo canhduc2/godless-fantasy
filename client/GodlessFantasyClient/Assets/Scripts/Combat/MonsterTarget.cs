@@ -10,6 +10,7 @@ namespace GodlessFantasy.Combat
     public class MonsterTarget : MonoBehaviour
     {
         [SerializeField] private string targetName = "Hình Nộm Luyện Công";
+        public string TargetName => targetName;
         [SerializeField] private Health health;
 
         private Camera mainCam;

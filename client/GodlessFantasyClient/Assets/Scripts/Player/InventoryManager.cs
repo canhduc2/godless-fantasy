@@ -132,24 +132,32 @@ namespace GodlessFantasy.Player
             EquipGearItem(neck);
             EquipGearItem(ring);
 
-            // 2. Sách Kỹ Năng (Cuộn Trục Bí Kíp)
-            var s1 = new InventoryItem("scroll_s1", "Bí Kíp: Cầu Ma Thuật", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_arcane", "ST: 25 + 100% INT | CD: 1.0s | Tầm: 8.0m", "Bắn cầu ma thuật theo đường thẳng (Line Skillshot).", 1,
-                new SkillScrollData("scroll_arcane_bolt", "Cuộn Trục: Cầu Ma Thuật", "Phẩm D", new Color(0.3f, 0.85f, 0.4f), "Ma Pháp", 15, 1.0f, 25, 1.0f, 1, "icon_skill_arcane_bolt", "item_scroll_arcane", "Bắn cầu ma pháp xuyên thấu.", 8.0f));
+            // 2. Sách Kỹ Năng (Cuộn Trục Bí Kíp) - Phân định rõ rệt HỆ và THUỘC TÍNH
+            // Bộ 4 chiêu phù hợp hoàn hảo với nhân vật mặc định (Hệ Kị Sĩ, Thuộc Tính Hỏa):
+            var s1 = new InventoryItem("scroll_s1", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] ST: 25 + 100% INT | CD: 1.0s | Tầm: 8.0m", "Phóng kiếm khí hỏa diễm theo đường thẳng (Line Skillshot).", 1,
+                new SkillScrollData("scroll_fire_slash", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "Hỏa", 15, 1.0f, 25, 1.0f, 1, "icon_skill_flame_cone", "item_scroll_fire", "Phóng kiếm khí hỏa diễm theo đường thẳng.", 8.0f, "Kị Sĩ"));
 
-            var s2 = new InventoryItem("scroll_s2", "Bí Kíp: Mưa Thiên Thạch", ItemType.SkillScroll, EquipSlot.None, "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_scroll_meteor", "ST: 40 + 120% INT | CD: 3.0s | Tầm: 7.0m", "Thả khối thiên thạch nổ vùng đất (Ground AoE).", 1,
-                new SkillScrollData("scroll_meteor", "Cuộn Trục: Mưa Thiên Thạch", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa", 25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_meteor", "Thiên thạch giáng xuống diện rộng.", 7.0f));
+            var s2 = new InventoryItem("scroll_s2", "Bí Kíp [Hệ Kị Sĩ]: Liệt Hỏa Oanh Kích", ItemType.SkillScroll, EquipSlot.None, "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] ST: 40 + 120% INT | CD: 3.0s | Tầm: 7.0m", "Giáng luồng lửa thiêu rụi vùng đất (Ground AoE).", 1,
+                new SkillScrollData("scroll_fire_ground", "Bí Kíp [Hệ Kị Sĩ]: Liệt Hỏa Oanh Kích", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa", 25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_fire", "Giáng luồng lửa thiêu rụi vùng đất.", 7.0f, "Kị Sĩ"));
 
-            var s3 = new InventoryItem("scroll_s3", "Bí Kíp: Sóng Lửa", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_flame", "ST: 30 + 80% INT | CD: 2.5s | Tầm: 4.5m", "Quét bão lửa hình quạt 60 độ (Cone Sweep).", 1,
-                new SkillScrollData("scroll_flame_cone", "Cuộn Trục: Sóng Lửa", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa", 20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_flame", "Bão lửa thiêu rụi phía trước.", 4.5f));
+            var s3 = new InventoryItem("scroll_s3", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Toàn Phong", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] ST: 30 + 80% INT | CD: 2.5s | Tầm: 4.5m", "Quét bão lửa hình quạt 60 độ phía trước (Cone Sweep).", 1,
+                new SkillScrollData("scroll_fire_sweep", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Toàn Phong", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa", 20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_fire", "Quét bão lửa hình quạt 60 độ phía trước.", 4.5f, "Kị Sĩ"));
 
-            var s4 = new InventoryItem("scroll_s4", "Bí Kíp: Bộc Phá Thánh Điển", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_nova", "ST: 60 + 150% INT | CD: 5.0s | Tầm: 2.5m", "Nổ hào quang 360 độ cực mạnh (Self Nova).", 1,
-                new SkillScrollData("scroll_divine_nova", "Cuộn Trục: Bộc Phá Thánh Điển", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Thánh", 35, 5.0f, 60, 1.5f, 4, "icon_skill_divine_nova", "item_scroll_nova", "Bùng nổ hào quang thần thánh.", 2.5f));
+            var s4 = new InventoryItem("scroll_s4", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Kim Cang", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_fire", "[Hệ: Kị Sĩ · Hỏa] Buff: +25% Công/Giáp | CD: 5.0s | Tự Thân", "Kích hoạt hào quang rồng lửa hộ thể (Self Buff).", 1,
+                new SkillScrollData("scroll_fire_buff", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Kim Cang", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Hỏa", 30, 5.0f, 50, 1.5f, 5, "icon_skill_divine_nova", "item_scroll_fire", "Kích hoạt hào quang rồng lửa hộ thể.", 0.0f, "Kị Sĩ", "", 3));
 
-            var s5 = new InventoryItem("scroll_s5", "Bí Kíp: Băng Huyết Tiễn", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_frost", "ST: 48 + 130% INT | CD: 2.0s | Tầm: 8.0m", "Mũi tên băng giá làm chậm mục tiêu.", 1,
-                new SkillScrollData("scroll_frost_arrow", "Cuộn Trục: Băng Huyết Tiễn", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng", 22, 2.0f, 48, 1.3f, 1, "item_scroll_frost", "item_scroll_frost", "Bắn tên băng sắc lẹm.", 8.0f));
+            // Các cuộn trục mẫu của Hệ khác / Thuộc Tính khác để kiểm tra cơ chế KHÓA CHẶT:
+            var s5 = new InventoryItem("scroll_s5", "Bí Kíp [Hệ Pháp Sư]: Mưa Thiên Thạch", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_fire", "[Hệ: Pháp Sư · Hỏa] ST: 55 + 140% INT | CD: 4.0s | Tầm: 7.0m", "Thả thiên thạch ma đạo (Kị Sĩ KHÔNG THỂ DÙNG vì sai Hệ!).", 1,
+                new SkillScrollData("scroll_mage_meteor", "Bí Kíp [Hệ Pháp Sư]: Mưa Thiên Thạch", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Hỏa", 32, 4.0f, 55, 1.4f, 2, "icon_skill_meteor", "item_scroll_fire", "Bí kíp độc quyền của Pháp Sư.", 7.0f, "Pháp Sư"));
 
-            var s6 = new InventoryItem("scroll_s6", "Bí Kíp: Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_generic", "ST: 55 + 140% INT | CD: 4.0s | Tầm: 7.0m", "Gọi sấm sét oanh tạc vùng đất chỉ định.", 1,
-                new SkillScrollData("scroll_thunder_burst", "Cuộn Trục: Lôi Thần Nộ", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Lôi", 32, 4.0f, 55, 1.4f, 2, "item_scroll_generic", "item_scroll_generic", "Tia sét thần sấm oanh tạc.", 7.0f));
+            var s6 = new InventoryItem("scroll_s6", "Bí Kíp [Hệ Kị Sĩ]: Băng Hàn Kiếm", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "item_scroll_ice", "[Hệ: Kị Sĩ · Băng] ST: 48 + 130% INT | CD: 2.0s | Tầm: 8.0m", "Kiếm khí băng tuyết (Người chơi Hỏa KHÔNG THỂ DÙNG vì khác Thuộc Tính!).", 1,
+                new SkillScrollData("scroll_knight_frost", "Bí Kíp [Hệ Kị Sĩ]: Băng Hàn Kiếm", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng", 22, 2.0f, 48, 1.3f, 1, "item_scroll_ice", "item_scroll_ice", "Bí kíp thuộc tính Băng.", 8.0f, "Kị Sĩ"));
+
+            var s7 = new InventoryItem("scroll_s7", "Bí Kíp [Hệ Pháp Sư]: Mưa Sinh Mệnh", ItemType.SkillScroll, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_scroll_wood", "[Hệ: Pháp Sư · Mộc] Hồi HP: 35 | CD: 6.0s | Tầm: 7.0m", "Mưa xanh hồi phục sinh lực (Hệ Mộc của Pháp Sư).", 1,
+                new SkillScrollData("scroll_mage_life_rain", "Bí Kíp [Hệ Pháp Sư]: Mưa Sinh Mệnh", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Mộc", 28, 6.0f, 35, 1.0f, 2, "icon_skill_arcane_bolt", "item_scroll_wood", "Mưa sinh mệnh phục hồi sinh lực.", 7.0f, "Pháp Sư", "", 1));
+
+            var s8 = new InventoryItem("scroll_s8", "Bí Kíp [Toàn Hệ]: Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_thunder", "[Toàn Hệ · Lôi] ST: 45 + 110% INT | CD: 3.5s | Tầm: 7.0m", "Sấm sét giáng từ trời cao (Bí kíp thuộc tính Lôi).", 1,
+                new SkillScrollData("scroll_all_thunder", "Bí Kíp [Toàn Hệ]: Lôi Thần Nộ", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Lôi", 25, 3.5f, 45, 1.1f, 2, "icon_skill_meteor", "item_scroll_thunder", "Sấm sét giáng diện rộng.", 7.0f, "Toàn Hệ"));
 
             items.Add(s1);
             items.Add(s2);
@@ -157,19 +165,24 @@ namespace GodlessFantasy.Player
             items.Add(s4);
             items.Add(s5);
             items.Add(s6);
+            items.Add(s7);
+            items.Add(s8);
 
-            // Gắn sẵn vào 4 ô skill hotbar
+            // Gắn sẵn vào 4 ô skill hotbar (đều thuộc Hệ Kị Sĩ, Thuộc Tính Hỏa)
             EquipSkillScrollToHotbar(s1, 0, true);
             EquipSkillScrollToHotbar(s2, 1, true);
             EquipSkillScrollToHotbar(s3, 2, true);
             EquipSkillScrollToHotbar(s4, 3, true);
 
-            // 3. Bình Thuốc Hồi Phục
-            items.Add(new InventoryItem("item_hp_pot", "Bình Máu HP (+35)", ItemType.Consumable, EquipSlot.None, "Phẩm E", Color.white, "item_potion_hp", "Hồi +35 Máu tức thì", "Bình dược liệu màu đỏ hồi phục sinh lực nhanh chóng.", 5));
-            items.Add(new InventoryItem("item_mp_pot", "Bình Mana (+30)", ItemType.Consumable, EquipSlot.None, "Phẩm E", Color.white, "item_potion_mana", "Hồi +30 Mana tức thì", "Bình nước thần màu xanh lam bổ sung năng lượng pháp thuật.", 5));
+            // 3. Vật Phẩm Hồi Phục: Thức Ăn (Phím Q) & Nước Uống (Phím E)
+            items.Add(new InventoryItem("item_hp_pot", "Bình Máu HP (+35)", ItemType.Consumable, EquipSlot.None, "Phẩm E", Color.white, "item_potion_hp", "❤️ Thuốc: Hồi +35 Máu tức thì (Phím Q)", "Bình dược liệu màu đỏ hồi phục sinh lực nhanh chóng.", 5));
+            items.Add(new InventoryItem("item_mp_pot", "Bình Mana (+30)", ItemType.Consumable, EquipSlot.None, "Phẩm E", Color.white, "item_potion_mana", "💧 Nước: Hồi +30 Mana tức thì (Phím E)", "Bình nước thần màu xanh lam bổ sung năng lượng pháp thuật.", 5));
+            items.Add(new InventoryItem("item_roast_meat", "Thịt Nướng Lửa Hồng", ItemType.Consumable, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_potion_hp", "🍗 Thức Ăn: Hồi +30 HP & +20 MP (Phím Q)", "Miếng thịt nướng thơm lừng nóng hổi, phục hồi cả sinh lực và ma lực.", 5));
+            items.Add(new InventoryItem("item_water", "Nước Suối Thanh Khiết", ItemType.Consumable, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.65f, 1.0f), "item_potion_mana", "💧 Nước Uống: Hồi +35 Mana (Phím E)", "Nước nguồn tinh khiết trong lành giúp thanh lọc tâm trí và hồi phục năng lượng.", 5));
+            items.Add(new InventoryItem("item_pet_food", "Hạt Dẻ Linh Hồn", ItemType.Consumable, EquipSlot.None, "Phẩm C", new Color(1.0f, 0.85f, 0.35f), "item_potion_hp", "🌰 Thức Ăn Pet: Tăng +60 EXP Thú Cưng", "Hạt dẻ chứa linh khí đất trời, món ăn ưa thích giúp Pet tăng cấp và tiến hóa to hơn.", 10));
 
             // 4. Thú Cưng Sóc Chibi
-            var pet = new InventoryItem("pet_squirrel_egg", "Sóc Chibi SquiRRels", ItemType.Pet, EquipSlot.None, "Phẩm A", new Color(1f, 0.85f, 0.35f), "pet_squirrel", "Thú Cưng Đồng Hành", "Thú cưng linh vật đáng yêu nhấp nhô nhẹ nhàng đi theo sau lưng.");
+            var pet = new InventoryItem("pet_squirrel_egg", "Sóc Chibi SquiRRels", ItemType.Pet, EquipSlot.None, "Phẩm A", new Color(1f, 0.85f, 0.35f), "pet_squirrel", "Thú Cưng Đồng Hành", "Thú cưng linh vật đáng yêu, có thể tiến hóa to hơn và mạnh hơn khi được cho ăn hạt dẻ.");
             pet.isEquipped = true; // Đang xuất chiến
             items.Add(pet);
         }
@@ -239,6 +252,20 @@ namespace GodlessFantasy.Player
                 int reqLv = GetRequiredLevelForSlot(slotIndex);
                 Debug.LogWarning($"[KHÓA KỸ NĂNG] Ô [{slotIndex + 1}] yêu cầu Cấp {reqLv} mới mở khóa!");
                 return false;
+            }
+
+            // KIỂM TRA ĐIỀU KIỆN KÉP NGHIÊM NGẶT: HỆ -> HỆ, THUỘC TÍNH -> THUỘC TÍNH
+            if (!bypassLevelCheck && scrollItem.scrollData != null)
+            {
+                string playerClass = playerStats != null ? playerStats.CharacterClass : "Kị Sĩ";
+                string playerElem = playerStats != null ? playerStats.Element : "Hỏa";
+                if (!scrollItem.scrollData.CanPlayerUse(playerClass, playerElem, out string reason))
+                {
+                    Debug.LogWarning($"[KHÓA BÍ KÍP] {reason}");
+                    Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                    FloatingDamageManager.Instance?.SpawnFloatingText(spawnPos, $"⛔ {reason}", new Color(1f, 0.35f, 0.35f));
+                    return false;
+                }
             }
 
             // Tháo cuộn cũ đang ở ô này ra
@@ -341,6 +368,8 @@ namespace GodlessFantasy.Player
             }
             return false;
         }
+
+        public bool RemoveItem(string itemId, int count = 1) => ConsumeItem(itemId, count);
 
         public int GetItemCount(string itemId)
         {
