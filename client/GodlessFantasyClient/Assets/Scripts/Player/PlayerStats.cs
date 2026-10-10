@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using GodlessFantasy.Combat;
+using GodlessFantasy.Core;
 
 namespace GodlessFantasy.Player
 {

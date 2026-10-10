@@ -97,17 +97,18 @@ namespace GodlessFantasy.UI
             float barH = (entityType == OverheadType.Player) ? 6f : 5f;
             float startX = guiX - barW / 2f;
 
-            // 1. DÒNG TÊN & CẤP ĐỘ
+            // 1. DÒNG TÊN & CẤP ĐỘ (Chữ hiển thị sắc nét, bình thường, không hiệu ứng pixel vỡ)
             string nameString = $"{displayName} [{titleOrLevel}]";
             Color nameColor = GetNameColor();
-            nameStyle.normal.textColor = nameColor;
 
-            Rect nameRect = new Rect(guiX - 80, guiY - 18, 160, 16);
-            // Viền bóng đen cho chữ
-            nameStyle.normal.textColor = new Color(0, 0, 0, 0.85f);
-            GUI.Label(new Rect(nameRect.x + 1, nameRect.y + 1, nameRect.width, nameRect.height), nameString, nameStyle);
+            Rect namePlateRect = new Rect(guiX - 70, guiY - 20, 140, 16);
+            // Nền đen mờ nhẹ giúp chữ nổi bật tự nhiên
+            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.70f);
+            GUI.DrawTexture(namePlateRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
             nameStyle.normal.textColor = nameColor;
-            GUI.Label(nameRect, nameString, nameStyle);
+            GUI.Label(namePlateRect, nameString, nameStyle);
 
             // 2. KHUNG NỀN THANH MÁU
             Rect hpBgRect = new Rect(startX, guiY, barW, barH);
@@ -198,7 +199,7 @@ namespace GodlessFantasy.UI
             {
                 nameStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 10,
+                    fontSize = 12,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
@@ -208,7 +209,7 @@ namespace GodlessFantasy.UI
             {
                 hpNumberStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 8,
+                    fontSize = 11,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = Color.white }
                 };

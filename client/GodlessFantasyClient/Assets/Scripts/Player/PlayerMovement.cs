@@ -103,8 +103,18 @@ namespace GodlessFantasy.Player
             }
         }
 
+        public static bool BlockWorldClick = false;
+
+        public void MoveTo(Vector2 worldPos)
+        {
+            targetPosition = worldPos;
+            isMovingToTarget = true;
+        }
+
         private void HandleMouseMovement()
         {
+            if (BlockWorldClick) return;
+
             // Click chuột trái để di chuyển (kể cả khi đang ngắm skill, chuột trái vẫn ra lệnh chạy)
             if (GameInput.GetLeftMouseButtonDown())
             {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using GodlessFantasy.Indicator;
 using GodlessFantasy.Core;
@@ -12,13 +13,11 @@ namespace GodlessFantasy.Combat
     }
 
     /// <summary>
-    /// Bộ Điều Khiển Kỹ Năng MOBA Đa Dạng (Two-Tap Multi-Skill Controller):
-    /// - Chiêu 1 [Phím 1]: Cầu Ma Thuật (Line Skillshot bắn thẳng).
-    /// - Chiêu 2 [Phím 2]: Mưa Thiên Thạch (Ground AoE thả vòng tròn tại chuột).
-    /// - Chiêu 3 [Phím 3]: Sóng Lửa (Cone Sweep quét hình quạt 60 độ).
-    /// - Chiêu 4 [Phím 4]: Bộc Phá Thần Thánh (Self Nova nổ hào quang 360 độ).
-    /// - Lướt [Shift / Space]: Lướt 360 độ né chiêu.
-    /// Chuột Trái luôn dùng để Di chuyển né đòn (Kiting). Chuột Phải hủy ngắm lập tức!
+    /// Bộ Điều Khiển Kỹ Năng & Cuộn Trục (Skill Scroll & Aiming Controller):
+    /// - Mỗi kỹ năng là một Cuộn Trục Kỹ Năng (Bí Kíp) thực thụ thuộc hành trang.
+    /// - Người chơi có thể KÉO THẢ (Drag & Drop) cuộn trục giữa túi đồ và 4 ô phím tắt [1], [2], [3], [4]!
+    /// - Khi đổi cuộn trục, biểu tượng, sát thương, tầm ngắm và cooldown của ô đó tự động cập nhật.
+    /// - Hỗ trợ chuẩn MOBA Two-Tap: Bấm lần 1 bật ngắm -> Bấm lần 2 xả chiêu -> Chuột phải hủy.
     /// </summary>
     public class SkillAimingController : MonoBehaviour
     {
@@ -26,54 +25,135 @@ namespace GodlessFantasy.Combat
         [SerializeField] private GameObject magicBoltPrefab;
         [SerializeField] private Transform firePoint;
 
-        [Header("Cooldowns")]
-        [SerializeField] private float skill1Cd = 1.0f;
-        [SerializeField] private float skill2Cd = 3.0f;
-        [SerializeField] private float skill3Cd = 2.5f;
-        [SerializeField] private float skill4Cd = 5.0f;
-
-        [Header("Mana Costs")]
-        [SerializeField] private int skill1Mana = 15;
-        [SerializeField] private int skill2Mana = 25;
-        [SerializeField] private int skill3Mana = 20;
-        [SerializeField] private int skill4Mana = 35;
-
-        [Header("Base Damages")]
-        [SerializeField] private int skill1BaseDmg = 25;
-        [SerializeField] private int skill2BaseDmg = 40;
-        [SerializeField] private int skill3BaseDmg = 30;
-        [SerializeField] private int skill4BaseDmg = 60;
-
         [Header("References")]
         [SerializeField] private IndicatorRenderer indicatorRenderer;
         [SerializeField] private PlayerStats playerStats;
 
-        private AimState currentState = AimState.Idle;
-        private int currentAimingSkill = 0; // 0=None, 1..4
+        // 4 Ô Cuộn Trục Kỹ Năng Đang Trang Bị (Hotbar Slots 1..4)
+        [SerializeField] private SkillScrollData[] equippedSlots = new SkillScrollData[4];
 
-        private float lastS1CastTime = -999f;
-        private float lastS2CastTime = -999f;
-        private float lastS3CastTime = -999f;
-        private float lastS4CastTime = -999f;
+        // Kho Bí Kíp Kỹ Năng trong Hành Trang
+        public List<SkillScrollData> scrollInventory = new List<SkillScrollData>();
+
+        // Thời gian thi triển gần nhất của 4 ô
+        private float[] slotLastCastTime = new float[4] { -999f, -999f, -999f, -999f };
+
+        private AimState currentState = AimState.Idle;
+        private int currentAimingSlot = 0; // 1..4, 0=None
 
         public bool IsAiming => currentState == AimState.Aiming;
-        public int CurrentAimingSkill => currentAimingSkill;
+        public int CurrentAimingSkill => currentAimingSlot;
 
-        public float Skill1CooldownRemaining => Mathf.Max(0, (lastS1CastTime + skill1Cd) - Time.time);
-        public float Skill2CooldownRemaining => Mathf.Max(0, (lastS2CastTime + skill2Cd) - Time.time);
-        public float Skill3CooldownRemaining => Mathf.Max(0, (lastS3CastTime + skill3Cd) - Time.time);
-        public float Skill4CooldownRemaining => Mathf.Max(0, (lastS4CastTime + skill4Cd) - Time.time);
+        // Backward Compatibility Getters
+        public float Skill1CooldownRemaining => GetCooldownRemaining(0);
+        public float Skill2CooldownRemaining => GetCooldownRemaining(1);
+        public float Skill3CooldownRemaining => GetCooldownRemaining(2);
+        public float Skill4CooldownRemaining => GetCooldownRemaining(3);
 
-        public int Skill1ManaCost => skill1Mana;
-        public int Skill2ManaCost => skill2Mana;
-        public int Skill3ManaCost => skill3Mana;
-        public int Skill4ManaCost => skill4Mana;
+        public int Skill1ManaCost => equippedSlots[0] != null ? equippedSlots[0].manaCost : 15;
+        public int Skill2ManaCost => equippedSlots[1] != null ? equippedSlots[1].manaCost : 25;
+        public int Skill3ManaCost => equippedSlots[2] != null ? equippedSlots[2].manaCost : 20;
+        public int Skill4ManaCost => equippedSlots[3] != null ? equippedSlots[3].manaCost : 35;
 
         private void Awake()
         {
             if (indicatorRenderer == null) indicatorRenderer = GetComponentInChildren<IndicatorRenderer>();
             if (firePoint == null) firePoint = transform;
             if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+
+            InitializeDefaultScrolls();
+        }
+
+        public void InitializeDefaultScrolls()
+        {
+            // Khởi tạo 4 Bí Kíp mặc định gắn vào 4 ô
+            if (equippedSlots[0] == null)
+            {
+                equippedSlots[0] = new SkillScrollData(
+                    "scroll_arcane_bolt", "Cuộn Trục: Cầu Ma Thuật", "Phẩm D", new Color(0.3f, 0.85f, 0.4f), "Ma Pháp",
+                    15, 1.0f, 25, 1.0f, 1, "icon_skill_arcane_bolt", "item_scroll_arcane",
+                    "Phóng cầu ma pháp xuyên thấu theo đường thẳng. Tiêu hao ít mana, hồi nhanh.");
+            }
+
+            if (equippedSlots[1] == null)
+            {
+                equippedSlots[1] = new SkillScrollData(
+                    "scroll_meteor", "Cuộn Trục: Mưa Thiên Thạch", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa",
+                    25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_meteor",
+                    "Triệu hồi khối thiên thạch giáng xuống vùng đất chỉ định gây nổ AoE diện rộng.");
+            }
+
+            if (equippedSlots[2] == null)
+            {
+                equippedSlots[2] = new SkillScrollData(
+                    "scroll_flame_cone", "Cuộn Trục: Sóng Lửa", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa",
+                    20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_flame",
+                    "Quét luồng bão lửa hình quạt 60 độ về phía trước, thiêu rụi nhiều mục tiêu.");
+            }
+
+            if (equippedSlots[3] == null)
+            {
+                equippedSlots[3] = new SkillScrollData(
+                    "scroll_divine_nova", "Cuộn Trục: Bộc Phá Thánh Điển", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Thánh",
+                    35, 5.0f, 60, 1.5f, 4, "icon_skill_divine_nova", "item_scroll_nova",
+                    "Bùng nổ vòng hào quang thánh quang 360 độ cực mạnh quét sạch kẻ địch xung quanh.");
+            }
+
+            // Kho bí kíp trong Túi Đồ để người chơi trải nghiệm Kéo Thả (Drag & Drop)
+            if (scrollInventory.Count == 0)
+            {
+                scrollInventory.Add(new SkillScrollData(
+                    "scroll_frost_arrow", "Cuộn Trục: Băng Huyết Tiễn", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng",
+                    22, 2.0f, 48, 1.3f, 1, "item_scroll_frost", "item_scroll_frost",
+                    "Bắn mũi tên băng giá cực nhanh, gây sát thương băng và làm tê liệt kẻ địch."));
+
+                scrollInventory.Add(new SkillScrollData(
+                    "scroll_thunder_burst", "Cuộn Trục: Lôi Thần Nộ", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Lôi",
+                    32, 4.0f, 55, 1.4f, 2, "item_scroll_generic", "item_scroll_generic",
+                    "Gọi tia sét thần sấm oanh tạc vùng đất chỉ định, giáng đòn chí mạng uy lực."));
+            }
+        }
+
+        public SkillScrollData GetEquippedScroll(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= 4) return null;
+            return equippedSlots[slotIndex];
+        }
+
+        public void EquipScroll(int slotIndex, SkillScrollData scroll)
+        {
+            if (slotIndex < 0 || slotIndex >= 4) return;
+            equippedSlots[slotIndex] = scroll;
+            slotLastCastTime[slotIndex] = -999f; // Reset CD khi lắp mới
+            Debug.Log($"<color=yellow>[KÉO THẢ KỸ NĂNG] Đã gắn '{scroll?.scrollName}' vào Ô [{slotIndex + 1}]!</color>");
+        }
+
+        public void SwapScrolls(int slotA, int slotB)
+        {
+            if (slotA < 0 || slotA >= 4 || slotB < 0 || slotB >= 4) return;
+            var temp = equippedSlots[slotA];
+            equippedSlots[slotA] = equippedSlots[slotB];
+            equippedSlots[slotB] = temp;
+            Debug.Log($"<color=yellow>[HOÁN ĐỔI KỸ NĂNG] Đã đổi vị trí Ô [{slotA + 1}] và Ô [{slotB + 1}]!</color>");
+        }
+
+        public void UnequipScroll(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= 4) return;
+            var removed = equippedSlots[slotIndex];
+            if (removed != null && !scrollInventory.Contains(removed))
+            {
+                scrollInventory.Add(removed);
+            }
+            equippedSlots[slotIndex] = null;
+        }
+
+        public float GetCooldownRemaining(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= 4) return 0f;
+            var scroll = equippedSlots[slotIndex];
+            if (scroll == null) return 0f;
+            return Mathf.Max(0, (slotLastCastTime[slotIndex] + scroll.cooldown) - Time.time);
         }
 
         private void Update()
@@ -84,45 +164,48 @@ namespace GodlessFantasy.Combat
 
         private void HandleSkillInput()
         {
-            // Phím 1
-            if (GameInput.GetSkill1KeyDown()) HandleSkillPress(1, Skill1CooldownRemaining, skill1Mana);
-            // Phím 2
-            if (GameInput.GetSkill2KeyDown()) HandleSkillPress(2, Skill2CooldownRemaining, skill2Mana);
-            // Phím 3
-            if (GameInput.GetSkill3KeyDown()) HandleSkillPress(3, Skill3CooldownRemaining, skill3Mana);
-            // Phím 4
-            if (GameInput.GetSkill4KeyDown()) HandleSkillPress(4, Skill4CooldownRemaining, skill4Mana);
+            if (GameInput.GetSkill1KeyDown()) HandleSkillPress(1);
+            if (GameInput.GetSkill2KeyDown()) HandleSkillPress(2);
+            if (GameInput.GetSkill3KeyDown()) HandleSkillPress(3);
+            if (GameInput.GetSkill4KeyDown()) HandleSkillPress(4);
         }
 
-        private void HandleSkillPress(int slot, float cdRemaining, int manaCost)
+        private void HandleSkillPress(int slot)
         {
-            if (cdRemaining > 0.05f)
+            int slotIdx = slot - 1;
+            SkillScrollData scroll = equippedSlots[slotIdx];
+
+            if (scroll == null)
             {
-                Debug.Log($"[SKILL {slot}] Đang hồi chiêu! Còn {cdRemaining:F1}s");
+                Debug.LogWarning($"[Ô {slot} TRỐNG] Hãy mở Menu Túi Đồ/Kỹ Năng để kéo cuộn trục vào ô này!");
                 return;
             }
 
-            if (playerStats != null && playerStats.CurrentMana < manaCost)
+            float cdRemaining = GetCooldownRemaining(slotIdx);
+            if (cdRemaining > 0.05f)
             {
-                Debug.LogWarning($"[SKILL {slot}] Không đủ Mana! (Cần {manaCost} Mana)");
+                Debug.Log($"[Ô {slot}] {scroll.scrollName} đang hồi chiêu! Còn {cdRemaining:F1}s");
+                return;
+            }
+
+            if (playerStats != null && playerStats.CurrentMana < scroll.manaCost)
+            {
+                Debug.LogWarning($"[Ô {slot}] Không đủ Mana! (Cần {scroll.manaCost} Mana)");
                 return;
             }
 
             if (currentState == AimState.Idle)
             {
-                // BẤM LẦN 1: Bật chế độ ngắm
                 EnterAimingState(slot);
             }
             else if (currentState == AimState.Aiming)
             {
-                if (currentAimingSkill == slot)
+                if (currentAimingSlot == slot)
                 {
-                    // BẤM LẦN 2 CÙNG PHÍM: XÁC NHẬN PHÓNG CHIÊU!
                     ConfirmAndCastSkill(slot);
                 }
                 else
                 {
-                    // Bấm phím chiêu khác -> Chuyển sang ngắm chiêu mới!
                     EnterAimingState(slot);
                 }
             }
@@ -130,7 +213,6 @@ namespace GodlessFantasy.Combat
 
         private void HandleCancelInput()
         {
-            // Click Chuột Phải: Hủy ngắm ngay lập tức
             if (currentState == AimState.Aiming && GameInput.GetRightMouseButtonDown())
             {
                 CancelAiming();
@@ -139,60 +221,68 @@ namespace GodlessFantasy.Combat
 
         private void EnterAimingState(int slot)
         {
+            int slotIdx = slot - 1;
+            SkillScrollData scroll = equippedSlots[slotIdx];
+            if (scroll == null) return;
+
             currentState = AimState.Aiming;
-            currentAimingSkill = slot;
+            currentAimingSlot = slot;
 
             if (indicatorRenderer != null)
             {
-                indicatorRenderer.ShowIndicator(slot);
+                indicatorRenderer.ShowIndicator(scroll.indicatorType);
             }
 
-            Debug.Log($"[AIMING] Đang ngắm Chiêu {slot}. Chuột trái né đòn, Bấm lại [{slot}] để xả chiêu, Chuột phải hủy!");
+            Debug.Log($"[AIMING] Đang ngắm {scroll.scrollName} [Ô {slot}]. Bấm [{slot}] lần 2 để xả chiêu!");
         }
 
         private void ConfirmAndCastSkill(int slot)
         {
-            int manaCost = (slot == 1) ? skill1Mana : (slot == 2) ? skill2Mana : (slot == 3) ? skill3Mana : skill4Mana;
-
-            if (playerStats != null && !playerStats.ConsumeMana(manaCost))
+            int slotIdx = slot - 1;
+            SkillScrollData scroll = equippedSlots[slotIdx];
+            if (scroll == null)
             {
-                Debug.LogWarning($"[SKILL {slot}] Không đủ Mana để thi triển!");
+                ExitAimingState();
+                return;
+            }
+
+            if (playerStats != null && !playerStats.ConsumeMana(scroll.manaCost))
+            {
+                Debug.LogWarning($"[Ô {slot}] Không đủ Mana để thi triển {scroll.scrollName}!");
                 ExitAimingState();
                 return;
             }
 
             int intel = playerStats != null ? playerStats.Intelligence : 12;
+            int totalDamage = scroll.baseDamage + Mathf.RoundToInt(intel * scroll.intelligenceScaling);
 
-            switch (slot)
+            // Thi triển theo Archetype của Cuộn Trục
+            switch (scroll.indicatorType)
             {
                 case 1:
-                    CastSkill1_LineSkillshot(intel);
-                    lastS1CastTime = Time.time;
+                    CastLineSkillshot(scroll, totalDamage);
                     break;
                 case 2:
-                    CastSkill2_GroundMeteor(intel);
-                    lastS2CastTime = Time.time;
+                    CastGroundAoE(scroll, totalDamage);
                     break;
                 case 3:
-                    CastSkill3_FlameCone(intel);
-                    lastS3CastTime = Time.time;
+                    CastConeSweep(scroll, totalDamage);
                     break;
                 case 4:
-                    CastSkill4_DivineNova(intel);
-                    lastS4CastTime = Time.time;
+                    CastSelfNova(scroll, totalDamage);
                     break;
             }
 
+            slotLastCastTime[slotIdx] = Time.time;
             ExitAimingState();
         }
 
-        // ================= CHIÊU 1: CẦU MA THUẬT (LINE SKILLSHOT) =================
-        private void CastSkill1_LineSkillshot(int intel)
+        // 1. Phóng Đạn Tuyến Tính (Line Skillshot)
+        private void CastLineSkillshot(SkillScrollData scroll, int dmg)
         {
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
-            int dmg = skill1BaseDmg + intel; // 25 + 12 = 37
-
             Vector3 spawnPos = firePoint.position + (Vector3)(aimDir * 0.45f);
+
             if (magicBoltPrefab != null)
             {
                 GameObject boltObj = Instantiate(magicBoltPrefab, spawnPos, Quaternion.identity);
@@ -202,17 +292,15 @@ namespace GodlessFantasy.Combat
                     bolt.Initialize(aimDir, dmg, gameObject.name);
                 }
             }
-            Debug.Log($"[CAST CHIÊU 1] Phóng Cầu Ma Thuật! Sát thương: {dmg}");
+            Debug.Log($"[CAST] Phóng '{scroll.scrollName}'! Sát thương: {dmg}");
         }
 
-        // ================= CHIÊU 2: MƯA THIÊN THẠCH (GROUND AOE CIRCLE) =================
-        private void CastSkill2_GroundMeteor(int intel)
+        // 2. Thả Vòng Tròn Đất (Ground AoE)
+        private void CastGroundAoE(SkillScrollData scroll, int dmg)
         {
             Vector3 targetPos = indicatorRenderer != null ? indicatorRenderer.GetGroundTargetPosition() : transform.position;
-            int dmg = skill2BaseDmg + Mathf.RoundToInt(intel * 1.2f); // 40 + 14 = 54
             float aoeRadius = 2.2f;
 
-            // Gây sát thương AoE lên mọi mục tiêu trong vòng tròn
             Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, aoeRadius);
             int hitCount = 0;
             foreach (var col in hits)
@@ -225,15 +313,13 @@ namespace GodlessFantasy.Combat
                     hitCount++;
                 }
             }
-
-            Debug.Log($"[CAST CHIÊU 2] Thiên Thạch Ma Pháp nổ tại ({targetPos.x:F1}, {targetPos.y:F1})! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
+            Debug.Log($"[CAST] Thả '{scroll.scrollName}' tại ({targetPos.x:F1}, {targetPos.y:F1})! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
         }
 
-        // ================= CHIÊU 3: SÓNG LỬA HÌNH QUẠT (CONE SWEEP) =================
-        private void CastSkill3_FlameCone(int intel)
+        // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep)
+        private void CastConeSweep(SkillScrollData scroll, int dmg)
         {
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
-            int dmg = skill3BaseDmg + Mathf.RoundToInt(intel * 0.8f); // 30 + 10 = 40
             float coneRange = 5.0f;
             float halfAngle = 35.0f;
 
@@ -255,16 +341,13 @@ namespace GodlessFantasy.Combat
                     }
                 }
             }
-
-            Debug.Log($"[CAST CHIÊU 3] Quét Sóng Lửa hình quạt! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
+            Debug.Log($"[CAST] Quét '{scroll.scrollName}' hình quạt! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
         }
 
-        // ================= CHIÊU 4: BỘC PHÁ THẦN THÁNH (SELF NOVA AOE) =================
-        private void CastSkill4_DivineNova(int intel)
+        // 4. Bộc Phá Hào Quang 360 Độ (Self Nova)
+        private void CastSelfNova(SkillScrollData scroll, int dmg)
         {
-            int dmg = skill4BaseDmg + Mathf.RoundToInt(intel * 1.5f); // 60 + 18 = 78
             float novaRadius = 4.5f;
-
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, novaRadius);
             int hitCount = 0;
             foreach (var col in hits)
@@ -277,8 +360,7 @@ namespace GodlessFantasy.Combat
                     hitCount++;
                 }
             }
-
-            Debug.Log($"[CAST CHIÊU 4 - ULTIMATE] Bộc Phá Thần Thánh 360 độ! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
+            Debug.Log($"[CAST] Nổ '{scroll.scrollName}' 360 độ quanh người! Trúng {hitCount} mục tiêu. Sát thương: {dmg}");
         }
 
         private void CancelAiming()
@@ -290,7 +372,7 @@ namespace GodlessFantasy.Combat
         private void ExitAimingState()
         {
             currentState = AimState.Idle;
-            currentAimingSkill = 0;
+            currentAimingSlot = 0;
 
             if (indicatorRenderer != null)
             {

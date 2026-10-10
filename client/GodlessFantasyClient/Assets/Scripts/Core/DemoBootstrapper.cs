@@ -173,12 +173,13 @@ namespace GodlessFantasy.Core
             SetPrivateField(indRenderer, "indicatorVisual", indicatorObj.transform);
             SetPrivateField(indRenderer, "spriteRenderer", indSr);
 
-            // Gán bộ điều khiển ngắm Two-Tap
+            // Gán bộ điều khiển ngắm Two-Tap & Cuộn Trục Kỹ Năng Kéo Thả
             var pCombat = playerObj.AddComponent<SkillAimingController>();
             SetPrivateField(pCombat, "magicBoltPrefab", boltTemplate);
             SetPrivateField(pCombat, "indicatorRenderer", indRenderer);
             SetPrivateField(pCombat, "firePoint", playerObj.transform);
             SetPrivateField(pCombat, "playerStats", pStats);
+            pCombat.InitializeDefaultScrolls();
 
             // 6. Thú Cưng Mini (Cute Mascot Pet Sóc Chibi của SquiRRels Studio!)
             if (petSprite != null)
