@@ -97,6 +97,7 @@ namespace GodlessFantasy.Combat
 
             // Chớp đỏ phản hồi trúng đòn cho cả Người Chơi lẫn Quái Vật
             TriggerHitFlash();
+            GodlessFantasy.Core.AudioManager.PlayHit();
 
             // Nếu người chơi bị đánh -> Màn hình chớp đỏ cảnh báo
             if (gameObject.name.Contains("Player") || CompareTag("Player"))
@@ -131,6 +132,7 @@ namespace GodlessFantasy.Combat
         private void Die()
         {
             Debug.Log($"[DEATH] {gameObject.name} đã hy sinh!");
+            GodlessFantasy.Core.AudioManager.PlayExplosion();
             OnDeath?.Invoke();
             // Đổi màu thành xám tối
             if (spriteRenderer != null) spriteRenderer.color = new Color(0.4f, 0.4f, 0.4f, 0.8f);

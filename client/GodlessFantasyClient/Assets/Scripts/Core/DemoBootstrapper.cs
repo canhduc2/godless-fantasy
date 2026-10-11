@@ -3,6 +3,7 @@ using GodlessFantasy.Player;
 using GodlessFantasy.Combat;
 using GodlessFantasy.Indicator;
 using GodlessFantasy.UI;
+using GodlessFantasy.AI;
 
 namespace GodlessFantasy.Core
 {
@@ -61,10 +62,15 @@ namespace GodlessFantasy.Core
             mapMgr.InitializeMap(-22, 22, -12, 12);
             gameObject.AddComponent<TerrainPainterTool>();
             gameObject.AddComponent<ItemCreatorModal>();
+            gameObject.AddComponent<GodlessFantasy.UI.SkillTestingMatrixModal>();
+            gameObject.AddComponent<GodlessFantasy.UI.GameSettingsModal>();
+            gameObject.AddComponent<GodlessFantasy.UI.WorldDistanceRuler>();
             gameObject.AddComponent<ItemDatabase>();
             gameObject.AddComponent<SkillDatabase>();
             gameObject.AddComponent<SkillVFXManager>();
             gameObject.AddComponent<GodlessFantasy.Guild.GuildManager>();
+            GameSettings.Initialize();
+            AudioManager.EnsureExists();
 
             // 3. Vùng An Toàn (Safe Zone Trigger bao trọn Làng Tân Thủ)
             GameObject safeZoneObj = new GameObject("SafeZone_Village");
@@ -108,6 +114,7 @@ namespace GodlessFantasy.Core
 
             // 5. Nhân Vật Chính (Player Hero)
             GameObject playerObj = new GameObject("Player_Hero");
+            playerObj.tag = "Player";
             playerObj.transform.position = new Vector3(-4.0f, 0, 0); // Đứng ở gần cổng làng
 
             var pSr = playerObj.AddComponent<SpriteRenderer>();
@@ -142,6 +149,7 @@ namespace GodlessFantasy.Core
             if (arrowSprite != null) indRenderer.SetSprites(arrowSprite, Resources.Load<Sprite>("indicator_ground_circle"), Resources.Load<Sprite>("indicator_cone"));
 
             // Gán bộ điều khiển ngắm Two-Tap & Cuộn Trục Kỹ Năng Kéo Thả
+            SetPrivateField(pMovement, "playerStats", pStats);
             var pCombat = playerObj.AddComponent<SkillAimingController>();
             SetPrivateField(pCombat, "magicBoltPrefab", boltTemplate);
             SetPrivateField(pCombat, "indicatorRenderer", indRenderer);
@@ -207,34 +215,69 @@ namespace GodlessFantasy.Core
                 camCtrl.SetTarget(playerObj.transform);
             }
 
-            // 9. Tạo Bù Nhìn Luyện Công (Monster Targets) Có Thanh Máu Trên Đầu & Tự Hồi Sinh
-            // - Quái 1: Trong bãi quái PvP (x = 5.0, y = 0)
-            CreateMonsterTarget("Dummy_PvP_Champion", "Bù Nhìn PvP 1", "Lv.1 Quái", new Vector3(5.0f, 0, 0), dummySprite, false);
-            // - Quái 2: Trong bãi quái PvP (x = 9.0, y = 3.5)
-            CreateMonsterTarget("Dummy_PvP_Warrior", "Bù Nhìn PvP 2", "Lv.1 Quái", new Vector3(9.0f, 3.5f, 0), dummySprite, false);
-            // - Quái 3: Trong Vùng An Toàn Làng Tân Thủ (Miễn nhiễm sát thương)
-            CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Làng", "SafeZone", new Vector3(-14.0f, 2.0f, 0), dummySprite, true);
+            // 9. Tạo Quái Vật & Bãi Luyện Công (Monster Targets & Mini-Boss Với AI Telegraph)
+            // - Quái 1: Mini-Boss Thủ Lĩnh (Máu dày 450, vòng đỏ Telegraph 3.2m rộng lớn, xả đòn uy lực)
+            CreateMonsterTarget("Boss_PvP_Champion", "Thủ Lĩnh Ma Thú (Mini-Boss)", "Lv.5 · Mini-Boss 🔥", new Vector3(8.0f, -1.5f, 0), dummySprite, false, hasAI: true, isBoss: true, maxHp: 450, attackRange: 3.2f, attackDamage: 35, scale: 1.4f);
 
-            // 10. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
+            // - Quái 2: Quái Thường Tuần Tra (Tầm đánh gần 1.8m, tốc độ nhanh, tuần tra và đuổi theo người chơi)
+            CreateMonsterTarget("Monster_PvP_Warrior", "Chiến Binh Quái (Thường)", "Lv.1 · Cận Chiến", new Vector3(5.5f, 2.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 120, attackRange: 1.8f, attackDamage: 16, scale: 1.0f);
+
+            // - Quái 3: Bù Nhìn Gỗ trong Vùng An Toàn Làng Tân Thủ (Miễn nhiễm sát thương, đứng im không đánh để test combo)
+            CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Gỗ (Làng)", "SafeZone", new Vector3(-14.0f, 2.0f, 0), dummySprite, true, hasAI: false, isBoss: false, maxHp: 9999, scale: 1.0f);
+
+            // 10. Cổng Dịch Chuyển Không Gian 2 Chiều (Map Portals: Làng Tân Thủ <-> Rừng Rậm Hắc Ám)
+            CreateMapPortal("Portal_Village_To_Wilderness", "Cổng Đến Rừng Rậm Hắc Ám", "Rừng Rậm Hắc Ám",
+                new Vector3(-4.5f, 3.5f, 0), new Vector3(11.5f, 0f, 0), BgmTrack.Combat, new Color(0.68f, 0.25f, 1.0f, 0.85f));
+
+            CreateMapPortal("Portal_Wilderness_To_Village", "Cổng Về Làng Tân Thủ", "Làng Tân Thủ",
+                new Vector3(13.5f, 3.5f, 0), new Vector3(-6.5f, 0f, 0), BgmTrack.Village, new Color(0.25f, 0.95f, 0.55f, 0.85f));
+
+            // 11. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
             if (FindAnyObjectByType<FloatingDamageManager>() == null)
             {
                 new GameObject("[FLOATING_DAMAGE_MANAGER]").AddComponent<FloatingDamageManager>();
             }
 
+            // 12. Khởi tạo Skill VFX Engine & Procedural Modular VFX Engine (140 Biến Thể Nguyên Tố)
+            if (FindAnyObjectByType<SkillVFXManager>() == null)
+            {
+                new GameObject("[SKILL_VFX_MANAGER]").AddComponent<SkillVFXManager>();
+            }
+            if (FindAnyObjectByType<ProceduralVFXEngine>() == null)
+            {
+                new GameObject("[PROCEDURAL_VFX_ENGINE]").AddComponent<ProceduralVFXEngine>();
+            }
+
             GameObject hudObj = new GameObject("Combat_HUD");
             hudObj.AddComponent<CombatHUD>();
 
-            Debug.Log("<color=green>[SquiRRels Studio] Thế giới Alpha Slice đã hoàn thiện 100%: Thanh máu trên đầu Player, NPC, Quái vật đầy đủ!</color>");
+            Debug.Log("<color=green>[SquiRRels Studio] Thế giới Alpha Slice đã hoàn thiện 100%: Quái AI Telegraph & Cổng Dịch Chuyển & Hệ Thống Procedural VFX 140 Biến Thể đã kích hoạt!</color>");
         }
 
-        private void CreateMonsterTarget(string name, string displayName, string levelStr, Vector3 position, Sprite sprite, bool isSafe)
+        private void CreateMapPortal(string objName, string portalTitle, string destZoneName, Vector3 worldPos, Vector3 destCoord, BgmTrack bgm, Color glowColor)
+        {
+            GameObject portalObj = new GameObject(objName);
+            portalObj.transform.position = worldPos;
+            var portalCtrl = portalObj.AddComponent<MapPortalController>();
+            portalCtrl.SetupPortal(portalTitle, destZoneName, destCoord, bgm, glowColor);
+        }
+
+        private void CreateMonsterTarget(string name, string displayName, string levelStr, Vector3 position, Sprite sprite, bool isSafe, bool hasAI = false, bool isBoss = false, int maxHp = 100, float attackRange = 1.8f, int attackDamage = 18, float scale = 1.0f)
         {
             GameObject dummyObj = new GameObject(name);
             dummyObj.transform.position = position;
+            if (Mathf.Abs(scale - 1.0f) > 0.01f)
+            {
+                dummyObj.transform.localScale = new Vector3(scale, scale, 1f);
+            }
 
             var sr = dummyObj.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.sortingOrder = 10; // Layer 10 cùng tầng với nhân vật
+            if (isBoss)
+            {
+                sr.color = new Color(1f, 0.82f, 0.82f, 1f); // Boss có ánh đỏ hung quyền uy
+            }
 
             var col = dummyObj.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.8f, 0.9f);
@@ -244,12 +287,42 @@ namespace GodlessFantasy.Core
             rb.bodyType = RigidbodyType2D.Kinematic;
 
             var health = dummyObj.AddComponent<Health>();
+            health.SetMaxHealth(maxHp);
             health.IsInSafeZone = isSafe;
 
             dummyObj.AddComponent<MonsterTarget>();
 
             var overhead = dummyObj.AddComponent<OverheadStatusBar>();
-            overhead.Setup(OverheadType.Monster, displayName, isSafe ? "SafeZone" : levelStr, 0.85f);
+            overhead.Setup(OverheadType.Monster, displayName, isSafe ? "SafeZone" : levelStr, isBoss ? 1.25f : 0.85f);
+
+            if (hasAI && !isSafe)
+            {
+                var ai = dummyObj.AddComponent<MonsterAIController>();
+                ai.spawnPoint = position;
+                ai.isBoss = isBoss;
+                ai.attackRange = attackRange;
+                ai.attackDamage = attackDamage;
+                if (isBoss)
+                {
+                    ai.wanderRadius = 3.5f;
+                    ai.leashRadius = 14.0f;
+                    ai.wanderSpeed = 1.1f;
+                    ai.chaseSpeed = 1.9f;
+                    ai.detectionRadius = 6.8f;
+                    ai.attackCooldown = 4.0f;
+                    ai.telegraphDuration = 1.5f;
+                }
+                else
+                {
+                    ai.wanderRadius = 4.0f;
+                    ai.leashRadius = 10.0f;
+                    ai.wanderSpeed = 1.4f;
+                    ai.chaseSpeed = 2.3f;
+                    ai.detectionRadius = 5.2f;
+                    ai.attackCooldown = 3.2f;
+                    ai.telegraphDuration = 1.2f;
+                }
+            }
         }
 
         private void SetPrivateField(object target, string fieldName, object value)

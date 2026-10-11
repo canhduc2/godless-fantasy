@@ -7,16 +7,14 @@
 
 ## 1. TỔNG QUAN BỐ CỤC MÀN HÌNH CHƠI GAME (HUD LAYOUT)
 
-Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối ưu để tối đa hóa tầm nhìn chiến đấu:
+Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối ưu toàn diện theo chuẩn Console đáy màn hình để giải phóng 100% tầm nhìn chiến đấu phía trên:
 
 ```
 +---------------------------------------------------------------------------------------+
-| [TOP-LEFT: THÔNG TIN NHÂN VẬT]                                [TOP-RIGHT: BONG BÓNG]  |
-| +---------+  Tên Nhân Vật: ShadowKnight                        +--------------------+ |
-| |  AVATAR |  HP   [=====================] 1850/1850            |  [💬 NÚT CHAT]     | |
-| | THỰC TẾ |  MANA [=============        ]  420/600             +--------------------+ |
-| +---------+  Kị Sĩ · Hỏa · Level 42                                                   |
-|                                                                                       |
+|                                                                [TOP-RIGHT: BONG BÓNG] |
+|                                                                +--------------------+ |
+|                                                                |  [💬 NÚT CHAT]     | |
+|                                                                +--------------------+ |
 |                                                                                       |
 | [MID-LEFT: MENU TRƯỢT]                                                                |
 | +---+                                                                                 |
@@ -24,17 +22,13 @@ Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối
 | +---+                                                                                 |
 |                                                                                       |
 |                                                                                       |
-|                                                                                       |
-|                                                                                       |
-|                                                                                       |
-|                                                                                       |
-|                                                                                       |
-|                               [BOTTOM-CENTER: THANH KỸ NĂNG]                          |
-|                               +----+  +----+  +----+  +----+    +------+              |
-|                               | 1  |  | 2  |  | 3  |  | 4  |    | SHIFT|              |
-|                               |Chiêu| |Chiêu| |Chiêu| |Khóa|    | DASH |              |
-|                               |    |  |    |  |    |  (75) |    | 20 MN|              |
-|                               +----+  +----+  +----+  +----+    +------+              |
+|                     [BOTTOM-CENTER: BẢNG CHỈ SỐ & HOTBAR KỸ NĂNG]                     |
+|         +-----------------------+  +----+  +----+  +----+  +----+    +------+         |
+|         | [AVATAR] Tên · Hệ     |  | 1  |  | 2  |  | 3  |  | 4  |    |  D   |         |
+|         | Lv.XX    HP 150/150   |  |Chiêu| |Chiêu| |Chiêu| |Chiêu|   | DASH |         |
+|         | INT STR  MANA 80/100  |  |    |  |    |  |    |  |    |    | 10 MN|         |
+|         +-----------------------+  +----+  +----+  +----+  +----+    +------+         |
+|         [BẢNG CHẠY CHỮ TIN TỨC SERVER (NEWS TICKER MARQUEE ĐÁY MÀN HÌNH)]            |
 +---------------------------------------------------------------------------------------+
 ```
 
@@ -42,16 +36,17 @@ Game hiển thị theo góc nhìn **2D Top-Down**, bố cục HUD được tối
 
 ## 2. CHI TIẾT CÁC PHÂN VÙNG HUD
 
-### 2.1. Cụm Góc Trái Trên Cùng (Top-Left HUD)
-1. **Avatar Thực Tế (Dynamic Real-time Portrait):**
-   - Không dùng ảnh tĩnh vẽ sẵn.
-   - Hiển thị mô hình/chân dung thực tế của nhân vật phản ánh đúng Trang phục, Mũ, Vũ khí và Thuộc tính đang kích hoạt.
-2. **Thanh Máu & Năng Lượng:**
-   - **Thanh HP (Đỏ):** Kèm label hiển thị số nguyên cụ thể (Ví dụ: `HP: 1850 / 1850`).
-   - **Thanh MANA (Xanh Lam):** Kèm label hiển thị số cụ thể (Ví dụ: `MANA: 420 / 600`).
-3. **Dòng Thông Tin Chức Nghiệp:**
-   - Cấu trúc: `[Hệ Chiến Đấu] · [Thuộc Tính Ma Lực] · [Cấp Độ]`.
-   - Ví dụ: `Pháp Sư · Ánh Sáng · Lv. 56` hoặc `Kẻ Ngoại Đạo · Bóng Tối · Lv. 12`.
+### 2.1. Cụm Bảng Điều Khiển Đáy Màn Hình (Bottom-Center HUD Console)
+1. **Bảng Chỉ Số Nhân Vật (Bottom Player Panel):**
+   - Đặt cân đối tại đáy màn hình, bên trái 5 ô Hotbar, giữ nguyên tầm nhìn thông thoáng góc trên bên trái.
+   - Không bị ẩn khi mở Menu Drawer bên trái.
+   - **Avatar & Cấp Độ:** Avatar động 42x42 viền vàng kim, huy hiệu Level Lv.X nổi bật.
+   - **Thanh Máu (HP Đỏ) & Năng Lượng (MANA Xanh):** Hiển thị rõ số nguyên kèm phím tắt nhanh (`HP: 150/150 [Bấm Q]`, `MANA: 80/100 [Bấm E]`).
+   - **Dòng Chữ Tự Động Chạy (Marquee):** Dòng Danh Hiệu/Tên và Dòng Chỉ Số (`INT · STR · VIT · AGI`) tự động cuộn chữ liên tục nối đuôi nhau vô hạn nếu chiều dài vượt quá khung, không để lại khoảng trống mênh mông.
+
+2. **Thanh 5 Ô Kỹ Năng & Lướt (Hotbar 1..4, Phím [D]):**
+   - 4 ô Cuộn Trục Kỹ Năng [1], [2], [3], [4] hiển thị huy hiệu tiêu hao Mana phía trên (`-XXmn`) và thời gian hồi chiêu phủ đen bán trong suốt.
+   - **Ô Lướt (Dash):** Sử dụng phím **[D]** công thái học (tiện tay, đúng nghĩa Dash, tránh lỗi dính phím Sticky Keys của Windows khi spam Shift). Hỗ trợ phím phụ `[Shift]` và `[Space]`. Hồi chiêu giảm dần theo Nhanh Nhẹn (AGI).
 
 ---
 

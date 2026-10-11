@@ -20,7 +20,7 @@ namespace GodlessFantasy.Core
         private int brushRadius = 0; // 0 = 1x1, 1 = 3x3
 
         private Camera mainCam;
-        private readonly string[] blockNames = { "Đá Làng", "Đá Cổ", "Cỏ Xanh", "Nước (Cản)", "Tường Đá (Cản)", "Cổng Vàng", "🧹 Tẩy/Xóa" };
+        private readonly string[] blockNames = { "🛡️ Vùng An Toàn (SafeZone)", "Đá Cổ", "Cỏ Xanh", "Nước (Cản)", "Tường Đá (Cản)", "Cổng Vàng", "🧹 Tẩy/Xóa" };
         private readonly TerrainBlockType[] blockTypes = {
             TerrainBlockType.SafeStone,
             TerrainBlockType.AncientStone,

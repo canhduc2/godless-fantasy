@@ -48,6 +48,7 @@ namespace GodlessFantasy.Player
 
                 FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🎉 LÊN CẤP {level}! (+5 TIỀM NĂNG)", new Color(1f, 0.90f, 0.25f));
                 Debug.Log($"<color=yellow>[LEVEL UP]</color> Nhân vật {characterName} đã đạt Cấp {level}!");
+                AudioManager.PlayLevelUp();
                 OnLevelUp?.Invoke(level);
             }
 
@@ -120,20 +121,47 @@ namespace GodlessFantasy.Player
         [SerializeField] private int gold = 1500;
         [SerializeField] private int magicCrystals = 25;
         [SerializeField] private int rebirthPoints = 2;
+        [SerializeField] private int rebirthCount = 0;
 
         public int AvailableStatPoints => availableStatPoints;
         public int Gold => gold;
         public int MagicCrystals => magicCrystals;
         public int RebirthPoints => rebirthPoints;
+        public int RebirthCount => rebirthCount;
+        public bool CanRebirth => level >= 100;
+
+        public bool PerformRebirth()
+        {
+            if (level < 100) return false;
+
+            rebirthCount++;
+            rebirthPoints++;
+            level = 1;
+            currentExp = 0;
+            maxExp = 100;
+            availableStatPoints += 10; // Thưởng 10 điểm tiềm năng sau mỗi lần Trùng Sinh / Rebirth
+            return true;
+        }
 
         public void AddStrength()
         {
-            if (availableStatPoints > 0) { strength++; availableStatPoints--; }
+            if (availableStatPoints > 0)
+            {
+                strength++;
+                availableStatPoints--;
+            }
         }
 
         public void AddIntelligence()
         {
-            if (availableStatPoints > 0) { intelligence++; availableStatPoints--; }
+            if (availableStatPoints > 0)
+            {
+                intelligence++;
+                availableStatPoints--;
+                maxMana += 8;
+                currentMana = Mathf.Min(maxMana, currentMana + 8);
+                OnManaChanged?.Invoke(currentMana, maxMana);
+            }
         }
 
         public void AddVitality()
@@ -142,13 +170,20 @@ namespace GodlessFantasy.Player
             {
                 vitality++;
                 availableStatPoints--;
-                if (health != null) health.SetMaxHealth(health.MaxHealth + 10);
+                if (health != null)
+                {
+                    health.IncreaseMaxHealth(15);
+                }
             }
         }
 
         public void AddAgility()
         {
-            if (availableStatPoints > 0) { agility++; availableStatPoints--; }
+            if (availableStatPoints > 0)
+            {
+                agility++;
+                availableStatPoints--;
+            }
         }
 
         public void AddGold(int amount) => gold += amount;
@@ -184,35 +219,58 @@ namespace GodlessFantasy.Player
         private float hpRegenTimer = 0f;
         private float manaRegenTimer = 0f;
 
-        // Chu kỳ hồi máu khắc khổ: 40s (Kị sĩ: 30s, Võ sĩ: 35s, Pháp sư/Xạ thủ: 40s)
-        public float HpRegenInterval => (characterClass == "Kị Sĩ") ? 30.0f : (characterClass == "Võ Sĩ") ? 35.0f : 40.0f;
-        public int HpRegenAmount => (characterClass == "Kị Sĩ" || characterClass == "Võ Sĩ") ? 2 : 1;
+        // Chu kỳ hồi máu khắc khổ: 40s (Kị sĩ: 28s, Võ sĩ: 32s, Pháp sư/Xạ thủ: 40s)
+        public float HpRegenInterval => (characterClass == "Kị Sĩ") ? 28.0f : (characterClass == "Võ Sĩ") ? 32.0f : 40.0f;
+        public int HpRegenAmount => (characterClass == "Võ Sĩ") ? 3 : (characterClass == "Kị Sĩ") ? 2 : 1;
         public float HpRegenTimerProgress => Mathf.Clamp01(hpRegenTimer / HpRegenInterval);
 
         // Chu kỳ hồi Mana: 3.0s (Pháp sư: +4, Các hệ khác: +2)
         public float ManaRegenInterval => 3.0f;
         public int ManaRegenAmount => (characterClass == "Pháp Sư") ? (4 + Mathf.FloorToInt(intelligence / 12f)) : 2;
 
+        // ================= HỆ THỐNG TẦM ĐÁNH THƯỜNG ĐẶC TRƯNG TỪNG PHÁI =================
+        public float BaseBasicAttackRange
+        {
+            get
+            {
+                string cls = CharacterClass;
+                if (cls.Contains("Võ") || cls.Contains("Brawler")) return 1.85f;  // Võ Sĩ: Quyền phong kình khí vươn tầm thoải mái
+                if (cls.Contains("Kị") || cls.Contains("Knight"))  return 2.35f;  // Kị Sĩ: Cận chiến trường kiếm/thương vung rộng rãi
+                if (cls.Contains("Pháp") || cls.Contains("Mage"))  return 5.50f;  // Pháp Sư: Tầm xa ma pháp trung bình
+                if (cls.Contains("Xạ") || cls.Contains("Archer"))  return 7.50f;  // Xạ Thủ: Tầm xa cung tiễn cực đại
+                return 2.35f;
+            }
+        }
+
+        public float DynamicBasicAttackRange => BaseBasicAttackRange + InherentBonusBasicRange;
+
+        // Tác dụng Nhanh Nhẹn (AGI): Tăng vừa phải các chỉ số sống còn (tốc chạy +0.04m/s, hồi lướt, tốc đánh, bạo kích, né tránh)
+        public float DynamicMoveSpeedBonus => Mathf.Max(0, agility - 9) * 0.04f + InherentBonusMoveSpeed + TitleBonusSpeed;
+        public float DynamicDashCooldownReduction => Mathf.Min(1.0f, Mathf.Max(0, agility - 9) * 0.05f);
+        public float DynamicAttackSpeedBonus => Mathf.Max(0, agility - 9) * 0.015f;
+        public float CriticalRate => 5.0f + Mathf.Max(0, agility - 9) * 0.5f + InherentBonusCritRate;
+        public float DodgeRate => 3.0f + Mathf.Max(0, agility - 9) * 0.4f + ((characterClass == "Xạ Thủ") ? 5.0f : 0f);
+
         // ================= HỆ THỐNG PERK BẨM SINH ĐỘC NHẤT THEO HỆ =================
         public string InherentPerkName =>
-            (characterClass == "Kị Sĩ") ? "Trái Tim Thép" :
-            (characterClass == "Pháp Sư") ? "Học Giả Chân Kinh" :
-            (characterClass == "Võ Sĩ") ? "Bản Năng Dã Thú" : "Mắt Ưng Thần Tiễn";
+            (characterClass == "Kị Sĩ") ? "Thiết Vệ Kiên Cố" :
+            (characterClass == "Pháp Sư") ? "Minh Tưởng Pháp Tắc" :
+            (characterClass == "Võ Sĩ") ? "Kim Cang Bá Thể" : "Ưng Nhãn Thần Xạ";
 
         public string InherentPerkDesc =>
-            (characterClass == "Kị Sĩ") ? "+50 HP Tối Đa · +15 Giáp · Hồi HP 30s (+2 HP)" :
-            (characterClass == "Pháp Sư") ? "+40 Mana Tối Đa · +20 Công Phép · Hồi Mana +4/3s" :
-            (characterClass == "Võ Sĩ") ? "+8% Bạo Kích · +12 ST Đòn Đánh Thường · Hồi HP 35s (+2 HP)" :
-            "+1.5m Tầm Đánh Thường (6.5m) · +0.5m/s Tốc Chạy";
+            (characterClass == "Kị Sĩ") ? "+50 HP · +15 Giáp · Tầm Cận Chiến 2.35m · Hồi HP 28s (+2)" :
+            (characterClass == "Pháp Sư") ? "+50 Mana · +25 Công Phép · Tầm Xa 5.5m · Hồi Mana +4/3s" :
+            (characterClass == "Võ Sĩ") ? "+80 HP · +16 Lực Đấm · +10% Bạo Kích · Tầm Đấm 1.85m · Bước Đi Đầm Chắc" :
+            "+2.0m Tầm Bắn (Tổng 9.5m!) · +0.5m/s Tốc Chạy · +15% Bạo Kích";
 
-        public int InherentBonusMaxHp => (characterClass == "Kị Sĩ") ? 50 : 0;
-        public int InherentBonusMaxMana => (characterClass == "Pháp Sư") ? 40 : 0;
+        public int InherentBonusMaxHp => (characterClass == "Võ Sĩ") ? 80 : (characterClass == "Kị Sĩ") ? 50 : 0;
+        public int InherentBonusMaxMana => (characterClass == "Pháp Sư") ? 50 : 0;
         public int InherentBonusArmor => (characterClass == "Kị Sĩ") ? 15 : 0;
-        public int InherentBonusMagicAtk => (characterClass == "Pháp Sư") ? 20 : 0;
-        public float InherentBonusCritRate => (characterClass == "Võ Sĩ") ? 8.0f : 0f;
-        public int InherentBonusAttackDmg => (characterClass == "Võ Sĩ") ? 12 : 0;
-        public float InherentBonusBasicRange => (characterClass == "Xạ Thủ") ? 1.5f : 0f;
-        public float InherentBonusMoveSpeed => (characterClass == "Xạ Thủ") ? 0.5f : 0f;
+        public int InherentBonusMagicAtk => (characterClass == "Pháp Sư") ? 25 : 0;
+        public float InherentBonusCritRate => (characterClass == "Xạ Thủ") ? 15.0f : (characterClass == "Võ Sĩ") ? 10.0f : 0f;
+        public int InherentBonusAttackDmg => (characterClass == "Võ Sĩ") ? 16 : 0;
+        public float InherentBonusBasicRange => (characterClass == "Xạ Thủ") ? 2.0f : 0f;
+        public float InherentBonusMoveSpeed => (characterClass == "Xạ Thủ") ? 0.5f : (characterClass == "Võ Sĩ") ? -0.2f : 0f;
 
         private void ApplyInherentClassPerkStats()
         {

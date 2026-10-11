@@ -1,0 +1,1224 @@
+fileFormatVersion: 2
+guid: 67fdd7daef4df224bab3d3e3c7198578
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8558262517179258346
+    second: vfx_nature_3_0
+  - first:
+      213: 3209215628263482825
+    second: vfx_nature_3_1
+  - first:
+      213: 7447460674954017888
+    second: vfx_nature_3_2
+  - first:
+      213: -9154234084292934688
+    second: vfx_nature_3_3
+  - first:
+      213: 1346524537060163434
+    second: vfx_nature_3_4
+  - first:
+      213: -2348323902150865759
+    second: vfx_nature_3_5
+  - first:
+      213: 320125270449830191
+    second: vfx_nature_3_6
+  - first:
+      213: -8866397686531892066
+    second: vfx_nature_3_7
+  - first:
+      213: 6384373799414097809
+    second: vfx_nature_3_8
+  - first:
+      213: 2855842767128846321
+    second: vfx_nature_3_9
+  - first:
+      213: 7375327727382082523
+    second: vfx_nature_3_10
+  - first:
+      213: -5293173797724452489
+    second: vfx_nature_3_11
+  - first:
+      213: -8618382374957818561
+    second: vfx_nature_3_12
+  - first:
+      213: -1941403840488781359
+    second: vfx_nature_3_13
+  - first:
+      213: 7123488701335664607
+    second: vfx_nature_3_14
+  - first:
+      213: 2586830266641518304
+    second: vfx_nature_3_15
+  - first:
+      213: -8950526538487046804
+    second: vfx_nature_3_16
+  - first:
+      213: 4025759910544540516
+    second: vfx_nature_3_17
+  - first:
+      213: -3242570405113884138
+    second: vfx_nature_3_18
+  - first:
+      213: -3532836846943057812
+    second: vfx_nature_3_19
+  - first:
+      213: -1400776505466036631
+    second: vfx_nature_3_20
+  - first:
+      213: 6947527222409062009
+    second: vfx_nature_3_21
+  - first:
+      213: -5815510043452700012
+    second: vfx_nature_3_22
+  - first:
+      213: -4678824963272135413
+    second: vfx_nature_3_23
+  - first:
+      213: 3158240607142368712
+    second: vfx_nature_3_24
+  - first:
+      213: -1377732022427683859
+    second: vfx_nature_3_25
+  - first:
+      213: 6895805900357408767
+    second: vfx_nature_3_26
+  - first:
+      213: 3200176104276470974
+    second: vfx_nature_3_27
+  - first:
+      213: 5856972705127327379
+    second: vfx_nature_3_28
+  - first:
+      213: -7715033055751641093
+    second: vfx_nature_3_29
+  - first:
+      213: -902645721606062260
+    second: vfx_nature_3_30
+  - first:
+      213: 3762462677850968735
+    second: vfx_nature_3_31
+  - first:
+      213: -2653781722169415533
+    second: vfx_nature_3_32
+  - first:
+      213: 9149224377941865551
+    second: vfx_nature_3_33
+  - first:
+      213: 8427865206560463272
+    second: vfx_nature_3_34
+  - first:
+      213: -3488301394715329057
+    second: vfx_nature_3_35
+  - first:
+      213: 134018080780948374
+    second: vfx_nature_3_36
+  - first:
+      213: 3672859383308648723
+    second: vfx_nature_3_37
+  - first:
+      213: -5283814646785700218
+    second: vfx_nature_3_38
+  - first:
+      213: -7049629985324404925
+    second: vfx_nature_3_39
+  - first:
+      213: 4125293353747626746
+    second: vfx_nature_3_40
+  - first:
+      213: 7610822595519099810
+    second: vfx_nature_3_41
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx_nature_3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 141
+        width: 11
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61a6df09591fa3980800000000000000
+      internalID: -8558262517179258346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 18
+        width: 52
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c5e64a5c9c698c20800000000000000
+      internalID: 3209215628263482825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_2
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 141
+        width: 22
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06c33598602ba5760800000000000000
+      internalID: 7447460674954017888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_3
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 120
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e342fef990a5f080800000000000000
+      internalID: -9154234084292934688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_4
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 141
+        width: 22
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6f71d8aee0dfa210800000000000000
+      internalID: 1346524537060163434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_5
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 120
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ac0dba5ad3196fd0800000000000000
+      internalID: -2348323902150865759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_6
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 141
+        width: 22
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f29b9c4cc30517400800000000000000
+      internalID: 320125270449830191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_7
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 120
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9cdbe0c74a34f480800000000000000
+      internalID: -8866397686531892066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_8
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 141
+        width: 22
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 197636b052ad99850800000000000000
+      internalID: 6384373799414097809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_9
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 120
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ff5515adddf1a720800000000000000
+      internalID: 2855842767128846321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_10
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 141
+        width: 22
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd3b2bced7d6a5660800000000000000
+      internalID: 7375327727382082523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_11
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 120
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7798a34b97eda86b0800000000000000
+      internalID: -5293173797724452489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_12
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 141
+        width: 21
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3dd62264ea556880800000000000000
+      internalID: -8618382374957818561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_13
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 79
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d9461a3e7fbe05e0800000000000000
+      internalID: -1941403840488781359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_14
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 100
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd7fe946b37bbd260800000000000000
+      internalID: 7123488701335664607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_15
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 59
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ee85610c6446e320800000000000000
+      internalID: 2586830266641518304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_16
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 100
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6dd5c0098759c380800000000000000
+      internalID: -8950526538487046804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_17
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 79
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 463040b2f4f5ed730800000000000000
+      internalID: 4025759910544540516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_18
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 100
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6121efb75631003d0800000000000000
+      internalID: -3242570405113884138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_19
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 59
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c684c800b97d8fec0800000000000000
+      internalID: -3532836846943057812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_20
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 100
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96edbfd90317f8ce0800000000000000
+      internalID: -1400776505466036631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_21
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 79
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9766c0ff2339a6060800000000000000
+      internalID: 6947527222409062009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_22
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 100
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49a09486d682b4fa0800000000000000
+      internalID: -5815510043452700012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_23
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 38
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0d2fe14c79711fb0800000000000000
+      internalID: -4678824963272135413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_24
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 38
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c55fef591354db20800000000000000
+      internalID: 3158240607142368712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_25
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 59
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de3748f660051ece0800000000000000
+      internalID: -1377732022427683859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_26
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 38
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff798da4ee2d2bf50800000000000000
+      internalID: 6895805900357408767
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_27
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 38
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ebca71a263f496c20800000000000000
+      internalID: 3200176104276470974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_28
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 59
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 396e54cc4a5284150800000000000000
+      internalID: 5856972705127327379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_29
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 38
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf7e681df42bee490800000000000000
+      internalID: -7715033055751641093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_30
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 59
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4ff4a5af782973f0800000000000000
+      internalID: -902645721606062260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_31
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 0
+        width: 21
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f92d8f10fd3f63430800000000000000
+      internalID: 3762462677850968735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_32
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 0
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 398eaa2859fdb2bd0800000000000000
+      internalID: -2653781722169415533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_33
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 18
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f44b199d81398fe70800000000000000
+      internalID: 9149224377941865551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_34
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 0
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a919eba0cac5f470800000000000000
+      internalID: 8427865206560463272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_35
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 18
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdd3e720d50179fc0800000000000000
+      internalID: -3488301394715329057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_36
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 0
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6939d620cb02cd100800000000000000
+      internalID: 134018080780948374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_37
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 18
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3118214462e98f230800000000000000
+      internalID: 3672859383308648723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_38
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 0
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68e0557d29e1ca6b0800000000000000
+      internalID: -5283814646785700218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_39
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 18
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34febcef0eeaa2e90800000000000000
+      internalID: -7049629985324404925
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_40
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 0
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afa3860d27cff3930800000000000000
+      internalID: 4125293353747626746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_nature_3_41
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 18
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a3be66a3d21f9960800000000000000
+      internalID: 7610822595519099810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx_nature_3_0: -8558262517179258346
+      vfx_nature_3_1: 3209215628263482825
+      vfx_nature_3_10: 7375327727382082523
+      vfx_nature_3_11: -5293173797724452489
+      vfx_nature_3_12: -8618382374957818561
+      vfx_nature_3_13: -1941403840488781359
+      vfx_nature_3_14: 7123488701335664607
+      vfx_nature_3_15: 2586830266641518304
+      vfx_nature_3_16: -8950526538487046804
+      vfx_nature_3_17: 4025759910544540516
+      vfx_nature_3_18: -3242570405113884138
+      vfx_nature_3_19: -3532836846943057812
+      vfx_nature_3_2: 7447460674954017888
+      vfx_nature_3_20: -1400776505466036631
+      vfx_nature_3_21: 6947527222409062009
+      vfx_nature_3_22: -5815510043452700012
+      vfx_nature_3_23: -4678824963272135413
+      vfx_nature_3_24: 3158240607142368712
+      vfx_nature_3_25: -1377732022427683859
+      vfx_nature_3_26: 6895805900357408767
+      vfx_nature_3_27: 3200176104276470974
+      vfx_nature_3_28: 5856972705127327379
+      vfx_nature_3_29: -7715033055751641093
+      vfx_nature_3_3: -9154234084292934688
+      vfx_nature_3_30: -902645721606062260
+      vfx_nature_3_31: 3762462677850968735
+      vfx_nature_3_32: -2653781722169415533
+      vfx_nature_3_33: 9149224377941865551
+      vfx_nature_3_34: 8427865206560463272
+      vfx_nature_3_35: -3488301394715329057
+      vfx_nature_3_36: 134018080780948374
+      vfx_nature_3_37: 3672859383308648723
+      vfx_nature_3_38: -5283814646785700218
+      vfx_nature_3_39: -7049629985324404925
+      vfx_nature_3_4: 1346524537060163434
+      vfx_nature_3_40: 4125293353747626746
+      vfx_nature_3_41: 7610822595519099810
+      vfx_nature_3_5: -2348323902150865759
+      vfx_nature_3_6: 320125270449830191
+      vfx_nature_3_7: -8866397686531892066
+      vfx_nature_3_8: 6384373799414097809
+      vfx_nature_3_9: 2855842767128846321
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

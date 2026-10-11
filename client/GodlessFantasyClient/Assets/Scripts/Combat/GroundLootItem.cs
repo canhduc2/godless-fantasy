@@ -36,22 +36,13 @@ namespace GodlessFantasy.Combat
             float yOffset = Mathf.Sin(Time.time * 5f) * 0.08f;
             transform.position = basePosition + new Vector3(0, yOffset, 0);
 
-            // Kiểm tra phím [F] để nhặt đồ khi đứng gần
+            // Kiểm tra phím [F] để nhặt đồ khi đứng gần (bỏ click chuột để không chắn đòn đánh / chọn quái)
             if (playerTransform != null && Vector2.Distance(transform.position, playerTransform.position) <= PICKUP_RANGE)
             {
                 if (Input.GetKeyDown(KeyCode.F))
                 {
                     TryPickup();
                 }
-            }
-        }
-
-        private void OnMouseDown()
-        {
-            // Cho phép click chuột vào vật phẩm để nhặt khi đứng gần
-            if (playerTransform != null && Vector2.Distance(transform.position, playerTransform.position) <= PICKUP_RANGE)
-            {
-                TryPickup();
             }
         }
 
@@ -62,10 +53,21 @@ namespace GodlessFantasy.Combat
             {
                 var item = new InventoryItem(itemId, itemName, ItemType.Consumable, EquipSlot.None, tierRank, tierColor, iconName,
                     $"Vật phẩm nhặt được từ quái rơi tự do.", "Nhấn chuột phải để sử dụng.", quantity);
-                inv.AddItem(item);
-                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 0.8f, $"🎒 Nhặt được: {itemName} x{quantity}!", tierColor);
-                Debug.Log($"<color=green>[LOOT PICKUP]</color> Đã nhặt thành công {itemName}!");
-                Destroy(gameObject);
+
+                if (!inv.CanAddItem(item))
+                {
+                    FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 0.8f, "⚠️ Hành trang đã đầy (24/24)!", Color.red);
+                    Debug.LogWarning($"<color=yellow>[LOOT PICKUP]</color> Không thể nhặt '{itemName}' vì hành trang đã đầy!");
+                    return;
+                }
+
+                if (inv.AddItem(item))
+                {
+                    FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 0.8f, $"🎒 Nhặt được: {itemName} x{quantity}!", tierColor);
+                    Debug.Log($"<color=green>[LOOT PICKUP]</color> Đã nhặt thành công {itemName}!");
+                    GodlessFantasy.Core.AudioManager.PlayPickup();
+                    Destroy(gameObject);
+                }
             }
         }
 
@@ -84,20 +86,46 @@ namespace GodlessFantasy.Combat
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 10,
-                fontStyle = FontStyle.Bold
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
+                wordWrap = false
             };
 
-            string promptText = (dist <= PICKUP_RANGE) ? $"[F] Nhặt {itemName}" : itemName;
-            float w = 180f;
-            Rect r = new Rect(guiX - w / 2f, guiY, w, 18f);
+            var inv = FindAnyObjectByType<InventoryManager>();
+            bool isFull = (inv != null && !inv.CanAddItem(new InventoryItem(itemId, itemName, ItemType.Consumable, EquipSlot.None, tierRank, tierColor, iconName, "", "", quantity)));
 
-            // Đổ bóng đen
+            string promptText;
+            if (dist <= PICKUP_RANGE)
+            {
+                promptText = isFull ? $"⚠️ ĐẦY TÚI: {itemName}" : $"[F] Nhặt: {itemName}";
+            }
+            else
+            {
+                promptText = itemName;
+            }
+
+            Vector2 textSize = labelStyle.CalcSize(new GUIContent(promptText));
+            float w = textSize.x + 14f;
+            Rect r = new Rect(guiX - w / 2f, guiY, w, 20f);
+
+            // Nền tối mờ chống lẫn vào map / quái
+            GUI.color = new Color(0.04f, 0.06f, 0.1f, 0.85f);
+            GUI.DrawTexture(r, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // Đổ bóng chữ đen
             labelStyle.normal.textColor = Color.black;
             GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), promptText, labelStyle);
 
-            // Màu phẩm cấp
-            labelStyle.normal.textColor = (dist <= PICKUP_RANGE) ? Color.yellow : tierColor;
+            // Màu hiển thị
+            if (dist <= PICKUP_RANGE)
+            {
+                labelStyle.normal.textColor = isFull ? new Color(1f, 0.35f, 0.35f) : Color.yellow;
+            }
+            else
+            {
+                labelStyle.normal.textColor = tierColor;
+            }
             GUI.Label(r, promptText, labelStyle);
         }
 
@@ -105,6 +133,9 @@ namespace GodlessFantasy.Combat
         {
             GameObject lootObj = new GameObject($"Loot_{name}");
             lootObj.transform.position = position;
+
+            // Đặt layer thành Ignore Raycast (Layer 2) để không chắn click chuột vào quái vật
+            lootObj.layer = LayerMask.NameToLayer("Ignore Raycast");
 
             var sr = lootObj.AddComponent<SpriteRenderer>();
             sr.sprite = Resources.Load<Sprite>(icon) ?? Resources.Load<Sprite>("item_potion_hp") ?? Resources.Load<Sprite>("magic_bolt");

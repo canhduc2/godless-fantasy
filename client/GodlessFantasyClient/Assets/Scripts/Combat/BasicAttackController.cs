@@ -17,7 +17,9 @@ namespace GodlessFantasy.Combat
     public class BasicAttackController : MonoBehaviour
     {
         [Header("Basic Attack Settings")]
-        [SerializeField] private float basicAttackRange = 5.0f; // 5.0 mét chuẩn tầm xa
+        [SerializeField] private float basicAttackRange = 3.2f;  // Tầm đánh thường chuẩn (phải lại gần mới focus & đánh được)
+        [SerializeField] private float loseFocusRange = 4.8f;    // Tầm mất Focus (khoảng đệm hysteresis chống giật)
+        [SerializeField] private float loseFocusGracePeriod = 0.6f; // Thời gian đệm ra ngoài tầm trước khi mất dấu hẳn
         [SerializeField] private float attackCooldown = 0.65f;   // 0.65s mỗi đòn đánh (~1.5 đòn/s)
         [SerializeField] private int baseDamage = 16;
 
@@ -25,12 +27,14 @@ namespace GodlessFantasy.Combat
         [SerializeField] private PlayerMovement playerMovement;
         [SerializeField] private PlayerStats playerStats;
         [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] private SkillAimingController skillAimingController;
 
         private Transform currentTarget = null;
         private Health targetHealth = null;
         private string targetDisplayName = "Mục Tiêu";
         private float lastAttackTime = -999f;
-        private bool isAutoApproaching = false;
+        private float outOfRangeTimer = 0f;
+        private float lastOutRangeWarnTime = -999f;
 
         private Camera mainCam;
         private Texture2D reticleTex;
@@ -39,14 +43,31 @@ namespace GodlessFantasy.Combat
         private GUIStyle targetRangeStyle;
 
         public Transform CurrentTarget => currentTarget;
-        public float BasicAttackRange => basicAttackRange;
-        public float AttackCooldown => attackCooldown;
+        public float BasicAttackRange => (playerStats != null) ? playerStats.DynamicBasicAttackRange : basicAttackRange;
+        public float LoseFocusRange => BasicAttackRange * 1.35f;
+        public float AttackCooldown
+        {
+            get
+            {
+                // Tốc đánh đặc trưng: Võ Sĩ đấm quyền liên hoàn 0.50s, Xạ Thủ 0.58s, Kị Sĩ 0.65s, Pháp Sư 0.75s
+                string cls = (playerStats != null) ? playerStats.CharacterClass : "Kị Sĩ";
+                float baseCd = attackCooldown;
+                if (cls.Contains("Võ") || cls.Contains("Brawler")) baseCd = 0.50f;
+                else if (cls.Contains("Xạ") || cls.Contains("Archer")) baseCd = 0.58f;
+                else if (cls.Contains("Kị") || cls.Contains("Knight")) baseCd = 0.65f;
+                else if (cls.Contains("Pháp") || cls.Contains("Mage")) baseCd = 0.75f;
+
+                float agiReduction = (playerStats != null) ? playerStats.DynamicAttackSpeedBonus : 0f;
+                return Mathf.Max(0.30f, baseCd - agiReduction);
+            }
+        }
 
         private void Awake()
         {
             if (playerMovement == null) playerMovement = GetComponent<PlayerMovement>();
             if (playerStats == null) playerStats = GetComponent<PlayerStats>();
             if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+            if (skillAimingController == null) skillAimingController = GetComponent<SkillAimingController>();
             mainCam = Camera.main;
 
             CreateTextures();
@@ -64,7 +85,8 @@ namespace GodlessFantasy.Combat
             if (mainCam == null) mainCam = Camera.main;
 
             HandleTargetSelectionInput();
-            HandleAutoApproachAndAttack();
+            HandleRightClickAttack();
+            HandleTargetHysteresis();
             HandleTestPlayerDamage();
         }
 
@@ -84,50 +106,42 @@ namespace GodlessFantasy.Combat
             }
         }
 
+        /// <summary>
+        /// 1. CHỌN MỤC TIÊU (FOCUS CÓ ĐIỀU KIỆN):
+        /// - Người chơi click chuột trái vào quái / mục tiêu.
+        /// - Chỉ được phép Focus khi mục tiêu ở trong tầm đánh thường (<= basicAttackRange)!
+        /// - Không cho phép focus/aim từ xa, không tự kéo nhân vật chạy đi!
+        /// </summary>
         private void HandleTargetSelectionInput()
         {
             // Bỏ qua nếu đang hover trên UI modal
-            if (PlayerMovement.BlockWorldClick) return;
+            if (PlayerMovement.BlockWorldClick || GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI()) return;
 
-            // Click chuột trái vào quái để khóa mục tiêu
+            // Click chuột trái vào quái hoặc người chơi đối thủ để chọn mục tiêu
             if (GameInput.GetLeftMouseButtonDown())
             {
+                if (mainCam == null) mainCam = Camera.main;
                 if (mainCam == null) return;
                 Vector3 mouseWorldPos = mainCam.ScreenToWorldPoint(GameInput.GetMousePosition());
-                Collider2D hit = Physics2D.OverlapPoint(new Vector2(mouseWorldPos.x, mouseWorldPos.y));
 
-                if (hit != null && hit.gameObject != gameObject)
+                if (TryFindCombatTargetAt(mouseWorldPos, out Transform targetTf, out Health targetH))
                 {
-                    var h = hit.GetComponent<Health>();
-                    var dmg = hit.GetComponent<IDamageable>();
-                    var monster = hit.GetComponent<MonsterTarget>();
+                    float dist = Vector2.Distance(transform.position, targetTf.position);
 
-                    if (h != null || dmg != null || monster != null)
+                    // ĐIỀU KIỆN TIÊN QUYẾT: Đủ tầm đánh thường mới được Focus!
+                    if (dist <= BasicAttackRange)
                     {
-                        // Chọn mục tiêu
-                        SetTarget(hit.transform, h);
-
-                        float dist = Vector2.Distance(transform.position, currentTarget.position);
-                        if (dist <= basicAttackRange)
-                        {
-                            // Trong tầm: Dừng lại và đánh ngay
-                            if (playerMovement != null) playerMovement.StopMoving();
-                            isAutoApproaching = false;
-                            TryPerformAttack();
-                        }
-                        else
-                        {
-                            // Ngoài tầm: Bắt đầu tự động tiếp cận
-                            isAutoApproaching = true;
-                            if (playerMovement != null) playerMovement.MoveTo(currentTarget.position);
-                        }
-                        return;
+                        SetTarget(targetTf, targetH);
+                        FloatingDamageManager.ShowFloatingText(targetTf.position + Vector3.up * 1f,
+                            $"🎯 Đã khóa: {targetDisplayName}", new Color(0.4f, 1f, 0.4f));
                     }
-                }
-                else
-                {
-                    // Click đất trống: Nếu click xa thì hủy tự động tiếp cận
-                    isAutoApproaching = false;
+                    else
+                    {
+                        // Ở ngoài tầm: Không cho phép focus từ xa, thông báo người chơi phải lại gần
+                        FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.2f,
+                            $"⚠️ Quá xa ({dist:F1}m > {BasicAttackRange:F1}m)! Hãy lại gần để khóa mục tiêu.", new Color(1f, 0.7f, 0.2f));
+                    }
+                    return;
                 }
             }
 
@@ -138,14 +152,97 @@ namespace GodlessFantasy.Combat
             }
         }
 
+        /// <summary>
+        /// Ưu tiên tuyệt đối mục tiêu MonsterTarget / PlayerStats (đối thủ) / IDamageable bằng Physics2D.OverlapPointAll:
+        /// Chuột click vào quái hoặc người chơi đối thủ luôn chọn trúng 100%, bỏ qua các vật cản địa hình / loot / trigger.
+        /// </summary>
+        public bool TryFindCombatTargetAt(Vector2 point, out Transform targetTransform, out Health targetH)
+        {
+            targetTransform = null;
+            targetH = null;
+
+            Collider2D[] allHits = Physics2D.OverlapPointAll(point);
+            if (allHits == null || allHits.Length == 0) return false;
+
+            Collider2D bestCol = null;
+            Health bestHealth = null;
+            int bestScore = -1;
+
+            foreach (var col in allHits)
+            {
+                if (col == null) continue;
+                // Loại trừ bản thân người chơi đang điều khiển (cả root lẫn child hitbox)
+                if (col.gameObject == gameObject || col.transform.root == transform.root) continue;
+                // Loại trừ NPC dân làng thân thiện
+                if (col.GetComponentInParent<VillageNPC>() != null) continue;
+
+                var monster = col.GetComponentInParent<MonsterTarget>();
+                var otherPlayer = col.GetComponentInParent<PlayerStats>();
+                var dmg = col.GetComponentInParent<IDamageable>();
+                var h = col.GetComponentInParent<Health>();
+
+                if (monster == null && otherPlayer == null && dmg == null && h == null) continue;
+
+                bool isAlive = (h != null && !h.IsDead) || (dmg != null && !dmg.IsDead);
+                int score = 0;
+
+                // Thang điểm ưu tiên tuyệt đối:
+                // 1. Quái vật (MonsterTarget) hoặc Người chơi đối thủ (PlayerStats) còn sống: 100 điểm
+                // 2. IDamageable / Health khác còn sống: 90 điểm
+                // 3. Quái vật / Đối thủ đang chờ hồi sinh: 80 điểm
+                // 4. IDamageable khác: 50 điểm
+                if (monster != null || otherPlayer != null)
+                {
+                    score = isAlive ? 100 : 80;
+                }
+                else
+                {
+                    score = isAlive ? 90 : 50;
+                }
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestCol = col;
+                    bestHealth = h;
+                }
+            }
+
+            if (bestCol != null)
+            {
+                var parentTarget = bestCol.GetComponentInParent<MonsterTarget>()?.transform
+                                ?? bestCol.GetComponentInParent<PlayerStats>()?.transform
+                                ?? bestCol.GetComponentInParent<Health>()?.transform
+                                ?? bestCol.transform;
+
+                targetTransform = parentTarget;
+                targetH = bestHealth ?? targetTransform.GetComponentInParent<Health>();
+                return true;
+            }
+
+            return false;
+        }
+
         private void SetTarget(Transform target, Health h)
         {
             currentTarget = target;
-            targetHealth = h ?? target.GetComponent<Health>();
+            targetHealth = h ?? target.GetComponentInParent<Health>();
+            outOfRangeTimer = 0f;
 
-            // Lấy tên hiển thị
-            var overhead = target.GetComponent<OverheadStatusBar>();
-            if (overhead != null)
+            // Lấy tên hiển thị chuẩn (người chơi đối thủ, quái vật, bù nhìn)
+            var otherPlayer = target.GetComponentInParent<PlayerStats>();
+            var monster = target.GetComponentInParent<MonsterTarget>();
+            var overhead = target.GetComponentInParent<OverheadStatusBar>();
+
+            if (otherPlayer != null && !string.IsNullOrEmpty(otherPlayer.CharacterName))
+            {
+                targetDisplayName = otherPlayer.CharacterName;
+            }
+            else if (monster != null && !string.IsNullOrEmpty(monster.TargetName))
+            {
+                targetDisplayName = monster.TargetName;
+            }
+            else if (overhead != null)
             {
                 targetDisplayName = target.name.Replace("Dummy_", "").Replace("_", " ");
             }
@@ -159,10 +256,77 @@ namespace GodlessFantasy.Combat
         {
             currentTarget = null;
             targetHealth = null;
-            isAutoApproaching = false;
+            outOfRangeTimer = 0f;
         }
 
-        private void HandleAutoApproachAndAttack()
+        /// <summary>
+        /// 2. ĐÁNH THƯỜNG BẰNG CHUỘT PHẢI (TRÚNG ĐÍCH TỰ ĐỘNG KHI CLICK CHUỘT PHẢI):
+        /// - Nhân vật KHÔNG tự động xả đòn khi đứng im.
+        /// - Khi người chơi CLICK CHUỘT PHẢI: Nếu mục tiêu trong tầm thì chưởng trúng đích!
+        /// - Skill vẫn độc lập: Nếu đang ngắm skill (SkillAimingController) thì nhường chuột phải cho tung skill.
+        /// </summary>
+        private void HandleRightClickAttack()
+        {
+            if (PlayerMovement.BlockWorldClick || GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI()) return;
+
+            // Nếu đang trong trạng thái ngắm chiêu (SkillAimingController) thì chuột phải là tung skill, không can thiệp
+            if (skillAimingController != null && skillAimingController.IsAiming) return;
+
+            // Kiểm tra click chuột phải hoặc giữ chuột phải để gõ đòn đánh thường
+            if (GameInput.GetRightMouseButtonDown() || Input.GetMouseButton(1))
+            {
+                // Nếu click chuột phải trực tiếp vào một mục tiêu cụ thể (quái vật hoặc người chơi đối thủ)
+                if (mainCam != null && GameInput.GetRightMouseButtonDown())
+                {
+                    Vector3 mouseWorldPos = mainCam.ScreenToWorldPoint(GameInput.GetMousePosition());
+                    if (TryFindCombatTargetAt(mouseWorldPos, out Transform targetTf, out Health targetH))
+                    {
+                        float distHit = Vector2.Distance(transform.position, targetTf.position);
+                        if (distHit <= BasicAttackRange)
+                        {
+                            SetTarget(targetTf, targetH);
+                            TryPerformAttack();
+                            return;
+                        }
+                        else
+                        {
+                            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.2f,
+                                $"⚠️ Mục tiêu ngoài tầm ({distHit:F1}m > {BasicAttackRange:F1}m)!", new Color(1f, 0.65f, 0.2f));
+                            return;
+                        }
+                    }
+                }
+
+                // Nếu đã có mục tiêu Focus trước đó
+                if (currentTarget != null)
+                {
+                    float dist = Vector2.Distance(transform.position, currentTarget.position);
+                    if (dist <= BasicAttackRange)
+                    {
+                        TryPerformAttack();
+                    }
+                    else
+                    {
+                        // Ngoài tầm đánh thường nhưng còn trong tầm đệm giữ Focus
+                        if (Time.time >= lastOutRangeWarnTime + 0.8f)
+                        {
+                            lastOutRangeWarnTime = Time.time;
+                            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.2f,
+                                $"⚠️ Mục tiêu ngoài tầm đánh ({dist:F1}m > {BasicAttackRange:F1}m)!", new Color(1f, 0.65f, 0.2f));
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 3. CƠ CHẾ KHOẢNG ĐỆM & MẤT DẤU (HYSTERESIS BUFFER):
+        /// - dist <= BasicAttackRange: Sẵn sàng đánh thường bằng chuột phải.
+        /// - BasicAttackRange < dist <= LoseFocusRange: Ngừng đánh thường nhưng TẠM GIỮ FOCUS.
+        /// - dist > LoseFocusRange: Ra khỏi tầm đệm -> Sau 0.6s mất dấu Focus hoàn toàn!
+        /// - Khi mất Focus: Không tự động chuyển quái, người chơi phải áp sát lấy lại dấu.
+        /// </summary>
+        private void HandleTargetHysteresis()
         {
             if (currentTarget == null) return;
 
@@ -175,25 +339,26 @@ namespace GodlessFantasy.Combat
 
             float dist = Vector2.Distance(transform.position, currentTarget.position);
 
-            if (isAutoApproaching)
+            if (dist <= BasicAttackRange)
             {
-                // Cập nhật vị trí di chuyển theo mục tiêu
-                if (playerMovement != null) playerMovement.SetTargetPosition(currentTarget.position);
-
-                if (dist <= basicAttackRange)
-                {
-                    // Đã vào tầm đánh: Dừng lại và xả đòn!
-                    isAutoApproaching = false;
-                    if (playerMovement != null) playerMovement.StopMoving();
-                    TryPerformAttack();
-                }
+                // Ở trong tầm đánh thường: Reset timer
+                outOfRangeTimer = 0f;
+            }
+            else if (dist <= LoseFocusRange)
+            {
+                // Khoảng đệm: Ngừng đánh thường nhưng TẠM GIỮ FOCUS!
+                outOfRangeTimer = 0f;
             }
             else
             {
-                // Nếu đang đứng trong tầm và giữ khoảng cách thì tiếp tục đánh khi hồi chiêu
-                if (dist <= basicAttackRange && GameInput.GetLeftMouseButton())
+                // Vượt ra ngoài tầm mất Focus: Đếm thời gian đệm ngắn trước khi mất dấu hẳn
+                outOfRangeTimer += Time.deltaTime;
+                if (outOfRangeTimer >= loseFocusGracePeriod)
                 {
-                    TryPerformAttack();
+                    Debug.Log($"<color=orange>[MẤT DẤU] Mục tiêu '{targetDisplayName}' ra khỏi tầm ({dist:F1}m > {LoseFocusRange:F1}m)!</color>");
+                    FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.2f,
+                        $"💨 Mất dấu mục tiêu (Cự ly {dist:F1}m)", new Color(0.85f, 0.85f, 0.85f));
+                    ClearTarget();
                 }
             }
         }
@@ -201,7 +366,7 @@ namespace GodlessFantasy.Combat
         private void TryPerformAttack()
         {
             if (currentTarget == null) return;
-            if (Time.time < lastAttackTime + attackCooldown) return;
+            if (Time.time < lastAttackTime + AttackCooldown) return;
 
             lastAttackTime = Time.time;
 
@@ -236,14 +401,33 @@ namespace GodlessFantasy.Combat
             // Buff tăng độ bão hoà màu: khi buff ON thì màu sáng hơn, có thêm glow vàng cam
             if (isBuffed) elemColor = Color.Lerp(elemColor, new Color(1f, 0.75f, 0.1f), 0.35f);
 
+            // Phát âm thanh phù hợp với chức nghiệp
+            bool isCastClass = (charClass == "Pháp Sư" || charClass == "Xạ Thủ");
+            if (isCastClass)
+            {
+                AudioManager.PlayCast();
+            }
+            else
+            {
+                AudioManager.PlaySlash();
+            }
+
+            // Kích hoạt vung vũ khí và bung vệt kiếm khí / đao khí nguyên tố của nhân vật
+            GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.TriggerAttack(element, isCastClass);
+
             // Chạy VFX phù hợp từng class
             yield return StartCoroutine(SpawnClassBasicAttackVFX(charClass, startPos, target, elemColor, isBuffed));
 
-            // Gây sát thương khi đạn chạm trúng
-            if (target != null && h != null && !h.IsDead)
+            // Gây sát thương khi đạn chạm trúng (hỗ trợ cả Quái vật lẫn Đối thủ Người chơi)
+            if (target != null)
             {
-                h.TakeDamage(damage, "Player_Hero");
-                FloatingDamageManager.Spawn(target.position + Vector3.up * 0.35f, damage, isCrit: isBuffed);
+                var dmgTarget = (h != null) ? (IDamageable)h : target.GetComponentInParent<IDamageable>();
+                if (dmgTarget != null && !dmgTarget.IsDead)
+                {
+                    dmgTarget.TakeDamage(damage, "Player_Hero");
+                    FloatingDamageManager.Spawn(target.position + Vector3.up * 0.35f, damage, isCrit: isBuffed);
+                    AudioManager.PlayHit();
+                }
             }
         }
 
@@ -379,18 +563,7 @@ namespace GodlessFantasy.Combat
             slash.transform.localScale = new Vector3(sc, sc * 1.25f, 1f);
             sr.sortingOrder = 22;
 
-            // Trail kiếm khí vòng cung cong phát sáng
-            var trail = slash.AddComponent<TrailRenderer>();
-            trail.time = 0.16f;
-            trail.startWidth = 0.35f * sc;
-            trail.endWidth = 0.02f;
-            trail.sortingOrder = 21;
-            trail.material = new Material(Shader.Find("Sprites/Default"));
-            Gradient g = new Gradient();
-            g.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(elemColor, 0f), new GradientColorKey(Color.white, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(0.95f, 0f), new GradientAlphaKey(0f, 1f) });
-            trail.colorGradient = g;
+            // Giữ lại duy nhất hình dạng vòng cung bán nguyệt sắc nét, bỏ vệt chưởng dài (No TrailRenderer)
 
             float speed = 20f;
             float totalDist = Vector3.Distance(startPos, target.position);
@@ -410,36 +583,79 @@ namespace GodlessFantasy.Combat
         }
 
         // ─────────────────────────────────────────────────────────
-        // VÕ SĨ: Chưởng quyền — Chùm nhiều nắm đấm mở rộng theo hình vòng cung (Expanding Fist Arc Volley)
+        // VÕ SĨ: Chưởng quyền — Chùm nắm đấm Pixel Art sắc nét có ngón tay & vệt khí kình (Pixel Fist Strike)
         // ─────────────────────────────────────────────────────────
         private static Sprite fistShockwaveSprite = null;
         private Sprite GetOrCreateFistSprite()
         {
             if (fistShockwaveSprite != null) return fistShockwaveSprite;
-            int size = 48;
+            int size = 32;
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
-            Vector2 c = new Vector2(24f, 24f);
+            tex.filterMode = FilterMode.Point; // Pixel art sắc nét 100%
 
-            for (int x = 0; x < size; x++)
+            // Ma trận Pixel Art Nắm Đấm Chiến Binh (Brawler Knuckle Fist):
+            // - Hướng đấm quay sang phải (+X), khớp 100% với góc xoay tiếp tuyến Atan2(dy, dx).
+            // - Cổ tay ở bên trái (X: 3..11), Mu bàn tay ở giữa (X: 12..15).
+            // - 4 Đốt ngón tay (Knuckles) gập vuông góc ở mặt trước (X: 16..23), ngón giữa nhô cao nhất.
+            // - Rãnh chia ngón tay '#' tạo độ tương phản khối retro rõ nét.
+            // - Đỉnh khớp ngón '*' sáng chấn quang.
+            // - Vệt sóng kình khí '^' xé gió phía trước.
+            string[] fistMap = new string[]
             {
-                for (int y = 0; y < size; y++)
+                "................................", // Y=0
+                "................................", // Y=1
+                "................................", // Y=2
+                "................................", // Y=3
+                "................................", // Y=4
+                "...........######...............", // Y=5
+                ".........##oooooo##.............", // Y=6  Ngón cái cuộn gập ở dưới
+                "........#oooooooooo#............", // Y=7
+                ".......#oooooooooooo#....^......", // Y=8
+                "......#ooooooooooooo*#..^^......", // Y=9  Ngón út
+                "....##oooooooooooooo*#...^......", // Y=10
+                "...#oooooooo#oooooooo#..........", // Y=11 Rãnh ngón út - áp út
+                "..#ooooooooo#oooooooo*#..^^.....", // Y=12 Ngón áp út
+                ".#oooooooooo#ooooooooo*#.^^^....", // Y=13
+                "#ooooooooooo#ooooooooo*#..^^....", // Y=14
+                "#ooooooooooo#oooooooooo*#..^....", // Y=15 Ngón giữa (đấm mạnh nhất, vươn xa nhất)
+                "#ooooooooooo#oooooooooo*#.^^....", // Y=16
+                ".#oooooooooo#ooooooooo*#.^^^....", // Y=17
+                "..#ooooooooo#oooooooo*#..^^.....", // Y=18 Rãnh ngón giữa - trỏ
+                "...#oooooooo#oooooooo#..........", // Y=19
+                "....##oooooo#ooooooo*#...^......", // Y=20 Ngón trỏ
+                "......#ooooooooooooo*#..^^......", // Y=21
+                ".......#oooooooooooo#....^......", // Y=22
+                "........#oooooooooo#............", // Y=23
+                ".........##oooooo##.............", // Y=24
+                "...........######...............", // Y=25
+                "................................", // Y=26
+                "................................", // Y=27
+                "................................", // Y=28
+                "................................", // Y=29
+                "................................", // Y=30
+                "................................"  // Y=31
+            };
+
+            for (int y = 0; y < size; y++)
+            {
+                string row = fistMap[y];
+                for (int x = 0; x < size; x++)
                 {
-                    float dist = Vector2.Distance(new Vector2(x, y), c);
-                    // Tạo khối nắm đấm quyền kình (lõi tròn đặc + ngón tay nổi)
-                    if (dist <= 18f)
+                    char c = (x < row.Length) ? row[x] : '.';
+                    Color col;
+                    switch (c)
                     {
-                        float alpha = (dist <= 14f) ? 1.0f : (18f - dist) / 4f;
-                        tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                        case '#': col = new Color(0.28f, 0.30f, 0.42f, 0.95f); break; // Viền bóng / Rãnh ngón
+                        case 'o': col = new Color(0.92f, 0.94f, 1.0f, 1.0f); break;  // Thân nắm đấm
+                        case '*': col = new Color(1.0f, 1.0f, 1.0f, 1.0f); break;    // Đỉnh đốt ngón tay phát quang
+                        case '^': col = new Color(0.70f, 0.88f, 1.0f, 0.75f); break; // Vệt kình khí rẽ gió
+                        default:  col = Color.clear; break;
                     }
-                    else
-                    {
-                        tex.SetPixel(x, y, Color.clear);
-                    }
+                    tex.SetPixel(x, y, col);
                 }
             }
             tex.Apply();
-            fistShockwaveSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 24f);
+            fistShockwaveSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.45f, 0.5f), 32f);
             return fistShockwaveSprite;
         }
 
@@ -447,70 +663,89 @@ namespace GodlessFantasy.Combat
         {
             if (target == null) yield break;
 
-            Vector3 baseDir = (target.position - startPos).normalized;
-            float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
+            // Bắn ra chính xác 2 chưởng nắm đấm đối xứng uốn lượn chéo nhau (Double Symmetrical Crossed Fist Strike)
+            // Đúng theo hình vẽ tay của User: 2 quyền trái & phải tách biệt, cắt chéo nhau đối xứng, khoảng cách rõ ràng, không rối mắt!
+            StartCoroutine(FistSymmetricalProjectile(startPos, target, elemColor, isBuffed, 1));  // Chưởng quyền trái (+1)
+            StartCoroutine(FistSymmetricalProjectile(startPos, target, elemColor, isBuffed, -1)); // Chưởng quyền phải (-1)
 
-            // Bắn ra chùm 4 nắm đấm xòe mở rộng theo hình vòng cung (Arc Spread: -36°, -12°, +12°, +36°)
-            float[] arcAngles = new float[] { -36f, -12f, 12f, 36f };
-            for (int i = 0; i < arcAngles.Length; i++)
-            {
-                float angleOffset = arcAngles[i];
-                float delay = i * 0.03f;
-                StartCoroutine(FistArcProjectile(startPos, target, elemColor, isBuffed, baseAngle + angleOffset, delay, i));
-            }
-
-            float duration = 0.32f;
+            float duration = 0.28f;
             yield return new WaitForSeconds(duration);
         }
 
-        private IEnumerator FistArcProjectile(Vector3 startPos, Transform target, Color elemColor, bool isBuffed, float launchAngle, float delay, int fistIdx)
+        private IEnumerator FistSymmetricalProjectile(Vector3 startPos, Transform target, Color elemColor, bool isBuffed, int side)
         {
-            if (delay > 0) yield return new WaitForSeconds(delay);
             if (target == null) yield break;
 
-            GameObject fist = new GameObject($"BA_WarriorFist_{fistIdx}");
+            GameObject fist = new GameObject($"BA_WarriorFist_{(side > 0 ? "Left" : "Right")}");
             fist.transform.position = startPos;
-            fist.transform.rotation = Quaternion.Euler(0, 0, launchAngle);
 
             var sr = fist.AddComponent<SpriteRenderer>();
             sr.sprite = GetOrCreateFistSprite();
             sr.color = elemColor;
-            float sc = isBuffed ? 0.65f : 0.50f; // Kích thước to rõ, dễ nhìn từ xa
+            float sc = isBuffed ? 0.38f : 0.30f; // Kích thước pixel gọn gàng, sắc nét, chuẩn võ sĩ chibi
             fist.transform.localScale = new Vector3(sc, sc, 1f);
             sr.sortingOrder = 22;
 
             var trail = fist.AddComponent<TrailRenderer>();
-            trail.time = 0.15f;
-            trail.startWidth = sc * 0.7f;
-            trail.endWidth = 0.05f;
+            trail.time = 0.14f;
+            trail.startWidth = sc * 0.55f;
+            trail.endWidth = 0.02f;
             trail.sortingOrder = 21;
             trail.material = new Material(Shader.Find("Sprites/Default"));
             Gradient g = new Gradient();
             g.SetKeys(
                 new GradientColorKey[] { new GradientColorKey(elemColor, 0f), new GradientColorKey(Color.white, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
+                new GradientAlphaKey[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0f, 1f) });
             trail.colorGradient = g;
 
-            // Hướng xòe ban đầu theo vòng cung
-            Vector3 spreadDir = new Vector3(Mathf.Cos(launchAngle * Mathf.Deg2Rad), Mathf.Sin(launchAngle * Mathf.Deg2Rad), 0);
+            Vector3 baseDir = (target.position - startPos).normalized;
+            Vector3 perpDir = new Vector3(-baseDir.y, baseDir.x, 0f); // Trục vuông góc uốn lượn
+
             float totalDist = Vector3.Distance(startPos, target.position);
-            float speed = 18f;
-            float duration = Mathf.Clamp(totalDist / speed, 0.08f, 0.38f);
+            float speed = 16f;
+            float duration = Mathf.Clamp(totalDist / speed, 0.15f, 0.38f);
             float elapsed = 0f;
+
+            // Biên độ cong đối xứng hình chữ X/thấu kính theo đúng hình vẽ tay
+            float maxAmplitude = Mathf.Clamp(totalDist * 0.25f, 0.40f, 0.75f);
+            Vector3 lastPos = startPos;
 
             while (elapsed < duration && target != null)
             {
                 elapsed += Time.deltaTime;
-                float t = elapsed / duration;
+                float t = Mathf.Clamp01(elapsed / duration);
 
-                // Quỹ đạo: mở rộng ra hình vòng cung lúc đầu (t < 0.4), sau đó hội tụ mạnh vào mục tiêu (t >= 0.4)
+                // Đường bay thẳng tiến tới mục tiêu
                 Vector3 directPos = Vector3.Lerp(startPos, target.position, t);
-                Vector3 arcOffset = spreadDir * (Mathf.Sin(t * Mathf.PI) * 0.45f);
-                fist.transform.position = directPos + arcOffset;
 
-                // Quay nhẹ theo xung chấn quyền
-                fist.transform.Rotate(0, 0, (fistIdx % 2 == 0 ? 360f : -360f) * Time.deltaTime * 2f);
+                // Quỹ đạo uốn cong đối xứng chuẩn xác theo hình vẽ tay của User:
+                // Tại t=0: dãn cách hai bên vai (wave = -1)
+                // Tại t=0.25: cắt chéo nhau lần 1 (wave = 0)
+                // Tại t=0.5: đổi bên dãn cách rộng hình thấu kính (wave = +1) -> khoảng cách rộng rãi không rối mắt
+                // Tại t=0.75: cắt chéo nhau lần 2 (wave = 0)
+                // Tại t=0.75..1.0: hội tụ mượt mà vào mục tiêu
+                float wave = -Mathf.Cos(t * Mathf.PI * 2f);
+                float envelope = t < 0.75f ? 1f : Mathf.Lerp(1f, 0f, (t - 0.75f) / 0.25f);
+                float lateralOffset = side * maxAmplitude * wave * envelope;
+                Vector3 currentPos = directPos + perpDir * lateralOffset;
+                fist.transform.position = currentPos;
+
+                // Xoay nắm đấm theo tiếp tuyến quỹ đạo chuyển động thực tế
+                Vector3 moveDelta = currentPos - lastPos;
+                if (moveDelta.sqrMagnitude > 0.0001f)
+                {
+                    float angle = Mathf.Atan2(moveDelta.y, moveDelta.x) * Mathf.Rad2Deg;
+                    fist.transform.rotation = Quaternion.Euler(0, 0, angle);
+                }
+                lastPos = currentPos;
+
                 yield return null;
+            }
+
+            // Hiệu ứng nổ quyền khi chạm mục tiêu
+            if (target != null)
+            {
+                FloatingDamageManager.ShowFloatingText(target.position, "💥", elemColor);
             }
 
             Destroy(fist);
@@ -625,8 +860,24 @@ namespace GodlessFantasy.Combat
             float boxSize = 42f;
             Rect targetBox = new Rect(screenPos.x - boxSize / 2f, guiY - boxSize / 2f, boxSize, boxSize);
 
-            // Màu nhấp nháy vàng - đỏ
-            Color pulseColor = Color.Lerp(new Color(1f, 0.85f, 0.2f), new Color(1f, 0.25f, 0.25f), Mathf.PingPong(Time.time * 5f, 1f));
+            // Màu sắc ngắm phản hồi trực quan theo 3 vùng cự ly:
+            float dist = Vector2.Distance(transform.position, currentTarget.position);
+            Color pulseColor;
+            if (dist <= basicAttackRange)
+            {
+                // Vùng 1: Trong tầm đánh (Xanh lục / Vàng)
+                pulseColor = Color.Lerp(new Color(0.3f, 1f, 0.4f), new Color(1f, 0.88f, 0.2f), Mathf.PingPong(Time.time * 4f, 1f));
+            }
+            else if (dist <= loseFocusRange)
+            {
+                // Vùng 2: Khoảng đệm (Vàng cam tạm giữ Focus)
+                pulseColor = Color.Lerp(new Color(1f, 0.8f, 0.2f), new Color(1f, 0.5f, 0.1f), Mathf.PingPong(Time.time * 4f, 1f));
+            }
+            else
+            {
+                // Vùng 3: Vượt ra ngoài tầm (Đỏ - sắp mất dấu)
+                pulseColor = new Color(1f, 0.25f, 0.25f, 0.95f);
+            }
 
             // Vẽ 4 góc ngắm [  ]
             float armLen = 8f;
@@ -654,10 +905,10 @@ namespace GodlessFantasy.Combat
 
         private void DrawTopTargetBanner()
         {
-            float bannerW = 270f;
+            float bannerW = 285f;
             float bannerH = 46f;
             float bannerX = (Screen.width - bannerW) / 2f;
-            float bannerY = 12f;
+            float bannerY = 48f; // Hạ xuống dưới thước đo khoảng cách (tránh đè lên ruler đỉnh màn hình)
             Rect r = new Rect(bannerX, bannerY, bannerW, bannerH);
 
             // Nền tối
@@ -693,12 +944,22 @@ namespace GodlessFantasy.Combat
 
             GUI.Label(hpBarRect, $"{curHp:0}/{maxHp:0} HP", targetHpStyle);
 
-            // Thông tin cự ly & trạng thái trong tầm đánh
+            // Thông tin cự ly & trạng thái theo 3 vùng hysteresis
             float dist = Vector2.Distance(transform.position, currentTarget.position);
-            bool inRange = dist <= basicAttackRange;
-            string rangeText = inRange
-                ? $"<color=#55ff55>Cự ly: {dist:F1}m • [TRONG TẦM ĐÁNH 5.0m]</color>"
-                : $"<color=#ffaa33>Cự ly: {dist:F1}m • [NGOÀI TẦM - ĐANG TIẾP CẬN]</color>";
+            string rangeText;
+            if (dist <= basicAttackRange)
+            {
+                rangeText = $"<color=#55ff55>Cự ly: {dist:F1}m • [TRONG TẦM ĐÁNH {basicAttackRange:F1}m - CHUỘT PHẢI ĐÁNH]</color>";
+            }
+            else if (dist <= loseFocusRange)
+            {
+                rangeText = $"<color=#ffbb33>Cự ly: {dist:F1}m • [KHOẢNG ĐỆM {loseFocusRange:F1}m - TẠM GIỮ FOCUS]</color>";
+            }
+            else
+            {
+                float remain = Mathf.Max(0f, loseFocusGracePeriod - outOfRangeTimer);
+                rangeText = $"<color=#ff4444>Cự ly: {dist:F1}m • [NGOÀI TẦM - MẤT DẤU TRONG {remain:F1}s]</color>";
+            }
 
             GUI.Label(new Rect(r.x + 10, r.y + 32, r.width - 20, 13), rangeText, targetRangeStyle);
         }

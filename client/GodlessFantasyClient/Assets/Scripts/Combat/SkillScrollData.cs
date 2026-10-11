@@ -30,6 +30,18 @@ namespace GodlessFantasy.Combat
         public string customVfxSprite;   // (Tùy chọn) Đường dẫn sprite đạn bay/hoạt ảnh riêng
         public string description;
 
+        // Thống số Hoạt Ảnh Thủ Tục & Đạn Đạo 140 Biến Thể (Procedural Ballistics - Discussion 10)
+        public int baseShapeMask = 0;       // 0=Orb, 1=Slash, 2=Arrow, 3=Wave, 4=Meteor, 5=NovaRing, 6=Pillar, 7=Beam
+        public int trajectoryType = 0;      // 0=Linear, 1=SineWave, 2=Homing, 3=LobbedArc, 4=Boomerang, 5=Instant
+        public float flySpeed = 16.0f;      // Tốc độ bay (m/s)
+        public float explosionRadius = 1.8f;// Bán kính nổ hạt Pixel Impact Burst
+        public bool hasTrail = true;        // Bật vệt đuôi năng lượng TrailRenderer
+        public bool hasScreenShake = false; // Rung màn hình khi va chạm
+
+        // Tùy Biến Mưa Kỹ Năng AoE (Rain Fall Angle & Style):
+        public int rainFallAngle = 0;       // 0=Thẳng Đứng 90°, 1=Chéo Trái 60°, 2=Chéo Phải 60°, 3=Từ Hướng Người Chơi
+        public int rainFallStyle = 0;       // 0=Tản Mác (Random), 1=Xoáy Ốc (Spiral), 2=Oanh Tạc Cùng Lúc (Carpet Bomb), 3=Sóng Quét (Sweeping)
+
         public bool IsSupport => skillCategory != 0;
         public string CategoryName
         {
@@ -102,6 +114,78 @@ namespace GodlessFantasy.Combat
                     default: this.castRange = 6.0f; break;
                 }
             }
+
+            // Tự động khớp Phôi Khối (BaseShapeMask) & Quỹ Đạo (Trajectory) chính xác 100% với Tên Chiêu
+            AutoAssignShapeMask();
+        }
+
+        /// <summary>
+        /// Tự động phân tích tên chiêu & cơ chế để gán đúng phôi khối Pixel Art (BaseShapeMask) & Quỹ đạo (Trajectory)
+        /// đảm bảo: Tên chiêu Kiếm Khí phải ra Vệt Chém (Slash), Tiễn phải ra Mũi Tên (Arrow), Sóng phải ra Wave, Thiên Thạch phải ra Meteor!
+        /// </summary>
+        public void AutoAssignShapeMask()
+        {
+            string n = (scrollName + " " + id).ToLower();
+
+            // 1. Phôi Khối Base Shape Masks (0=Orb, 1=Slash, 2=Arrow, 3=Wave, 4=Meteor, 5=NovaRing, 6=Pillar, 7=Beam)
+            if (n.Contains("kiếm") || n.Contains("slash") || n.Contains("trảm") || n.Contains("chém"))
+            {
+                baseShapeMask = 1; // Slash (Vệt Kiếm Khí)
+            }
+            else if (n.Contains("tiễn") || n.Contains("arrow") || n.Contains("bắn") || n.Contains("xạ") || n.Contains("snipe"))
+            {
+                baseShapeMask = 2; // Arrow (Mũi Tên Ma Thuật)
+            }
+            else if (n.Contains("sóng") || n.Contains("wave") || n.Contains("triều") || n.Contains("toàn phong") || indicatorType == 3)
+            {
+                baseShapeMask = 3; // Wave (Lưỡi Sóng Xung Kích)
+            }
+            else if (n.Contains("thiên thạch") || n.Contains("meteor") || n.Contains("oanh kích") || n.Contains("mưa") || n.Contains("trụy") || indicatorType == 2)
+            {
+                baseShapeMask = 4; // Meteor (Thiên Thạch Bốc Cháy)
+            }
+            else if (n.Contains("nova") || n.Contains("bá vương") || n.Contains("quanh thân") || n.Contains("bộc phá") || indicatorType == 4)
+            {
+                baseShapeMask = 5; // NovaRing (Vòng Nổ Năng Lượng 360°)
+            }
+            else if (n.Contains("trụ") || n.Contains("cột") || n.Contains("pillar") || n.Contains("địa kiếm"))
+            {
+                baseShapeMask = 6; // Pillar (Cột Năng Lượng Địa Chấn)
+            }
+            else if (n.Contains("tia") || n.Contains("beam") || n.Contains("laser") || n.Contains("xuyên"))
+            {
+                baseShapeMask = 7; // Beam (Tia Laser Xuyên Thấu)
+            }
+            else
+            {
+                baseShapeMask = 0; // Orb (Cầu Năng Lượng Nguyên Tố)
+            }
+
+            // 2. Quỹ Đạo Trajectory (0=Linear, 1=SineWave, 2=Homing, 3=LobbedArc, 4=Boomerang, 5=Instant)
+            if (n.Contains("homing") || n.Contains("truy hồn") || n.Contains("đuổi"))
+            {
+                trajectoryType = 2; // Homing
+            }
+            else if (n.Contains("sine") || n.Contains("lượn") || n.Contains("rồng"))
+            {
+                trajectoryType = 1; // SineWave
+            }
+            else if (n.Contains("arc") || n.Contains("cầu vồng") || n.Contains("dậm"))
+            {
+                trajectoryType = 3; // LobbedArc
+            }
+            else if (n.Contains("boomerang") || n.Contains("lộn"))
+            {
+                trajectoryType = 4; // Boomerang
+            }
+            else if (n.Contains("instant") || n.Contains("tức thời"))
+            {
+                trajectoryType = 5; // Instant
+            }
+            else
+            {
+                trajectoryType = 0; // Linear
+            }
         }
 
         /// <summary>
@@ -151,7 +235,14 @@ namespace GodlessFantasy.Combat
 
         public SkillScrollData Clone()
         {
-            return new SkillScrollData(id, scrollName, tierRank, tierColor, element, manaCost, cooldown, baseDamage, intelligenceScaling, indicatorType, iconName, scrollIconName, description, castRange, requiredClass, customVfxSprite, skillCategory);
+            var clone = new SkillScrollData(id, scrollName, tierRank, tierColor, element, manaCost, cooldown, baseDamage, intelligenceScaling, indicatorType, iconName, scrollIconName, description, castRange, requiredClass, customVfxSprite, skillCategory);
+            clone.baseShapeMask = this.baseShapeMask;
+            clone.trajectoryType = this.trajectoryType;
+            clone.flySpeed = this.flySpeed;
+            clone.explosionRadius = this.explosionRadius;
+            clone.hasTrail = this.hasTrail;
+            clone.hasScreenShake = this.hasScreenShake;
+            return clone;
         }
     }
 }

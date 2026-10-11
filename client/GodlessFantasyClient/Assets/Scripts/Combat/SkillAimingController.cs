@@ -44,6 +44,7 @@ namespace GodlessFantasy.Combat
 
         public bool IsAiming => currentState == AimState.Aiming;
         public int CurrentAimingSkill => currentAimingSlot;
+        public int CurrentAimingSlot => currentAimingSlot;
 
         // Backward Compatibility Getters
         public float Skill1CooldownRemaining => GetCooldownRemaining(0);
@@ -266,7 +267,9 @@ namespace GodlessFantasy.Combat
 
             if (indicatorRenderer != null)
             {
-                indicatorRenderer.ShowIndicator(scroll.indicatorType);
+                float r = scroll.castRange > 0 ? scroll.castRange : 8.0f;
+                float rad = scroll.explosionRadius > 0 ? scroll.explosionRadius : 1.9f;
+                indicatorRenderer.ShowIndicator(scroll.indicatorType, r, rad);
             }
 
             Debug.Log($"[AIMING] Đang ngắm {scroll.scrollName} [Ô {slot}]. Chuột Phải để tung chiêu · Bấm [{slot}] hoặc ESC để hủy!");
@@ -292,6 +295,11 @@ namespace GodlessFantasy.Combat
             int intel = playerStats != null ? playerStats.Intelligence : 12;
             float buffMult = (playerStats != null) ? playerStats.GetDamageBuffMultiplier() : 0f;
             int totalDamage = Mathf.RoundToInt((scroll.baseDamage + Mathf.RoundToInt(intel * scroll.intelligenceScaling)) * (1f + buffMult));
+
+            GodlessFantasy.Core.AudioManager.PlayCast();
+
+            // Kích hoạt hoạt ảnh vung vũ khí & chém/phóng ma pháp theo nguyên tố
+            GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.TriggerAttack(scroll.element, isCast: true);
 
             // Thi triển theo Archetype của Cuộn Trục
             switch (scroll.indicatorType)
@@ -325,7 +333,11 @@ namespace GodlessFantasy.Combat
         {
             float radius = 6.5f;
 
-            if (SkillVFXManager.Instance != null)
+            if (ProceduralVFXEngine.Instance != null)
+            {
+                ProceduralVFXEngine.Instance.SpawnProceduralTeamBarrier(transform.position, scroll.element, radius, 4.0f);
+            }
+            else if (SkillVFXManager.Instance != null)
             {
                 SkillVFXManager.Instance.SpawnTeamBuffAoEVFX(transform.position, radius, scroll.element);
             }
@@ -361,7 +373,11 @@ namespace GodlessFantasy.Combat
 
         private void CastSelfBuff(SkillScrollData scroll)
         {
-            if (SkillVFXManager.Instance != null)
+            if (ProceduralVFXEngine.Instance != null)
+            {
+                ProceduralVFXEngine.Instance.SpawnProceduralSelfAura(transform, scroll.element, 3.5f);
+            }
+            else if (SkillVFXManager.Instance != null)
             {
                 SkillVFXManager.Instance.SpawnSelfBuffVFX(transform.position, scroll.element);
             }
@@ -397,7 +413,17 @@ namespace GodlessFantasy.Combat
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
             Vector3 spawnPos = firePoint != null ? firePoint.position + (Vector3)(aimDir * 0.45f) : transform.position + (Vector3)(aimDir * 0.45f);
 
-            if (SkillVFXManager.Instance != null)
+            if (ProceduralVFXEngine.Instance != null && scroll != null)
+            {
+                BaseShapeMask shape = (BaseShapeMask)Mathf.Clamp(scroll.baseShapeMask, 0, 23);
+                TrajectoryType traj = (TrajectoryType)Mathf.Clamp(scroll.trajectoryType, 0, 5);
+                float speed = scroll.flySpeed > 0 ? scroll.flySpeed : 16.0f;
+                float radius = scroll.explosionRadius > 0 ? scroll.explosionRadius : 1.8f;
+                ProceduralVFXEngine.Instance.FireProceduralSkill(
+                    spawnPos, aimDir, shape, scroll.element, traj, dmg, speed, radius,
+                    scroll.hasTrail, scroll.hasScreenShake, gameObject.name, null, scroll.castRange);
+            }
+            else if (SkillVFXManager.Instance != null)
             {
                 SkillVFXManager.Instance.SpawnLineProjectile(spawnPos, aimDir, dmg, scroll, gameObject.name);
             }
@@ -413,16 +439,20 @@ namespace GodlessFantasy.Combat
             Debug.Log($"[CAST] Phóng '{scroll.scrollName}'! Sát thương: {dmg}");
         }
 
-        // 2. Thả Vòng Tròn Đất (Ground AoE / Rain Effect - Bán kính 1.9m)
+        // 2. Thả Vòng Tròn Đất (Ground AoE / Rain Effect)
         private void CastGroundAoE(SkillScrollData scroll, int dmg)
         {
             Vector3 targetPos = indicatorRenderer != null ? indicatorRenderer.GetGroundTargetPosition() : transform.position;
-            float aoeRadius = 1.9f;
+            float aoeRadius = scroll.explosionRadius > 0 ? scroll.explosionRadius : 1.9f;
 
             if (scroll.IsSupport)
             {
-                // HỖ TRỢ / HỒI MÁU / HỒI MANA / BUFF ĐỒNG ĐỘI (Ví dụ: Mưa Sinh Mệnh Hệ Mộc)
-                if (SkillVFXManager.Instance != null)
+                // HỖ TRỢ / HỒI MÁU / HỒI MANA / BUFF ĐỒNG ĐỘI
+                if (ProceduralVFXEngine.Instance != null)
+                {
+                    ProceduralVFXEngine.Instance.SpawnProceduralTeamBarrier(targetPos, scroll.element, aoeRadius * 2.2f, 3.5f);
+                }
+                else if (SkillVFXManager.Instance != null)
                 {
                     SkillVFXManager.Instance.SpawnHealingRain(targetPos, aoeRadius, 2.0f, scroll.element);
                 }
@@ -447,7 +477,19 @@ namespace GodlessFantasy.Combat
             }
             else
             {
-                if (SkillVFXManager.Instance != null)
+                if (ProceduralVFXEngine.Instance != null)
+                {
+                    bool isSprout = (scroll.baseShapeMask == 8 || scroll.baseShapeMask == 9 || scroll.baseShapeMask == 10 || scroll.baseShapeMask == 11 || scroll.baseShapeMask == 12 || scroll.baseShapeMask == 20);
+                    if (isSprout)
+                    {
+                        ProceduralVFXEngine.Instance.SpawnProceduralGroundEruption(targetPos, scroll.element, (BaseShapeMask)scroll.baseShapeMask, aoeRadius, dmg, gameObject.name);
+                    }
+                    else
+                    {
+                        ProceduralVFXEngine.Instance.SpawnProceduralAoERain(targetPos, scroll.element, aoeRadius, dmg, gameObject.name, scroll.rainFallAngle, scroll.rainFallStyle, transform.position);
+                    }
+                }
+                else if (SkillVFXManager.Instance != null)
                 {
                     SkillVFXManager.Instance.SpawnGroundAoEImpact(targetPos, aoeRadius, dmg, scroll, gameObject.name);
                 }
@@ -468,25 +510,30 @@ namespace GodlessFantasy.Combat
             }
         }
 
-        // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep - Tầm 4.5m, góc 60 độ khớp 100% Visual Indicator)
+        // 3. Quét Sóng Lửa Hình Quạt (Cone Sweep - Tầm khớp 100% castRange và Indicator)
         private void CastConeSweep(SkillScrollData scroll, int dmg)
         {
             Vector2 aimDir = indicatorRenderer != null ? indicatorRenderer.GetAimDirection() : Vector2.right;
-            float coneRange = 4.5f;
+            float coneRange = scroll.castRange > 0 ? scroll.castRange : 4.5f;
             float halfAngle = 30.0f;
-            Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position;
+            float forwardOffset = 0.55f; // Cách người 0.55m đồng bộ chuẩn xác 100% với Indicator
+            Vector3 spawnPos = (firePoint != null ? firePoint.position : transform.position) + (Vector3)(aimDir * forwardOffset);
 
-            if (SkillVFXManager.Instance != null)
+            if (ProceduralVFXEngine.Instance != null)
+            {
+                ProceduralVFXEngine.Instance.SpawnProceduralConeWave(transform.position, aimDir, scroll.element, coneRange, dmg, gameObject.name);
+            }
+            else if (SkillVFXManager.Instance != null)
             {
                 SkillVFXManager.Instance.SpawnConeSweep(spawnPos, aimDir, coneRange, halfAngle, dmg, scroll, gameObject.name);
             }
             else
             {
-                Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, coneRange);
+                Collider2D[] hits = Physics2D.OverlapCircleAll(spawnPos, coneRange);
                 foreach (var col in hits)
                 {
                     if (col.gameObject == gameObject) continue;
-                    Vector2 toTarget = (col.transform.position - transform.position);
+                    Vector2 toTarget = (col.transform.position - spawnPos);
                     float angle = Vector2.Angle(aimDir, toTarget.normalized);
 
                     if (angle <= halfAngle)
@@ -509,7 +556,11 @@ namespace GodlessFantasy.Combat
 
             if (scroll.IsSupport)
             {
-                if (SkillVFXManager.Instance != null)
+                if (ProceduralVFXEngine.Instance != null)
+                {
+                    ProceduralVFXEngine.Instance.SpawnProceduralRadialNova(transform.position, scroll.element, novaRadius * 2f, 0, gameObject.name);
+                }
+                else if (SkillVFXManager.Instance != null)
                 {
                     SkillVFXManager.Instance.SpawnSelfNovaVFX(transform.position, scroll.element);
                 }
@@ -528,7 +579,11 @@ namespace GodlessFantasy.Combat
                 return;
             }
 
-            if (SkillVFXManager.Instance != null)
+            if (ProceduralVFXEngine.Instance != null)
+            {
+                ProceduralVFXEngine.Instance.SpawnProceduralRadialNova(transform.position, scroll.element, (scroll.explosionRadius > 0 ? scroll.explosionRadius : novaRadius) * 2f, dmg, gameObject.name);
+            }
+            else if (SkillVFXManager.Instance != null)
             {
                 SkillVFXManager.Instance.SpawnSelfNova(transform.position, novaRadius, dmg, scroll, gameObject.name);
             }

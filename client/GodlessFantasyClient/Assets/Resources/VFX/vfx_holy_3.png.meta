@@ -1,0 +1,1120 @@
+fileFormatVersion: 2
+guid: 99151ddb4f195284283afce764b424e4
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3035072491803541658
+    second: vfx_holy_3_0
+  - first:
+      213: -1434783962624828414
+    second: vfx_holy_3_1
+  - first:
+      213: 5661025393530113215
+    second: vfx_holy_3_2
+  - first:
+      213: -6897950747758689562
+    second: vfx_holy_3_3
+  - first:
+      213: 2300409241866839179
+    second: vfx_holy_3_4
+  - first:
+      213: -9049691646797771796
+    second: vfx_holy_3_5
+  - first:
+      213: 8225923421269896244
+    second: vfx_holy_3_6
+  - first:
+      213: 4367153535152694468
+    second: vfx_holy_3_7
+  - first:
+      213: -6989293412874566985
+    second: vfx_holy_3_8
+  - first:
+      213: -5050661936783441494
+    second: vfx_holy_3_9
+  - first:
+      213: -2108931828318839316
+    second: vfx_holy_3_10
+  - first:
+      213: -3687573703158049162
+    second: vfx_holy_3_11
+  - first:
+      213: 2287954501896082441
+    second: vfx_holy_3_12
+  - first:
+      213: 4489028942006015026
+    second: vfx_holy_3_13
+  - first:
+      213: -497427383377250790
+    second: vfx_holy_3_14
+  - first:
+      213: -2844479294692655794
+    second: vfx_holy_3_15
+  - first:
+      213: -1155624004062178663
+    second: vfx_holy_3_16
+  - first:
+      213: -1708853640211563204
+    second: vfx_holy_3_17
+  - first:
+      213: -7740455126182601324
+    second: vfx_holy_3_18
+  - first:
+      213: 6979329913193160901
+    second: vfx_holy_3_19
+  - first:
+      213: -5182200964463200848
+    second: vfx_holy_3_20
+  - first:
+      213: 3102382016784887658
+    second: vfx_holy_3_21
+  - first:
+      213: -9140999161717621382
+    second: vfx_holy_3_22
+  - first:
+      213: -4297706106295782049
+    second: vfx_holy_3_23
+  - first:
+      213: -3785166854435686873
+    second: vfx_holy_3_24
+  - first:
+      213: -6343082232215938469
+    second: vfx_holy_3_25
+  - first:
+      213: -3392584948814102547
+    second: vfx_holy_3_26
+  - first:
+      213: 2388490946988548836
+    second: vfx_holy_3_27
+  - first:
+      213: 3272711984932825837
+    second: vfx_holy_3_28
+  - first:
+      213: -346508918263272617
+    second: vfx_holy_3_29
+  - first:
+      213: 717414948583143834
+    second: vfx_holy_3_30
+  - first:
+      213: -3218846156509479937
+    second: vfx_holy_3_31
+  - first:
+      213: -1187492603765200136
+    second: vfx_holy_3_32
+  - first:
+      213: 6463975026009288499
+    second: vfx_holy_3_33
+  - first:
+      213: -6592247071239256607
+    second: vfx_holy_3_34
+  - first:
+      213: -1507606030648219122
+    second: vfx_holy_3_35
+  - first:
+      213: 8821786408600797173
+    second: vfx_holy_3_36
+  - first:
+      213: -5192962516614152381
+    second: vfx_holy_3_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx_holy_3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 26
+        width: 72
+        height: 108
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66f7d7236a141e5d0800000000000000
+      internalID: -3035072491803541658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_1
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 133
+        width: 21
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20cd15a769f961ce0800000000000000
+      internalID: -1434783962624828414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_2
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 133
+        width: 22
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fbc04dd1a90009e40800000000000000
+      internalID: 5661025393530113215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_3
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 112
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e204b1875e8540a0800000000000000
+      internalID: -6897950747758689562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_4
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 133
+        width: 23
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b84af737402bcef10800000000000000
+      internalID: 2300409241866839179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_5
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 92
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ceb8cc10569096280800000000000000
+      internalID: -9049691646797771796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_6
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 133
+        width: 22
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43cab52d4c9582270800000000000000
+      internalID: 8225923421269896244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_7
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 112
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c42e56800f3b9c30800000000000000
+      internalID: 4367153535152694468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_8
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 133
+        width: 22
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b242aefbaa010f90800000000000000
+      internalID: -6989293412874566985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_9
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 112
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa1cf616ab178e9b0800000000000000
+      internalID: -5050661936783441494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_10
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 133
+        width: 22
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ced5a8dfca19bb2e0800000000000000
+      internalID: -2108931828318839316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_11
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 112
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 676513c214b13dcc0800000000000000
+      internalID: -3687573703158049162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_12
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 51
+        width: 43
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90495c35f7270cf10800000000000000
+      internalID: 2287954501896082441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_13
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 92
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23457b2f90c3c4e30800000000000000
+      internalID: 4489028942006015026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_14
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 51
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a163f382e68c819f0800000000000000
+      internalID: -497427383377250790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_15
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 51
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4df3e4f6216688d0800000000000000
+      internalID: -2844479294692655794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_16
+      rect:
+        serializedVersion: 2
+        x: 174
+        y: 92
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99295ff471666ffe0800000000000000
+      internalID: -1155624004062178663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_17
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 51
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3d7e0a0baee848e0800000000000000
+      internalID: -1708853640211563204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_18
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 92
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49dd80cc211649490800000000000000
+      internalID: -7740455126182601324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_19
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 71
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c0e226f39f8bd060800000000000000
+      internalID: 6979329913193160901
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_20
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 10
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b5fb76edaf1518b0800000000000000
+      internalID: -5182200964463200848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_21
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 10
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6fe504d100ed0b20800000000000000
+      internalID: 3102382016784887658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_22
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 30
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7d7da981b5a42180800000000000000
+      internalID: -9140999161717621382
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_23
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 10
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f557639011b7b54c0800000000000000
+      internalID: -4297706106295782049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_24
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 30
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72637c1fcc2687bc0800000000000000
+      internalID: -3785166854435686873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_25
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 10
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5a5daf1158d8f7a0800000000000000
+      internalID: -6343082232215938469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_26
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 30
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: def3997b6fd1be0d0800000000000000
+      internalID: -3392584948814102547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_27
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 10
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e22d7c8cdf952120800000000000000
+      internalID: 2388490946988548836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_28
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 30
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deaa512f5320b6d20800000000000000
+      internalID: 3272711984932825837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_29
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 10
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75ba96789f3f03bf0800000000000000
+      internalID: -346508918263272617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_30
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 30
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a997ade3815c4f900800000000000000
+      internalID: 717414948583143834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_31
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffbfe9e897c5453d0800000000000000
+      internalID: -3218846156509479937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_32
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 0
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8faeb2bb4cd258fe0800000000000000
+      internalID: -1187492603765200136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_33
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 0
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33fa74ed907a4b950800000000000000
+      internalID: 6463975026009288499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_34
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 0
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e5cc274732a384a0800000000000000
+      internalID: -6592247071239256607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_35
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 0
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0ae9f18d48e31be0800000000000000
+      internalID: -1507606030648219122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_36
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 0
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fff401bff74d6a70800000000000000
+      internalID: 8821786408600797173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_holy_3_37
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 0
+        width: 21
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34f7b49ca14eee7b0800000000000000
+      internalID: -5192962516614152381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx_holy_3_0: -3035072491803541658
+      vfx_holy_3_1: -1434783962624828414
+      vfx_holy_3_10: -2108931828318839316
+      vfx_holy_3_11: -3687573703158049162
+      vfx_holy_3_12: 2287954501896082441
+      vfx_holy_3_13: 4489028942006015026
+      vfx_holy_3_14: -497427383377250790
+      vfx_holy_3_15: -2844479294692655794
+      vfx_holy_3_16: -1155624004062178663
+      vfx_holy_3_17: -1708853640211563204
+      vfx_holy_3_18: -7740455126182601324
+      vfx_holy_3_19: 6979329913193160901
+      vfx_holy_3_2: 5661025393530113215
+      vfx_holy_3_20: -5182200964463200848
+      vfx_holy_3_21: 3102382016784887658
+      vfx_holy_3_22: -9140999161717621382
+      vfx_holy_3_23: -4297706106295782049
+      vfx_holy_3_24: -3785166854435686873
+      vfx_holy_3_25: -6343082232215938469
+      vfx_holy_3_26: -3392584948814102547
+      vfx_holy_3_27: 2388490946988548836
+      vfx_holy_3_28: 3272711984932825837
+      vfx_holy_3_29: -346508918263272617
+      vfx_holy_3_3: -6897950747758689562
+      vfx_holy_3_30: 717414948583143834
+      vfx_holy_3_31: -3218846156509479937
+      vfx_holy_3_32: -1187492603765200136
+      vfx_holy_3_33: 6463975026009288499
+      vfx_holy_3_34: -6592247071239256607
+      vfx_holy_3_35: -1507606030648219122
+      vfx_holy_3_36: 8821786408600797173
+      vfx_holy_3_37: -5192962516614152381
+      vfx_holy_3_4: 2300409241866839179
+      vfx_holy_3_5: -9049691646797771796
+      vfx_holy_3_6: 8225923421269896244
+      vfx_holy_3_7: 4367153535152694468
+      vfx_holy_3_8: -6989293412874566985
+      vfx_holy_3_9: -5050661936783441494
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

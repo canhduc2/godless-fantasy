@@ -131,20 +131,37 @@ namespace GodlessFantasy.Core
 
             var col = tileObj.GetComponent<BoxCollider2D>();
 
+            Transform overlayTf = tileObj.transform.Find("SafeZone_Overlay");
+
             switch (type)
             {
                 case TerrainBlockType.SafeStone:
-                    sr.sprite = (safeTileSprite != null) ? safeTileSprite : stoneTileSprite;
+                    // 1. LỚP DƯỚI: Địa hình khối bình thường (Đá cổ Làng Tân Thủ)
+                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
                     sr.color = Color.white;
                     sr.sortingOrder = -10;
                     if (col != null) Destroy(col);
+
+                    // 2. LỚP TRÊN: Lớp phủ Vùng An Toàn trong suốt / mờ nhẹ hỗ trợ debug
+                    if (safeTileSprite != null)
+                    {
+                        GameObject overlayObj = (overlayTf != null) ? overlayTf.gameObject : new GameObject("SafeZone_Overlay");
+                        overlayObj.transform.parent = tileObj.transform;
+                        overlayObj.transform.localPosition = Vector3.zero;
+                        var overlaySr = overlayObj.GetComponent<SpriteRenderer>();
+                        if (overlaySr == null) overlaySr = overlayObj.AddComponent<SpriteRenderer>();
+                        overlaySr.sprite = safeTileSprite;
+                        overlaySr.color = new Color(1f, 1f, 1f, 0.45f); // Trong suốt mờ nhẹ cho debug
+                        overlaySr.sortingOrder = -8; // Lớp trên lớp đất (-10), dưới nhân vật (0)
+                    }
                     break;
 
                 case TerrainBlockType.AncientStone:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : safeTileSprite;
+                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
                     sr.color = Color.white;
                     sr.sortingOrder = -10;
                     if (col != null) Destroy(col);
+                    if (overlayTf != null) Destroy(overlayTf.gameObject);
                     break;
 
                 case TerrainBlockType.Grass:
@@ -152,22 +169,25 @@ namespace GodlessFantasy.Core
                     sr.color = Color.white;
                     sr.sortingOrder = -10;
                     if (col != null) Destroy(col);
+                    if (overlayTf != null) Destroy(overlayTf.gameObject);
                     break;
 
                 case TerrainBlockType.Water:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : safeTileSprite;
+                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
                     sr.color = new Color(0.12f, 0.45f, 0.95f, 0.95f); // Màu xanh dương nước biển
                     sr.sortingOrder = -9;
                     if (col == null) col = tileObj.AddComponent<BoxCollider2D>();
                     col.size = new Vector2(0.98f, 0.98f);
+                    if (overlayTf != null) Destroy(overlayTf.gameObject);
                     break;
 
                 case TerrainBlockType.Wall:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : safeTileSprite;
+                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
                     sr.color = new Color(0.35f, 0.28f, 0.24f, 1.0f); // Màu tường đá trầm kiên cố
                     sr.sortingOrder = 5; // Nổi lên trên mặt đất
                     if (col == null) col = tileObj.AddComponent<BoxCollider2D>();
                     col.size = new Vector2(0.98f, 0.98f);
+                    if (overlayTf != null) Destroy(overlayTf.gameObject);
                     break;
 
                 case TerrainBlockType.Gate:
@@ -175,6 +195,7 @@ namespace GodlessFantasy.Core
                     sr.color = new Color(1.0f, 0.85f, 0.35f, 1.0f); // Cổng vàng kim
                     sr.sortingOrder = -9;
                     if (col != null) Destroy(col);
+                    if (overlayTf != null) Destroy(overlayTf.gameObject);
                     break;
             }
         }

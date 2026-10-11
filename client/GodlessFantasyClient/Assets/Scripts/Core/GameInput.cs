@@ -63,33 +63,18 @@ namespace GodlessFantasy.Core
 
         public static Vector2 GetMovementVector()
         {
-            Vector2 dir = Vector2.zero;
-#if ENABLE_INPUT_SYSTEM
-            if (Keyboard.current != null)
-            {
-                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) dir.y += 1f;
-                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) dir.y -= 1f;
-                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) dir.x -= 1f;
-                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) dir.x += 1f;
-                return dir.normalized;
-            }
-#endif
-            try
-            {
-                dir.x = Input.GetAxisRaw("Horizontal");
-                dir.y = Input.GetAxisRaw("Vertical");
-                return dir.normalized;
-            }
-            catch { return Vector2.zero; }
+            // Vô hiệu hóa di chuyển WASD theo yêu cầu thiết kế:
+            // Phím [D] dành riêng cho Dash, toàn bộ di chuyển dùng chuột Click-to-Move.
+            return Vector2.zero;
         }
 
         public static bool GetDashKeyDown()
         {
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
-                return Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame;
+                return Keyboard.current.dKey.wasPressedThisFrame || Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame;
 #endif
-            try { return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift) || Input.GetKeyDown(KeyCode.Space); } catch { return false; }
+            try { return Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift) || Input.GetKeyDown(KeyCode.Space); } catch { return false; }
         }
 
         public static bool GetSkill1KeyDown()
@@ -153,6 +138,24 @@ namespace GodlessFantasy.Core
                 return Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.fKey.wasPressedThisFrame;
 #endif
             try { return Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.F); } catch { return false; }
+        }
+
+        public static bool GetToggleMuteKeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.mKey.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.M); } catch { return false; }
+        }
+
+        public static bool GetPetInteractKeyDown()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null)
+                return Keyboard.current.pKey.wasPressedThisFrame;
+#endif
+            try { return Input.GetKeyDown(KeyCode.P); } catch { return false; }
         }
     }
 }

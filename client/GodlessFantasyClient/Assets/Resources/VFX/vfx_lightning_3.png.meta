@@ -1,0 +1,1354 @@
+fileFormatVersion: 2
+guid: cef35ab89c8a13e4b9385bb1da0e111c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5151127129594868529
+    second: vfx_lightning_3_0
+  - first:
+      213: 698843116899692246
+    second: vfx_lightning_3_1
+  - first:
+      213: -5427545430990580717
+    second: vfx_lightning_3_2
+  - first:
+      213: -1813549937367624487
+    second: vfx_lightning_3_3
+  - first:
+      213: -4053834061071802444
+    second: vfx_lightning_3_4
+  - first:
+      213: 8006782869182969082
+    second: vfx_lightning_3_5
+  - first:
+      213: -5387227950767902763
+    second: vfx_lightning_3_6
+  - first:
+      213: 6787532421660357548
+    second: vfx_lightning_3_7
+  - first:
+      213: 4690823772959564134
+    second: vfx_lightning_3_8
+  - first:
+      213: -6276888329870885966
+    second: vfx_lightning_3_9
+  - first:
+      213: 1298887297694123897
+    second: vfx_lightning_3_10
+  - first:
+      213: -4492497298384345712
+    second: vfx_lightning_3_11
+  - first:
+      213: 4681300898749284173
+    second: vfx_lightning_3_12
+  - first:
+      213: -6345702797095189523
+    second: vfx_lightning_3_13
+  - first:
+      213: -6618678843610820866
+    second: vfx_lightning_3_14
+  - first:
+      213: -171156354101140335
+    second: vfx_lightning_3_15
+  - first:
+      213: -4342279457750817109
+    second: vfx_lightning_3_16
+  - first:
+      213: -6178221345806140473
+    second: vfx_lightning_3_17
+  - first:
+      213: 708815195690032887
+    second: vfx_lightning_3_18
+  - first:
+      213: -2698176970915237975
+    second: vfx_lightning_3_19
+  - first:
+      213: -1491450912322100063
+    second: vfx_lightning_3_20
+  - first:
+      213: 4331435664976683392
+    second: vfx_lightning_3_21
+  - first:
+      213: 2819074811386057586
+    second: vfx_lightning_3_22
+  - first:
+      213: 2418271335606509580
+    second: vfx_lightning_3_23
+  - first:
+      213: -6547055799000519597
+    second: vfx_lightning_3_24
+  - first:
+      213: 7605648339920730740
+    second: vfx_lightning_3_25
+  - first:
+      213: -88441988060910462
+    second: vfx_lightning_3_26
+  - first:
+      213: -5505766194178183815
+    second: vfx_lightning_3_27
+  - first:
+      213: -830910418096694594
+    second: vfx_lightning_3_28
+  - first:
+      213: -6654600662981858617
+    second: vfx_lightning_3_29
+  - first:
+      213: -8807398605024414095
+    second: vfx_lightning_3_30
+  - first:
+      213: -2370917347830853776
+    second: vfx_lightning_3_31
+  - first:
+      213: -7617170127249690171
+    second: vfx_lightning_3_32
+  - first:
+      213: 1743806088786249586
+    second: vfx_lightning_3_33
+  - first:
+      213: -7184459755017928928
+    second: vfx_lightning_3_34
+  - first:
+      213: 5218701241837855897
+    second: vfx_lightning_3_35
+  - first:
+      213: -8305794321348139513
+    second: vfx_lightning_3_36
+  - first:
+      213: -2746921266027869819
+    second: vfx_lightning_3_37
+  - first:
+      213: -6354724744881136009
+    second: vfx_lightning_3_38
+  - first:
+      213: -303563871196111369
+    second: vfx_lightning_3_39
+  - first:
+      213: -2030679239950151978
+    second: vfx_lightning_3_40
+  - first:
+      213: 9155149783366933803
+    second: vfx_lightning_3_41
+  - first:
+      213: -3700076901373271108
+    second: vfx_lightning_3_42
+  - first:
+      213: -6523562396273367273
+    second: vfx_lightning_3_43
+  - first:
+      213: -5806211575310379717
+    second: vfx_lightning_3_44
+  - first:
+      213: -6655697390399294171
+    second: vfx_lightning_3_45
+  - first:
+      213: 2496319305265342586
+    second: vfx_lightning_3_46
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx_lightning_3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 130
+        width: 11
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fccce9fda258388b0800000000000000
+      internalID: -5151127129594868529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 89
+        width: 31
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6de6888bc1ac2b900800000000000000
+      internalID: 698843116899692246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_2
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 130
+        width: 22
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3141387df2c7da4b0800000000000000
+      internalID: -5427545430990580717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_3
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 110
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d455c8c0f9f4d6e0800000000000000
+      internalID: -1813549937367624487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_4
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 130
+        width: 22
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4bf9f6b4663edb7c0800000000000000
+      internalID: -4053834061071802444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_5
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 110
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af47557099ecd1f60800000000000000
+      internalID: 8006782869182969082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_6
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 130
+        width: 22
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5df6c66b8b8bc35b0800000000000000
+      internalID: -5387227950767902763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_7
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 110
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca3338e86c8223e50800000000000000
+      internalID: 6787532421660357548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_8
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 130
+        width: 22
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66166335e57291140800000000000000
+      internalID: 4690823772959564134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_9
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 110
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bb3043025304e8a0800000000000000
+      internalID: -6276888329870885966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_10
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 130
+        width: 22
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 977435e8d13960210800000000000000
+      internalID: 1298887297694123897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_11
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 110
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0952667628177a1c0800000000000000
+      internalID: -4492497298384345712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_12
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 130
+        width: 21
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4ffaa46d5257f040800000000000000
+      internalID: 4681300898749284173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_13
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 69
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de340f05de88fe7a0800000000000000
+      internalID: -6345702797095189523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_14
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 89
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efe0f24b8aab524a0800000000000000
+      internalID: -6618678843610820866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_15
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 69
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19420c8e33eef9df0800000000000000
+      internalID: -171156354101140335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_16
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 89
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba6694de6df1db3c0800000000000000
+      internalID: -4342279457750817109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_17
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 68
+        width: 22
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7cb3d7b6b6c824aa0800000000000000
+      internalID: -6178221345806140473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_18
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 89
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fed08e3aa736d900800000000000000
+      internalID: 708815195690032887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_19
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 69
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9af257b27562e8ad0800000000000000
+      internalID: -2698176970915237975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_20
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 89
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a4eb1b1c4d4d4be0800000000000000
+      internalID: -1491450912322100063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_21
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 68
+        width: 22
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 081a462d9c95c1c30800000000000000
+      internalID: 4331435664976683392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_22
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 89
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 273dae7da9d5f1720800000000000000
+      internalID: 2819074811386057586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_23
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 69
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c00e55997fc6f8120800000000000000
+      internalID: 2418271335606509580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_24
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 89
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35ca9e7407f2425a0800000000000000
+      internalID: -6547055799000519597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_25
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 48
+        width: 11
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47ab3836ed0bc8960800000000000000
+      internalID: 7605648339920730740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_26
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 28
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28c666efa7ac5cef0800000000000000
+      internalID: -88441988060910462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_27
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 48
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97da7a331d69793b0800000000000000
+      internalID: -5505766194178183815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_28
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 28
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ebadc2980630874f0800000000000000
+      internalID: -830910418096694594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_29
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 48
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ca23e064fb16a3a0800000000000000
+      internalID: -6654600662981858617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_30
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 28
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 176bf30e1a5d5c580800000000000000
+      internalID: -8807398605024414095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_31
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 48
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07f0bbadb3fc81fd0800000000000000
+      internalID: -2370917347830853776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_32
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 28
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c1b09370206a4690800000000000000
+      internalID: -7617170127249690171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_33
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 48
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 277844f066e333810800000000000000
+      internalID: 1743806088786249586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_34
+      rect:
+        serializedVersion: 2
+        x: 174
+        y: 28
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02ff01feaebab4c90800000000000000
+      internalID: -7184459755017928928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_35
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 48
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 994a2ac212d8c6840800000000000000
+      internalID: 5218701241837855897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_36
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 28
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 706669a1214ebbc80800000000000000
+      internalID: -8305794321348139513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_37
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 48
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 589417099a9f0e9d0800000000000000
+      internalID: -2746921266027869819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_38
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 7
+        width: 11
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77e99f7638b7fc7a0800000000000000
+      internalID: -6354724744881136009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_39
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 0
+        width: 21
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fd96ba744689cbf0800000000000000
+      internalID: -303563871196111369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_40
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 0
+        width: 42
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dec2028df391d3e0800000000000000
+      internalID: -2030679239950151978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_41
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 0
+        width: 42
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2d941fc830ad0f70800000000000000
+      internalID: 9155149783366933803
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_42
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 0
+        width: 42
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb3a40c79afa6acc0800000000000000
+      internalID: -3700076901373271108
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_43
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 7
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 717a70c5096a775a0800000000000000
+      internalID: -6523562396273367273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_44
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 0
+        width: 22
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b351ddab5513c6fa0800000000000000
+      internalID: -5806211575310379717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_45
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 0
+        width: 42
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52571c0ac7632a3a0800000000000000
+      internalID: -6655697390399294171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_lightning_3_46
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 7
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a786a4c9e25b4a220800000000000000
+      internalID: 2496319305265342586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx_lightning_3_0: -5151127129594868529
+      vfx_lightning_3_1: 698843116899692246
+      vfx_lightning_3_10: 1298887297694123897
+      vfx_lightning_3_11: -4492497298384345712
+      vfx_lightning_3_12: 4681300898749284173
+      vfx_lightning_3_13: -6345702797095189523
+      vfx_lightning_3_14: -6618678843610820866
+      vfx_lightning_3_15: -171156354101140335
+      vfx_lightning_3_16: -4342279457750817109
+      vfx_lightning_3_17: -6178221345806140473
+      vfx_lightning_3_18: 708815195690032887
+      vfx_lightning_3_19: -2698176970915237975
+      vfx_lightning_3_2: -5427545430990580717
+      vfx_lightning_3_20: -1491450912322100063
+      vfx_lightning_3_21: 4331435664976683392
+      vfx_lightning_3_22: 2819074811386057586
+      vfx_lightning_3_23: 2418271335606509580
+      vfx_lightning_3_24: -6547055799000519597
+      vfx_lightning_3_25: 7605648339920730740
+      vfx_lightning_3_26: -88441988060910462
+      vfx_lightning_3_27: -5505766194178183815
+      vfx_lightning_3_28: -830910418096694594
+      vfx_lightning_3_29: -6654600662981858617
+      vfx_lightning_3_3: -1813549937367624487
+      vfx_lightning_3_30: -8807398605024414095
+      vfx_lightning_3_31: -2370917347830853776
+      vfx_lightning_3_32: -7617170127249690171
+      vfx_lightning_3_33: 1743806088786249586
+      vfx_lightning_3_34: -7184459755017928928
+      vfx_lightning_3_35: 5218701241837855897
+      vfx_lightning_3_36: -8305794321348139513
+      vfx_lightning_3_37: -2746921266027869819
+      vfx_lightning_3_38: -6354724744881136009
+      vfx_lightning_3_39: -303563871196111369
+      vfx_lightning_3_4: -4053834061071802444
+      vfx_lightning_3_40: -2030679239950151978
+      vfx_lightning_3_41: 9155149783366933803
+      vfx_lightning_3_42: -3700076901373271108
+      vfx_lightning_3_43: -6523562396273367273
+      vfx_lightning_3_44: -5806211575310379717
+      vfx_lightning_3_45: -6655697390399294171
+      vfx_lightning_3_46: 2496319305265342586
+      vfx_lightning_3_5: 8006782869182969082
+      vfx_lightning_3_6: -5387227950767902763
+      vfx_lightning_3_7: 6787532421660357548
+      vfx_lightning_3_8: 4690823772959564134
+      vfx_lightning_3_9: -6276888329870885966
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

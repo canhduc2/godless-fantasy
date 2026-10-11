@@ -23,7 +23,10 @@ namespace GodlessFantasy.Combat
         {
             if (Instance == null) Instance = this;
             boltSprite = Resources.Load<Sprite>("magic_bolt");
-            coneSprite = Resources.Load<Sprite>("indicator_cone") ?? CreateFallbackCone();
+            Sprite rawCone = Resources.Load<Sprite>("indicator_cone");
+            coneSprite = (rawCone != null && rawCone.texture != null)
+                ? Sprite.Create(rawCone.texture, new Rect(0, 0, rawCone.texture.width, rawCone.texture.height), new Vector2(0.125f, 0.5f), 32f)
+                : CreateFallbackCone();
             groundCircleSprite = Resources.Load<Sprite>("indicator_ground_circle") ?? Resources.Load<Sprite>("indicator_circle") ?? CreateFallbackCircle();
             spriteMaterial = new Material(Shader.Find("Sprites/Default"));
         }
@@ -45,6 +48,19 @@ namespace GodlessFantasy.Combat
         // ================= 1. TEMPLATE CHIÊU 1: BẮN ĐẠN ĐƯỜNG THẲNG (LINE PROJECTILE) =================
         public void SpawnLineProjectile(Vector3 startPos, Vector2 direction, int damage, SkillScrollData scroll, string shooterId)
         {
+            float range = scroll != null && scroll.castRange > 0 ? scroll.castRange : 8.0f;
+
+            // Tận dụng ProceduralVFXEngine (140 biến thể nguyên tố & 8 phôi khối Pixel Art)
+            if (ProceduralVFXEngine.Instance != null && scroll != null)
+            {
+                BaseShapeMask shape = (BaseShapeMask)Mathf.Clamp(scroll.baseShapeMask, 0, 7);
+                TrajectoryType traj = (TrajectoryType)Mathf.Clamp(scroll.trajectoryType, 0, 5);
+                float speed = scroll.flySpeed > 0 ? scroll.flySpeed : 16.0f;
+                float radius = scroll.explosionRadius > 0 ? scroll.explosionRadius : 1.8f;
+                ProceduralVFXEngine.Instance.FireProceduralSkill(startPos, direction, shape, scroll.element, traj, damage, speed, radius, scroll.hasTrail, scroll.hasScreenShake, shooterId, null, range);
+                return;
+            }
+
             Color elemCol = GetElementColor(scroll?.element, scroll?.tierColor ?? new Color(0.2f, 0.8f, 1f));
 
             GameObject boltObj = new GameObject($"Projectile_{scroll?.scrollName ?? "Bolt"}");
@@ -79,13 +95,25 @@ namespace GodlessFantasy.Combat
             trail.colorGradient = grad;
 
             var bolt = boltObj.AddComponent<MagicBolt>();
-            bolt.Initialize(direction, damage, shooterId);
+            bolt.Initialize(direction, damage, shooterId, range);
         }
 
         // ================= 2. TEMPLATE CHIÊU 2: MƯA SKILL ĐỔ XUỐNG (SKY RAIN / METEOR SHOWER) =================
         // Khớp 100% vòng tròn ngắm indicator_circle: Thiên thạch / mưa phép đổ từ trời xuống điểm chỉ định!
         public void SpawnGroundAoEImpact(Vector3 targetPos, float radius, int damage, SkillScrollData scroll, string attackerId)
         {
+            if (ProceduralVFXEngine.Instance != null && scroll != null)
+            {
+                bool isSprout = (scroll.baseShapeMask == 8 || scroll.baseShapeMask == 9 || scroll.baseShapeMask == 10 || scroll.baseShapeMask == 11 || scroll.baseShapeMask == 12 || scroll.baseShapeMask == 20);
+                if (isSprout)
+                {
+                    ProceduralVFXEngine.Instance.SpawnProceduralGroundEruption(targetPos, scroll.element, (BaseShapeMask)scroll.baseShapeMask, radius, damage, attackerId);
+                    return;
+                }
+                ProceduralVFXEngine.Instance.SpawnProceduralAoERain(targetPos, scroll.element, radius, damage, attackerId, scroll.rainFallAngle, scroll.rainFallStyle);
+                return;
+            }
+
             Color elemCol = GetElementColor(scroll?.element, scroll?.tierColor ?? new Color(1f, 0.45f, 0.1f));
             StartCoroutine(MeteorRainShowerRoutine(targetPos, radius, damage, elemCol, scroll, attackerId));
         }
@@ -204,6 +232,7 @@ namespace GodlessFantasy.Combat
             sr.sprite = groundCircleSprite;
             sr.color = color;
             sr.sortingOrder = 16;
+            GodlessFantasy.Core.AudioManager.PlayExplosion();
             StartCoroutine(ImpactBlastExpand(blastObj, sr, blastRadius));
         }
 
@@ -229,6 +258,12 @@ namespace GodlessFantasy.Combat
         // Khớp 100% hình quạt indicator_cone: Không còn bị bắn đạn tõe góc nữa, mà là một làn sóng lửa cuồn cuộn quét tới!
         public void SpawnConeSweep(Vector3 startPos, Vector2 direction, float range, float halfAngle, int damage, SkillScrollData scroll, string attackerId)
         {
+            if (ProceduralVFXEngine.Instance != null && scroll != null)
+            {
+                ProceduralVFXEngine.Instance.SpawnProceduralConeWave(startPos, direction, scroll.element, range, damage, attackerId);
+                return;
+            }
+
             Color elemCol = GetElementColor(scroll?.element, scroll?.tierColor ?? new Color(1f, 0.45f, 0.1f));
             StartCoroutine(ConeFlameWaveRoutine(startPos, direction, range, halfAngle, damage, elemCol, scroll, attackerId));
         }
@@ -292,6 +327,12 @@ namespace GodlessFantasy.Combat
         // ================= 4. TEMPLATE CHIÊU 4: NỔ TỎA QUANH NGƯỜI (SELF NOVA 360 ĐỘ) =================
         public void SpawnSelfNova(Vector3 centerPos, float radius, int damage, SkillScrollData scroll, string attackerId)
         {
+            if (ProceduralVFXEngine.Instance != null && scroll != null)
+            {
+                ProceduralVFXEngine.Instance.SpawnProceduralRadialNova(centerPos, scroll.element, radius, damage, attackerId);
+                return;
+            }
+
             Color elemCol = GetElementColor(scroll?.element, scroll?.tierColor ?? new Color(0.9f, 0.3f, 1f));
 
             GameObject novaObj = new GameObject($"Nova_{scroll?.scrollName ?? "Blast"}");

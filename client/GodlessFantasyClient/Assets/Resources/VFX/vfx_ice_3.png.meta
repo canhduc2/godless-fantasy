@@ -1,0 +1,1198 @@
+fileFormatVersion: 2
+guid: fa4fd6d346e621844aa7b7f1b3e64deb
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2366228866945619538
+    second: vfx_ice_3_0
+  - first:
+      213: 4840919879769072891
+    second: vfx_ice_3_1
+  - first:
+      213: 7143905575567502072
+    second: vfx_ice_3_2
+  - first:
+      213: -7326787718851991101
+    second: vfx_ice_3_3
+  - first:
+      213: -8266654480699421449
+    second: vfx_ice_3_4
+  - first:
+      213: 3674421392150963378
+    second: vfx_ice_3_5
+  - first:
+      213: 3821371632602513645
+    second: vfx_ice_3_6
+  - first:
+      213: 3196034593790740230
+    second: vfx_ice_3_7
+  - first:
+      213: -8307581346966446148
+    second: vfx_ice_3_8
+  - first:
+      213: 9198909383763632267
+    second: vfx_ice_3_9
+  - first:
+      213: 2512393165255645732
+    second: vfx_ice_3_10
+  - first:
+      213: -3490417794891257966
+    second: vfx_ice_3_11
+  - first:
+      213: 5244241873966033624
+    second: vfx_ice_3_12
+  - first:
+      213: 2870792744016373353
+    second: vfx_ice_3_13
+  - first:
+      213: 3322389879954145875
+    second: vfx_ice_3_14
+  - first:
+      213: -8704158396677333759
+    second: vfx_ice_3_15
+  - first:
+      213: -6554060452622123111
+    second: vfx_ice_3_16
+  - first:
+      213: -9083732333099080853
+    second: vfx_ice_3_17
+  - first:
+      213: 227788189624530013
+    second: vfx_ice_3_18
+  - first:
+      213: 706262290096007458
+    second: vfx_ice_3_19
+  - first:
+      213: 6767257163929544406
+    second: vfx_ice_3_20
+  - first:
+      213: 7809444916605951104
+    second: vfx_ice_3_21
+  - first:
+      213: 6383069598489355274
+    second: vfx_ice_3_22
+  - first:
+      213: 734515460244053164
+    second: vfx_ice_3_23
+  - first:
+      213: 3976147438462705831
+    second: vfx_ice_3_24
+  - first:
+      213: -5723493729424069923
+    second: vfx_ice_3_25
+  - first:
+      213: -5534672129828228201
+    second: vfx_ice_3_26
+  - first:
+      213: -6316020909484600483
+    second: vfx_ice_3_27
+  - first:
+      213: -3499328122685137935
+    second: vfx_ice_3_28
+  - first:
+      213: -2470429375413521211
+    second: vfx_ice_3_29
+  - first:
+      213: -6010628254070083195
+    second: vfx_ice_3_30
+  - first:
+      213: 3285600229572524920
+    second: vfx_ice_3_31
+  - first:
+      213: -9161589553827012181
+    second: vfx_ice_3_32
+  - first:
+      213: -7966123191961818517
+    second: vfx_ice_3_33
+  - first:
+      213: 6718415386169035438
+    second: vfx_ice_3_34
+  - first:
+      213: 1123235824165910371
+    second: vfx_ice_3_35
+  - first:
+      213: 699087642858959935
+    second: vfx_ice_3_36
+  - first:
+      213: -8042647572187600397
+    second: vfx_ice_3_37
+  - first:
+      213: -2765161614115035629
+    second: vfx_ice_3_38
+  - first:
+      213: -3635336147569871367
+    second: vfx_ice_3_39
+  - first:
+      213: 8184730599386308227
+    second: vfx_ice_3_40
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx_ice_3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 52
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 256919f1e9886d020800000000000000
+      internalID: 2366228866945619538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_1
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 127
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf423cb7bf66e2340800000000000000
+      internalID: 4840919879769072891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_2
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 107
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8fa22ac5540442360800000000000000
+      internalID: 7143905575567502072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_3
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 127
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c9e1218365025a90800000000000000
+      internalID: -7326787718851991101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_4
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 107
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fc05056c81f64d80800000000000000
+      internalID: -8266654480699421449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_5
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 128
+        width: 22
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b4214ac9ca2ef230800000000000000
+      internalID: 3674421392150963378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_6
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 107
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de0070cd04d380530800000000000000
+      internalID: 3821371632602513645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_7
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 127
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 607c1cc97889a5c20800000000000000
+      internalID: 3196034593790740230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_8
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 107
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbf5767c7ca85bc80800000000000000
+      internalID: -8307581346966446148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_9
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 128
+        width: 22
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b802d3cb85719af70800000000000000
+      internalID: 9198909383763632267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_10
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 107
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42a9e27c540ddd220800000000000000
+      internalID: 2512393165255645732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_11
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 86
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 297edc1328b8f8fc0800000000000000
+      internalID: -3490417794891257966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_12
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 66
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8da69fdf23a47c840800000000000000
+      internalID: 5244241873966033624
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_13
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 86
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9666dd26aca17d720800000000000000
+      internalID: 2870792744016373353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_14
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 66
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35205083eff7b1e20800000000000000
+      internalID: 3322389879954145875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_15
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 87
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10d50590e0e943780800000000000000
+      internalID: -8704158396677333759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_16
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 66
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99fb5054ebc4b05a0800000000000000
+      internalID: -6554060452622123111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_17
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 87
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6326ea129910f180800000000000000
+      internalID: -9083732333099080853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_18
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 66
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d54799ec624492300800000000000000
+      internalID: 227788189624530013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_19
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 86
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2292d679fc52dc900800000000000000
+      internalID: 706262290096007458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_20
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 66
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d6ecbf39802aed50800000000000000
+      internalID: 6767257163929544406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_21
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 46
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08c174386c8b06c60800000000000000
+      internalID: 7809444916605951104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_22
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 25
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a04ad8a1bf7359850800000000000000
+      internalID: 6383069598489355274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_23
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 46
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cac11e16be5813a00800000000000000
+      internalID: 734515460244053164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_24
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 25
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a0262c570d1e2730800000000000000
+      internalID: 3976147438462705831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_25
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 46
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddaa08707c01290b0800000000000000
+      internalID: -5723493729424069923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_26
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 25
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79375599505e033b0800000000000000
+      internalID: -5534672129828228201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_27
+      rect:
+        serializedVersion: 2
+        x: 174
+        y: 46
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d531b30527cf858a0800000000000000
+      internalID: -6316020909484600483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_28
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 25
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fb51d6dc93ef6fc0800000000000000
+      internalID: -3499328122685137935
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_29
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 46
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c479cb629547bdd0800000000000000
+      internalID: -2470429375413521211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_30
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 25
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 581f937d275f59ca0800000000000000
+      internalID: -6010628254070083195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_31
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 5
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87bbc9d300cc89d20800000000000000
+      internalID: 3285600229572524920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_32
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 0
+        width: 22
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba1263a47de7bd080800000000000000
+      internalID: -9161589553827012181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_33
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 5
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6a6d1ac925a27190800000000000000
+      internalID: -7966123191961818517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_34
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 0
+        width: 22
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaacf12b23b9c3d50800000000000000
+      internalID: 6718415386169035438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_35
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 5
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 367f66ae709869f00800000000000000
+      internalID: 1123235824165910371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_36
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 0
+        width: 22
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f34397bd188a3b900800000000000000
+      internalID: 699087642858959935
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_37
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 5
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f9a91615a6c26090800000000000000
+      internalID: -8042647572187600397
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_38
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 0
+        width: 22
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 316a024992c20a9d0800000000000000
+      internalID: -2765161614115035629
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_39
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 5
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f5f5fcd801bc8dc0800000000000000
+      internalID: -3635336147569871367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_ice_3_40
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 0
+        width: 21
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38ed0b69d11069170800000000000000
+      internalID: 8184730599386308227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx_ice_3_0: 2366228866945619538
+      vfx_ice_3_1: 4840919879769072891
+      vfx_ice_3_10: 2512393165255645732
+      vfx_ice_3_11: -3490417794891257966
+      vfx_ice_3_12: 5244241873966033624
+      vfx_ice_3_13: 2870792744016373353
+      vfx_ice_3_14: 3322389879954145875
+      vfx_ice_3_15: -8704158396677333759
+      vfx_ice_3_16: -6554060452622123111
+      vfx_ice_3_17: -9083732333099080853
+      vfx_ice_3_18: 227788189624530013
+      vfx_ice_3_19: 706262290096007458
+      vfx_ice_3_2: 7143905575567502072
+      vfx_ice_3_20: 6767257163929544406
+      vfx_ice_3_21: 7809444916605951104
+      vfx_ice_3_22: 6383069598489355274
+      vfx_ice_3_23: 734515460244053164
+      vfx_ice_3_24: 3976147438462705831
+      vfx_ice_3_25: -5723493729424069923
+      vfx_ice_3_26: -5534672129828228201
+      vfx_ice_3_27: -6316020909484600483
+      vfx_ice_3_28: -3499328122685137935
+      vfx_ice_3_29: -2470429375413521211
+      vfx_ice_3_3: -7326787718851991101
+      vfx_ice_3_30: -6010628254070083195
+      vfx_ice_3_31: 3285600229572524920
+      vfx_ice_3_32: -9161589553827012181
+      vfx_ice_3_33: -7966123191961818517
+      vfx_ice_3_34: 6718415386169035438
+      vfx_ice_3_35: 1123235824165910371
+      vfx_ice_3_36: 699087642858959935
+      vfx_ice_3_37: -8042647572187600397
+      vfx_ice_3_38: -2765161614115035629
+      vfx_ice_3_39: -3635336147569871367
+      vfx_ice_3_4: -8266654480699421449
+      vfx_ice_3_40: 8184730599386308227
+      vfx_ice_3_5: 3674421392150963378
+      vfx_ice_3_6: 3821371632602513645
+      vfx_ice_3_7: 3196034593790740230
+      vfx_ice_3_8: -8307581346966446148
+      vfx_ice_3_9: 9198909383763632267
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

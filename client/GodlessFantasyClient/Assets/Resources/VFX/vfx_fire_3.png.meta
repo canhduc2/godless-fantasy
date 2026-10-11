@@ -1,0 +1,1068 @@
+fileFormatVersion: 2
+guid: 415a82d13bfd9c64a9c86894ed8dc95e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6147284982312271844
+    second: vfx_fire_3_0
+  - first:
+      213: -5007129767413422018
+    second: vfx_fire_3_1
+  - first:
+      213: -5307746921361698302
+    second: vfx_fire_3_2
+  - first:
+      213: 2317817727181299258
+    second: vfx_fire_3_3
+  - first:
+      213: -8350512565811352521
+    second: vfx_fire_3_4
+  - first:
+      213: -4422916775620422414
+    second: vfx_fire_3_5
+  - first:
+      213: -3997833879111403791
+    second: vfx_fire_3_6
+  - first:
+      213: -4870289504868613342
+    second: vfx_fire_3_7
+  - first:
+      213: 5228828402903184406
+    second: vfx_fire_3_8
+  - first:
+      213: 2365539829633318080
+    second: vfx_fire_3_9
+  - first:
+      213: -3321186897234124075
+    second: vfx_fire_3_10
+  - first:
+      213: 5896244388672540277
+    second: vfx_fire_3_11
+  - first:
+      213: -7524259888150826431
+    second: vfx_fire_3_12
+  - first:
+      213: -8277238410238942234
+    second: vfx_fire_3_13
+  - first:
+      213: -5716590687779014778
+    second: vfx_fire_3_14
+  - first:
+      213: 7238466600824560118
+    second: vfx_fire_3_15
+  - first:
+      213: 4332304092416083827
+    second: vfx_fire_3_16
+  - first:
+      213: -935559751282692359
+    second: vfx_fire_3_17
+  - first:
+      213: -7976090536460749848
+    second: vfx_fire_3_18
+  - first:
+      213: -6034092609187967286
+    second: vfx_fire_3_19
+  - first:
+      213: -5405236667126235010
+    second: vfx_fire_3_20
+  - first:
+      213: 8568346794100353038
+    second: vfx_fire_3_21
+  - first:
+      213: -2028801509343957262
+    second: vfx_fire_3_22
+  - first:
+      213: 600672360053073915
+    second: vfx_fire_3_23
+  - first:
+      213: -707777088093318518
+    second: vfx_fire_3_24
+  - first:
+      213: -3958030567722911163
+    second: vfx_fire_3_25
+  - first:
+      213: -4664871672702306721
+    second: vfx_fire_3_26
+  - first:
+      213: -6660240583746951622
+    second: vfx_fire_3_27
+  - first:
+      213: -5414286956819642951
+    second: vfx_fire_3_28
+  - first:
+      213: -1753883835730957391
+    second: vfx_fire_3_29
+  - first:
+      213: -4045588917616051427
+    second: vfx_fire_3_30
+  - first:
+      213: -6959210870508471874
+    second: vfx_fire_3_31
+  - first:
+      213: -1720640560502506433
+    second: vfx_fire_3_32
+  - first:
+      213: 2345467281519490611
+    second: vfx_fire_3_33
+  - first:
+      213: -6473062251816399317
+    second: vfx_fire_3_34
+  - first:
+      213: 7958832774682889005
+    second: vfx_fire_3_35
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx_fire_3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 104
+        width: 31
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c100f28d0e470baa0800000000000000
+      internalID: -6147284982312271844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_1
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 125
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e38e905610a138ab0800000000000000
+      internalID: -5007129767413422018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_2
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 104
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2021092fb481756b0800000000000000
+      internalID: -5307746921361698302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_3
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 125
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3e9eba41fa8a2020800000000000000
+      internalID: 2317817727181299258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_4
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 104
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73ce06670150d1c80800000000000000
+      internalID: -8350512565811352521
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_5
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 125
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f4570e40a4ae92c0800000000000000
+      internalID: -4422916775620422414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_6
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 104
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f6fa84b447d488c0800000000000000
+      internalID: -3997833879111403791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_7
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 125
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2234efccf71496cb0800000000000000
+      internalID: -4870289504868613342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_8
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 104
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 614748a9ab7809840800000000000000
+      internalID: 5228828402903184406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_9
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 125
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ccf45f11f514d020800000000000000
+      internalID: 2365539829633318080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_10
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 104
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d2ada50d16c8e1d0800000000000000
+      internalID: -3321186897234124075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_11
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 125
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57e87b7280ba3d150800000000000000
+      internalID: 5896244388672540277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 142bc093f75749790800000000000000
+      internalID: -7524259888150826431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_13
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 63
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e32d744587512d80800000000000000
+      internalID: -8277238410238942234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_14
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 84
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68730a8ae079aa0b0800000000000000
+      internalID: -5716590687779014778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_15
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 63
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f95dacb503347460800000000000000
+      internalID: 7238466600824560118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_16
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 84
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3778e675e9f6f1c30800000000000000
+      internalID: 4332304092416083827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_17
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 43
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9fe64aeec593403f0800000000000000
+      internalID: -935559751282692359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_18
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 84
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e3f6ed8aeb3f4190800000000000000
+      internalID: -7976090536460749848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_19
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 63
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ace8a8fedb8924ca0800000000000000
+      internalID: -6034092609187967286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_20
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 84
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e704601b3edbcf4b0800000000000000
+      internalID: -5405236667126235010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_21
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 43
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0865be1302e8e670800000000000000
+      internalID: 8568346794100353038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_22
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 84
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2fee6cbb6cf38d3e0800000000000000
+      internalID: -2028801509343957262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_23
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 23
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf7eb573454065800800000000000000
+      internalID: 600672360053073915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_24
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 43
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8299040d787d26f0800000000000000
+      internalID: -707777088093318518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_25
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 22
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54afcb05b204219c0800000000000000
+      internalID: -3958030567722911163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_26
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 22
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f56fbc1edeb034fb0800000000000000
+      internalID: -4664871672702306721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_27
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 43
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a366f1ff9721293a0800000000000000
+      internalID: -6660240583746951622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_28
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 22
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b50cbae2b69cd4b0800000000000000
+      internalID: -5414286956819642951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_29
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 23
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bbe4f1a1f3f8a7e0800000000000000
+      internalID: -1753883835730957391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_30
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 43
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1bfc3a505e2bd7c0800000000000000
+      internalID: -4045588917616051427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_31
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 0
+        width: 42
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb93e42b59aeb6f90800000000000000
+      internalID: -6959210870508471874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_32
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 0
+        width: 42
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3c7e1dc68e0f18e0800000000000000
+      internalID: -1720640560502506433
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_33
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 0
+        width: 42
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3363543d016cc8020800000000000000
+      internalID: 2345467281519490611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_34
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 0
+        width: 42
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2e4e7f7d201b26a0800000000000000
+      internalID: -6473062251816399317
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_fire_3_35
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 2
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2bc5b9ad34737e60800000000000000
+      internalID: 7958832774682889005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx_fire_3_0: -6147284982312271844
+      vfx_fire_3_1: -5007129767413422018
+      vfx_fire_3_10: -3321186897234124075
+      vfx_fire_3_11: 5896244388672540277
+      vfx_fire_3_12: -7524259888150826431
+      vfx_fire_3_13: -8277238410238942234
+      vfx_fire_3_14: -5716590687779014778
+      vfx_fire_3_15: 7238466600824560118
+      vfx_fire_3_16: 4332304092416083827
+      vfx_fire_3_17: -935559751282692359
+      vfx_fire_3_18: -7976090536460749848
+      vfx_fire_3_19: -6034092609187967286
+      vfx_fire_3_2: -5307746921361698302
+      vfx_fire_3_20: -5405236667126235010
+      vfx_fire_3_21: 8568346794100353038
+      vfx_fire_3_22: -2028801509343957262
+      vfx_fire_3_23: 600672360053073915
+      vfx_fire_3_24: -707777088093318518
+      vfx_fire_3_25: -3958030567722911163
+      vfx_fire_3_26: -4664871672702306721
+      vfx_fire_3_27: -6660240583746951622
+      vfx_fire_3_28: -5414286956819642951
+      vfx_fire_3_29: -1753883835730957391
+      vfx_fire_3_3: 2317817727181299258
+      vfx_fire_3_30: -4045588917616051427
+      vfx_fire_3_31: -6959210870508471874
+      vfx_fire_3_32: -1720640560502506433
+      vfx_fire_3_33: 2345467281519490611
+      vfx_fire_3_34: -6473062251816399317
+      vfx_fire_3_35: 7958832774682889005
+      vfx_fire_3_4: -8350512565811352521
+      vfx_fire_3_5: -4422916775620422414
+      vfx_fire_3_6: -3997833879111403791
+      vfx_fire_3_7: -4870289504868613342
+      vfx_fire_3_8: 5228828402903184406
+      vfx_fire_3_9: 2365539829633318080
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

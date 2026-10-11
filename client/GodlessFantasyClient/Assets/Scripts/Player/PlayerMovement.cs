@@ -43,14 +43,28 @@ namespace GodlessFantasy.Player
         {
             get
             {
-                int agi = (playerStats != null) ? playerStats.Agility : 9;
-                // Mỗi điểm AGI giảm 0.1s; giảm tối đa 1.0s (không bao giờ tụt quá 1s so với 3.5s gốc, không tụt về 0.9s, 0.8s, 0.7s...)
-                float reduction = Mathf.Min(1.0f, Mathf.Max(0, agi - 9) * 0.1f);
-                return dashCooldown - reduction;
+                if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+                float reduction = (playerStats != null) ? playerStats.DynamicDashCooldownReduction : 0f;
+                return Mathf.Max(2.5f, dashCooldown - reduction);
+            }
+        }
+
+        public float CurrentMoveSpeed
+        {
+            get
+            {
+                if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+                float baseSpd = moveSpeed;
+                if (playerStats != null)
+                {
+                    baseSpd += playerStats.DynamicMoveSpeedBonus;
+                }
+                return baseSpd;
             }
         }
 
         public bool IsDashing => isDashing;
+        public bool IsMoving => isMovingToTarget || (rb != null && rb.linearVelocity.sqrMagnitude > 0.05f);
         public float DashCooldownRemaining => Mathf.Max(0, (lastDashTime + CurrentDashCooldown) - Time.time);
 
         [SerializeField] private SpriteRenderer spriteRenderer;
@@ -80,7 +94,8 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            HandleKeyboardMovement();
+            // Vô hiệu hóa di chuyển bằng WASD theo yêu cầu: Tránh hoàn toàn xung đột với phím Dash [D].
+            // Toàn bộ di chuyển được xử lý 100% bằng Click Chuột (Click-to-Move) chuẩn mực MMORPG/ARPG.
             HandleMouseMovement();
             HandleDashInput();
         }
@@ -102,22 +117,10 @@ namespace GodlessFantasy.Player
                 }
                 else
                 {
-                    rb.linearVelocity = direction.normalized * moveSpeed;
+                    rb.linearVelocity = direction.normalized * CurrentMoveSpeed;
                 }
             }
-        }
-
-        private void HandleKeyboardMovement()
-        {
-            Vector2 inputDir = GameInput.GetMovementVector();
-
-            if (inputDir.sqrMagnitude > 0.01f)
-            {
-                // WASD ghi đè Click-to-Move ngay lập tức
-                isMovingToTarget = false;
-                rb.linearVelocity = inputDir * moveSpeed;
-            }
-            else if (!isMovingToTarget)
+            else
             {
                 rb.linearVelocity = Vector2.zero;
             }
@@ -145,21 +148,55 @@ namespace GodlessFantasy.Player
             if (rb != null) rb.linearVelocity = Vector2.zero;
         }
 
+        private Combat.BasicAttackController basicAttack;
+
         private void HandleMouseMovement()
         {
-            if (BlockWorldClick) return;
+            if (BlockWorldClick || GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI()) return;
 
             // Click chuột trái để di chuyển
             if (GameInput.GetLeftMouseButtonDown())
             {
                 if (mainCamera == null) mainCamera = Camera.main;
+                if (mainCamera == null) return;
                 Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
 
-                // Nếu click trúng quái vật / mục tiêu tấn công thì nhường quyền xử lý cho BasicAttack
-                Collider2D hit = Physics2D.OverlapPoint(new Vector2(mouseWorldPos.x, mouseWorldPos.y));
-                if (hit != null && hit.gameObject != gameObject && (hit.GetComponent<Combat.IDamageable>() != null || hit.GetComponent<Combat.MonsterTarget>() != null))
+                // ƯU TIÊN TUYỆT ĐỐI MỤC TIÊU QUÁI VẬT & NGƯỜI CHƠI ĐỐI THỦ:
+                // Dùng Physics2D.OverlapPointAll quét toàn bộ Collider2D tại vị trí chuột.
+                // Nếu click trúng bất kỳ mục tiêu chiến đấu nào (MonsterTarget, PlayerStats đối thủ, IDamageable)
+                // thì nhường quyền xử lý 100% cho BasicAttackController (không di chuyển nhân vật đến vị trí đó).
+                if (basicAttack == null) basicAttack = GetComponent<Combat.BasicAttackController>();
+                bool hitCombatTarget = false;
+
+                if (basicAttack != null)
                 {
-                    return;
+                    hitCombatTarget = basicAttack.TryFindCombatTargetAt(mouseWorldPos, out _, out _);
+                }
+                else
+                {
+                    Collider2D[] allHits = Physics2D.OverlapPointAll(new Vector2(mouseWorldPos.x, mouseWorldPos.y));
+                    foreach (var hCol in allHits)
+                    {
+                        if (hCol == null) continue;
+                        if (hCol.gameObject == gameObject || hCol.transform.root == transform.root) continue;
+                        if (hCol.GetComponentInParent<VillageNPC>() != null) continue;
+
+                        var monster = hCol.GetComponentInParent<Combat.MonsterTarget>();
+                        var otherPlayer = hCol.GetComponentInParent<PlayerStats>();
+                        var dmg = hCol.GetComponentInParent<Combat.IDamageable>();
+                        var h = hCol.GetComponentInParent<Combat.Health>();
+
+                        if (monster != null || otherPlayer != null || dmg != null || h != null)
+                        {
+                            hitCombatTarget = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hitCombatTarget)
+                {
+                    return; // Nhường trọn vẹn cho đòn đánh thường / khóa mục tiêu!
                 }
 
                 targetPosition = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
@@ -171,6 +208,8 @@ namespace GodlessFantasy.Player
 
         private void HandleDashInput()
         {
+            if (GodlessFantasy.UI.CombatHUD.IsAnyModalOpen()) return;
+
             if (GameInput.GetDashKeyDown())
             {
                 if (Time.time >= lastDashTime + CurrentDashCooldown)
@@ -205,6 +244,8 @@ namespace GodlessFantasy.Player
             isDashing = true;
             isMovingToTarget = false;
             lastDashTime = Time.time;
+
+            AudioManager.PlayDash();
 
             rb.linearVelocity = direction * dashSpeed;
 

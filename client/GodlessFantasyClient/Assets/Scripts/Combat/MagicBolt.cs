@@ -17,6 +17,8 @@ namespace GodlessFantasy.Combat
         private Vector2 moveDirection;
         private string shooterId = "Player";
         private Rigidbody2D rb;
+        private Vector3 startPosition;
+        private float maxRange = 8.0f;
 
         private void Awake()
         {
@@ -24,8 +26,10 @@ namespace GodlessFantasy.Combat
             // Không hủy ở Awake để tránh làm mất prefab template!
         }
 
-        public void Initialize(Vector2 direction, int boltDamage, string attacker)
+        public void Initialize(Vector2 direction, int boltDamage, string attacker, float range = 8.0f)
         {
+            startPosition = transform.position;
+            maxRange = Mathf.Max(1.0f, range);
             moveDirection = direction.normalized;
             damage = boltDamage;
             shooterId = attacker;
@@ -39,8 +43,18 @@ namespace GodlessFantasy.Combat
                 rb.linearVelocity = moveDirection * speed;
             }
 
-            // Tự động hủy đạn sau lifetime khi đã được phóng ra
-            Destroy(gameObject, lifetime);
+            // Tự động hủy đạn theo thời gian tối đa để tới maxRange
+            float calculatedLife = Mathf.Min(lifetime, (maxRange / Mathf.Max(1f, speed)) + 0.05f);
+            Destroy(gameObject, calculatedLife);
+        }
+
+        private void Update()
+        {
+            // Kiểm tra mất tầm: Khi bay vượt quá maxRange thì biến mất ngay lập tức!
+            if (Vector3.Distance(transform.position, startPosition) >= maxRange)
+            {
+                Destroy(gameObject);
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D other)

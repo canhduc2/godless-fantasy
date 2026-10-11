@@ -57,9 +57,16 @@ namespace GodlessFantasy.Combat
             var col = GetComponent<Collider2D>();
             if (col != null) col.enabled = false;
 
+            var ai = GetComponent<GodlessFantasy.AI.MonsterAIController>();
+            if (ai != null)
+            {
+                ai.HideTelegraph();
+            }
+
             // 1. Phân phối EXP & Vàng (Nếu có bang hội thì chia cho đồng đội trong map)
-            int expReward = gameObject.name.Contains("Champion") ? 120 : 45;
-            int goldReward = gameObject.name.Contains("Champion") ? 60 : 25;
+            bool isBoss = gameObject.name.Contains("Boss") || gameObject.name.Contains("Champion");
+            int expReward = isBoss ? 250 : 50;
+            int goldReward = isBoss ? 150 : 30;
 
             var gm = GodlessFantasy.Guild.GuildManager.Instance;
             if (gm != null && gm.IsInGuild)
@@ -79,7 +86,13 @@ namespace GodlessFantasy.Combat
             }
 
             // 2. Rơi vật phẩm tự do tại vị trí quái chết để người chơi tự do nhặt và tranh nhau đồ
-            if (Random.value > 0.4f)
+            if (isBoss)
+            {
+                // Boss rơi bảo vật phẩm cao cấp
+                GroundLootItem.SpawnLoot(transform.position, "Bảo Thạch Cổ Đại", "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "item_necklace", 1);
+                GroundLootItem.SpawnLoot(transform.position + new Vector3(0.5f, 0, 0), "Bình Đại Dược Thần", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_potion_hp", 2);
+            }
+            else if (Random.value > 0.4f)
             {
                 GroundLootItem.SpawnLoot(transform.position, "Thịt Nướng Lửa Hồng", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_potion_hp", 1);
             }
@@ -110,11 +123,18 @@ namespace GodlessFantasy.Combat
 
             if (health != null)
             {
-                // Reset máu
-                typeof(Health).GetField("currentHealth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                    ?.SetValue(health, health.MaxHealth);
+                health.Revive();
             }
-            transform.position = initialPosition;
+
+            var ai = GetComponent<GodlessFantasy.AI.MonsterAIController>();
+            if (ai != null)
+            {
+                ai.ResetToSpawn();
+            }
+            else
+            {
+                transform.position = initialPosition;
+            }
         }
     }
 }

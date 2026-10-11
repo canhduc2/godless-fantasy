@@ -1,0 +1,1302 @@
+fileFormatVersion: 2
+guid: 3449ca7596b349d4ea1edebd79fd90c2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 9130712421065994894
+    second: vfx_wind_3_0
+  - first:
+      213: -6867155043257438737
+    second: vfx_wind_3_1
+  - first:
+      213: 4632091467139756957
+    second: vfx_wind_3_2
+  - first:
+      213: 5039314879722929319
+    second: vfx_wind_3_3
+  - first:
+      213: 6874395502290682788
+    second: vfx_wind_3_4
+  - first:
+      213: 7998448546517110994
+    second: vfx_wind_3_5
+  - first:
+      213: -3043814204268193577
+    second: vfx_wind_3_6
+  - first:
+      213: -2590321456687726643
+    second: vfx_wind_3_7
+  - first:
+      213: 3856782483574848356
+    second: vfx_wind_3_8
+  - first:
+      213: 5206010761870097695
+    second: vfx_wind_3_9
+  - first:
+      213: -5421161547270859391
+    second: vfx_wind_3_10
+  - first:
+      213: -4635520577445466799
+    second: vfx_wind_3_11
+  - first:
+      213: 4293989297955999532
+    second: vfx_wind_3_12
+  - first:
+      213: -8000176787013294721
+    second: vfx_wind_3_13
+  - first:
+      213: 9106761200151703540
+    second: vfx_wind_3_14
+  - first:
+      213: -7079205585145015844
+    second: vfx_wind_3_15
+  - first:
+      213: 3227550567804352860
+    second: vfx_wind_3_16
+  - first:
+      213: 8170584746144505588
+    second: vfx_wind_3_17
+  - first:
+      213: 3837121724193839042
+    second: vfx_wind_3_18
+  - first:
+      213: -6900661039717342309
+    second: vfx_wind_3_19
+  - first:
+      213: -2981515012126360962
+    second: vfx_wind_3_20
+  - first:
+      213: 761946378974704902
+    second: vfx_wind_3_21
+  - first:
+      213: -27840924942150338
+    second: vfx_wind_3_22
+  - first:
+      213: 2463278461547394236
+    second: vfx_wind_3_23
+  - first:
+      213: 1224217223741757779
+    second: vfx_wind_3_24
+  - first:
+      213: 409016712711734157
+    second: vfx_wind_3_25
+  - first:
+      213: 8752999013762679227
+    second: vfx_wind_3_26
+  - first:
+      213: 5140429241474752124
+    second: vfx_wind_3_27
+  - first:
+      213: -5950126144505556059
+    second: vfx_wind_3_28
+  - first:
+      213: 5200300709126467463
+    second: vfx_wind_3_29
+  - first:
+      213: -1107055719286870797
+    second: vfx_wind_3_30
+  - first:
+      213: -929868004550778729
+    second: vfx_wind_3_31
+  - first:
+      213: -5053089304898264950
+    second: vfx_wind_3_32
+  - first:
+      213: -996146323030223350
+    second: vfx_wind_3_33
+  - first:
+      213: -285475850974429650
+    second: vfx_wind_3_34
+  - first:
+      213: -6477781804788445445
+    second: vfx_wind_3_35
+  - first:
+      213: -1617267499112157775
+    second: vfx_wind_3_36
+  - first:
+      213: 7023811722272089752
+    second: vfx_wind_3_37
+  - first:
+      213: -8852919362553227089
+    second: vfx_wind_3_38
+  - first:
+      213: -1104979872099905908
+    second: vfx_wind_3_39
+  - first:
+      213: 85026639596401275
+    second: vfx_wind_3_40
+  - first:
+      213: -7074020283747744619
+    second: vfx_wind_3_41
+  - first:
+      213: 3612928000550410749
+    second: vfx_wind_3_42
+  - first:
+      213: 697674683512971450
+    second: vfx_wind_3_43
+  - first:
+      213: 6183706134378954768
+    second: vfx_wind_3_44
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx_wind_3_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 117
+        width: 52
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e82b2e3029ec6be70800000000000000
+      internalID: 9130712421065994894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_1
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 138
+        width: 21
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fedab153fd6f2b0a0800000000000000
+      internalID: -6867155043257438737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_2
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 138
+        width: 21
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d93bbf1c5ae784040800000000000000
+      internalID: 4632091467139756957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_3
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 118
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7acb9350f2e3fe540800000000000000
+      internalID: 5039314879722929319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_4
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 138
+        width: 22
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a344978942c66f50800000000000000
+      internalID: 6874395502290682788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_5
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 118
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d054615392300f60800000000000000
+      internalID: 7998448546517110994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_6
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 138
+        width: 22
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d85e48ab1332c5d0800000000000000
+      internalID: -3043814204268193577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_7
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 118
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcf3e08fb545d0cd0800000000000000
+      internalID: -2590321456687726643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_8
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 138
+        width: 22
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46b7d651c3b068530800000000000000
+      internalID: 3856782483574848356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_9
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 118
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1db02e84377f3840800000000000000
+      internalID: 5206010761870097695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_10
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 138
+        width: 22
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 185d9e89b4a24c4b0800000000000000
+      internalID: -5421161547270859391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_11
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 118
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15d695848925bafb0800000000000000
+      internalID: -4635520577445466799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 15
+        width: 52
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2f0ff51480579b30800000000000000
+      internalID: 4293989297955999532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_13
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 97
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f752fb55999a9f090800000000000000
+      internalID: -8000176787013294721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_14
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 77
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ff2a55df07b16e70800000000000000
+      internalID: 9106761200151703540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_15
+      rect:
+        serializedVersion: 2
+        x: 92
+        y: 97
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd1587d070c91cd90800000000000000
+      internalID: -7079205585145015844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_16
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 77
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c59b69024209acc20800000000000000
+      internalID: 3227550567804352860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_17
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 97
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fe1b29798fb36170800000000000000
+      internalID: 8170584746144505588
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_18
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 77
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c71282d0e1304530800000000000000
+      internalID: 3837121724193839042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_19
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 97
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b93254c785deb30a0800000000000000
+      internalID: -6900661039717342309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_20
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 77
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7ab6b9a4e78f96d0800000000000000
+      internalID: -2981515012126360962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_21
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 97
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 605bea8d13af29a00800000000000000
+      internalID: 761946378974704902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_22
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 77
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e35da9683d61d9ff0800000000000000
+      internalID: -27840924942150338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_23
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 56
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb43763b5b25f2220800000000000000
+      internalID: 2463278461547394236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_24
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 36
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 359da0d241b4df010800000000000000
+      internalID: 1224217223741757779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_25
+      rect:
+        serializedVersion: 2
+        x: 92
+        y: 56
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d83816c788e1da500800000000000000
+      internalID: 409016712711734157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_26
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 36
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb14ba64a36e87970800000000000000
+      internalID: 8752999013762679227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_27
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 56
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7e1223f829765740800000000000000
+      internalID: 5140429241474752124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_28
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 36
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a35bf3fbc7ec6da0800000000000000
+      internalID: -5950126144505556059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_29
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 56
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78fe1bc41fd2b2840800000000000000
+      internalID: 5200300709126467463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_30
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 36
+        width: 22
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fc675150b2f2a0f0800000000000000
+      internalID: -1107055719286870797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_31
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 56
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 790efbcf9f17813f0800000000000000
+      internalID: -929868004550778729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_32
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 36
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a80a633bc02dfd9b0800000000000000
+      internalID: -5053089304898264950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_33
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 11
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a06d87f623afc22f0800000000000000
+      internalID: -996146323030223350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_34
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 0
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2e77bed939c90cf0800000000000000
+      internalID: -285475850974429650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_35
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 15
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfe8811f4cb4a16a0800000000000000
+      internalID: -6477781804788445445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_36
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 0
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bda2a837cf4e89e0800000000000000
+      internalID: -1617267499112157775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_37
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 15
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 896a0433c87997160800000000000000
+      internalID: 7023811722272089752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_38
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 0
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa856d99ebc142580800000000000000
+      internalID: -8852919362553227089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_39
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 15
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8e478729a25aa0f0800000000000000
+      internalID: -1104979872099905908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_40
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 0
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b72b69937431e2100800000000000000
+      internalID: 85026639596401275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_41
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 15
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 594ce4d180804dd90800000000000000
+      internalID: -7074020283747744619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_42
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 0
+        width: 22
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df99ed7dfd2b32230800000000000000
+      internalID: 3612928000550410749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_43
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 15
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab0e29f9d63aea900800000000000000
+      internalID: 697674683512971450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx_wind_3_44
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 0
+        width: 21
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 010cf0f67ffe0d550800000000000000
+      internalID: 6183706134378954768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx_wind_3_0: 9130712421065994894
+      vfx_wind_3_1: -6867155043257438737
+      vfx_wind_3_10: -5421161547270859391
+      vfx_wind_3_11: -4635520577445466799
+      vfx_wind_3_12: 4293989297955999532
+      vfx_wind_3_13: -8000176787013294721
+      vfx_wind_3_14: 9106761200151703540
+      vfx_wind_3_15: -7079205585145015844
+      vfx_wind_3_16: 3227550567804352860
+      vfx_wind_3_17: 8170584746144505588
+      vfx_wind_3_18: 3837121724193839042
+      vfx_wind_3_19: -6900661039717342309
+      vfx_wind_3_2: 4632091467139756957
+      vfx_wind_3_20: -2981515012126360962
+      vfx_wind_3_21: 761946378974704902
+      vfx_wind_3_22: -27840924942150338
+      vfx_wind_3_23: 2463278461547394236
+      vfx_wind_3_24: 1224217223741757779
+      vfx_wind_3_25: 409016712711734157
+      vfx_wind_3_26: 8752999013762679227
+      vfx_wind_3_27: 5140429241474752124
+      vfx_wind_3_28: -5950126144505556059
+      vfx_wind_3_29: 5200300709126467463
+      vfx_wind_3_3: 5039314879722929319
+      vfx_wind_3_30: -1107055719286870797
+      vfx_wind_3_31: -929868004550778729
+      vfx_wind_3_32: -5053089304898264950
+      vfx_wind_3_33: -996146323030223350
+      vfx_wind_3_34: -285475850974429650
+      vfx_wind_3_35: -6477781804788445445
+      vfx_wind_3_36: -1617267499112157775
+      vfx_wind_3_37: 7023811722272089752
+      vfx_wind_3_38: -8852919362553227089
+      vfx_wind_3_39: -1104979872099905908
+      vfx_wind_3_4: 6874395502290682788
+      vfx_wind_3_40: 85026639596401275
+      vfx_wind_3_41: -7074020283747744619
+      vfx_wind_3_42: 3612928000550410749
+      vfx_wind_3_43: 697674683512971450
+      vfx_wind_3_44: 6183706134378954768
+      vfx_wind_3_5: 7998448546517110994
+      vfx_wind_3_6: -3043814204268193577
+      vfx_wind_3_7: -2590321456687726643
+      vfx_wind_3_8: 3856782483574848356
+      vfx_wind_3_9: 5206010761870097695
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

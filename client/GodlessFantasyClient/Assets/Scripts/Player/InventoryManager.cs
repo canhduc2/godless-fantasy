@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using GodlessFantasy.Combat;
+using GodlessFantasy.Core;
 
 namespace GodlessFantasy.Player
 {
@@ -39,12 +40,45 @@ namespace GodlessFantasy.Player
         public InventoryItem PendingDropItem => pendingDropItem;
         public float DropCountdown => dropCountdown;
 
-        public void AddItem(InventoryItem item)
+        public bool IsFull => items.Count >= INVENTORY_CAPACITY;
+
+        public bool CanAddItem(InventoryItem item)
         {
-            if (item != null)
+            if (item == null) return false;
+            // Nếu là vật phẩm tiêu hao (Consumable) và đã có sẵn trong túi -> Cho phép cộng dồn số lượng
+            if (item.itemType == ItemType.Consumable)
             {
-                items.Add(item);
+                var existing = items.Find(x => x.id == item.id && x.itemType == ItemType.Consumable);
+                if (existing != null) return true;
             }
+            return items.Count < INVENTORY_CAPACITY;
+        }
+
+        public bool AddItem(InventoryItem item)
+        {
+            if (item == null) return false;
+
+            // 1. Kiểm tra cộng dồn đối với Dược phẩm / Tiêu hao
+            if (item.itemType == ItemType.Consumable)
+            {
+                var existing = items.Find(x => x.id == item.id && x.itemType == ItemType.Consumable);
+                if (existing != null)
+                {
+                    existing.quantity += item.quantity;
+                    Debug.Log($"<color=green>[HÀNH TRANG]</color> Đã cộng dồn {item.quantity} '{item.itemName}' (Hiện có: {existing.quantity})!");
+                    return true;
+                }
+            }
+
+            // 2. Chặn tuyệt đối nếu đã đạt giới hạn 24 ô
+            if (items.Count >= INVENTORY_CAPACITY)
+            {
+                Debug.LogWarning($"<color=red>[HÀNH TRANG ĐẦY]</color> Không thể nhận '{item.itemName}' vì hành trang đã đầy ({items.Count}/{INVENTORY_CAPACITY})!");
+                return false;
+            }
+
+            items.Add(item);
+            return true;
         }
 
         private void Awake()
@@ -124,13 +158,13 @@ namespace GodlessFantasy.Player
             items.Add(ring);
 
             // Mặc sẵn 7 món này lên người nhân vật
-            EquipGearItem(wep);
-            EquipGearItem(helm);
-            EquipGearItem(armor);
-            EquipGearItem(pants);
-            EquipGearItem(boots);
-            EquipGearItem(neck);
-            EquipGearItem(ring);
+            EquipGearItem(wep, true);
+            EquipGearItem(helm, true);
+            EquipGearItem(armor, true);
+            EquipGearItem(pants, true);
+            EquipGearItem(boots, true);
+            EquipGearItem(neck, true);
+            EquipGearItem(ring, true);
 
             // 2. Sách Kỹ Năng (Cuộn Trục Bí Kíp) - Tên chuyên nghiệp, ngắn gọn & chuẩn hệ
             var s1 = new InventoryItem("scroll_s1", "Hỏa Kiếm Khí", ItemType.SkillScroll, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_scroll_fire", "• [Kị Sĩ · Hỏa] | ST: 25 + 100% INT | CD: 1.0s | Tầm: 8.0m", "Phóng kiếm khí hỏa diễm theo đường thẳng (Line Skillshot).", 1,
@@ -188,12 +222,56 @@ namespace GodlessFantasy.Player
             var pet = new InventoryItem("pet_squirrel_egg", "Sóc Chibi SquiRRels", ItemType.Pet, EquipSlot.None, "Phẩm A", new Color(1f, 0.85f, 0.35f), "pet_squirrel", "Thú Cưng Đồng Hành", "Thú cưng linh vật đáng yêu, có thể tiến hóa to hơn và mạnh hơn khi được cho ăn hạt dẻ.");
             pet.isEquipped = true; // Đang xuất chiến
             items.Add(pet);
+
+            // 5. Ngoại Trang (Skin Trang Phục)
+            var skin = new InventoryItem("gear_costume_champion", "Ngoại Trang Thiết Giáp Chiến Thần", ItemType.Costume, EquipSlot.Costume, "Phẩm S", new Color(1f, 0.85f, 0.25f), "item_costume", "+15 Giáp • Che Lấp Toàn Thân (Skin)", "Ngoại trang hoàng gia tuyệt mỹ, biến đổi hoàn toàn diện mạo thành Chiến Binh Hoàng Kim!");
+            items.Add(skin);
+
+            // 6. KHO TRANG BỊ MẪU KIỂM THỬ KHÓA HỆ & THUỘC TÍNH (TEST GEAR FOR ALL CLASSES & ELEMENTS):
+            // - Món 1: Chiến Giáp Hỏa Long (Kị Sĩ · Hỏa) -> Người chơi Kị Sĩ Hỏa MẶC ĐƯỢC!
+            items.Add(new InventoryItem("gear_knight_flame_armor", "Chiến Giáp Hỏa Long", ItemType.Equipment, EquipSlot.Armor, "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "item_armor", "+28 Giáp · +45 Thể Lực (VIT)", "Chiến giáp đúc từ vảy Hỏa Long cổ đại, uy lực ngút trời.", 1, null, "Kị Sĩ", "Hỏa"));
+
+            // - Món 2: Pháp Bào Băng Sương (Pháp Sư · Băng) -> Người chơi Kị Sĩ Hỏa BỊ CHẶN: Sai Hệ & Khác Thuộc Tính!
+            items.Add(new InventoryItem("gear_mage_frost_robe", "Pháp Bào Băng Sương", ItemType.Equipment, EquipSlot.Armor, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_armor", "+12 Giáp · +40 Trí Tuệ (INT)", "Áo dệt từ tơ tuyết vĩnh cửu, tỏa hàn khí buốt giá.", 1, null, "Pháp Sư", "Băng"));
+
+            // - Món 3: Hàn Băng Thánh Khiên (Kị Sĩ · Băng) -> Cùng hệ Kị Sĩ nhưng Khác Thuộc Tính Băng -> BỊ CHẶN!
+            items.Add(new InventoryItem("gear_knight_ice_shield", "Hàn Băng Thánh Khiên", ItemType.Equipment, EquipSlot.Helmet, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_helmet", "+20 Giáp · +25 Thể Lực (VIT)", "Khiên băng nghìn năm hộ thể, chỉ người mang nguyên tố Băng mới phát huy được.", 1, null, "Kị Sĩ", "Băng"));
+
+            // - Món 4: Áo Da Phong Linh (Xạ Thủ · Phong) -> Sai Hệ!
+            items.Add(new InventoryItem("gear_archer_wind_vest", "Áo Da Phong Linh", ItemType.Equipment, EquipSlot.Armor, "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "item_armor", "+16 Giáp · +38 Nhanh Nhẹn (AGI)", "Áo da nhẹ bẫng tựa gió thoảng, hỗ trợ thần tiễn thủ xuất chiêu chớp nhoáng.", 1, null, "Xạ Thủ", "Phong"));
+
+            // - Món 5: Võ Khố Lôi Đình (Võ Sĩ · Lôi) -> Sai Hệ!
+            items.Add(new InventoryItem("gear_brawler_thunder_pants", "Võ Khố Lôi Đình", ItemType.Equipment, EquipSlot.Pants, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_pants", "+18 Giáp · +30 Sức Mạnh (STR)", "Quần võ gia tăng điện tích cuồng nộ trong từng đòn thế.", 1, null, "Võ Sĩ", "Lôi"));
+
+            // - Món 6: Thánh Quang Hộ Phù (Toàn Hệ · Quang) -> Toàn Hệ nhưng khác nguyên tố (Quang vs Hỏa) -> BỊ CHẶN!
+            items.Add(new InventoryItem("gear_all_holy_amulet", "Thánh Quang Hộ Phù", ItemType.Equipment, EquipSlot.Necklace, "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "item_necklace", "+15 Giáp · +30 INT · +30 VIT", "Bùa hộ mệnh thần thánh ban phước, chỉ phát huy với dũng sĩ mang Thuộc Tính Ánh Sáng.", 1, null, "Toàn Hệ", "Ánh Sáng"));
+
+            // - Món 7: Nhẫn Liệt Hỏa (Toàn Hệ · Hỏa) -> Toàn Hệ và cùng nguyên tố Hỏa -> Người chơi MẶC ĐƯỢC!
+            items.Add(new InventoryItem("gear_all_flame_ring", "Nhẫn Liệt Hỏa", ItemType.Equipment, EquipSlot.Ring, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_ring", "+25 Công · +15 INT · +15 STR", "Nhẫn rực lửa tăng mạnh lực chiến, tương thích cho bất kỳ ai mang nguyên tố Hỏa.", 1, null, "Toàn Hệ", "Hỏa"));
         }
 
         // ================= XỬ LÝ TRANG BỊ TAB 1 =================
-        public void EquipGearItem(InventoryItem item)
+        public bool EquipGearItem(InventoryItem item, bool bypassLockCheck = false)
         {
-            if (item == null || item.itemType != ItemType.Equipment || item.equipSlot == EquipSlot.None) return;
+            if (item == null || (item.itemType != ItemType.Equipment && item.itemType != ItemType.Costume) || item.equipSlot == EquipSlot.None) return false;
+
+            EnsureReferences();
+
+            // KIỂM TRA ĐIỀU KIỆN KÉP NGHIÊM NGẶT: HỆ & THUỘC TÍNH NGUYÊN TỐ (ĐỒNG BỘ 100% VỚI BÍ KÍP)
+            if (!bypassLockCheck)
+            {
+                string playerClass = playerStats != null ? playerStats.CharacterClass : "Kị Sĩ";
+                string playerElem = playerStats != null ? playerStats.Element : "Hỏa";
+
+                if (!item.CanPlayerEquip(playerClass, playerElem, out string reason))
+                {
+                    Debug.LogWarning($"[KHÓA TRANG BỊ] {reason}");
+                    Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                    FloatingDamageManager.ShowFloatingText(spawnPos, $"⛔ {reason}", new Color(1f, 0.35f, 0.35f));
+                    AudioManager.PlayHit();
+                    return false;
+                }
+            }
 
             // Nếu ô đó đã có món khác -> Tháo món cũ ra trước
             if (equippedGear.TryGetValue(item.equipSlot, out var oldItem) && oldItem != null)
@@ -203,7 +281,12 @@ namespace GodlessFantasy.Player
 
             equippedGear[item.equipSlot] = item;
             item.isEquipped = true;
+
+            Vector3 okPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.4f : Vector3.zero;
+            FloatingDamageManager.ShowFloatingText(okPos, $"🛡️ Mặc {item.itemName}", new Color(0.35f, 0.95f, 0.55f));
+            AudioManager.PlayPickup();
             Debug.Log($"<color=green>[TRANG BỊ] Đã mặc '{item.itemName}' vào ô {item.equipSlot}!</color>");
+            return true;
         }
 
         public void UnequipGearItem(EquipSlot slot)
@@ -324,6 +407,15 @@ namespace GodlessFantasy.Player
             return true;
         }
 
+        public static bool IsTierBOrHigher(string tierRank)
+        {
+            if (string.IsNullOrEmpty(tierRank)) return false;
+            string t = tierRank.Trim().ToUpper();
+            // Bậc B trở lên bao gồm: B, A, S, X (hoặc Phẩm B, Phẩm A, Phẩm S, Phẩm X)
+            // Bậc thấp: C, D, E
+            return t.Contains("B") || t.Contains("A") || t.Contains("S") || t.Contains("X");
+        }
+
         public void RequestDropItem(InventoryItem item)
         {
             if (!CanDropItem(item))
@@ -333,7 +425,8 @@ namespace GodlessFantasy.Player
             }
 
             pendingDropItem = item;
-            dropCountdown = 0f; // Bỏ thời gian chờ 5s theo yêu cầu user
+            // Khóa 30 giây bảo hộ an toàn đối với vật phẩm từ bậc B trở lên, bậc thấp (C, D, E) thì không cần chờ
+            dropCountdown = IsTierBOrHigher(item.tierRank) ? 30f : 0f;
             isDropModalOpen = true;
         }
 

@@ -23,11 +23,14 @@ namespace GodlessFantasy.Player
         [SerializeField] private float zoomSensitivity = 1.2f;
         [SerializeField] private float zoomSmoothSpeed = 10.0f;
 
+        public static CameraController Instance { get; private set; }
+
         private Camera cam;
         private float targetZoom = 5.0f;
 
         private void Awake()
         {
+            Instance = this;
             cam = GetComponent<Camera>();
             if (cam != null)
             {
@@ -37,10 +40,30 @@ namespace GodlessFantasy.Player
             }
         }
 
+        private float shakeTimer = 0f;
+        private float shakeMagnitude = 0.15f;
+
+        public void Shake(float duration = 0.2f, float magnitude = 0.15f)
+        {
+            shakeTimer = duration;
+            shakeMagnitude = magnitude;
+        }
+
         private void LateUpdate()
         {
             HandleTracking();
             HandleZoom();
+            HandleShake();
+        }
+
+        private void HandleShake()
+        {
+            if (shakeTimer > 0f)
+            {
+                shakeTimer -= Time.deltaTime;
+                Vector2 rand = Random.insideUnitCircle * shakeMagnitude;
+                transform.position += new Vector3(rand.x, rand.y, 0f);
+            }
         }
 
         private void HandleTracking()
@@ -71,11 +94,16 @@ namespace GodlessFantasy.Player
         {
             if (cam == null) return;
 
-            float scroll = GameInput.GetMouseScroll();
-            if (Mathf.Abs(scroll) > 0.01f)
+            // Chống zoom màn hình khi đang rê chuột trên UI, cuộn danh sách menu hoặc đang mở Menu/Drawer/Modal/Popup
+            bool isBlockedByUI = GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI() || GodlessFantasy.UI.CombatHUD.IsAnyModalOpen();
+            if (!isBlockedByUI)
             {
-                targetZoom -= scroll * zoomSensitivity;
-                targetZoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
+                float scroll = GameInput.GetMouseScroll();
+                if (Mathf.Abs(scroll) > 0.01f)
+                {
+                    targetZoom -= scroll * zoomSensitivity;
+                    targetZoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
+                }
             }
 
             cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, targetZoom, zoomSmoothSpeed * Time.deltaTime);

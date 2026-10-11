@@ -39,31 +39,41 @@ namespace GodlessFantasy.Guild
         public string leaderName;
         public int guildLevel = 1;
         public int guildGoldFund = 500;
-        public string slogan = "Huynh đệ đồng tâm, sinh tử có nhau!";
+        public string guildPassCode = "6688"; // Pass/Code gia nhập bang hội
+
+        [SerializeField] private string _slogan = "Huynh đệ đồng tâm, sinh tử có nhau!";
+        public string slogan
+        {
+            get => _slogan;
+            set
+            {
+                if (string.IsNullOrEmpty(value)) _slogan = "";
+                else if (value.Length > 50) _slogan = value.Substring(0, 50);
+                else _slogan = value;
+            }
+        }
         public List<GuildMember> members = new List<GuildMember>();
 
-        public GuildData(string id, string name, string leader)
+        public GuildData(string id, string name, string leader, string passCode = "6688")
         {
             guildId = id;
             guildName = name;
             leaderName = leader;
             guildLevel = 1;
             guildGoldFund = 500;
+            guildPassCode = string.IsNullOrEmpty(passCode) ? "8888" : passCode;
+            slogan = "Huynh đệ đồng tâm, sinh tử có nhau!";
         }
     }
 
     /// <summary>
     /// Hệ Thống Quản Lý Bang Hội & Đồng Đội (Guild & Teammate System):
     /// - Mở từ Tab Cài Đặt (Settings) -> Pop-up cửa sổ ở giữa màn hình.
-    /// - Chưa có bang: Tạo bang (chi phí rẻ 200 vàng ai cũng tạo được) / Gia nhập bang có sẵn.
+    /// - Chưa có bang: Tạo bang (chi phí rẻ 200 vàng ai cũng tạo được) / Gia nhập bang có sẵn bằng Mã Code / Pass Bang.
     /// - Đã có bang: Không thể ở bang khác, muốn sang bang khác phải RỜI BANG.
-    /// - Rời Bang: Cơ chế Double Check bảo vệ đếm ngược 60s (1 phút) mới mở khóa nút Rời Bang.
-    /// - Danh sách thành viên: Xem Profile, Trạng thái Online, Map, Mời Giao Dịch.
-    /// - Hiển thị Tên Bang trên cùng đỉnh đầu nhân vật (trên danh hiệu).
-    /// - Hiển thị chấm màu đồng minh trên Minimap khi ở cùng Map.
-    /// - Chia sẻ EXP & Vàng khi đánh boss/quái cùng nhau.
-    /// - Hưởng Buff Chiêu 6 (AoE Team Buff) khi đứng gần nhau trong cùng Map.
-    /// - Title chung phó bản bang: « Huynh Đệ Sát Cánh ».
+    /// - Rời Bang / Giải Tán Bang: Cơ chế Double Check bảo vệ đếm ngược 60s (1 phút) mới mở khóa nút Rời/Giải Tán Bang.
+    /// - Bang Chủ có bảng Cài Đặt: Đổi Pass Bang, Đổi Khẩu Hiệu (tối đa 50 ký tự), Kích thành viên, Giải tán bang.
+    /// - Danh sách thành viên: Xem Profile, Trạng thái Online, Map, Mời Giao Dịch, Kích Thành Viên (Bang Chủ).
     /// </summary>
     public class GuildManager : MonoBehaviour
     {
@@ -74,16 +84,43 @@ namespace GodlessFantasy.Guild
         [SerializeField] private GuildData currentGuild = null;
         [SerializeField] private List<GuildData> publicGuilds = new List<GuildData>();
 
-        // Timer bảo vệ rời bang (1 phút = 60s mới mở khóa)
+        // Timer bảo vệ rời / giải tán bang (1 phút = 60s mới mở khóa)
         private float leaveGuildCountdown = 0f;
         private bool isLeaveRequested = false;
+        private bool isDisbandRequested = false;
+
+        // Giới hạn nhập Pass Code gia nhập bang: Tối đa 3 lần / ngày
+        public const int MAX_DAILY_JOIN_ATTEMPTS = 3;
+        private int dailyJoinAttemptsUsed = 0;
+        private string lastAttemptDateStr = "";
+
+        public int RemainingDailyJoinAttempts
+        {
+            get
+            {
+                CheckResetDailyAttempts();
+                return Mathf.Max(0, MAX_DAILY_JOIN_ATTEMPTS - dailyJoinAttemptsUsed);
+            }
+        }
+
+        private void CheckResetDailyAttempts()
+        {
+            string todayStr = DateTime.Now.ToString("yyyy-MM-dd");
+            if (lastAttemptDateStr != todayStr)
+            {
+                lastAttemptDateStr = todayStr;
+                dailyJoinAttemptsUsed = 0;
+            }
+        }
 
         public GuildData CurrentGuild => currentGuild;
         public bool IsInGuild => currentGuild != null;
         public List<GuildData> PublicGuilds => publicGuilds;
         public float LeaveGuildCountdown => leaveGuildCountdown;
         public bool IsLeaveRequested => isLeaveRequested;
+        public bool IsDisbandRequested => isDisbandRequested;
         public bool IsLeaveUnlocked => isLeaveRequested && leaveGuildCountdown <= 0f;
+        public bool IsDisbandUnlocked => isDisbandRequested && leaveGuildCountdown <= 0f;
 
         public event Action OnGuildUpdated;
 
@@ -95,27 +132,32 @@ namespace GodlessFantasy.Guild
 
         private void InitializeDefaultGuilds()
         {
-            // Danh sách các bang hội server mẫu để người chơi có thể gia nhập hoặc xem
-            var g1 = new GuildData("guild_dragon", "Thần Long Hội", "Chiến Thần Long");
+            // Bang hội mẫu 1: Thần Long Hội (Người chơi làm Bang Chủ để trải nghiệm đầy đủ quyền hạn)
+            var g1 = new GuildData("guild_dragon", "Thần Long Hội", "Dũng Sĩ SquiRRels", "6688");
             g1.slogan = "Chấn hưng bang phái, bình định tứ hải!";
-            g1.members.Add(new GuildMember("Chiến Thần Long", 15, "Kị Sĩ", "Hỏa", true, "Rừng Rậm PvP", true, new Vector2(8f, 2f)));
+            g1.members.Add(new GuildMember("Dũng Sĩ SquiRRels", 15, "Kị Sĩ", "Hỏa", true, "Rừng Rậm PvP", true, new Vector2(8f, 2f)));
             g1.members.Add(new GuildMember("Băng Tâm Tiên Tử", 14, "Pháp Sư", "Băng", true, "Rừng Rậm PvP", false, new Vector2(9.5f, 3f)));
             g1.members.Add(new GuildMember("Lôi Đình Quyền Vương", 12, "Võ Sĩ", "Lôi", true, "Làng Tân Thủ", false, new Vector2(-12f, 0f)));
+            g1.members.Add(new GuildMember("Huyết Lôi Kiếm Thánh", 18, "Võ Sĩ", "Lôi", true, "Rừng Rậm PvP", false, new Vector2(11f, 1f)));
+            g1.members.Add(new GuildMember("Thanh Long Yểm Nguyệt", 17, "Kị Sĩ", "Mộc", true, "Làng Tân Thủ", false, new Vector2(-8f, 2f)));
+            g1.members.Add(new GuildMember("Bạch Hổ Thần Tướng", 13, "Xạ Thủ", "Quang", false, "Rừng Rậm PvP", false, new Vector2(14f, -2f)));
+            g1.members.Add(new GuildMember("Bích Tiêu Đao Khách", 11, "Xạ Thủ", "Phong", false, "Làng Tân Thủ", false, new Vector2(-10f, -3f)));
             publicGuilds.Add(g1);
 
-            var g2 = new GuildData("guild_phoenix", "Phượng Hoàng Cốc", "Hỏa Phượng Tiên");
+            // Bang hội mẫu 2: Phượng Hoàng Cốc (Pass gia nhập: 1234)
+            var g2 = new GuildData("guild_phoenix", "Phượng Hoàng Cốc", "Hỏa Phượng Tiên", "1234");
             g2.slogan = "Tự do khám phá, tương trợ anh em!";
             g2.members.Add(new GuildMember("Hỏa Phượng Tiên", 16, "Pháp Sư", "Hỏa", true, "Làng Tân Thủ", true));
             g2.members.Add(new GuildMember("Phong Ảnh Xạ Thủ", 11, "Xạ Thủ", "Phong", false, "Rừng Rậm PvP", false));
             publicGuilds.Add(g2);
 
-            // Mặc định tạo sẵn bang hội "SquiRRels Studio" người chơi đang tham gia để trải nghiệm ngay
-            JoinGuildInternal("guild_dragon", "Dũng Sĩ SquiRRels");
+            // Mặc định người chơi đang ở trong bang Thần Long Hội
+            currentGuild = g1;
         }
 
         private void Update()
         {
-            if (isLeaveRequested && leaveGuildCountdown > 0f)
+            if ((isLeaveRequested || isDisbandRequested) && leaveGuildCountdown > 0f)
             {
                 leaveGuildCountdown -= Time.deltaTime;
                 if (leaveGuildCountdown <= 0f)
@@ -125,7 +167,20 @@ namespace GodlessFantasy.Guild
             }
         }
 
+        public bool IsPlayerLeader(PlayerStats playerStats)
+        {
+            if (currentGuild == null || playerStats == null) return false;
+            if (currentGuild.leaderName == playerStats.CharacterName) return true;
+            var m = currentGuild.members.Find(x => x.memberName == playerStats.CharacterName);
+            return m != null && m.isLeader;
+        }
+
         public bool CreateGuild(string name, PlayerStats playerStats)
+        {
+            return CreateGuild(name, "8888", "Huynh đệ đồng tâm, sinh tử có nhau!", playerStats);
+        }
+
+        public bool CreateGuild(string name, string passCode, string slogan, PlayerStats playerStats)
         {
             if (IsInGuild)
             {
@@ -149,7 +204,11 @@ namespace GodlessFantasy.Guild
 
             string leaderName = playerStats.CharacterName;
             string gId = "guild_" + Guid.NewGuid().ToString().Substring(0, 8);
-            var newGuild = new GuildData(gId, name.Trim(), leaderName);
+            var newGuild = new GuildData(gId, name.Trim(), leaderName, string.IsNullOrEmpty(passCode) ? "8888" : passCode.Trim());
+            if (!string.IsNullOrEmpty(slogan))
+            {
+                newGuild.slogan = slogan;
+            }
             newGuild.members.Add(new GuildMember(leaderName, playerStats.Level, playerStats.CharacterClass, playerStats.Element, true, "Làng Tân Thủ", true));
 
             publicGuilds.Add(newGuild);
@@ -157,7 +216,7 @@ namespace GodlessFantasy.Guild
 
             FloatingDamageManager.ShowFloatingText(playerStats.transform.position + Vector3.up * 1.2f,
                 $"👑 THÀNH LẬP BANG [{name}] THÀNH CÔNG!", new Color(1f, 0.88f, 0.25f));
-            Debug.Log($"<color=yellow>[GUILD]</color> Đã tạo Bang Hội '{name}' thành công!");
+            Debug.Log($"<color=yellow>[GUILD]</color> Đã tạo Bang Hội '{name}' thành công! Pass code: {newGuild.guildPassCode}");
 
             OnGuildUpdated?.Invoke();
             return true;
@@ -165,14 +224,43 @@ namespace GodlessFantasy.Guild
 
         public bool JoinGuild(string guildId, PlayerStats playerStats)
         {
+            return JoinGuildWithCode(guildId, "", playerStats, out _);
+        }
+
+        public bool JoinGuildWithCode(string guildId, string code, PlayerStats playerStats, out string errorMsg)
+        {
+            errorMsg = "";
             if (IsInGuild)
             {
-                Debug.LogWarning("[GUILD] Bạn đã ở trong một bang hội!");
+                errorMsg = "Bạn đã ở trong một bang hội! Cần rời bang trước.";
                 return false;
             }
 
             var target = publicGuilds.Find(g => g.guildId == guildId);
-            if (target == null) return false;
+            if (target == null)
+            {
+                errorMsg = "Không tìm thấy bang hội trên server!";
+                return false;
+            }
+
+            CheckResetDailyAttempts();
+
+            if (RemainingDailyJoinAttempts <= 0)
+            {
+                errorMsg = "❌ Đã hết lượt nhập mã hôm nay (Giới hạn: 3 lần/ngày)! Vui lòng thử lại vào ngày mai.";
+                return false;
+            }
+
+            string requiredCode = string.IsNullOrEmpty(target.guildPassCode) ? "6688" : target.guildPassCode.Trim();
+            if (string.IsNullOrEmpty(code) || code.Trim() != requiredCode)
+            {
+                dailyJoinAttemptsUsed++;
+                int left = RemainingDailyJoinAttempts;
+                errorMsg = left > 0
+                    ? $"❌ Sai Mã Code Bang! (Còn {left}/3 lượt thử hôm nay)"
+                    : "❌ Sai Mã Code Bang! Đã hết 3 lượt nhập hôm nay, vui lòng quay lại ngày mai.";
+                return false;
+            }
 
             string myName = playerStats != null ? playerStats.CharacterName : "Dũng Sĩ";
             target.members.Add(new GuildMember(myName, playerStats != null ? playerStats.Level : 1,
@@ -205,7 +293,8 @@ namespace GodlessFantasy.Guild
         {
             if (!IsInGuild) return;
             isLeaveRequested = true;
-            leaveGuildCountdown = 60.0f; // 1 phút an toàn chống bấm nhầm / phá bang
+            isDisbandRequested = false;
+            leaveGuildCountdown = 60.0f; // 1 phút an toàn chống bấm nhầm
             Debug.Log("<color=yellow>[GUILD]</color> Đã yêu cầu rời bang. Chờ 60 giây để xác nhận!");
         }
 
@@ -229,6 +318,77 @@ namespace GodlessFantasy.Guild
             FloatingDamageManager.ShowFloatingText(playerStats != null ? playerStats.transform.position + Vector3.up * 1.2f : Vector3.zero,
                 $"👋 ĐÃ RỜI BANG [{oldGuildName}]!", new Color(1f, 0.6f, 0.2f));
 
+            OnGuildUpdated?.Invoke();
+            return true;
+        }
+
+        // Bắt đầu quy trình Double-Check giải tán bang (Dành cho Bang Chủ - Đếm ngược 60s = 1 phút mới mở khóa)
+        public void RequestDisbandGuild()
+        {
+            if (!IsInGuild) return;
+            isDisbandRequested = true;
+            isLeaveRequested = false;
+            leaveGuildCountdown = 60.0f; // 1 phút an toàn bảo vệ
+            Debug.Log("<color=red>[GUILD]</color> Bang Chủ đã yêu cầu GIẢI TÁN BANG. Chờ 60 giây để mở khóa xác nhận!");
+        }
+
+        public void CancelDisbandGuild()
+        {
+            isDisbandRequested = false;
+            leaveGuildCountdown = 0f;
+        }
+
+        public bool ConfirmDisbandGuild(PlayerStats playerStats)
+        {
+            if (!IsInGuild || !IsDisbandUnlocked || !IsPlayerLeader(playerStats)) return false;
+
+            string oldGuildName = currentGuild.guildName;
+            publicGuilds.RemoveAll(g => g.guildId == currentGuild.guildId);
+            currentGuild = null;
+            isDisbandRequested = false;
+            leaveGuildCountdown = 0f;
+
+            FloatingDamageManager.ShowFloatingText(playerStats != null ? playerStats.transform.position + Vector3.up * 1.2f : Vector3.zero,
+                $"💥 ĐÃ GIẢI TÁN BANG [{oldGuildName}] HOÀN TOÀN!", new Color(1f, 0.25f, 0.25f));
+            Debug.Log($"<color=red>[GUILD]</color> Đã giải tán bang {oldGuildName} thành công!");
+
+            OnGuildUpdated?.Invoke();
+            return true;
+        }
+
+        // Kích thành viên khỏi bang (Chỉ Bang Chủ mới kích được, không thể kích Bang Chủ)
+        public bool KickMember(string memberName, PlayerStats requesterStats)
+        {
+            if (!IsInGuild || !IsPlayerLeader(requesterStats)) return false;
+            if (memberName == requesterStats.CharacterName || memberName == currentGuild.leaderName) return false;
+
+            int removed = currentGuild.members.RemoveAll(m => m.memberName == memberName);
+            if (removed > 0)
+            {
+                FloatingDamageManager.ShowFloatingText(requesterStats != null ? requesterStats.transform.position + Vector3.up * 1f : Vector3.zero,
+                    $"⚠️ ĐÃ KÍCH [{memberName}] KHỎI BANG!", new Color(1f, 0.4f, 0.4f));
+                Debug.Log($"<color=orange>[GUILD]</color> Bang Chủ đã kích thành viên {memberName} khỏi bang!");
+                OnGuildUpdated?.Invoke();
+                return true;
+            }
+            return false;
+        }
+
+        // Đổi Pass Bang & Khẩu Hiệu Bang (Dành cho Bang Chủ)
+        public bool UpdateGuildSettings(string newSlogan, string newPassCode, PlayerStats requesterStats)
+        {
+            if (!IsInGuild || !IsPlayerLeader(requesterStats)) return false;
+
+            if (newSlogan != null)
+            {
+                currentGuild.slogan = newSlogan;
+            }
+            if (!string.IsNullOrEmpty(newPassCode))
+            {
+                currentGuild.guildPassCode = newPassCode.Trim();
+            }
+
+            Debug.Log($"<color=green>[GUILD]</color> Đã cập nhật cài đặt bang: Slogan='{currentGuild.slogan}', Pass='{currentGuild.guildPassCode}'");
             OnGuildUpdated?.Invoke();
             return true;
         }
