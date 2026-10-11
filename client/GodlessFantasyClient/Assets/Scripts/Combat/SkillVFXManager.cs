@@ -32,13 +32,13 @@ namespace GodlessFantasy.Combat
         {
             if (string.IsNullOrEmpty(element)) return fallback;
             string elemLower = element.ToLower();
-            if (elemLower.Contains("hỏa") || elemLower.Contains("fire")) return new Color(1.0f, 0.42f, 0.10f); // Cam đỏ rực lửa
-            if (elemLower.Contains("băng") || elemLower.Contains("ice") || elemLower.Contains("frost")) return new Color(0.20f, 0.85f, 1.0f); // Xanh băng tuyết
-            if (elemLower.Contains("lôi") || elemLower.Contains("lightning") || elemLower.Contains("sấm")) return new Color(1.0f, 0.95f, 0.20f); // Vàng sấm sét
-            if (elemLower.Contains("mộc") || elemLower.Contains("wood") || elemLower.Contains("tự nhiên") || elemLower.Contains("nature")) return new Color(0.20f, 0.92f, 0.35f); // Xanh mộc sinh mệnh
-            if (elemLower.Contains("phong") || elemLower.Contains("wind") || elemLower.Contains("khí")) return new Color(0.35f, 0.90f, 0.85f); // Xanh ngọc phong
-            if (elemLower.Contains("thánh") || elemLower.Contains("holy") || elemLower.Contains("quang") || elemLower.Contains("light")) return new Color(1.0f, 0.90f, 0.45f); // Vàng kim thánh
-            if (elemLower.Contains("ma") || elemLower.Contains("dark") || elemLower.Contains("hắc") || elemLower.Contains("tối")) return new Color(0.75f, 0.25f, 1.0f); // Tím ma pháp
+            if (elemLower.Contains("hỏa") || elemLower.Contains("fire")) return new Color(1.0f, 0.32f, 0.05f); // 🔥 Cam đỏ rực
+            if (elemLower.Contains("băng") || elemLower.Contains("ice") || elemLower.Contains("frost")) return new Color(0.20f, 0.85f, 1.0f); // 🧊 Xanh băng
+            if (elemLower.Contains("lôi") || elemLower.Contains("lightning") || elemLower.Contains("sấm")) return new Color(1.0f, 0.95f, 0.15f); // ⚡ Vàng sấm
+            if (elemLower.Contains("mộc") || elemLower.Contains("wood") || elemLower.Contains("sinh") || elemLower.Contains("nature")) return new Color(0.15f, 0.92f, 0.30f); // 🌿 Xanh sinh mệnh
+            if (elemLower.Contains("phong") || elemLower.Contains("wind") || elemLower.Contains("ngọc")) return new Color(0.20f, 0.92f, 0.85f); // 💨 Xanh ngọc
+            if (elemLower.Contains("quang") || elemLower.Contains("holy") || elemLower.Contains("thánh") || elemLower.Contains("light") || elemLower.Contains("sáng") || elemLower.Contains("bạch kim")) return new Color(0.96f, 0.98f, 1.0f); // ✨ TRẮNG BẠCH KIM
+            if (elemLower.Contains("ma") || elemLower.Contains("dark") || elemLower.Contains("hắc") || elemLower.Contains("ám") || elemLower.Contains("tối")) return new Color(0.72f, 0.22f, 1.0f); // 🌑 Tím ma pháp
             return fallback;
         }
 
@@ -470,6 +470,50 @@ namespace GodlessFantasy.Combat
         }
 
         // ================= FALLBACK SPRITE GENERATORS =================
+        // ================= 6. TEMPLATE CHIÊU 6: BUFF DIỆN RỘNG TOÀN ĐỘI / BANG HỘI (AOE TEAM BUFF 360 ĐỘ) =================
+        public void SpawnTeamBuffAoEVFX(Vector3 centerPos, float radius = 6.5f, string element = "Hỏa")
+        {
+            Color goldBuffColor = new Color(1.0f, 0.88f, 0.25f); // Màu vàng hoàng kim rực rỡ đặc trưng chiêu 6
+            GameObject teamBuffObj = new GameObject($"TeamBuffAoE_{element}");
+            teamBuffObj.transform.position = centerPos;
+            StartCoroutine(TeamBuffAoERoutine(teamBuffObj, centerPos, radius, goldBuffColor));
+        }
+
+        private IEnumerator TeamBuffAoERoutine(GameObject obj, Vector3 center, float radius, Color color)
+        {
+            var lr = obj.AddComponent<LineRenderer>();
+            lr.material = spriteMaterial;
+            lr.sortingOrder = 24;
+            lr.useWorldSpace = true;
+            lr.loop = true;
+            lr.positionCount = 36;
+
+            float dur = 0.65f;
+            float elapsed = 0f;
+
+            while (elapsed < dur)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / dur;
+                float curR = Mathf.Lerp(0.5f, radius, Mathf.SmoothStep(0f, 1f, t));
+                lr.startWidth = Mathf.Lerp(0.28f, 0.03f, t);
+                lr.endWidth = lr.startWidth;
+
+                Color c = new Color(color.r, color.g, color.b, (1f - t) * 0.95f);
+                lr.startColor = c;
+                lr.endColor = c;
+
+                for (int i = 0; i < 36; i++)
+                {
+                    float angle = i * (Mathf.PI * 2f / 36f);
+                    lr.SetPosition(i, center + new Vector3(Mathf.Cos(angle) * curR, Mathf.Sin(angle) * curR, 0));
+                }
+                yield return null;
+            }
+
+            Destroy(obj);
+        }
+
         private Sprite CreateFallbackCircle()
         {
             int size = 64;

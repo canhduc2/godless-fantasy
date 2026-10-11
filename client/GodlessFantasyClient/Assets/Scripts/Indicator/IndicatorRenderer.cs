@@ -9,12 +9,14 @@ namespace GodlessFantasy.Indicator
         DirectionalArrow, // Chiêu 1: Mũi tên định hướng (Line Skillshot)
         GroundCircle,     // Chiêu 2: Vòng tròn thả phép tại chuột (Ground AoE)
         ConeArc,          // Chiêu 3: Hình quạt quét lửa 60 độ phía trước (Cone Sweep)
-        SelfNova          // Chiêu 4: Hào quang nổ 360 độ quanh người (Self Aura)
+        SelfNova,         // Chiêu 4: Hào quang nổ 360 độ quanh người (Self Aura)
+        SelfBuff,         // Chiêu 5: Buff Tự Thân
+        TeamBuffWide      // Chiêu 6: Buff Hào Quang 360 Độ Rộng Lớn Toàn Đội / Bang Hội
     }
 
     /// <summary>
     /// Bộ Điều Khiển Tâm Ngắm MOBA Đa Dạng (Multi-Archetype MOBA Indicator):
-    /// - Hỗ trợ cả 4 loại ngắm: Mũi tên thẳng, Vòng tròn thả đất, Quạt quét lửa, Hào quang nổ quanh thân.
+    /// - Hỗ trợ cả 4 loại ngắm + loại 6: Mũi tên thẳng, Vòng tròn thả đất, Quạt quét lửa, Hào quang nổ quanh thân, Buff toàn đội 360 độ.
     /// - Tất cả sprite chỉ báo đều có sortingOrder = 0 (NẰM DƯỚI NHÂN VẬT LAYER 10!).
     /// </summary>
     public class IndicatorRenderer : MonoBehaviour
@@ -31,6 +33,7 @@ namespace GodlessFantasy.Indicator
         private GameObject groundCircleVisual;
         private GameObject coneVisual;
         private GameObject selfNovaVisual;
+        private GameObject teamBuffWideVisual;
 
         public bool IsAiming => currentType != IndicatorType.None;
         public void SetSprites(Sprite arrow, Sprite circle, Sprite cone)
@@ -40,6 +43,7 @@ namespace GodlessFantasy.Indicator
             {
                 if (groundCircleVisual != null) groundCircleVisual.GetComponent<SpriteRenderer>().sprite = circle;
                 if (selfNovaVisual != null) selfNovaVisual.GetComponent<SpriteRenderer>().sprite = circle;
+                if (teamBuffWideVisual != null) teamBuffWideVisual.GetComponent<SpriteRenderer>().sprite = circle;
             }
             if (cone != null && coneVisual != null) coneVisual.GetComponent<SpriteRenderer>().sprite = cone;
         }
@@ -90,6 +94,16 @@ namespace GodlessFantasy.Indicator
             sSr.sprite = circleSp;
             sSr.sortingOrder = 0; // DƯỚI NHÂN VẬT
             selfNovaVisual.transform.localScale = new Vector3(2.66f, 2.66f, 1f); // Bán kính chuẩn 2.5m khớp 100% Hitbox!
+
+            // 6. Team Buff Wide Circle (Skill 6: Buff Hào Quang Đồng Đội 360 Độ - Bán kính rộng 6.5m, màu vàng hoàng kim)
+            teamBuffWideVisual = new GameObject("TeamBuffWide_Visual");
+            teamBuffWideVisual.transform.parent = transform;
+            teamBuffWideVisual.transform.localPosition = Vector3.zero;
+            var tbSr = teamBuffWideVisual.AddComponent<SpriteRenderer>();
+            tbSr.sprite = circleSp;
+            tbSr.color = new Color(1.0f, 0.88f, 0.25f, 0.75f); // Màu vàng hoàng gia nổi bật
+            tbSr.sortingOrder = 0; // DƯỚI NHÂN VẬT
+            teamBuffWideVisual.transform.localScale = new Vector3(6.8f, 6.8f, 1f); // Bán kính chuẩn 6.5m!
         }
 
         private void Update()
@@ -121,6 +135,10 @@ namespace GodlessFantasy.Indicator
                     currentType = IndicatorType.SelfNova;
                     if (selfNovaVisual != null) selfNovaVisual.SetActive(true);
                     break;
+                case 6:
+                    currentType = IndicatorType.TeamBuffWide;
+                    if (teamBuffWideVisual != null) teamBuffWideVisual.SetActive(true);
+                    break;
             }
 
             UpdateAim();
@@ -133,6 +151,7 @@ namespace GodlessFantasy.Indicator
             if (groundCircleVisual != null) groundCircleVisual.SetActive(false);
             if (coneVisual != null) coneVisual.SetActive(false);
             if (selfNovaVisual != null) selfNovaVisual.SetActive(false);
+            if (teamBuffWideVisual != null) teamBuffWideVisual.SetActive(false);
         }
 
         private void UpdateAim()

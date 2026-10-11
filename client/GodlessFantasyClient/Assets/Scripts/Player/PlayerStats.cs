@@ -19,7 +19,40 @@ namespace GodlessFantasy.Player
         [SerializeField] private string characterName = "Dũng Sĩ SquiRRels";
         [SerializeField] private string characterClass = "Kị Sĩ";
         [SerializeField] private int level = 1;
+        [SerializeField] private int currentExp = 35;
+        [SerializeField] private int maxExp = 100;
         [SerializeField] private string element = "Hỏa";
+
+        public int CurrentExp => currentExp;
+        public int MaxExp => maxExp;
+        public float ExpPercentage => maxExp > 0 ? Mathf.Clamp01((float)currentExp / maxExp) : 0f;
+        public event Action<int, int> OnExpChanged;
+        public event Action<int> OnLevelUp;
+
+        public void GainExp(int amount)
+        {
+            if (amount <= 0) return;
+            currentExp += amount;
+
+            while (currentExp >= maxExp)
+            {
+                currentExp -= maxExp;
+                level++;
+                maxExp = Mathf.RoundToInt(100f * Mathf.Pow(level, 1.45f));
+                availableStatPoints += 5;
+
+                // Hồi đầy máu và mana khi lên cấp
+                if (health != null) health.Revive();
+                currentMana = maxMana;
+                OnManaChanged?.Invoke(currentMana, maxMana);
+
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🎉 LÊN CẤP {level}! (+5 TIỀM NĂNG)", new Color(1f, 0.90f, 0.25f));
+                Debug.Log($"<color=yellow>[LEVEL UP]</color> Nhân vật {characterName} đã đạt Cấp {level}!");
+                OnLevelUp?.Invoke(level);
+            }
+
+            OnExpChanged?.Invoke(currentExp, maxExp);
+        }
 
         [Header("Core Attributes (Thuộc Tính Cơ Bản)")]
         [SerializeField] private int strength = 8;

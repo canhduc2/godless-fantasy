@@ -56,6 +56,7 @@ namespace GodlessFantasy.Combat
                     case 3: return $"{castRange:0.#}m (Hình Quạt)";
                     case 4: return $"{castRange:0.#}m (Xung Quanh)";
                     case 5: return "0m (Buff Tự Thân)";
+                    case 6: return $"{castRange:0.#}m (Buff Toàn Đội 360°)";
                     default: return $"{castRange:0.#}m";
                 }
             }

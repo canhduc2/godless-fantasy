@@ -311,10 +311,52 @@ namespace GodlessFantasy.Combat
                 case 5:
                     CastSelfBuff(scroll);
                     break;
+                case 6:
+                    CastTeamBuffAoE(scroll);
+                    break;
             }
 
             slotLastCastTime[slotIdx] = Time.time;
             ExitAimingState();
+        }
+
+        // 6. Buff Diện Rộng Toàn Đội / Bang Hội 360 Độ (AoE Team Buff - Bán kính 6.5m)
+        private void CastTeamBuffAoE(SkillScrollData scroll)
+        {
+            float radius = 6.5f;
+
+            if (SkillVFXManager.Instance != null)
+            {
+                SkillVFXManager.Instance.SpawnTeamBuffAoEVFX(transform.position, radius, scroll.element);
+            }
+
+            string cleanName = scroll.scrollName;
+            if (cleanName.Contains(":")) cleanName = cleanName.Substring(cleanName.IndexOf(':') + 1).Trim();
+            else if (cleanName.Contains("]")) cleanName = cleanName.Substring(cleanName.IndexOf(']') + 1).Trim();
+
+            // Buff cho bản thân người dùng
+            if (playerStats != null)
+            {
+                playerStats.ApplyBuff(scroll.id, cleanName, scroll.iconName, 18.0f, 1, 20f);
+            }
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.1f, $"👑 {cleanName} (+20% ST Đội)!", new Color(1f, 0.88f, 0.25f));
+
+            // Quét và áp dụng hiệu ứng cho tất cả đồng đội / thành viên Bang Hội trong phạm vi 6.5m cùng map
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius);
+            foreach (var col in hits)
+            {
+                if (col.gameObject == gameObject) continue;
+                if (col.CompareTag("Player") || col.gameObject.name.Contains("Player") || col.gameObject.name.Contains("Pet"))
+                {
+                    if (col.TryGetComponent<PlayerStats>(out var allyStats))
+                    {
+                        allyStats.ApplyBuff(scroll.id, cleanName, scroll.iconName, 18.0f, 1, 20f);
+                    }
+                    FloatingDamageManager.ShowFloatingText(col.transform.position + Vector3.up * 1.1f, $"🛡️ {cleanName} (+20% ST)!", new Color(1f, 0.88f, 0.25f));
+                }
+            }
+
+            Debug.Log($"<color=yellow>[TEAM BUFF AOE]</color> Đã kích hoạt Buff Đồng Đội '{scroll.scrollName}' ({scroll.element}) bán kính {radius}m!");
         }
 
         private void CastSelfBuff(SkillScrollData scroll)

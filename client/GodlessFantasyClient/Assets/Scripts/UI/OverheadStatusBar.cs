@@ -104,7 +104,28 @@ namespace GodlessFantasy.UI
             float barH = (entityType == OverheadType.Player) ? 6f : 5f;
             float startX = guiX - barW / 2f;
 
-            // 0. DÒNG DANH HIỆU TRÊN CÙNG (TITLE LABEL - CHO NGƯỜI CHƠI)
+            // -1. DÒNG TÊN BANG HỘI TRÊN CÙNG (GUILD LABEL - TRÊN CẢ DANH HIỆU)
+            if (entityType == OverheadType.Player)
+            {
+                var gm = GodlessFantasy.Guild.GuildManager.Instance;
+                if (gm != null && gm.IsInGuild && gm.CurrentGuild != null)
+                {
+                    string guildText = $"< {gm.CurrentGuild.guildName} >";
+                    float gW = 340f;
+                    float gH = 15f;
+                    Rect gRect = new Rect(guiX - gW / 2f, guiY - 55f, gW, gH);
+
+                    // Đổ bóng đen
+                    titleStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+                    GUI.Label(new Rect(gRect.x + 1, gRect.y + 1, gRect.width, gRect.height), guildText, titleStyle);
+
+                    // Màu vàng hoàng gia đặc trưng Bang Hội
+                    titleStyle.normal.textColor = new Color(1.0f, 0.85f, 0.25f, 0.95f);
+                    GUI.Label(gRect, guildText, titleStyle);
+                }
+            }
+
+            // 0. DÒNG DANH HIỆU (TITLE LABEL - CHO NGƯỜI CHƠI)
             if (entityType == OverheadType.Player && playerStats != null && playerStats.EquippedTitle != null)
             {
                 var curTitle = playerStats.EquippedTitle;
@@ -112,7 +133,7 @@ namespace GodlessFantasy.UI
                 string titleText = $"« {cleanTitle} »";
                 float titleW = 340f;
                 float titleH = 16f;
-                Rect titleRect = new Rect(guiX - titleW / 2f, guiY - 40f, titleW, titleH);
+                Rect titleRect = new Rect(guiX - titleW / 2f, guiY - 39f, titleW, titleH);
 
                 titleStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
                 GUI.Label(new Rect(titleRect.x + 1, titleRect.y + 1, titleRect.width, titleRect.height), titleText, titleStyle);

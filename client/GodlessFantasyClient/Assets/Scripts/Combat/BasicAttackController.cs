@@ -320,8 +320,46 @@ namespace GodlessFantasy.Combat
         }
 
         // ─────────────────────────────────────────────────────────
-        // KỊ SĨ: Kiếm khí — vệt kéo dài xoay 45° bay thẳng
+        // KỊ SĨ: Kiếm khí — Hình dạng vòng cung bán nguyệt (Crescent Arc Blade)
         // ─────────────────────────────────────────────────────────
+        private static Sprite crescentBladeSprite = null;
+        private Sprite GetOrCreateCrescentSprite()
+        {
+            if (crescentBladeSprite != null) return crescentBladeSprite;
+            int w = 64;
+            int h = 64;
+            Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            Vector2 center = new Vector2(20f, 32f);
+            float outerR = 30f;
+            float innerR = 18f;
+
+            for (int x = 0; x < w; x++)
+            {
+                for (int y = 0; y < h; y++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), center);
+                    float angle = Mathf.Atan2(y - center.y, x - center.x) * Mathf.Rad2Deg;
+
+                    if (dist >= innerR && dist <= outerR && angle >= -65f && angle <= 65f)
+                    {
+                        // Vuốt nhọn hai đầu cánh cung và sáng ở cạnh ngoài
+                        float edgeFactor = 1f - Mathf.Abs(dist - (innerR + outerR) * 0.5f) / ((outerR - innerR) * 0.5f);
+                        float angleFactor = 1f - Mathf.Abs(angle) / 65f;
+                        float alpha = Mathf.Clamp01(edgeFactor * angleFactor * 1.5f);
+                        tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                    }
+                    else
+                    {
+                        tex.SetPixel(x, y, Color.clear);
+                    }
+                }
+            }
+            tex.Apply();
+            crescentBladeSprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 32f);
+            return crescentBladeSprite;
+        }
+
         private IEnumerator VFX_KnightSlash(Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
         {
             if (target == null) yield break;
@@ -329,25 +367,23 @@ namespace GodlessFantasy.Combat
             Vector3 dir = (target.position - startPos).normalized;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
-            // Vệt kiếm khí: hình chữ nhật mảnh, dài, xoay theo hướng bay
-            GameObject slash = new GameObject("BA_KnightSlash");
+            // Kiếm khí hình vòng cung bán nguyệt (Crescent Arc) bay quét tới mục tiêu
+            GameObject slash = new GameObject("BA_KnightCrescentSlash");
             slash.transform.position = startPos;
             slash.transform.rotation = Quaternion.Euler(0, 0, angle);
 
             var sr = slash.AddComponent<SpriteRenderer>();
-            sr.sprite = Resources.Load<Sprite>("magic_bolt") ?? Resources.Load<Sprite>("indicator_ground_circle");
+            sr.sprite = GetOrCreateCrescentSprite();
             sr.color = elemColor;
-            // Hình kiếm khí: hẹp và dài
-            float w = isBuffed ? 1.2f : 0.85f;
-            float h2 = isBuffed ? 0.22f : 0.16f;
-            slash.transform.localScale = new Vector3(w, h2, 1f);
+            float sc = isBuffed ? 1.4f : 1.1f;
+            slash.transform.localScale = new Vector3(sc, sc * 1.25f, 1f);
             sr.sortingOrder = 22;
 
-            // Trail mảnh sắc bén
+            // Trail kiếm khí vòng cung cong phát sáng
             var trail = slash.AddComponent<TrailRenderer>();
-            trail.time = 0.12f;
-            trail.startWidth = h2 * 0.6f;
-            trail.endWidth = 0f;
+            trail.time = 0.16f;
+            trail.startWidth = 0.35f * sc;
+            trail.endWidth = 0.02f;
             trail.sortingOrder = 21;
             trail.material = new Material(Shader.Find("Sprites/Default"));
             Gradient g = new Gradient();
@@ -356,9 +392,9 @@ namespace GodlessFantasy.Combat
                 new GradientAlphaKey[] { new GradientAlphaKey(0.95f, 0f), new GradientAlphaKey(0f, 1f) });
             trail.colorGradient = g;
 
-            float speed = 22f; // kiếm khí bay nhanh hơn
+            float speed = 20f;
             float totalDist = Vector3.Distance(startPos, target.position);
-            float duration = Mathf.Clamp(totalDist / speed, 0.05f, 0.3f);
+            float duration = Mathf.Clamp(totalDist / speed, 0.06f, 0.35f);
             float elapsed = 0f;
 
             while (elapsed < duration && target != null)
@@ -366,82 +402,118 @@ namespace GodlessFantasy.Combat
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
                 slash.transform.position = Vector3.Lerp(startPos, target.position, t);
-                // Quay lắc nhẹ như lưỡi kiếm rung
-                slash.transform.rotation = Quaternion.Euler(0, 0, angle + Mathf.Sin(t * Mathf.PI * 4f) * 8f);
+                // Vòng cung nghiêng nhẹ theo quỹ đạo chém
+                slash.transform.rotation = Quaternion.Euler(0, 0, angle + Mathf.Sin(t * Mathf.PI * 2f) * 12f);
                 yield return null;
             }
             Destroy(slash);
         }
 
         // ─────────────────────────────────────────────────────────
-        // VÕ SĨ: Chưởng — 2 vòng sóng xung kích bay ra rồi hội tụ
+        // VÕ SĨ: Chưởng quyền — Chùm nhiều nắm đấm mở rộng theo hình vòng cung (Expanding Fist Arc Volley)
         // ─────────────────────────────────────────────────────────
+        private static Sprite fistShockwaveSprite = null;
+        private Sprite GetOrCreateFistSprite()
+        {
+            if (fistShockwaveSprite != null) return fistShockwaveSprite;
+            int size = 48;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Vector2 c = new Vector2(24f, 24f);
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), c);
+                    // Tạo khối nắm đấm quyền kình (lõi tròn đặc + ngón tay nổi)
+                    if (dist <= 18f)
+                    {
+                        float alpha = (dist <= 14f) ? 1.0f : (18f - dist) / 4f;
+                        tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                    }
+                    else
+                    {
+                        tex.SetPixel(x, y, Color.clear);
+                    }
+                }
+            }
+            tex.Apply();
+            fistShockwaveSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 24f);
+            return fistShockwaveSprite;
+        }
+
         private IEnumerator VFX_WarriorPalm(Vector3 startPos, Transform target, Color elemColor, bool isBuffed)
         {
             if (target == null) yield break;
 
-            // Spawn 2 ring sóng offset nhẹ rồi cùng bay đến target
-            for (int wave = 0; wave < 2; wave++)
+            Vector3 baseDir = (target.position - startPos).normalized;
+            float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
+
+            // Bắn ra chùm 4 nắm đấm xòe mở rộng theo hình vòng cung (Arc Spread: -36°, -12°, +12°, +36°)
+            float[] arcAngles = new float[] { -36f, -12f, 12f, 36f };
+            for (int i = 0; i < arcAngles.Length; i++)
             {
-                int w = wave; // capture
-                float wDelay = wave * 0.06f;
-                StartCoroutine(WarriorWaveRing(startPos, target, elemColor, isBuffed, wDelay, w));
+                float angleOffset = arcAngles[i];
+                float delay = i * 0.03f;
+                StartCoroutine(FistArcProjectile(startPos, target, elemColor, isBuffed, baseAngle + angleOffset, delay, i));
             }
 
-            // Đợi tới khi vòng 1 đến đích
-            float speed = 15f;
-            float totalDist = Vector3.Distance(startPos, target.position);
-            float duration = Mathf.Clamp(totalDist / speed, 0.07f, 0.4f) + 0.12f;
+            float duration = 0.32f;
             yield return new WaitForSeconds(duration);
         }
 
-        private IEnumerator WarriorWaveRing(Vector3 startPos, Transform target, Color elemColor, bool isBuffed, float delay, int waveIndex)
+        private IEnumerator FistArcProjectile(Vector3 startPos, Transform target, Color elemColor, bool isBuffed, float launchAngle, float delay, int fistIdx)
         {
-            yield return new WaitForSeconds(delay);
-
+            if (delay > 0) yield return new WaitForSeconds(delay);
             if (target == null) yield break;
 
-            GameObject ring = new GameObject($"BA_WarriorWave_{waveIndex}");
-            Vector3 offset = new Vector3(
-                (waveIndex == 0 ? -0.15f : 0.15f) * (Random.value > 0.5f ? 1 : -1),
-                (waveIndex == 0 ? 0.12f : -0.12f),
-                0);
-            ring.transform.position = startPos + offset;
+            GameObject fist = new GameObject($"BA_WarriorFist_{fistIdx}");
+            fist.transform.position = startPos;
+            fist.transform.rotation = Quaternion.Euler(0, 0, launchAngle);
 
-            var sr = ring.AddComponent<SpriteRenderer>();
-            sr.sprite = Resources.Load<Sprite>("indicator_ground_circle") ?? Resources.Load<Sprite>("magic_bolt");
-            sr.color = new Color(elemColor.r, elemColor.g, elemColor.b, 0.85f);
-            float sc = isBuffed ? 0.50f : 0.38f;
-            ring.transform.localScale = new Vector3(sc, sc, 1f);
+            var sr = fist.AddComponent<SpriteRenderer>();
+            sr.sprite = GetOrCreateFistSprite();
+            sr.color = elemColor;
+            float sc = isBuffed ? 0.65f : 0.50f; // Kích thước to rõ, dễ nhìn từ xa
+            fist.transform.localScale = new Vector3(sc, sc, 1f);
             sr.sortingOrder = 22;
 
-            var trail = ring.AddComponent<TrailRenderer>();
-            trail.time = 0.10f;
-            trail.startWidth = sc * 0.5f;
-            trail.endWidth = 0f;
+            var trail = fist.AddComponent<TrailRenderer>();
+            trail.time = 0.15f;
+            trail.startWidth = sc * 0.7f;
+            trail.endWidth = 0.05f;
             trail.sortingOrder = 21;
             trail.material = new Material(Shader.Find("Sprites/Default"));
             Gradient g = new Gradient();
             g.SetKeys(
                 new GradientColorKey[] { new GradientColorKey(elemColor, 0f), new GradientColorKey(Color.white, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(0.80f, 0f), new GradientAlphaKey(0f, 1f) });
+                new GradientAlphaKey[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
             trail.colorGradient = g;
 
-            float speed = 15f;
-            float totalDist = Vector3.Distance(ring.transform.position, target.position);
-            float duration = Mathf.Clamp(totalDist / speed, 0.06f, 0.4f);
+            // Hướng xòe ban đầu theo vòng cung
+            Vector3 spreadDir = new Vector3(Mathf.Cos(launchAngle * Mathf.Deg2Rad), Mathf.Sin(launchAngle * Mathf.Deg2Rad), 0);
+            float totalDist = Vector3.Distance(startPos, target.position);
+            float speed = 18f;
+            float duration = Mathf.Clamp(totalDist / speed, 0.08f, 0.38f);
             float elapsed = 0f;
-            Vector3 sp = ring.transform.position;
 
             while (elapsed < duration && target != null)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-                ring.transform.position = Vector3.Lerp(sp, target.position, t);
-                ring.transform.Rotate(0, 0, 480f * Time.deltaTime);
+
+                // Quỹ đạo: mở rộng ra hình vòng cung lúc đầu (t < 0.4), sau đó hội tụ mạnh vào mục tiêu (t >= 0.4)
+                Vector3 directPos = Vector3.Lerp(startPos, target.position, t);
+                Vector3 arcOffset = spreadDir * (Mathf.Sin(t * Mathf.PI) * 0.45f);
+                fist.transform.position = directPos + arcOffset;
+
+                // Quay nhẹ theo xung chấn quyền
+                fist.transform.Rotate(0, 0, (fistIdx % 2 == 0 ? 360f : -360f) * Time.deltaTime * 2f);
                 yield return null;
             }
-            Destroy(ring);
+
+            Destroy(fist);
         }
 
         // ─────────────────────────────────────────────────────────

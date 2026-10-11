@@ -64,6 +64,7 @@ namespace GodlessFantasy.Core
             gameObject.AddComponent<ItemDatabase>();
             gameObject.AddComponent<SkillDatabase>();
             gameObject.AddComponent<SkillVFXManager>();
+            gameObject.AddComponent<GodlessFantasy.Guild.GuildManager>();
 
             // 3. Vùng An Toàn (Safe Zone Trigger bao trọn Làng Tân Thủ)
             GameObject safeZoneObj = new GameObject("SafeZone_Village");

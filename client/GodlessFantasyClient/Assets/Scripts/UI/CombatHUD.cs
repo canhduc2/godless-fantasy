@@ -80,12 +80,21 @@ namespace GodlessFantasy.UI
         private InventoryItem selectedInventoryItem = null;
         private EquipSlot? selectedEquipSlot = EquipSlot.Helmet;
 
-        // Chat Modal State (2 Tab chuẩn đặc tả: Vị Trí Hiện Tại & Thế Giới)
+        // Chat Modal State (3 Tab: Khu Vực, Thế Giới & Bang Hội)
         private bool isChatOpen = false;
-        private int currentChatTab = 0; // 0=Vị Trí Hiện Tại (Local), 1=Thế Giới (World)
+        private int currentChatTab = 0; // 0=Khu Vực (Local), 1=Thế Giới (World), 2=Bang Hội (Guild)
         private string chatInputText = "Chào mọi người!";
         private string localChatHistory = "📢 [Khu Vực]: Chào mừng bạn đến với Làng Tân Thủ!\n💬 [Hệ Thống]: Đã vào Vùng An Toàn (Safe Zone).\n⚡ [Mẹo]: Bấm E khi lại gần NPC để nói chuyện! Phím Q/E tiêu hao bình dược.";
         private string worldChatHistory = "🌍 [Thế Giới] DarkMage: Coi chừng skill lửa của tao nhé ae!\n🌍 [Thế Giới] Knight01: Mày chưởng trúng tao là tao chém đấy :D\n🌍 [Thế Giới] ArcherX: Boss Bìa Rừng ra rồi anh em tập trung!";
+        private string guildChatHistory = "🛡️ [Bang] [Chiến Thần Long]: Huynh đệ tập hợp săn Boss phó bản nào!\n🛡️ [Bang] [Băng Tâm Tiên Tử]: Đang qua bãi quái PvP đây!\n🛡️ [Bang] [Lôi Đình Quyền Vương]: Nhớ đứng gần buff số 6 để hưởng aura nhé!";
+
+        // Guild Modal State (Cửa sổ Bang Hội chính giữa màn hình)
+        private bool isGuildModalOpen = false;
+        private string newGuildNameInput = "Bang SquiRRels";
+        private Vector2 guildMemberListScroll = Vector2.zero;
+        private GodlessFantasy.Guild.GuildMember selectedProfileMember = null;
+        private string guildTradeNotification = "";
+        private float guildTradeNotifyTimer = 0f;
 
         // Settings States
         private bool autoDeclineTrade = false;
@@ -122,9 +131,15 @@ namespace GodlessFantasy.UI
         {
             if (Instance == null) return false;
             if (Instance.isDrawerOpen && screenX < 480f) return true;
+            if (Instance.isGuildModalOpen)
+            {
+                float gW = 540f, gH = 430f;
+                Rect gRect = new Rect((Screen.width - gW) / 2f, (Screen.height - gH) / 2f, gW, gH);
+                if (gRect.Contains(new Vector2(screenX, screenY))) return true;
+            }
             if (Instance.isChatOpen)
             {
-                float cW = 380f, cH = 260f;
+                float cW = 430f, cH = 270f;
                 Rect cRect = new Rect((Screen.width - cW) / 2f, (Screen.height - cH) / 2f, cW, cH);
                 if (cRect.Contains(new Vector2(screenX, screenY))) return true;
             }
@@ -384,6 +399,7 @@ namespace GodlessFantasy.UI
             GUI.depth = FantasyUITheme.DepthModal;
             if (isDrawerOpen) DrawDrawerModal();
             if (isChatOpen) DrawChatModal();
+            if (isGuildModalOpen) DrawGuildModal();
 
             // 3. LỚP TRÊN CÙNG TUYỆT ĐỐI (Depth -100): HỘP THOẠI XÁC NHẬN 5S & TOOLTIP
             GUI.depth = FantasyUITheme.DepthPopupTooltip;
@@ -624,6 +640,24 @@ namespace GodlessFantasy.UI
                 GUI.color = Color.white;
             }
 
+            // 4.5. Guild Teammates Dots (Chấm màu xanh ngọc đồng đội đặc trưng trên Minimap)
+            var gm = GodlessFantasy.Guild.GuildManager.Instance;
+            if (gm != null && gm.IsInGuild && gm.CurrentGuild != null)
+            {
+                foreach (var member in gm.CurrentGuild.members)
+                {
+                    if (member.isOnline && !member.memberName.Contains("SquiRRels") && member.mapPosition != Vector2.zero)
+                    {
+                        Vector2 allyPos = WorldToMinimapPos(member.mapPosition, mapX, mapY, mapW, mapH, minWx, maxWx, minWy, maxWy);
+                        // Chấm màu xanh ngọc đồng minh nổi bật
+                        GUI.color = new Color(0.2f, 0.95f, 0.65f, 1f);
+                        GUI.DrawTexture(new Rect(allyPos.x - 3, allyPos.y - 3, 6, 6), Texture2D.whiteTexture);
+                        DrawOutline(new Rect(allyPos.x - 3, allyPos.y - 3, 6, 6), new Color(0.1f, 0.4f, 0.2f), 1);
+                    }
+                }
+                GUI.color = Color.white;
+            }
+
             // 5. Player Dot & Radar Pulse
             Vector2 pPos = playerMovement != null ? (Vector2)playerMovement.transform.position : Vector2.zero;
             Vector2 pMapPos = WorldToMinimapPos(pPos, mapX, mapY, mapW, mapH, minWx, maxWx, minWy, maxWy);
@@ -711,10 +745,11 @@ namespace GodlessFantasy.UI
         {
             if (playerStats == null || playerStats.ActiveBuffs == null || playerStats.ActiveBuffs.Count == 0) return;
 
-            float startX = isDrawerOpen ? 468f : 16f;
-            float startY = Screen.height * 0.40f;
+            // ĐẶT SÁT MÉP PHẢI MÀN HÌNH (DƯỚI MINIMAP) THEO ĐÚNG HÌNH VẼ USER
             float cardW = 165f;
             float cardH = 34f;
+            float startX = Screen.width - cardW - 12f;
+            float startY = 135f;
             float cardGap = 6f;
 
             for (int i = 0; i < playerStats.ActiveBuffs.Count; i++)
@@ -742,9 +777,9 @@ namespace GodlessFantasy.UI
                 Texture2D frameSlotTex = LoadTextureSafe("ui_frame_slot");
                 if (frameSlotTex != null) GUI.DrawTexture(iconRect, frameSlotTex);
 
-                // Thời gian đếm ngược (CHUYỂN SANG BÊN PHẢI THEO YÊU CẦU USER)
-                float timeW = 44f;
-                float timeX = cardRect.xMax - timeW - 6f;
+                // Thời gian đếm ngược — sát mép phải tuyệt đối
+                float timeW = 38f;
+                float timeX = cardRect.xMax - timeW - 2f; // 2px padding từ mép phải
                 Rect timeRect = new Rect(timeX, cardRect.y + 4f, timeW, 14f);
 
                 standardTextStyle.alignment = TextAnchor.MiddleRight;
@@ -754,9 +789,9 @@ namespace GodlessFantasy.UI
                 GUI.Label(timeRect, $"{buff.remainingTime:0.0}s", standardTextStyle);
                 standardTextStyle.fontStyle = FontStyle.Normal;
 
-                // Tên buff (nằm giữa icon và thời gian, chữ chạy mượt mà nếu dài)
-                float textX = iconRect.xMax + 6f;
-                float nameW = Mathf.Max(50f, timeX - textX - 4f);
+                // Tên buff — chiếm toàn bộ khoảng giữa icon và time label
+                float textX = iconRect.xMax + 5f;
+                float nameW = Mathf.Max(40f, timeX - textX - 2f);
                 Rect nameRect = new Rect(textX, cardRect.y + 3f, nameW, 14f);
 
                 boldWhiteStyle.alignment = TextAnchor.MiddleLeft;
@@ -764,9 +799,8 @@ namespace GodlessFantasy.UI
                 boldWhiteStyle.normal.textColor = new Color(0.40f, 0.92f, 1.0f);
                 DrawAutoScrollText(nameRect, buff.name, boldWhiteStyle, 25f, new Color(0.40f, 0.92f, 1.0f));
 
-                // Dòng hiệu ứng bổ trợ phía dưới
-                float subW = cardRect.width - (textX - cardRect.x) - 6f;
-                Rect subRect = new Rect(textX, cardRect.y + 16f, subW, 13f);
+                // Dòng hiệu ứng bổ trợ phía dưới (cùng chiều rộng với tên)
+                Rect subRect = new Rect(textX, cardRect.y + 16f, nameW, 13f);
                 standardTextStyle.alignment = TextAnchor.MiddleLeft;
                 standardTextStyle.fontSize = 9;
                 standardTextStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
@@ -774,7 +808,7 @@ namespace GodlessFantasy.UI
                 GUI.Label(subRect, effectTag, standardTextStyle);
                 standardTextStyle.normal.textColor = Color.white;
 
-                // Thanh tiến trình nhỏ dưới đáy card
+                // Thanh tiến trình nhỏ dưới đáy card (full width)
                 float progress = Mathf.Clamp01(buff.remainingTime / Mathf.Max(0.1f, buff.duration));
                 Rect progBar = new Rect(cardRect.x + 2, cardRect.yMax - 3, (cardW - 4) * progress, 2);
                 GUI.color = new Color(0.0f, 0.9f, 0.95f, 0.85f);
@@ -1020,9 +1054,34 @@ namespace GodlessFantasy.UI
             boldWhiteStyle.fontSize = 13;
             boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.45f);
-            GUI.Label(new Rect(r.x, r.y, r.width, 22), $"HỆ [{charClass}] · THUỘC TÍNH [{elem}] · LEVEL [{lv}]", boldWhiteStyle);
+            GUI.Label(new Rect(r.x, r.y, r.width, 20), $"HỆ [{charClass}] · THUỘC TÍNH [{elem}] · LEVEL [{lv}]", boldWhiteStyle);
             boldWhiteStyle.alignment = TextAnchor.UpperLeft;
             boldWhiteStyle.normal.textColor = Color.white;
+
+            // ================= THANH EXP HIỂN THỊ CHỈ SỐ RÕ RÀNG (EXP BAR) =================
+            int curExp = playerStats != null ? playerStats.CurrentExp : 0;
+            int maxExp = playerStats != null ? playerStats.MaxExp : 100;
+            float expPct = playerStats != null ? playerStats.ExpPercentage : 0f;
+
+            Rect expBarRect = new Rect(r.x + 8f, r.y + 22f, r.width - 16f, 16f);
+            // Nền tối thanh EXP
+            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
+            GUI.DrawTexture(expBarRect, Texture2D.whiteTexture);
+            // Vệt tiến trình EXP (Cyan / Ngọc Bích sáng)
+            GUI.color = new Color(0.12f, 0.72f, 0.92f, 0.90f);
+            GUI.DrawTexture(new Rect(expBarRect.x + 1, expBarRect.y + 1, Mathf.Max(2f, (expBarRect.width - 2f) * expPct), expBarRect.height - 2f), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            DrawOutline(expBarRect, new Color(0.85f, 0.70f, 0.25f, 0.75f), 1);
+
+            // Chữ số EXP hiển thị rõ nét
+            standardTextStyle.alignment = TextAnchor.MiddleCenter;
+            standardTextStyle.fontSize = 10;
+            standardTextStyle.fontStyle = FontStyle.Bold;
+            standardTextStyle.normal.textColor = Color.black;
+            GUI.Label(new Rect(expBarRect.x + 1, expBarRect.y + 1, expBarRect.width, expBarRect.height), $"EXP: {curExp} / {maxExp} ({expPct * 100f:0.0}%)", standardTextStyle);
+            standardTextStyle.normal.textColor = new Color(1f, 0.95f, 0.75f);
+            GUI.Label(expBarRect, $"EXP: {curExp} / {maxExp} ({expPct * 100f:0.0}%)", standardTextStyle);
+            standardTextStyle.fontStyle = FontStyle.Normal;
 
             float slotBoxSize = 50f;
             float slotGap = 10f; // Khoảng cách 10px rõ ràng giữa các ô, không bị dính sát vào nhau
@@ -1030,7 +1089,7 @@ namespace GodlessFantasy.UI
             float rightColX = r.x + r.width - slotBoxSize - 8f;
             float centerBoxX = leftColX + slotBoxSize + 10f;
             float centerBoxW = rightColX - 10f - centerBoxX; // Chiều rộng khung nhân vật giữa
-            float centerBoxY = r.y + 24f;
+            float centerBoxY = r.y + 44f;
             float centerBoxH = slotBoxSize * 3f + slotGap * 2f + 4f; // 174px
 
             // KHUNG GIỮA: ẢNH NHÂN VẬT & TÊN
@@ -2016,6 +2075,17 @@ namespace GodlessFantasy.UI
                     GodlessFantasy.Core.TerrainPainterTool.Instance.IsPaintingMode = !GodlessFantasy.Core.TerrainPainterTool.Instance.IsPaintingMode;
                 }
             }
+
+            // TÍNH NĂNG ĐỒNG ĐỘI & BANG HỘI (GUILD) THEO YÊU CẦU USER
+            float guildY = devY + 44f;
+            boldWhiteStyle.fontSize = 11;
+            boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.25f);
+            GUI.Label(new Rect(r.x, guildY - 18f, r.width, 18), "🛡️ TÍNH NĂNG ĐỒNG ĐỘI & BANG HỘI (GUILD):", boldWhiteStyle);
+
+            if (DrawFantasyButton(new Rect(r.x, guildY, r.width, 32), "🛡️ MỞ QUẢN LÝ BANG HỘI", 11, isGuildModalOpen, new Color(1f, 0.88f, 0.25f)))
+            {
+                isGuildModalOpen = !isGuildModalOpen;
+            }
         }
 
         // ================= POPUP DOUBLE CHECK 5S KHI VỨT BỎ VẬT PHẨM =================
@@ -2056,11 +2126,11 @@ namespace GodlessFantasy.UI
             }
         }
 
-        // ================= CỬA SỔ TRÒ CHUYỆN 2 TAB (CHÍNH GIỮA MÀN HÌNH THEO YÊU CẦU USER) =================
+        // ================= CỬA SỔ TRÒ CHUYỆN 3 TAB (KHU VỰC · THẾ GIỚI · BANG HỘI) =================
         private void DrawChatModal()
         {
-            float chatW = 380f;
-            float chatH = 260f;
+            float chatW = 430f;
+            float chatH = 270f;
             float chatX = (Screen.width - chatW) / 2f;
             float chatY = (Screen.height - chatH) / 2f;
             Rect chatRect = new Rect(chatX, chatY, chatW, chatH);
@@ -2071,20 +2141,26 @@ namespace GodlessFantasy.UI
             GUI.color = Color.white;
             DrawDoubleGoldFrame(chatRect);
 
-            // 2 TAB HEADER THEO ĐÚNG ĐẶC TẢ GDD
-            float tabBtnW = 140f;
+            // 3 TAB HEADER THEO ĐÚNG YÊU CẦU USER (KHU VỰC, THẾ GIỚI, BANG HỘI)
+            float tabBtnW = 124f;
             float tabBtnH = 24f;
 
             bool isLocalTab = (currentChatTab == 0);
-            if (DrawFantasyButton(new Rect(chatRect.x + 8, chatRect.y + 6, tabBtnW, tabBtnH), "📍 VỊ TRÍ HIỆN TẠI", 10, isLocalTab))
+            if (DrawFantasyButton(new Rect(chatRect.x + 8, chatRect.y + 6, tabBtnW, tabBtnH), "📍 KHU VỰC", 10, isLocalTab))
             {
                 currentChatTab = 0;
             }
 
             bool isWorldTab = (currentChatTab == 1);
-            if (DrawFantasyButton(new Rect(chatRect.x + 152, chatRect.y + 6, tabBtnW, tabBtnH), "🌍 THẾ GIỚI", 10, isWorldTab))
+            if (DrawFantasyButton(new Rect(chatRect.x + 136, chatRect.y + 6, tabBtnW, tabBtnH), "🌍 THẾ GIỚI", 10, isWorldTab))
             {
                 currentChatTab = 1;
+            }
+
+            bool isGuildTab = (currentChatTab == 2);
+            if (DrawFantasyButton(new Rect(chatRect.x + 264, chatRect.y + 6, tabBtnW, tabBtnH), "🛡️ BANG HỘI", 10, isGuildTab, new Color(1f, 0.88f, 0.25f)))
+            {
+                currentChatTab = 2;
             }
 
             // Nút đóng [X]
@@ -2102,7 +2178,7 @@ namespace GodlessFantasy.UI
 
             standardTextStyle.alignment = TextAnchor.UpperLeft;
             standardTextStyle.fontSize = 11;
-            string currentHistory = (currentChatTab == 0) ? localChatHistory : worldChatHistory;
+            string currentHistory = (currentChatTab == 0) ? localChatHistory : (currentChatTab == 1) ? worldChatHistory : guildChatHistory;
             GUI.Label(new Rect(histRect.x + 6, histRect.y + 6, histRect.width - 12, histRect.height - 12), currentHistory, standardTextStyle);
 
             // KHUNG NHẬP TIN NHẮN & NÚT GỬI
@@ -2112,16 +2188,289 @@ namespace GodlessFantasy.UI
             {
                 if (!string.IsNullOrEmpty(chatInputText))
                 {
+                    string pName = playerStats?.CharacterName ?? "Bạn";
                     if (currentChatTab == 0)
                     {
-                        localChatHistory += $"\n💬 [Vị Trí] [Bạn]: {chatInputText}";
+                        localChatHistory += $"\n💬 [Khu Vực] [{pName}]: {chatInputText}";
+                    }
+                    else if (currentChatTab == 1)
+                    {
+                        worldChatHistory += $"\n🌍 [Thế Giới] [{pName}]: {chatInputText}";
                     }
                     else
                     {
-                        worldChatHistory += $"\n🌍 [Thế Giới] [Bạn]: {chatInputText}";
+                        guildChatHistory += $"\n🛡️ [Bang] [{pName}]: {chatInputText}";
                     }
                     chatInputText = "";
                 }
+            }
+        }
+
+        // ================= POPUP QUẢN LÝ BANG HỘI (GUILD WINDOW CHÍNH GIỮA MÀN HÌNH) =================
+        private void DrawGuildModal()
+        {
+            float modalW = 560f;
+            float modalH = 430f;
+            float modalX = (Screen.width - modalW) / 2f;
+            float modalY = (Screen.height - modalH) / 2f;
+            Rect modalRect = new Rect(modalX, modalY, modalW, modalH);
+
+            // Nền tối đặc chống nhìn xuyên thấu
+            GUI.color = new Color(0.04f, 0.05f, 0.09f, 1.0f);
+            GUI.DrawTexture(modalRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            DrawDoubleGoldFrame(modalRect);
+
+            // Header Tiêu Đề Cửa Sổ
+            boldWhiteStyle.fontSize = 14;
+            boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
+            boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
+            GUI.Label(new Rect(modalX, modalY + 6f, modalW, 22f), "🛡️ HỆ THỐNG BANG HỘI & ĐỒNG ĐỘI (GUILD)", boldWhiteStyle);
+
+            // Nút đóng [✕]
+            if (DrawFantasyButton(new Rect(modalX + modalW - 32f, modalY + 6f, 24f, 22f), "✕", 11))
+            {
+                isGuildModalOpen = false;
+            }
+
+            var gm = GodlessFantasy.Guild.GuildManager.Instance;
+            if (gm == null) return;
+
+            // Thông báo Giao dịch nếu có
+            if (guildTradeNotifyTimer > 0f)
+            {
+                guildTradeNotifyTimer -= Time.deltaTime;
+                Rect notifyRect = new Rect(modalX + 16f, modalY + 30f, modalW - 32f, 22f);
+                GUI.color = new Color(0.1f, 0.4f, 0.2f, 0.95f);
+                GUI.DrawTexture(notifyRect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                standardTextStyle.alignment = TextAnchor.MiddleCenter;
+                standardTextStyle.normal.textColor = Color.yellow;
+                GUI.Label(notifyRect, guildTradeNotification, standardTextStyle);
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // TRƯỜNG HỢP 1: NGƯỜI CHƠI CHƯA GIA NHẬP BANG HỘI NÀO
+            // ─────────────────────────────────────────────────────────────
+            if (!gm.IsInGuild)
+            {
+                float contentY = modalY + 40f;
+
+                // 1. Khung Thành Lập Bang Hội Mới
+                Rect createBox = new Rect(modalX + 16f, contentY, modalW - 32f, 85f);
+                DrawFantasyFrame(createBox, new Color(0.06f, 0.08f, 0.12f, 0.95f), new Color(0.85f, 0.70f, 0.25f, 0.75f), new Color(1f, 0.88f, 0.45f, 0.95f));
+
+                boldWhiteStyle.fontSize = 11;
+                boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
+                boldWhiteStyle.alignment = TextAnchor.UpperLeft;
+                GUI.Label(new Rect(createBox.x + 12f, createBox.y + 8f, 300f, 18f), "👑 THÀNH LẬP BANG HỘI MỚI (CHI PHÍ: 200 VÀNG - AI CŨNG TẠO ĐƯỢC):", boldWhiteStyle);
+
+                newGuildNameInput = GUI.TextField(new Rect(createBox.x + 12f, createBox.y + 32f, 280f, 28f), newGuildNameInput);
+
+                if (DrawFantasyButton(new Rect(createBox.x + 304f, createBox.y + 32f, 220f, 28f), "TẠO BANG NGAY (-200 VÀNG)", 11, true, new Color(1f, 0.88f, 0.25f)))
+                {
+                    gm.CreateGuild(newGuildNameInput, playerStats);
+                }
+
+                standardTextStyle.fontSize = 10;
+                standardTextStyle.normal.textColor = new Color(0.7f, 0.8f, 0.9f);
+                GUI.Label(new Rect(createBox.x + 12f, createBox.y + 64f, createBox.width - 24f, 16f), "• Thành lập bang giúp hiển thị Tên Bang trên đầu, chia sẻ EXP/Vàng khi đánh quái, và hưởng buff số 6!", standardTextStyle);
+
+                // 2. Khung Danh Sách Bang Hội Trên Server & Xin Gia Nhập
+                float listY = contentY + 95f;
+                Rect listBox = new Rect(modalX + 16f, listY, modalW - 32f, modalH - 145f);
+                DrawFantasyFrame(listBox, new Color(0.05f, 0.07f, 0.11f, 0.95f), new Color(0.45f, 0.55f, 0.75f, 0.6f), new Color(0.6f, 0.75f, 0.95f, 0.8f));
+
+                boldWhiteStyle.fontSize = 11;
+                boldWhiteStyle.normal.textColor = new Color(0.4f, 0.9f, 1f);
+                GUI.Label(new Rect(listBox.x + 12f, listBox.y + 8f, 400f, 18f), "📜 DANH SÁCH BANG HỘI SẴN CÓ TRÊN SERVER:", boldWhiteStyle);
+
+                float gRowY = listBox.y + 30f;
+                foreach (var guild in gm.PublicGuilds)
+                {
+                    Rect gRow = new Rect(listBox.x + 8f, gRowY, listBox.width - 16f, 52f);
+                    GUI.color = new Color(0.08f, 0.11f, 0.16f, 0.95f);
+                    GUI.DrawTexture(gRow, Texture2D.whiteTexture);
+                    GUI.color = Color.white;
+                    DrawOutline(gRow, new Color(0.3f, 0.45f, 0.65f, 0.5f), 1);
+
+                    standardTextStyle.alignment = TextAnchor.UpperLeft;
+                    standardTextStyle.fontSize = 11;
+                    standardTextStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
+                    GUI.Label(new Rect(gRow.x + 8f, gRow.y + 6f, 250f, 18f), $"🛡️ {guild.guildName} [Cấp {guild.guildLevel}]", standardTextStyle);
+
+                    standardTextStyle.fontSize = 10;
+                    standardTextStyle.normal.textColor = Color.white;
+                    GUI.Label(new Rect(gRow.x + 8f, gRow.y + 24f, 340f, 16f), $"Bang chủ: {guild.leaderName} · {guild.members.Count} thành viên · \"{guild.slogan}\"", standardTextStyle);
+
+                    if (DrawFantasyButton(new Rect(gRow.x + gRow.width - 100f, gRow.y + 12f, 92f, 28f), "GIA NHẬP", 11, true, new Color(0.3f, 0.9f, 0.5f)))
+                    {
+                        gm.JoinGuild(guild.guildId, playerStats);
+                    }
+
+                    gRowY += 58f;
+                }
+            }
+            // ─────────────────────────────────────────────────────────────
+            // TRƯỜNG HỢP 2: NGƯỜI CHƠI ĐÃ CÓ BANG HỘI
+            // ─────────────────────────────────────────────────────────────
+            else
+            {
+                var curGuild = gm.CurrentGuild;
+                float curY = modalY + 34f;
+
+                // 1. Thẻ Thông Tin Bang Hội
+                Rect infoCard = new Rect(modalX + 16f, curY, modalW - 32f, 54f);
+                DrawFantasyFrame(infoCard, new Color(0.06f, 0.08f, 0.12f, 0.95f), new Color(0.85f, 0.70f, 0.25f, 0.85f), new Color(1f, 0.88f, 0.45f, 0.95f));
+
+                boldWhiteStyle.fontSize = 13;
+                boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.25f);
+                GUI.Label(new Rect(infoCard.x + 12f, infoCard.y + 6f, 300f, 20f), $"👑 BANG: < {curGuild.guildName} > [CẤP {curGuild.guildLevel}]", boldWhiteStyle);
+
+                standardTextStyle.alignment = TextAnchor.UpperLeft;
+                standardTextStyle.fontSize = 10;
+                standardTextStyle.normal.textColor = new Color(0.8f, 0.9f, 1f);
+                GUI.Label(new Rect(infoCard.x + 12f, infoCard.y + 28f, infoCard.width - 24f, 18f),
+                    $"Bang chủ: <color=#ffaa00><b>{curGuild.leaderName}</b></color> · Quỹ bang: <b>{curGuild.guildGoldFund} Vàng</b> · Thành viên: <b>{curGuild.members.Count}/50</b> · Khẩu hiệu: <i>\"{curGuild.slogan}\"</i>", standardTextStyle);
+
+                // 2. Danh Sách Thành Viên Bang Hội (Scrollable)
+                float memBoxY = curY + 60f;
+                float memBoxH = 240f;
+                Rect memBox = new Rect(modalX + 16f, memBoxY, modalW - 32f, memBoxH);
+                DrawFantasyFrame(memBox, new Color(0.05f, 0.07f, 0.11f, 0.95f), new Color(0.45f, 0.55f, 0.75f, 0.6f), new Color(0.6f, 0.75f, 0.95f, 0.8f));
+
+                boldWhiteStyle.fontSize = 11;
+                boldWhiteStyle.normal.textColor = new Color(0.35f, 0.85f, 1f);
+                GUI.Label(new Rect(memBox.x + 12f, memBox.y + 6f, 400f, 18f), "👥 DANH SÁCH THÀNH VIÊN BANG HỘI:", boldWhiteStyle);
+
+                float viewH = curGuild.members.Count * 42f;
+                Rect viewRect = new Rect(0, 0, memBox.width - 24f, Mathf.Max(viewH, memBoxH - 34f));
+                guildMemberListScroll = GUI.BeginScrollView(new Rect(memBox.x + 6f, memBox.y + 26f, memBox.width - 12f, memBoxH - 32f), guildMemberListScroll, viewRect);
+
+                for (int i = 0; i < curGuild.members.Count; i++)
+                {
+                    var m = curGuild.members[i];
+                    Rect mRow = new Rect(2f, i * 42f, viewRect.width - 4f, 38f);
+
+                    GUI.color = (i % 2 == 0) ? new Color(0.07f, 0.10f, 0.15f, 0.95f) : new Color(0.09f, 0.12f, 0.18f, 0.95f);
+                    GUI.DrawTexture(mRow, Texture2D.whiteTexture);
+                    GUI.color = Color.white;
+                    DrawOutline(mRow, new Color(0.25f, 0.35f, 0.50f, 0.4f), 1);
+
+                    // Trạng thái Online / Offline
+                    string statusIcon = m.isOnline ? "<color=#55ff55>● Online</color>" : "<color=#888888>○ Offline</color>";
+                    string leaderTag = m.isLeader ? " <color=#ffaa00>[Bang Chủ]</color>" : "";
+
+                    standardTextStyle.fontSize = 11;
+                    standardTextStyle.normal.textColor = Color.white;
+                    GUI.Label(new Rect(mRow.x + 8f, mRow.y + 4f, 220f, 16f), $"{m.memberName}{leaderTag}", standardTextStyle);
+
+                    standardTextStyle.fontSize = 10;
+                    standardTextStyle.normal.textColor = new Color(0.7f, 0.8f, 0.9f);
+                    GUI.Label(new Rect(mRow.x + 8f, mRow.y + 20f, 260f, 16f), $"Lv.{m.level} · {m.characterClass} ({m.element}) · {statusIcon} · Map: {m.currentMap}", standardTextStyle);
+
+                    // Nút Profile
+                    if (DrawFantasyButton(new Rect(mRow.x + mRow.width - 165f, mRow.y + 6f, 74f, 26f), "PROFILE", 10))
+                    {
+                        selectedProfileMember = m;
+                    }
+
+                    // Nút Giao Dịch
+                    if (DrawFantasyButton(new Rect(mRow.x + mRow.width - 85f, mRow.y + 6f, 80f, 26f), "GIAO DỊCH", 10, true, new Color(0.35f, 0.85f, 1f)))
+                    {
+                        guildTradeNotification = $"🤝 Đã gửi lời mời giao dịch đến [{m.memberName}]!";
+                        guildTradeNotifyTimer = 3.5f;
+                    }
+                }
+                GUI.EndScrollView();
+
+                // 3. Khung Cơ Chế Bảo Vệ Rời Bang (Double-Check 60s đếm ngược)
+                float bottomY = modalY + modalH - 85f;
+                Rect bottomBox = new Rect(modalX + 16f, bottomY, modalW - 32f, 72f);
+                DrawFantasyFrame(bottomBox, new Color(0.08f, 0.05f, 0.06f, 0.95f), new Color(0.85f, 0.3f, 0.3f, 0.6f), new Color(1f, 0.4f, 0.4f, 0.8f));
+
+                if (!gm.IsLeaveRequested)
+                {
+                    standardTextStyle.fontSize = 10;
+                    standardTextStyle.normal.textColor = new Color(0.8f, 0.8f, 0.8f);
+                    GUI.Label(new Rect(bottomBox.x + 12f, bottomBox.y + 8f, bottomBox.width - 160f, 32f),
+                        "• Bạn chỉ được tham gia 1 Bang Hội duy nhất. Để sang bang khác, bạn cần Rời Bang.\n• Cơ chế bảo vệ: Bấm Rời Bang sẽ yêu cầu chờ 1 phút (60s) chống thao tác nhầm.", standardTextStyle);
+
+                    if (DrawFantasyButton(new Rect(bottomBox.x + bottomBox.width - 140f, bottomBox.y + 20f, 128f, 32f), "🚪 YÊU CẦU RỜI BANG", 11, true, new Color(1f, 0.45f, 0.45f)))
+                    {
+                        gm.RequestLeaveGuild();
+                    }
+                }
+                else
+                {
+                    // Đang trong tiến trình Double-Check 60 giây
+                    float cd = gm.LeaveGuildCountdown;
+                    bool unlocked = gm.IsLeaveUnlocked;
+
+                    boldWhiteStyle.fontSize = 11;
+                    boldWhiteStyle.normal.textColor = unlocked ? new Color(1f, 0.3f, 0.3f) : new Color(1f, 0.85f, 0.3f);
+                    string statusMsg = unlocked
+                        ? "⚠️ ĐÃ MỞ KHÓA! BẤM XÁC NHẬN ĐỂ RỜI BANG VĨNH VIỄN:"
+                        : $"⏳ ĐANG BẢO VỆ: CẦN CHỜ {cd:0.0}s NỮA MỚI MỞ KHÓA NÚT RỜI BANG!";
+                    GUI.Label(new Rect(bottomBox.x + 12f, bottomBox.y + 8f, bottomBox.width - 24f, 18f), statusMsg, boldWhiteStyle);
+
+                    if (DrawFantasyButton(new Rect(bottomBox.x + 12f, bottomBox.y + 30f, 140f, 30f), "✕ HỦY RỜI BANG", 11))
+                    {
+                        gm.CancelLeaveGuild();
+                    }
+
+                    string confirmBtnText = unlocked ? "⚠️ XÁC NHẬN RỜI BANG" : $"KHÓA ({cd:0}s)";
+                    Color confirmBtnColor = unlocked ? new Color(1f, 0.25f, 0.25f) : new Color(0.5f, 0.5f, 0.5f);
+                    if (DrawFantasyButton(new Rect(bottomBox.x + 160f, bottomBox.y + 30f, 180f, 30f), confirmBtnText, 11, unlocked, confirmBtnColor))
+                    {
+                        if (unlocked)
+                        {
+                            gm.ConfirmLeaveGuild(playerStats);
+                        }
+                    }
+                }
+
+                // Popup Profile Xem Thông Tin Thành Viên nếu được chọn
+                if (selectedProfileMember != null)
+                {
+                    DrawMemberProfilePopup(selectedProfileMember);
+                }
+            }
+        }
+
+        private void DrawMemberProfilePopup(GodlessFantasy.Guild.GuildMember member)
+        {
+            float pW = 320f;
+            float pH = 210f;
+            float pX = (Screen.width - pW) / 2f;
+            float pY = (Screen.height - pH) / 2f;
+            Rect pRect = new Rect(pX, pY, pW, pH);
+
+            GUI.depth = -150;
+            DrawFantasyFrame(pRect, new Color(0.04f, 0.06f, 0.10f, 0.98f), new Color(0.85f, 0.70f, 0.25f, 0.95f), new Color(1f, 0.88f, 0.45f, 1f));
+
+            boldWhiteStyle.fontSize = 13;
+            boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
+            boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.25f);
+            GUI.Label(new Rect(pRect.x, pRect.y + 10f, pRect.width, 22f), $"👤 HỒ SƠ THÀNH VIÊN", boldWhiteStyle);
+
+            standardTextStyle.alignment = TextAnchor.UpperLeft;
+            standardTextStyle.fontSize = 11;
+            standardTextStyle.normal.textColor = Color.white;
+
+            string info =
+                $"• Tên nhân vật: <color=#00e5ff><b>{member.memberName}</b></color>\n" +
+                $"• Cấp độ: <color=yellow><b>Cấp {member.level}</b></color>\n" +
+                $"• Chức nghiệp: <color=#ffaa00><b>{member.characterClass}</b></color>\n" +
+                $"• Thuộc tính: <color=#55ff55><b>{member.element}</b></color>\n" +
+                $"• Vị trí hiện tại: <b>{member.currentMap}</b>\n" +
+                $"• Trạng thái: {(member.isOnline ? "<color=#55ff55>Online</color>" : "<color=#888888>Offline</color>")}";
+
+            GUI.Label(new Rect(pRect.x + 16f, pRect.y + 40f, pRect.width - 32f, 120f), info, standardTextStyle);
+
+            if (DrawFantasyButton(new Rect(pRect.x + (pRect.width - 100f) / 2f, pRect.y + pRect.height - 38f, 100f, 28f), "ĐÓNG", 11, true))
+            {
+                selectedProfileMember = null;
             }
         }
 

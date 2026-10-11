@@ -158,6 +158,9 @@ namespace GodlessFantasy.Player
             var s8 = new InventoryItem("scroll_s8", "Lôi Thần Nộ", ItemType.SkillScroll, EquipSlot.None, "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "item_scroll_thunder", "• [Toàn Hệ · Lôi] | ST: 45 + 110% INT | CD: 3.5s | Tầm: 7.0m", "Sấm sét giáng từ trời cao (Bí kíp Toàn Hệ).", 1,
                 new SkillScrollData("scroll_all_thunder", "Lôi Thần Nộ", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Lôi", 25, 3.5f, 45, 1.1f, 2, "icon_skill_meteor", "item_scroll_thunder", "Sấm sét giáng diện rộng.", 7.0f, "Toàn Hệ"));
 
+            var s9 = new InventoryItem("scroll_s9", "Hào Quang Bang Hội", ItemType.SkillScroll, EquipSlot.None, "Phẩm S", new Color(1.0f, 0.88f, 0.25f), "item_scroll_fire", "• [Kị Sĩ · Hỏa] | Buff Đồng Đội 360° (+20% ST) | CD: 6.0s | Tầm: 6.5m", "Kích hoạt hào quang vàng hoàng gia buff toàn đội trong bán kính 6.5m!", 1,
+                new SkillScrollData("scroll_guild_buff", "Hào Quang Bang Hội", "Phẩm S", new Color(1.0f, 0.88f, 0.25f), "Hỏa", 30, 6.0f, 40, 1.2f, 6, "icon_skill_divine_nova", "item_scroll_fire", "Kích hoạt hào quang vàng hoàng kim 360 độ ban phước +20% sát thương cho bản thân và toàn bộ đồng đội cùng bang!", 6.5f, "Kị Sĩ", "", 3));
+
             items.Add(s1);
             items.Add(s2);
             items.Add(s3);
@@ -166,6 +169,7 @@ namespace GodlessFantasy.Player
             items.Add(s6);
             items.Add(s7);
             items.Add(s8);
+            items.Add(s9);
 
             // Gắn sẵn vào 4 ô skill hotbar (đều thuộc Hệ Kị Sĩ, Thuộc Tính Hỏa)
             EquipSkillScrollToHotbar(s1, 0, true);

@@ -50,12 +50,43 @@ namespace GodlessFantasy.Combat
 
         private void HandleDeath()
         {
-            respawnTimer = 3.0f;
+            respawnTimer = 4.0f;
             // Tạm ẩn hình nộm
             var sr = GetComponent<SpriteRenderer>();
             if (sr != null) sr.enabled = false;
             var col = GetComponent<Collider2D>();
             if (col != null) col.enabled = false;
+
+            // 1. Phân phối EXP & Vàng (Nếu có bang hội thì chia cho đồng đội trong map)
+            int expReward = gameObject.name.Contains("Champion") ? 120 : 45;
+            int goldReward = gameObject.name.Contains("Champion") ? 60 : 25;
+
+            var gm = GodlessFantasy.Guild.GuildManager.Instance;
+            if (gm != null && gm.IsInGuild)
+            {
+                gm.DistributeGuildReward(expReward, goldReward, transform.position);
+            }
+            else
+            {
+                var player = FindAnyObjectByType<GodlessFantasy.Player.PlayerStats>();
+                if (player != null)
+                {
+                    player.GainExp(expReward);
+                    player.AddGold(goldReward);
+                    FloatingDamageManager.ShowFloatingText(player.transform.position + Vector3.up * 1f,
+                        $"+{expReward} EXP · +{goldReward} Vàng", new Color(1f, 0.88f, 0.25f));
+                }
+            }
+
+            // 2. Rơi vật phẩm tự do tại vị trí quái chết để người chơi tự do nhặt và tranh nhau đồ
+            if (Random.value > 0.4f)
+            {
+                GroundLootItem.SpawnLoot(transform.position, "Thịt Nướng Lửa Hồng", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_potion_hp", 1);
+            }
+            else
+            {
+                GroundLootItem.SpawnLoot(transform.position, "Bình Dược Liệu HP", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_potion_hp", 1);
+            }
         }
 
         private void Update()
