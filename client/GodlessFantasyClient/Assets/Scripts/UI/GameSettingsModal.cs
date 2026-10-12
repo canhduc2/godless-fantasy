@@ -169,8 +169,10 @@ namespace GodlessFantasy.UI
 
             // Nhãn tốc độ + Giá trị hiển thị
             float curSpeed = GameSettings.SimulationSpeed;
-            string speedDesc = (curSpeed < 0.95f) ? $" (Chậm {(1f / curSpeed):0.1f}x - Soi từng frame)" :
-                               (curSpeed > 1.05f) ? $" (Tua nhanh {curSpeed:0.1f}x)" : " (Chuẩn 100%)";
+            string slowSpeedStr = (1f / curSpeed).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            string fastSpeedStr = curSpeed.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            string speedDesc = (curSpeed < 0.95f) ? $" (Chậm {slowSpeedStr}x - Soi từng frame)" :
+                               (curSpeed > 1.05f) ? $" (Tua nhanh {fastSpeedStr}x)" : " (Chuẩn 100%)";
 
             GUI.Label(new Rect(modalX + 26f, speedY, 180f, 22f), "Tốc Độ Hiệu Ứng:", labelStyle);
             GUI.Label(new Rect(modalX + modalW - 200f, speedY, 174f, 22f), $"{curSpeed:0.00}x{speedDesc}", valueStyle);

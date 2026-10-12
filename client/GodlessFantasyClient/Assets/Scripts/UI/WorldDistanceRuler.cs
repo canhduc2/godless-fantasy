@@ -155,8 +155,9 @@ namespace GodlessFantasy.UI
                              (pStats != null && pStats.CharacterClass.Contains("Xạ")) ? "🏹" :
                              (pStats != null && pStats.CharacterClass.Contains("Pháp")) ? "🔮" : "⚔️";
 
-            DrawRangeMarker(zeroScreenX + basicAtkRange * pixelsPerMeterX, rulerY, basicAtkRange, $"{atkIcon} {basicAtkRange:0.1}m", new Color(1.0f, 0.55f, 0.15f));
-            DrawRangeMarker(zeroScreenX - basicAtkRange * pixelsPerMeterX, rulerY, basicAtkRange, $"{atkIcon} {basicAtkRange:0.1}m", new Color(1.0f, 0.55f, 0.15f));
+            string atkRangeStr = basicAtkRange.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "m";
+            DrawRangeMarker(zeroScreenX + basicAtkRange * pixelsPerMeterX, rulerY, basicAtkRange, $"{atkIcon} {atkRangeStr}", new Color(1.0f, 0.55f, 0.15f));
+            DrawRangeMarker(zeroScreenX - basicAtkRange * pixelsPerMeterX, rulerY, basicAtkRange, $"{atkIcon} {atkRangeStr}", new Color(1.0f, 0.55f, 0.15f));
 
             // Tầm ngắm chiêu đang kích hoạt (nếu có)
             var aimingCtrl = player.GetComponent<SkillAimingController>();
@@ -164,8 +165,9 @@ namespace GodlessFantasy.UI
             {
                 var scroll = aimingCtrl.GetEquippedScroll(aimingCtrl.CurrentAimingSlot - 1);
                 float castRange = (scroll != null && scroll.castRange > 0) ? scroll.castRange : 8.0f;
-                DrawRangeMarker(zeroScreenX + castRange * pixelsPerMeterX, rulerY, castRange, $"🎯 {castRange:0.#}m", new Color(1.0f, 0.25f, 0.35f));
-                DrawRangeMarker(zeroScreenX - castRange * pixelsPerMeterX, rulerY, castRange, $"🎯 {castRange:0.#}m", new Color(1.0f, 0.25f, 0.35f));
+                string castRangeStr = castRange.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "m";
+                DrawRangeMarker(zeroScreenX + castRange * pixelsPerMeterX, rulerY, castRange, $"🎯 {castRangeStr}", new Color(1.0f, 0.25f, 0.35f));
+                DrawRangeMarker(zeroScreenX - castRange * pixelsPerMeterX, rulerY, castRange, $"🎯 {castRangeStr}", new Color(1.0f, 0.25f, 0.35f));
             }
 
             // Vạch con trỏ chuột (Mouse Distance Tracking - Bám chính xác 1:1 theo tọa độ chuột màn hình)

@@ -1464,8 +1464,10 @@ namespace GodlessFantasy.UI
             FantasyUITheme.DrawOutline(speedBox, new Color(0.3f, 0.45f, 0.7f, 0.6f), 1);
 
             float curSpeed = GameSettings.SimulationSpeed;
-            string speedLabel = (curSpeed < 0.95f) ? $" (Chậm {(1f / curSpeed):0.1f}x - Soi từng frame)" :
-                                (curSpeed > 1.05f) ? $" (Tua nhanh {curSpeed:0.1f}x)" : " (Chuẩn 100%)";
+            string slowSpeedStr = (1f / curSpeed).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            string fastSpeedStr = curSpeed.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            string speedLabel = (curSpeed < 0.95f) ? $" (Chậm {slowSpeedStr}x - Soi từng frame)" :
+                                (curSpeed > 1.05f) ? $" (Tua nhanh {fastSpeedStr}x)" : " (Chuẩn 100%)";
 
             var spdHeaderStyle = new GUIStyle(GUI.skin.label)
             {
