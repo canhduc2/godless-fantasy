@@ -711,9 +711,16 @@ namespace GodlessFantasy.UI
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 wordWrap = false,
-                normal = { textColor = Color.white }
+                padding = new RectOffset(0, 0, 0, 0),
+                margin = new RectOffset(0, 0, 0, 0)
             };
-            DrawAutoScrollText(new Rect(lvBadge.x + 1, lvBadge.y, lvBadge.width - 2, lvBadge.height), $"Lv.{lv}", lvStyle, speed: 18f, textColor: Color.white, gap: 8f, forceScroll: false);
+
+            // Vẽ chữ tĩnh cố định ở giữa khung, đổ bóng sắc nét (tuyệt đối không chạy chữ)
+            lvStyle.normal.textColor = new Color(0f, 0f, 0f, 0.9f);
+            GUI.Label(new Rect(lvBadge.x + 1, lvBadge.y + 1, lvBadge.width, lvBadge.height), $"Lv.{lv}", lvStyle);
+
+            lvStyle.normal.textColor = Color.white;
+            GUI.Label(lvBadge, $"Lv.{lv}", lvStyle);
 
             float rightColX = panel.x + 53f;
             float rightColW = panel.width - 58f; // 215 - 58 = 157px
