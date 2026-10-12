@@ -14,6 +14,8 @@ namespace GodlessFantasy.Player
         [Header("NPC Specs")]
         [SerializeField] private string npcName = "Trưởng Làng Eldrin";
         [SerializeField] private string dialogue = "Chào mừng dũng sĩ đến với Godless Fantasy! Hãy sử dụng Chiêu 1 [Phím 1] và Lướt [Shift] để luyện tập với các Hình Nộm gỗ ngoài kia trước khi bước vào vùng chiến trường đẫm máu!";
+        [SerializeField] private bool opensShopModal = false;
+        [SerializeField] private VillageNPCType shopType = VillageNPCType.Merchant;
 
         public static bool IsPlayerNearAnyNPC { get; private set; } = false;
         public static bool IsAnyNPCDialogueOpen { get; private set; } = false;
@@ -21,6 +23,14 @@ namespace GodlessFantasy.Player
         private bool isPlayerNearby = false;
         private bool showDialogue = false;
         private Transform playerTransform;
+
+        public void Setup(string name, string dial, bool isShop = false, VillageNPCType role = VillageNPCType.Merchant)
+        {
+            npcName = name;
+            dialogue = dial;
+            opensShopModal = isShop;
+            shopType = role;
+        }
 
         private void Start()
         {
@@ -46,10 +56,17 @@ namespace GodlessFantasy.Player
             IsPlayerNearAnyNPC = isPlayerNearby;
             IsAnyNPCDialogueOpen = showDialogue;
 
-            // BẤM PHÍM E HOẶC ESC ĐỂ ĐÓNG/MỞ HỘP THOẠI
+            // BẤM PHÍM E HOẶC ESC ĐỂ ĐÓNG/MỞ HỘP THOẠI HOẶC SHOP
             if (isPlayerNearby && Core.GameInput.GetInteractKeyDown())
             {
-                showDialogue = !showDialogue;
+                if (opensShopModal)
+                {
+                    VillageShopNPCModal.OpenNPC(shopType);
+                }
+                else
+                {
+                    showDialogue = !showDialogue;
+                }
             }
             if (showDialogue && Input.GetKeyDown(KeyCode.Escape))
             {
@@ -61,7 +78,14 @@ namespace GodlessFantasy.Player
         {
             if (isPlayerNearby)
             {
-                showDialogue = !showDialogue;
+                if (opensShopModal)
+                {
+                    VillageShopNPCModal.OpenNPC(shopType);
+                }
+                else
+                {
+                    showDialogue = !showDialogue;
+                }
             }
         }
 

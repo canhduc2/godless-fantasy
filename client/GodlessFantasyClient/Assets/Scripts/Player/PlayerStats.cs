@@ -124,9 +124,9 @@ namespace GodlessFantasy.Player
         [SerializeField] private int rebirthCount = 0;
 
         public int AvailableStatPoints => availableStatPoints;
-        public int Gold => gold;
+        public int Gold { get => gold; set => gold = value; }
         public int MagicCrystals => magicCrystals;
-        public int RebirthPoints => rebirthPoints;
+        public int RebirthPoints { get => rebirthPoints; set => rebirthPoints = value; }
         public int RebirthCount => rebirthCount;
         public bool CanRebirth => level >= 100;
 
@@ -194,7 +194,15 @@ namespace GodlessFantasy.Player
         }
 
         public int Agility => agility;
-        public int CurrentMana => currentMana;
+        public int CurrentMana
+        {
+            get => currentMana;
+            set
+            {
+                currentMana = Mathf.Clamp(value, 0, maxMana);
+                OnManaChanged?.Invoke(currentMana, maxMana);
+            }
+        }
         public int MaxMana => maxMana;
         public int HpPotionCount => hpPotionCount;
         public int ManaPotionCount => manaPotionCount;

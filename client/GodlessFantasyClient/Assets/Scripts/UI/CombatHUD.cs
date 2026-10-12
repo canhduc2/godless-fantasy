@@ -271,15 +271,15 @@ namespace GodlessFantasy.UI
 
             // 8. Bảng thông tin nhân vật nay đã được dời xuống đáy màn hình cạnh Hotbar (không còn ở góc trái trên)
 
-            // 9. Bản đồ nhỏ (Minimap) góc phải trên & nút chat (hạ xuống y=36f để không cản trở thước đo đỉnh màn hình)
-            if (mx > Screen.width - 200f && my >= 36f && my < 140f)
+            // 9. Bản đồ nhỏ (Minimap) góc phải trên, nút chức năng & Giờ Thế Giới
+            if (mx > Screen.width - 200f && my >= 36f && my < 156f)
                 return true;
 
-            // 10. Widget Active Buffs (dưới minimap mép phải)
+            // 10. Widget Active Buffs (dưới giờ thế giới mép phải)
             if (Instance.playerStats != null && Instance.playerStats.ActiveBuffs != null && Instance.playerStats.ActiveBuffs.Count > 0)
             {
                 float buffH = Instance.playerStats.ActiveBuffs.Count * 40f + 10f;
-                if (mx > Screen.width - 190f && my >= 144f && my <= 144f + buffH)
+                if (mx > Screen.width - 190f && my >= 158f && my <= 158f + buffH)
                     return true;
             }
 
@@ -985,13 +985,13 @@ namespace GodlessFantasy.UI
 
             GUI.DrawTexture(mapRect, radarBgTex != null ? radarBgTex : Texture2D.whiteTexture);
 
-            float minWx = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MinX : -45f;
-            float maxWx = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MaxX : 45f;
-            float minWy = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MinY : -22f;
-            float maxWy = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MaxY : 22f;
+            float minWx = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MinX : -135f;
+            float maxWx = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MaxX : 135f;
+            float minWy = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MinY : -66f;
+            float maxWy = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MaxY : 66f;
 
             // 1. Phân vùng Làng và Rừng
-            float safeRatio = Mathf.Clamp01((-8f - minWx) / (maxWx - minWx));
+            float safeRatio = Mathf.Clamp01((-20f - minWx) / (maxWx - minWx));
             float safeW = mapW * safeRatio;
             GUI.color = new Color(0.22f, 0.28f, 0.38f, 0.85f);
             GUI.DrawTexture(new Rect(mapX, mapY, safeW, mapH), Texture2D.whiteTexture);
@@ -1090,11 +1090,14 @@ namespace GodlessFantasy.UI
             }
 
             // Zone & Coord Label
-            string zoneName = (pPos.x <= -8.0f) ? "Làng Tân Thủ" : "Rừng Rậm PvP";
+            string zoneName = (pPos.x <= -20.0f) ? "Làng Tân Thủ" : "Rừng Rậm PvP";
             statBadgeStyle.alignment = TextAnchor.MiddleCenter;
-            statBadgeStyle.normal.textColor = (pPos.x <= -8.0f) ? new Color(0.5f, 0.95f, 0.6f) : new Color(1f, 0.5f, 0.5f);
+            statBadgeStyle.normal.textColor = (pPos.x <= -20.0f) ? new Color(0.5f, 0.95f, 0.6f) : new Color(1f, 0.5f, 0.5f);
             GUI.Label(new Rect(mapX, mapY + mapH - 18, mapW, 16), $"{zoneName} ({pPos.x:F1}, {pPos.y:F1})", statBadgeStyle);
             statBadgeStyle.normal.textColor = Color.white;
+
+            // GIỜ THẾ GIỚI DƯỚI MINIMAP (WORLD TIME BADGE)
+            DrawWorldTimeBadge(new Rect(mapX, mapY + mapH + 3, mapW, 18));
 
             // Click-To-Move
             if (Event.current.type == EventType.MouseDown && mapRect.Contains(Event.current.mousePosition))
@@ -1190,7 +1193,7 @@ namespace GodlessFantasy.UI
             float cardW = 165f;
             float cardH = 34f;
             float startX = Screen.width - cardW - 12f;
-            float startY = 144f;
+            float startY = 158f;
             float cardGap = 6f;
 
             for (int i = 0; i < playerStats.ActiveBuffs.Count; i++)
@@ -1256,6 +1259,42 @@ namespace GodlessFantasy.UI
                 GUI.DrawTexture(progBar, Texture2D.whiteTexture);
                 GUI.color = Color.white;
             }
+        }
+
+        // ================= 4.6. GIỜ THẾ GIỚI DƯỚI MINIMAP (WORLD TIME BADGE) =================
+        private void DrawWorldTimeBadge(Rect r)
+        {
+            // Nền tối mỏng viền vàng chuẩn wireframe
+            GUI.color = new Color(0.04f, 0.07f, 0.12f, 0.92f);
+            GUI.DrawTexture(r, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            DrawDoubleGoldFrame(r);
+
+            string timeStr = "☀️ 12:00 · Ban Ngày";
+            Color timeColor = new Color(1f, 0.88f, 0.35f);
+
+            if (GodlessFantasy.Core.EnvironmentAtmosphereManager.Instance != null)
+            {
+                var env = GodlessFantasy.Core.EnvironmentAtmosphereManager.Instance;
+                string icon = env.GetTimePhaseIcon();
+                string t = env.GetFormattedTime();
+                string phase = env.GetTimePhaseName();
+                timeStr = $"{icon} {t} · {phase}";
+
+                if (env.IsNight) timeColor = new Color(0.45f, 0.85f, 1.0f); // Xanh ánh trăng ban đêm
+                else if (phase == "Hoàng Hôn") timeColor = new Color(1.0f, 0.55f, 0.25f); // Cam hoàng hôn
+                else if (phase == "Bình Minh") timeColor = new Color(1.0f, 0.75f, 0.55f); // Hồng cam bình minh
+            }
+
+            var timeStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
+                wordWrap = false,
+                normal = { textColor = timeColor }
+            };
+            GUI.Label(new Rect(r.x, r.y, r.width, r.height), timeStr, timeStyle);
         }
 
         // ================= 5. THANH 5 Ô CHIÊU THỨC KẾ BÊN BẢNG CHỈ SỐ =================

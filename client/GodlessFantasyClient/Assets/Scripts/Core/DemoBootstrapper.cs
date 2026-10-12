@@ -51,15 +51,18 @@ namespace GodlessFantasy.Core
             Sprite grassTile = Resources.Load<Sprite>("tile_grass");
             Sprite petSprite = Resources.Load<Sprite>("pet_squirrel");
 
-            // 2. Xây Dựng Bản Đồ Thế Giới Khối Địa Hình (Block-Based Terrain Engine) & Ánh Sáng Môi Trường
+            // 2. Xây Dựng Bản Đồ Thế Giới Khối Địa Hình & Chunk Streaming Siêu Rộng x3 (270m x 132m)
             gameObject.AddComponent<EnvironmentAtmosphereManager>();
             var mapMgr = gameObject.AddComponent<BlockMapManager>();
-            mapMgr.InitializeMap(-45, 45, -22, 22);
+            mapMgr.InitializeMap(-135, 135, -66, 66);
             gameObject.AddComponent<TerrainPainterTool>();
             gameObject.AddComponent<ItemCreatorModal>();
             gameObject.AddComponent<GodlessFantasy.UI.SkillTestingMatrixModal>();
             gameObject.AddComponent<GodlessFantasy.UI.GameSettingsModal>();
             gameObject.AddComponent<GodlessFantasy.UI.WorldDistanceRuler>();
+            gameObject.AddComponent<GodlessFantasy.Player.RebirthVaultManager>();
+            gameObject.AddComponent<GodlessFantasy.UI.VillageShopNPCModal>();
+            gameObject.AddComponent<GodlessFantasy.UI.DeathScreenModal>();
             gameObject.AddComponent<ItemDatabase>();
             gameObject.AddComponent<SkillDatabase>();
             gameObject.AddComponent<SkillVFXManager>();
@@ -67,12 +70,12 @@ namespace GodlessFantasy.Core
             GameSettings.Initialize();
             AudioManager.EnsureExists();
 
-            // 3. Vùng An Toàn (Safe Zone Trigger bao trọn Làng Tân Thủ)
+            // 3. Vùng An Toàn (Safe Zone Trigger bao trọn Đại Đô Thị Làng Tân Thủ rộng 120m)
             GameObject safeZoneObj = new GameObject("SafeZone_Village");
-            safeZoneObj.transform.position = new Vector3(-24.0f, 0, 0);
+            safeZoneObj.transform.position = new Vector3(-80.0f, 0, 0);
             var safeCol = safeZoneObj.AddComponent<BoxCollider2D>();
             safeCol.isTrigger = true;
-            safeCol.size = new Vector2(34.0f, 42.0f);
+            safeCol.size = new Vector2(120.0f, 140.0f);
             safeZoneObj.AddComponent<SafeZone>();
 
             // 4. Prefab Đạn Ma Thuật (MagicBolt Template - Có TrailRenderer rực rỡ)
@@ -110,7 +113,7 @@ namespace GodlessFantasy.Core
             // 5. Nhân Vật Chính (Player Hero)
             GameObject playerObj = new GameObject("Player_Hero");
             playerObj.tag = "Player";
-            playerObj.transform.position = new Vector3(-16.0f, 0, 0); // Đứng ở quảng trường Làng Tân Thủ
+            playerObj.transform.position = new Vector3(-70.0f, 0, 0); // Đứng ở quảng trường Đại Đô Thị Làng Tân Thủ
 
             var pSr = playerObj.AddComponent<SpriteRenderer>();
             pSr.sprite = playerSprite;
@@ -172,28 +175,22 @@ namespace GodlessFantasy.Core
                 SetPrivateField(pInventory, "petFollower", petFollower);
             }
 
-            // 7. Tạo NPC Trưởng Làng Tân Thủ (Có thanh tên/máu NPC và Hộp thoại nhiệm vụ)
-            Sprite npcSprite = Resources.Load<Sprite>("npc_elder");
-            if (npcSprite != null)
-            {
-                GameObject npcObj = new GameObject("NPC_Elder_Eldrin");
-                npcObj.transform.position = new Vector3(-22.0f, 1.8f, 0);
+            // 7. Tạo Dàn NPC Làng Tân Thủ Hoàn Chỉnh (Trưởng Làng, Shop, Thợ Rèn, Dược Sư, Sứ Giả RP)
+            Sprite npcElderSprite = Resources.Load<Sprite>("npc_elder");
+            CreateVillageNPC("NPC_Elder_Eldrin", "Trưởng Làng Eldrin", "NPC 💬", new Vector3(-72.0f, 2.0f, 0), npcElderSprite, false, GodlessFantasy.UI.VillageNPCType.Merchant,
+                "Chào mừng dũng sĩ đến với Đại Đô Thị Làng Tân Thủ! Hãy ghé thăm các hàng quán chuẩn bị hành trang trước khi ra trận.");
 
-                var nSr = npcObj.AddComponent<SpriteRenderer>();
-                nSr.sprite = npcSprite;
-                nSr.sortingOrder = 10;
+            CreateVillageNPC("NPC_Merchant_Barnaby", "Thương Nhân Barnaby", "Shop 🛒", new Vector3(-65.0f, 6.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Merchant,
+                "Cửa hàng bán đầy đủ bình máu HP, bình mana MP và cuộn chiêu sơ cấp!");
 
-                var nCol = npcObj.AddComponent<BoxCollider2D>();
-                nCol.size = new Vector2(0.8f, 1.0f);
+            CreateVillageNPC("NPC_Blacksmith_Vulkan", "Thợ Rèn Vulkan", "Thợ Rèn 🔨", new Vector3(-65.0f, -6.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Blacksmith,
+                "Ta có thể cường hóa đập đồ trang bị của ngươi lên +1 đến +10!");
 
-                var nHealth = npcObj.AddComponent<Health>();
-                nHealth.IsInSafeZone = true;
+            CreateVillageNPC("NPC_Alchemist_Morgana", "Phù Thủy Morgana", "Dược Sư 🔮", new Vector3(-55.0f, 6.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Alchemist,
+                "Thuốc lắc cuồng nộ và nước thánh giải nguyền của ta sẽ tăng cường sức mạnh chiến đấu của ngươi!");
 
-                npcObj.AddComponent<VillageNPC>();
-
-                var nOverhead = npcObj.AddComponent<OverheadStatusBar>();
-                nOverhead.Setup(OverheadType.NPC, "Trưởng Làng Eldrin", "NPC 💬", 0.95f);
-            }
+            CreateVillageNPC("NPC_Rebirth_Kaelen", "Sứ Giả Kaelen", "Chuyển Sinh 🏛️", new Vector3(-92.0f, 15.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Rebirth,
+                "Đổi điểm RP lấy bí thuật cổ đại, hoặc mở Rương Chuyển Sinh lưu giữ 2 món bảo vật!");
 
             // 8. Cấu Hình Camera Centered Parallax Tracking
             Camera mainCam = Camera.main;
@@ -210,25 +207,31 @@ namespace GodlessFantasy.Core
                 camCtrl.SetTarget(playerObj.transform);
             }
 
-            // 9. Tạo Quái Vật & Bãi Luyện Công (Monster Targets & Mini-Boss Với AI Telegraph)
-            // - Quái 1: Mini-Boss Thủ Lĩnh (Máu dày 450, vòng đỏ Telegraph 3.2m rộng lớn, sâu trong rừng qua bờ suối)
-            CreateMonsterTarget("Boss_PvP_Champion", "Thủ Lĩnh Ma Thú (Mini-Boss)", "Lv.5 · Mini-Boss 🔥", new Vector3(28.0f, -4.0f, 0), dummySprite, false, hasAI: true, isBoss: true, maxHp: 450, attackRange: 3.2f, attackDamage: 35, scale: 1.4f);
+            // 9. Tạo Quái Vật & Bãi Luyện Công (Monster Targets & Mini-Boss Trên Thế Giới Siêu Rộng)
+            // - Bù Nhìn Gỗ trong Vùng An Toàn Làng Tân Thủ tại bãi võ
+            CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Gỗ (Làng)", "SafeZone", new Vector3(-76.0f, -12.0f, 0), dummySprite, true, hasAI: false, isBoss: false, maxHp: 9999, scale: 1.0f);
 
-            // - Quái 2: Quái Thường Tuần Tra (Tầm đánh gần 1.8m, tốc độ nhanh, tuần tra bìa rừng)
-            CreateMonsterTarget("Monster_PvP_Warrior", "Chiến Binh Quái (Thường)", "Lv.1 · Cận Chiến", new Vector3(10.0f, 2.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 120, attackRange: 1.8f, attackDamage: 16, scale: 1.0f);
+            // - Quái 1: Chiến Binh Bìa Rừng
+            CreateMonsterTarget("Monster_PvP_Warrior_1", "Chiến Binh Quái (Bìa Rừng)", "Lv.1 · Cận Chiến", new Vector3(18.0f, 4.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 120, attackRange: 1.8f, attackDamage: 16, scale: 1.0f);
 
-            // - Quái 3: Quái Thường Tuần Tra 2
-            CreateMonsterTarget("Monster_PvP_Warrior_2", "Chiến Binh Quái (Tuần Tra)", "Lv.2 · Cận Chiến", new Vector3(14.0f, -6.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 140, attackRange: 1.8f, attackDamage: 18, scale: 1.0f);
+            // - Quái 2: Chiến Binh Tuần Tra Ven Sông
+            CreateMonsterTarget("Monster_PvP_Warrior_2", "Chiến Binh Quái (Ven Sông)", "Lv.2 · Cận Chiến", new Vector3(35.0f, -8.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 140, attackRange: 1.8f, attackDamage: 18, scale: 1.0f);
 
-            // - Quái 4: Bù Nhìn Gỗ trong Vùng An Toàn Làng Tân Thủ (Miễn nhiễm sát thương, đứng im không đánh để test combo)
-            CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Gỗ (Làng)", "SafeZone", new Vector3(-26.0f, 2.0f, 0), dummySprite, true, hasAI: false, isBoss: false, maxHp: 9999, scale: 1.0f);
+            // - Quái 3: Quái Tinh Anh Bên Kia Sông
+            CreateMonsterTarget("Monster_PvP_Warrior_3", "Chiến Binh Quái (Bên Kia Sông)", "Lv.3 · Cận Chiến", new Vector3(65.0f, 8.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 180, attackRange: 2.0f, attackDamage: 22, scale: 1.1f);
+
+            // - Quái 4: Ma Thú Hắc Ám Gần Tàn Tích
+            CreateMonsterTarget("Monster_PvP_Warrior_4", "Ma Thú Tàn Tích", "Lv.4 · Tinh Anh", new Vector3(85.0f, -12.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 240, attackRange: 2.2f, attackDamage: 26, scale: 1.2f);
+
+            // - Quái 5: Mini-Boss Thủ Lĩnh Ma Thú (Tại Đấu Trường Tàn Tích 110, -10)
+            CreateMonsterTarget("Boss_PvP_Champion", "Thủ Lĩnh Ma Thú (Mini-Boss)", "Lv.5 · Mini-Boss 🔥", new Vector3(110.0f, -10.0f, 0), dummySprite, false, hasAI: true, isBoss: true, maxHp: 650, attackRange: 3.4f, attackDamage: 40, scale: 1.5f);
 
             // 10. Cổng Dịch Chuyển Không Gian 2 Chiều (Map Portals: Làng Tân Thủ <-> Rừng Rậm Hắc Ám)
             CreateMapPortal("Portal_Village_To_Wilderness", "Cổng Đến Rừng Rậm Hắc Ám", "Rừng Rậm Hắc Ám",
-                new Vector3(-7.5f, 3.5f, 0), new Vector3(8.0f, 0f, 0), BgmTrack.Combat, new Color(0.68f, 0.25f, 1.0f, 0.85f));
+                new Vector3(-18.0f, 3.5f, 0), new Vector3(15.0f, 0f, 0), BgmTrack.Combat, new Color(0.68f, 0.25f, 1.0f, 0.85f));
 
             CreateMapPortal("Portal_Wilderness_To_Village", "Cổng Về Làng Tân Thủ", "Làng Tân Thủ",
-                new Vector3(8.0f, 3.5f, 0), new Vector3(-9.0f, 0f, 0), BgmTrack.Village, new Color(0.25f, 0.95f, 0.55f, 0.85f));
+                new Vector3(15.0f, 3.5f, 0), new Vector3(-22.0f, 0f, 0), BgmTrack.Village, new Color(0.25f, 0.95f, 0.55f, 0.85f));
 
             // 11. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
             if (FindAnyObjectByType<FloatingDamageManager>() == null)
@@ -321,6 +324,29 @@ namespace GodlessFantasy.Core
                     ai.telegraphDuration = 1.2f;
                 }
             }
+        }
+
+        private void CreateVillageNPC(string id, string name, string roleStr, Vector3 pos, Sprite sprite, bool isShop, GodlessFantasy.UI.VillageNPCType shopType, string dial)
+        {
+            if (sprite == null) return;
+            GameObject npcObj = new GameObject(id);
+            npcObj.transform.position = pos;
+
+            var sr = npcObj.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 10;
+
+            var col = npcObj.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(0.8f, 1.0f);
+
+            var health = npcObj.AddComponent<Combat.Health>();
+            health.IsInSafeZone = true;
+
+            var vNpc = npcObj.AddComponent<Player.VillageNPC>();
+            vNpc.Setup(name, dial, isShop, shopType);
+
+            var overhead = npcObj.AddComponent<UI.OverheadStatusBar>();
+            overhead.Setup(UI.OverheadType.NPC, name, roleStr, 0.95f);
         }
 
         private void SetPrivateField(object target, string fieldName, object value)

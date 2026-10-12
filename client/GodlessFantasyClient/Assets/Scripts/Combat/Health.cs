@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GodlessFantasy.Combat
@@ -136,6 +137,23 @@ namespace GodlessFantasy.Combat
             OnDeath?.Invoke();
             // Đổi màu thành xám tối
             if (spriteRenderer != null) spriteRenderer.color = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+
+            // Nếu người chơi chết: Kích hoạt Màn Hình Tử Trận & Cơ chế rơi đồ 50%
+            if (gameObject.CompareTag("Player") || gameObject.name.Contains("Player"))
+            {
+                var inv = GetComponent<Player.InventoryManager>() ?? UnityEngine.Object.FindAnyObjectByType<Player.InventoryManager>();
+                List<string> droppedNames = new List<string>();
+                if (inv != null)
+                {
+                    droppedNames = inv.DropUnprotectedLootOnDeath();
+                }
+                UI.DeathScreenModal.TriggerPlayerDeath(droppedNames);
+            }
+        }
+
+        public void ResetHealth()
+        {
+            Revive();
         }
 
         public void Heal(int amount)

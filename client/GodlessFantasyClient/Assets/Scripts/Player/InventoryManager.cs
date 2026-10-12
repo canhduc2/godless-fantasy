@@ -473,7 +473,6 @@ namespace GodlessFantasy.Player
             return item != null ? item.quantity : 0;
         }
 
-        // ================= THÚ CƯNG (THÁO RA / THẢ) =================
         public void TogglePetSummon(InventoryItem petItem)
         {
             if (petItem == null || petItem.itemType != ItemType.Pet) return;
@@ -485,6 +484,41 @@ namespace GodlessFantasy.Player
                 petFollower.gameObject.SetActive(petItem.isEquipped);
             }
             Debug.Log(petItem.isEquipped ? "[PET] Đã gọi Thú Cưng xuất chiến!" : "[PET] Đã thu hồi Thú Cưng vào lồng!");
+        }
+
+        // ================= RỦI RO RƠI ĐỒ 50% KHI CHẾT NGOÀI SAFE ZONE =================
+        /// <summary>
+        /// Khi tử trận: 5 ô đầu tiên được bảo vệ vĩnh viễn (Permanent Protected Slots).
+        /// Các món từ ô thứ 6 trở đi có 50% tỉ lệ rơi tự do ra sàn đất theo đúng luật Hardcore MMORPG.
+        /// </summary>
+        public List<string> DropUnprotectedLootOnDeath()
+        {
+            List<string> droppedNames = new List<string>();
+            List<InventoryItem> toRemove = new List<InventoryItem>();
+
+            for (int i = 5; i < items.Count; i++)
+            {
+                var it = items[i];
+                if (it == null) continue;
+
+                if (equippedGear != null && equippedGear.ContainsValue(it)) continue;
+
+                if (UnityEngine.Random.value < 0.50f)
+                {
+                    toRemove.Add(it);
+                    droppedNames.Add(it.itemName);
+
+                    Vector3 dropPos = transform.position + (Vector3)(UnityEngine.Random.insideUnitCircle * 0.85f);
+                    GroundLootItem.SpawnLoot(dropPos, it.itemName, it.tierRank, it.tierColor, it.iconName, it.quantity);
+                }
+            }
+
+            foreach (var r in toRemove)
+            {
+                items.Remove(r);
+            }
+
+            return droppedNames;
         }
     }
 }
