@@ -711,16 +711,11 @@ namespace GodlessFantasy.UI
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 wordWrap = false,
-                padding = new RectOffset(0, 0, 0, 0),
-                margin = new RectOffset(0, 0, 0, 0)
+                normal = { textColor = Color.white }
             };
 
-            // Vẽ chữ tĩnh cố định ở giữa khung, đổ bóng sắc nét (tuyệt đối không chạy chữ)
-            lvStyle.normal.textColor = new Color(0f, 0f, 0f, 0.9f);
-            GUI.Label(new Rect(lvBadge.x + 1, lvBadge.y + 1, lvBadge.width, lvBadge.height), $"Lv.{lv}", lvStyle);
-
-            lvStyle.normal.textColor = Color.white;
-            GUI.Label(lvBadge, $"Lv.{lv}", lvStyle);
+            // Chạy chữ tự động (Auto-Scroll Marquee) lặp vòng mượt mà theo yêu cầu
+            DrawAutoScrollText(new Rect(lvBadge.x + 1, lvBadge.y, lvBadge.width - 2, lvBadge.height), $"Lv.{lv}", lvStyle, speed: 20f, textColor: Color.white, gap: 14f, forceScroll: true);
 
             float rightColX = panel.x + 53f;
             float rightColW = panel.width - 58f; // 215 - 58 = 157px
@@ -3267,6 +3262,9 @@ namespace GodlessFantasy.UI
             }
 
             // Nếu dài quá hoặc được yêu cầu thì cuộn từ phải sang trái (Marquee) bên trong khung cắt BeginGroup
+            var prevAlign = style.alignment;
+            style.alignment = TextAnchor.MiddleLeft;
+
             GUI.BeginGroup(r);
 
             float travelDistance = textW + gap;
@@ -3295,6 +3293,7 @@ namespace GodlessFantasy.UI
 
             GUI.EndGroup();
 
+            style.alignment = prevAlign;
             style.normal.textColor = originalColor;
             style.wordWrap = prevWrap;
         }
