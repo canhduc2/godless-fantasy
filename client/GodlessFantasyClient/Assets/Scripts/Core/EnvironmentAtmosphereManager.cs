@@ -178,33 +178,19 @@ namespace GodlessFantasy.Core
             playerLightObj = new GameObject("Player_Vision_Light");
             playerLightObj.transform.parent = playerTransform;
             playerLightObj.transform.localPosition = Vector3.zero;
-            playerLightObj.transform.localScale = Vector3.one * 5.6f;
+            playerLightObj.transform.localScale = Vector3.one * 2.8f; // Thu nhỏ bán kính không đè nhòe màn hình
 
             playerLightSr = playerLightObj.AddComponent<SpriteRenderer>();
             playerLightSr.sprite = radialLightSprite;
-            playerLightSr.color = new Color(0.85f, 0.92f, 1.0f, 0.22f);
-            playerLightSr.sortingOrder = 9;
+            playerLightSr.color = new Color(1.0f, 0.90f, 0.65f, 0.0f); // Tắt lúc ban ngày
+            playerLightSr.sortingOrder = 8; // NẰM DƯỚI NHÂN VẬT (Layer 10) ĐỂ KHÔNG BAO GIỜ LÀM NHÒE NHÂN VẬT
         }
 
         private void SetupAtmosphericMist()
         {
+            // Bỏ tạo các vệt sương đục milky mist che mờ màn hình
             mistContainer = new GameObject("Atmospheric_Mist_Container");
             mistContainer.transform.parent = transform;
-
-            for (int i = 0; i < 6; i++)
-            {
-                GameObject slice = new GameObject($"Mist_Slice_{i}");
-                slice.transform.parent = mistContainer.transform;
-                slice.transform.position = new Vector3(15f + i * 20f, (i % 2 == 0 ? 8f : -8f), 0);
-                slice.transform.localScale = new Vector3(28f, 14f, 1f);
-
-                var sr = slice.AddComponent<SpriteRenderer>();
-                sr.sprite = radialLightSprite;
-                sr.color = new Color(0.65f, 0.75f, 0.95f, 0.08f);
-                sr.sortingOrder = 15;
-
-                mistSlices.Add(slice.transform);
-            }
         }
 
         private void SetupNightFireflies()
@@ -286,27 +272,21 @@ namespace GodlessFantasy.Core
                 float px = playerTransform.position.x;
                 if (px <= -20f)
                 {
-                    // Làng Tân Thủ: Giảm 30% độ tối để người chơi thấy rõ nhà cửa/shop
-                    tintColor.a *= 0.70f;
-                }
-                else if (px > 20f)
-                {
-                    // Rừng Rậm: Tăng 15% độ sâu của màu màn đêm
-                    tintColor.a = Mathf.Min(0.65f, tintColor.a * 1.15f);
+                    // Làng Tân Thủ: Giảm 40% độ tối để người chơi thấy rõ nhà cửa/shop sáng sủa
+                    tintColor.a *= 0.60f;
                 }
             }
 
             cameraTintSr.color = Color.Lerp(cameraTintSr.color, tintColor, Time.deltaTime * 3f);
 
-            // Đổi màu nền Camera Background
+            // Đổi màu nền Camera Background tươi sáng
             Color bgSky = CalculateSkyBackground(currentHour);
             mainCamera.backgroundColor = Color.Lerp(mainCamera.backgroundColor, bgSky, Time.deltaTime * 2.5f);
 
-            // Tăng cường Hào Quang Người Chơi khi trời tối
+            // Tăng nhẹ vầng sáng dịu dưới chân người chơi khi trời tối (không làm mờ mặt nhân vật)
             if (playerLightSr != null)
             {
-                float nightFactor = Mathf.Clamp01(cameraTintSr.color.a / 0.45f);
-                float targetLightAlpha = Mathf.Lerp(0.12f, 0.45f, nightFactor);
+                float targetLightAlpha = IsNight ? 0.14f : 0.0f;
                 Color lc = playerLightSr.color;
                 lc.a = Mathf.Lerp(lc.a, targetLightAlpha, Time.deltaTime * 3f);
                 playerLightSr.color = lc;
@@ -315,41 +295,39 @@ namespace GodlessFantasy.Core
 
         private Color CalculateAtmosphericTint(float hour)
         {
-            // 05:00 - 07:00: Bình Minh (Hồng cam dịu)
+            // 05:00 - 07:00: Bình Minh (Hồng cam nhẹ nhàng, trong veo)
             if (hour >= 5.0f && hour < 7.0f)
             {
                 float t = (hour - 5.0f) / 2.0f;
-                Color dawn = new Color(1.0f, 0.65f, 0.45f, 0.20f);
-                Color day = new Color(1.0f, 0.95f, 0.85f, 0.02f);
+                Color dawn = new Color(1.0f, 0.75f, 0.55f, 0.05f);
+                Color day = new Color(1.0f, 1.0f, 1.0f, 0.0f);
                 return Color.Lerp(dawn, day, t);
             }
-            // 07:00 - 17:00: Ban Ngày (Nắng vàng trong trẻo, mỏng nhẹ)
+            // 07:00 - 17:00: Ban Ngày (100% TRONG TRẺO, KHÔNG PHỦ MỜ, TĂNG TƯƠNG PHẢN ĐỒNG CỎ RỰC RỠ)
             else if (hour >= 7.0f && hour < 17.0f)
             {
-                return new Color(1.0f, 0.95f, 0.85f, 0.02f);
+                return new Color(1.0f, 1.0f, 1.0f, 0.0f);
             }
-            // 17:00 - 19.5f: Hoàng Hôn (Cam hổ phách, đỏ tía rực rỡ)
+            // 17:00 - 19.5f: Hoàng Hôn (Cam hổ phách ấm áp dịu nhẹ, sắc nét)
             else if (hour >= 17.0f && hour < 19.5f)
             {
                 float t = (hour - 17.0f) / 2.5f;
-                Color day = new Color(1.0f, 0.95f, 0.85f, 0.02f);
-                Color dusk = new Color(0.95f, 0.38f, 0.15f, 0.32f);
+                Color day = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+                Color dusk = new Color(1.0f, 0.50f, 0.20f, 0.10f);
                 return Color.Lerp(day, dusk, t);
             }
-            // 19:30 - 05:00: Ban Đêm (Màn đêm huyền bí ánh trăng xanh biếc)
+            // 19:30 - 05:00: Ban Đêm (Ánh trăng xanh navy huyền ảo, tương phản cao, rõ ràng sắc nét)
             else
             {
-                float nightProgression = (hour >= 19.5f) ? (hour - 19.5f) / 4.5f : (hour + 4.5f) / 9.5f;
-                Color nightColor = new Color(0.04f, 0.08f, 0.26f, 0.52f);
-                return nightColor;
+                return new Color(0.02f, 0.05f, 0.20f, 0.22f);
             }
         }
 
         private Color CalculateSkyBackground(float hour)
         {
-            if (hour >= 7.0f && hour < 17.0f) return new Color(0.10f, 0.14f, 0.22f); // Trời ngày
-            if (hour >= 17.0f && hour < 19.5f) return new Color(0.18f, 0.08f, 0.14f); // Trời hoàng hôn
-            return new Color(0.02f, 0.03f, 0.06f); // Trời đêm
+            if (hour >= 7.0f && hour < 17.0f) return new Color(0.24f, 0.38f, 0.55f); // Bầu trời xanh tươi sáng
+            if (hour >= 17.0f && hour < 19.5f) return new Color(0.32f, 0.18f, 0.22f); // Trời hoàng hôn ấm áp
+            return new Color(0.04f, 0.06f, 0.12f); // Trời đêm xanh thẫm
         }
 
         private void UpdateTorchFlicker()

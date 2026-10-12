@@ -142,6 +142,13 @@ namespace GodlessFantasy.AI
             float distFromSpawn = Vector2.Distance(transform.position, spawnPoint);
             float distToPlayer = playerTransform != null ? Vector2.Distance(transform.position, playerTransform.position) : 999f;
 
+            // Kiểm tra trạng thái ẩn nấp của người chơi
+            bool isPlayerStealth = GodlessFantasy.Player.PlayerMovement.IsPlayerInStealth;
+            if (isPlayerStealth && (currentState == MonsterState.Chase || currentState == MonsterState.AttackTelegraph))
+            {
+                SetState(MonsterState.Wander);
+            }
+
             // 1. Kiểm tra Giới Hạn Leash: Vượt quá bán kính -> Quay đầu hồi máu
             if (currentState != MonsterState.LeashReturn && distFromSpawn > leashRadius)
             {
@@ -209,8 +216,8 @@ namespace GodlessFantasy.AI
 
         private void UpdateIdle(float distToPlayer)
         {
-            // Kiểm tra thấy Player
-            if (distToPlayer <= detectionRadius && playerHealth != null && !playerHealth.IsDead && !playerHealth.IsInSafeZone)
+            // Kiểm tra thấy Player (chỉ khi không ẩn nấp)
+            if (!GodlessFantasy.Player.PlayerMovement.IsPlayerInStealth && distToPlayer <= detectionRadius && playerHealth != null && !playerHealth.IsDead && !playerHealth.IsInSafeZone)
             {
                 SetState(MonsterState.Chase);
                 return;
@@ -225,8 +232,8 @@ namespace GodlessFantasy.AI
 
         private void UpdateWander(float distToPlayer)
         {
-            // Kiểm tra thấy Player
-            if (distToPlayer <= detectionRadius && playerHealth != null && !playerHealth.IsDead && !playerHealth.IsInSafeZone)
+            // Kiểm tra thấy Player (chỉ khi không ẩn nấp)
+            if (!GodlessFantasy.Player.PlayerMovement.IsPlayerInStealth && distToPlayer <= detectionRadius && playerHealth != null && !playerHealth.IsDead && !playerHealth.IsInSafeZone)
             {
                 SetState(MonsterState.Chase);
                 return;

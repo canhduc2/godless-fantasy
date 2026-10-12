@@ -67,6 +67,20 @@ namespace GodlessFantasy.Player
         public bool IsMoving => isMovingToTarget || (rb != null && rb.linearVelocity.sqrMagnitude > 0.05f);
         public float DashCooldownRemaining => Mathf.Max(0, (lastDashTime + CurrentDashCooldown) - Time.time);
 
+        public static bool IsPlayerInStealth { get; set; } = false;
+
+        public void SetStealth(bool inStealth)
+        {
+            IsPlayerInStealth = inStealth;
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                Color c = spriteRenderer.color;
+                c.a = inStealth ? 0.40f : 1.0f;
+                spriteRenderer.color = c;
+            }
+        }
+
         [SerializeField] private SpriteRenderer spriteRenderer;
 
         private void Awake()

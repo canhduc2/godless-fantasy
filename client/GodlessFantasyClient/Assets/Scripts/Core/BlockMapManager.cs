@@ -82,6 +82,7 @@ namespace GodlessFantasy.Core
         private void Awake()
         {
             if (Instance == null) Instance = this;
+            World.TerrainBlockRegistry.EnsureInitialized();
             LoadSprites();
         }
 
@@ -212,8 +213,8 @@ namespace GodlessFantasy.Core
                 {
                     if (y < MinY || y > MaxY) continue;
 
-                    TerrainBlockType type = GetBlockType(x, y);
-                    CreateTileInChunk(x, y, type, chunkObj.transform);
+                    ushort blockId = GetBlockId(x, y);
+                    CreateTileInChunk(x, y, blockId, chunkObj.transform);
                 }
             }
         }
@@ -229,157 +230,161 @@ namespace GodlessFantasy.Core
         }
 
         /// <summary>
-        /// Tạo một ô địa hình bên trong Chunk GameObject
+        /// Tạo một ô địa hình bên trong Chunk GameObject từ mã khối (Block ID) trong TerrainBlockRegistry
         /// </summary>
-        private void CreateTileInChunk(int x, int y, TerrainBlockType type, Transform chunkParent)
+        private void CreateTileInChunk(int x, int y, ushort blockId, Transform chunkParent)
         {
+            var def = World.TerrainBlockRegistry.GetBlock(blockId);
+            Sprite sp = World.TerrainBlockRegistry.GetSprite(blockId);
+
             GameObject tileObj = new GameObject($"T_{x}_{y}");
             tileObj.transform.parent = chunkParent;
             tileObj.transform.position = new Vector3(x, y, 0);
 
             var sr = tileObj.AddComponent<SpriteRenderer>();
+            sr.sprite = sp;
+            sr.color = Color.white;
+            sr.sortingOrder = def.sortingOrder;
 
-            switch (type)
+            // 1. Collider cho tường, đá cản đường hoặc nước sâu
+            if (!def.isWalkable || def.isWater)
             {
-                case TerrainBlockType.SafeStone:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
-                    sr.color = Color.white;
-                    sr.sortingOrder = -10;
+                var col = tileObj.AddComponent<BoxCollider2D>();
+                col.size = new Vector2(0.98f, 0.98f);
+            }
 
-                    if (safeTileSprite != null)
-                    {
-                        GameObject overlayObj = new GameObject("SafeZone_Overlay");
-                        overlayObj.transform.parent = tileObj.transform;
-                        overlayObj.transform.localPosition = Vector3.zero;
-                        var overlaySr = overlayObj.AddComponent<SpriteRenderer>();
-                        overlaySr.sprite = safeTileSprite;
-                        overlaySr.color = new Color(1f, 1f, 1f, 0.40f);
-                        overlaySr.sortingOrder = -8;
-                    }
-                    break;
+            // 2. Bụi rậm ẩn nấp (Stealth Bush Trigger - cho phép chui vào tàng hình)
+            if (def.isStealth)
+            {
+                var trigger = tileObj.AddComponent<BoxCollider2D>();
+                trigger.isTrigger = true;
+                trigger.size = new Vector2(0.95f, 0.95f);
+                tileObj.AddComponent<World.StealthBushTrigger>();
+            }
 
-                case TerrainBlockType.AncientStone:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
-                    sr.color = Color.white;
-                    sr.sortingOrder = -10;
-                    break;
-
-                case TerrainBlockType.Grass:
-                    sr.sprite = (grassTileSprite != null) ? grassTileSprite : stoneTileSprite;
-                    sr.color = Color.white;
-                    sr.sortingOrder = -10;
-                    break;
-
-                case TerrainBlockType.DirtPath:
-                    sr.sprite = (dirtPathSprite != null) ? dirtPathSprite : stoneTileSprite;
-                    sr.color = Color.white;
-                    sr.sortingOrder = -10;
-                    break;
-
-                case TerrainBlockType.Water:
-                    sr.sprite = (waterTileSprite != null) ? waterTileSprite : stoneTileSprite;
-                    sr.color = Color.white;
-                    sr.sortingOrder = -9;
-                    var wCol = tileObj.AddComponent<BoxCollider2D>();
-                    wCol.size = new Vector2(0.98f, 0.98f);
-                    break;
-
-                case TerrainBlockType.Wall:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
-                    sr.color = new Color(0.32f, 0.25f, 0.22f, 1.0f);
-                    sr.sortingOrder = 5;
-                    var wallCol = tileObj.AddComponent<BoxCollider2D>();
-                    wallCol.size = new Vector2(0.98f, 0.98f);
-                    break;
-
-                case TerrainBlockType.Gate:
-                    sr.sprite = (safeTileSprite != null) ? safeTileSprite : stoneTileSprite;
-                    sr.color = new Color(1.0f, 0.85f, 0.35f, 1.0f);
-                    sr.sortingOrder = -9;
-                    break;
+            // 3. Hoạt ảnh tự nhiên (WindSway, WaterWave, FlamePulse, CrystalPulse)
+            if (def.animType != World.BlockAnimType.None)
+            {
+                var animator = tileObj.AddComponent<World.ProceduralFoliageAnimator>();
+                animator.Setup(def.animType, def.animSpeed, def.animIntensity);
             }
         }
 
         /// <summary>
         /// Thuật toán sinh địa hình thế giới mở rộng lớn (270m x 132m)
         /// </summary>
-        public TerrainBlockType GetBlockType(int x, int y)
+        /// <summary>
+        /// Sinh mã khối thủ tục cho toàn bộ thế giới mở rộng 270m x 132m (Data-Driven Procedural Block Code Generator):
+        /// - Áp dụng hệ thống 48 khối chuẩn mực từ TerrainBlockRegistry.
+        /// - Phân vùng sinh động: Làng Tân Thủ, Nông Trại, Đầm Lầy, Sông Hồ, Cầu Gỗ, Rừng Rậm, Bụi Rậm Ẩn Nấp, Tàn Tích Hầm Ngục.
+        /// </summary>
+        public ushort GetBlockId(int x, int y)
         {
             Vector2Int key = new Vector2Int(x, y);
             if (customBlockTypes.TryGetValue(key, out var customType))
             {
-                return customType;
+                return (ushort)customType;
             }
 
             // 1. Tường thành biên giới bao quanh toàn bộ thế giới
             if (x <= MinX || x >= MaxX || y <= MinY || y >= MaxY)
             {
-                return TerrainBlockType.Wall;
+                return 24; // cliff_wall
             }
 
-            // 2. Dòng Sông Ma Thuật (Magic River) uốn lượn tại x = 44..47
-            // Có Cầu Đá Cự Thạch bắc qua ở y = -2..2
+            // 2. KHU VỰC PHÓ BẢN HẦM NGỤC DI TÍCH (DUNGEON CRYPT FLOOR 1) TẠI (x: -16..16, y: -58..-32)
+            if (Mathf.Abs(x) <= 16 && y >= -58 && y <= -32)
+            {
+                if (Mathf.Abs(x) == 16 || y == -58 || y == -32) return 23; // stone_wall
+                if (Mathf.Abs(x) <= 2 && Mathf.Abs(y - (-45)) <= 2) return 28; // magic_rune_circle
+                return 22; // stone_dungeon
+            }
+
+            // 3. Dòng Sông Ma Thuật (Magic River) uốn lượn tại x = 44..47
             if (x >= 44 && x <= 47)
             {
-                if (Mathf.Abs(y) <= 2)
-                {
-                    return TerrainBlockType.AncientStone; // Cầu đá lớn qua sông
-                }
-                return TerrainBlockType.Water; // Nước sâu chặn di chuyển
+                if (Mathf.Abs(y) <= 2) return 26; // wooden_bridge (Cầu gỗ lớn qua sông)
+                if (x == 44 || x == 47) return 12; // water_shallow (Nước nông gợn sóng)
+                return 13; // water_deep (Nước sâu biếc)
             }
-
-            // 3. Trục Đại Lộ Cổ Chạy Ngang Qua Thế Giới
-            bool isMainHighway = (y >= -2 && y <= 2);
-            if (isMainHighway)
+            // Bãi cát vàng và lau sậy ven bờ sông
+            if ((x == 43 || x == 48) && Mathf.Abs(y) > 2)
             {
-                return (x <= -20) ? TerrainBlockType.DirtPath : TerrainBlockType.AncientStone;
+                if ((x + y) % 6 == 0) return 33; // foliage_tall_reed
+                return 16; // sand_shore
             }
 
-            // 4. KHU VỰC ĐẠI ĐÔ THỊ LÀNG TÂN THỦ (x <= -20)
+            // 4. Trục Đại Lộ Cổ Chạy Ngang Qua Thế Giới (y = -2..2)
+            if (y >= -2 && y <= 2)
+            {
+                return (x <= -20) ? (ushort)8 : (ushort)9; // dirt_warm_path hoặc dirt_packed_road
+            }
+
+            // 5. KHU VỰC ĐẠI ĐÔ THỊ LÀNG TÂN THỦ (x <= -20)
             if (x <= -20)
             {
                 // Đường đất nội bộ làng kết nối các khu vực
                 bool isVillageRoad = (x == -80 || x == -50 || y == 25 || y == -25);
-                if (isVillageRoad) return TerrainBlockType.DirtPath;
+                if (isVillageRoad) return 8; // dirt_warm_path
 
                 // Quảng trường trung tâm làng (-80, 0)
                 float distToPlaza = Vector2.Distance(new Vector2(x, y), new Vector2(-80, 0));
-                if (distToPlaza <= 14f) return TerrainBlockType.SafeStone;
-
-                // Khu vực ngoại ô cỏ xanh
-                if (x <= -110 || y >= 45 || y <= -45)
+                if (distToPlaza <= 13f)
                 {
-                    return TerrainBlockType.Grass;
+                    if (distToPlaza >= 11.5f) return 29; // safezone_gold (Viền đá vàng bảo hộ)
+                    return 20; // cobble_plaza (Đá hoa cương sạch sẽ)
                 }
 
-                return ((x + y) % 4 == 0) ? TerrainBlockType.Grass : TerrainBlockType.SafeStone;
+                // Vườn hoa làng & Khu nông trại
+                if (x >= -60 && x <= -40 && y >= 10 && y <= 20)
+                {
+                    return 10; // farmland_tilled
+                }
+
+                // Cỏ hoa dại làng
+                int seed = Mathf.Abs((x * 7 + y * 13) % 20);
+                if (seed == 1) return 1; // grass_flower_yellow
+                if (seed == 2) return 4; // grass_flower_white
+                if (seed == 3) return 5; // grass_dense_clover
+
+                return 0; // grass_bright (Đồng cỏ xanh tươi)
             }
 
-            // 5. VÙNG RANH GIỚI CỔNG LÀNG (-20 < x <= 10)
+            // 6. VÙNG RANH GIỚI CỔNG LÀNG (-20 < x <= 10)
             if (x <= 10)
             {
-                return TerrainBlockType.DirtPath;
+                int rSeed = Mathf.Abs((x * 11 + y * 7) % 25);
+                if (rSeed == 0) return 30; // foliage_stealth_bush (Bụi rậm ẩn nấp)
+                if (rSeed == 1) return 32; // foliage_grass_tuft (Khóm cỏ đung đưa gió)
+                if (rSeed == 2) return 41; // prop_pebble_cluster (Cụm sỏi nhỏ)
+                return 8; // dirt_warm_path
             }
 
-            // 6. KHU VỰC RỪNG RẬM HOANG DÃ & THUNG LŨNG TÀN TÍCH (x > 10)
+            // 7. KHU VỰC RỪNG RẬM HOANG DÃ & THUNG LŨNG TÀN TÍCH (x > 10)
             // Lối mòn dẫn lên Cổng Phó Bản Hầm Ngục tại (120, 25)
             if (x >= 80 && y >= 23 && y <= 27)
             {
-                return TerrainBlockType.DirtPath;
+                return 8; // dirt_warm_path
             }
 
-            // 7. KHU VỰC PHÓ BẢN HẦM NGỤC DI TÍCH (DUNGEON CRYPT FLOOR 1) TẠI (x: -16..16, y: -58..-32)
-            if (Mathf.Abs(x) <= 16 && y >= -58 && y <= -32)
-            {
-                if (Mathf.Abs(x) == 16 || y == -58 || y == -32)
-                {
-                    return TerrainBlockType.Wall; // Tường đá kiên cố phong ấn hầm ngục
-                }
-                return TerrainBlockType.AncientStone; // Sàn đá cổ di tích
-            }
+            // Rừng Rậm: Bụi Rậm Ẩn Nấp phong phú, hoa dại, đá rêu, khúc gỗ mục, khóm cỏ đung đưa
+            int wildSeed = Mathf.Abs((x * 17 + y * 31 + (x ^ y) * 3) % 36);
+            if (wildSeed == 0 || wildSeed == 1) return 30; // foliage_stealth_bush (Bụi rậm ẩn nấp cho người chơi né quái!)
+            if (wildSeed == 2 || wildSeed == 3) return 32; // foliage_grass_tuft (Khóm cỏ đung đưa gió)
+            if (wildSeed == 4) return 38; // foliage_flower_patch (Vạt hoa dã quỳ)
+            if (wildSeed == 5) return 40; // prop_mossy_boulder (Tảng đá rêu)
+            if (wildSeed == 6) return 42; // prop_fallen_log (Khúc gỗ mục có rêu)
+            if (wildSeed == 7) return 3;  // grass_flower_red (Hoa đỏ)
+            if (wildSeed == 8) return 39; // mushroom_giant (Nấm đỏ khổng lồ)
+            if (wildSeed == 9) return 7;  // grass_dark_forest
+            if (wildSeed == 10) return 6; // grass_autumn
 
-            // Đất rừng xen kẽ tàn tích đá cổ
-            return ((x * 5 + y * 11) % 6 == 0) ? TerrainBlockType.AncientStone : TerrainBlockType.Grass;
+            return 0; // grass_bright (Đồng cỏ xanh tươi)
+        }
+
+        public TerrainBlockType GetBlockType(int x, int y)
+        {
+            return (TerrainBlockType)GetBlockId(x, y);
         }
 
         public void SetBlock(int x, int y, TerrainBlockType type, bool recordType = true)
@@ -475,6 +480,24 @@ namespace GodlessFantasy.Core
 
             // 6. CỔNG PHÓ BẢN HẦM NGỤC DI TÍCH (Dungeon Arch Gate tại 120, 25)
             CreateProp("Dungeon_Arch_Gate", dungeonGateSprite, new Vector3(120f, 25f, 0), propsParent, new Vector2(1.2f, 0.6f), new Vector2(0, -0.5f), sortingOrder: 12);
+
+            // 7. TRỤ HỒI SINH ĐÁ CỔ KHẮC RUNE (Waystone Shrines) RẢI RÁC KHẮP CÁC KHU VỰC
+            CreateWaystoneProp("Waystone_Plaza", "Trụ Quảng Trường Làng", new Vector3(-70f, 2f, 0), true);
+            CreateWaystoneProp("Waystone_EastGate", "Trụ Cổng Đông Làng", new Vector3(-22f, 2f, 0), false);
+            CreateWaystoneProp("Waystone_Outpost", "Trụ Tiền Đồn Rừng Rậm", new Vector3(18f, 3.5f, 0), false);
+            CreateWaystoneProp("Waystone_Bridge", "Trụ Cầu Đá Cự Thạch", new Vector3(44f, 4f, 0), false);
+            CreateWaystoneProp("Waystone_Dungeon", "Trụ Cửa Hầm Ngục Di Tích", new Vector3(116f, 22f, 0), false);
+        }
+
+        private void CreateWaystoneProp(string objName, string shrineName, Vector3 pos, bool defaultActive)
+        {
+            Sprite wsSprite = Resources.Load<Sprite>("prop_waystone_shrine") ?? Resources.Load<Sprite>("block_prop_waystone_shrine");
+            GameObject wsObj = CreateProp(objName, wsSprite, pos, propsParent, new Vector2(0.8f, 0.6f), new Vector2(0, -0.4f), sortingOrder: 10);
+            if (wsObj != null)
+            {
+                var shrine = wsObj.AddComponent<World.WaystoneShrine>();
+                shrine.Setup(shrineName, defaultActive);
+            }
         }
 
         private GameObject CreateProp(string name, Sprite sprite, Vector3 pos, Transform parent, Vector2? colSize = null, Vector2? colOffset = null, int sortingOrder = 10)

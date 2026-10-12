@@ -107,7 +107,7 @@ namespace GodlessFantasy.UI
                 // Phím SPACE để hồi sinh nhanh
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    RespawnAtVillage();
+                    RespawnAtSavedPoint();
                 }
             }
         }
@@ -173,22 +173,25 @@ namespace GodlessFantasy.UI
             }
 
             // Nút Hồi sinh
-            Rect btnRect = new Rect(boxX + (boxW - 280f) / 2f, boxY + boxH - 65, 280f, 44);
+            string locName = GodlessFantasy.World.WaystoneShrine.GetRespawnLocationName();
+            Rect btnRect = new Rect(boxX + (boxW - 320f) / 2f, boxY + boxH - 65, 320f, 44);
             GUI.color = new Color(0.2f, 0.75f, 0.35f, 1f);
-            if (GUI.Button(btnRect, "✨ HỒI SINH VỀ LÀNG AN TOÀN [SPACE]", btnStyle))
+            if (GUI.Button(btnRect, $"✨ HỒI SINH: {locName.ToUpper()} [SPACE]", btnStyle))
             {
-                RespawnAtVillage();
+                RespawnAtSavedPoint();
             }
             GUI.color = Color.white;
         }
 
-        public void RespawnAtVillage()
+        public void RespawnAtSavedPoint()
         {
             var player = GameObject.FindWithTag("Player") ?? GameObject.Find("Player_Hero");
             if (player != null)
             {
-                // Dịch chuyển về Đài Tế Làng Tân Thủ
-                player.transform.position = new Vector3(-20.0f, 0f, 0f);
+                // Dịch chuyển về Trụ Hồi Sinh gần nhất đã lưu
+                Vector3 respawnPos = GodlessFantasy.World.WaystoneShrine.GetRespawnPosition();
+                string locName = GodlessFantasy.World.WaystoneShrine.GetRespawnLocationName();
+                player.transform.position = respawnPos;
 
                 // Hồi phục đầy 100% Máu & Mana
                 var health = player.GetComponent<Health>();
@@ -203,13 +206,13 @@ namespace GodlessFantasy.UI
                     stats.CurrentMana = stats.MaxMana;
                 }
 
-                FloatingDamageManager.ShowFloatingText(player.transform.position + Vector3.up * 1.2f, "✨ Hồi Sinh Thành Công Tại Làng Tân Thủ!", Color.green);
+                FloatingDamageManager.ShowFloatingText(player.transform.position + Vector3.up * 1.2f, $"✨ Hồi Sinh Thành Công Tại {locName}!", Color.green);
             }
 
             IsDead = false;
             PlayerMovement.BlockWorldClick = false;
             AudioManager.PlayTeleport();
-            Debug.Log("<color=green>[HỒI SINH]</color> Đã hồi sinh về Làng Tân Thủ an toàn!");
+            Debug.Log("<color=green>[HỒI SINH]</color> Đã hồi sinh về Trụ Hồi Sinh đã lưu an toàn!");
         }
 
         private void DrawDoubleGoldFrame(Rect r, Color outerCol, Color innerCol)
