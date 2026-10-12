@@ -1840,15 +1840,15 @@ namespace GodlessFantasy.UI
             boldWhiteStyle.fontSize = 12;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
             string slotCountColor = (currentSlots >= maxSlots) ? "#ff5555" : "#88d8ff";
-            GUI.Label(new Rect(r.x, r.y, 130f, 20), $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>", boldWhiteStyle);
+            GUI.Label(new Rect(r.x, r.y, 145f, 20), $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
 
             float gridAreaW = cols * (slotSize + gap) + 18f; // ~210px
 
-            // 2. Nút Mở Khóa Thêm Ô Hành Trang Bằng Vàng (Giá tăng tiến theo từng ô)
+            // 2. Nút Mở Khóa Thêm Ô Hành Trang Bằng Vàng (Cách ra 10px để không bị đè chữ)
             if (unlockCost > 0)
             {
-                Rect unlockBtnRect = new Rect(r.x + 132f, r.y - 1f, 130f, 21f);
+                Rect unlockBtnRect = new Rect(r.x + 155f, r.y - 1f, 115f, 21f);
                 string btnText = canUnlock ? $"[+ MỞ Ô: {unlockCost:N0}💰]" : $"[+ CẦN {unlockCost:N0}💰]";
                 Color btnBorderCol = canUnlock ? new Color(1f, 0.85f, 0.25f, 1f) : new Color(0.5f, 0.5f, 0.5f, 0.7f);
                 Color btnBgCol = canUnlock ? new Color(0.18f, 0.14f, 0.05f, 0.95f) : new Color(0.1f, 0.1f, 0.1f, 0.85f);
@@ -1881,15 +1881,15 @@ namespace GodlessFantasy.UI
             }
             else
             {
-                Rect maxBadgeRect = new Rect(r.x + 132f, r.y, 110f, 20f);
+                Rect maxBadgeRect = new Rect(r.x + 155f, r.y, 110f, 20f);
                 statBadgeStyle.fontSize = 10;
                 statBadgeStyle.normal.textColor = new Color(0.6f, 0.8f, 0.6f);
                 GUI.Label(maxBadgeRect, "[ĐÃ TỐI ĐA 96 Ô]", statBadgeStyle);
             }
 
             // 3. Hiển thị số Vàng hiện có ở góc trên bên phải
-            float goldX = r.x + gridAreaW + 10f;
-            float goldW = r.width - gridAreaW - 12f;
+            float goldX = r.x + 276f;
+            float goldW = r.width - 276f;
             standardTextStyle.fontSize = 11;
             standardTextStyle.alignment = TextAnchor.MiddleRight;
             GUI.Label(new Rect(goldX, r.y, goldW, 20), $"💰 Vàng: <color=yellow>{currentGold:N0}</color>", standardTextStyle);
