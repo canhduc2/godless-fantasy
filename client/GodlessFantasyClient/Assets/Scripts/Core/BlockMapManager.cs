@@ -13,6 +13,7 @@ namespace GodlessFantasy.Core
         Water = 3,        // Vùng nước sâu (Chặn di chuyển - có Collider)
         Wall = 4,         // Tường đá / Vách núi (Chặn di chuyển - có Collider)
         Gate = 5,         // Cổng ranh giới
+        DirtPath = 6,     // Đường đất nện tự nhiên
         Erase = 99        // Tẩy xóa ô
     }
 
@@ -40,6 +41,11 @@ namespace GodlessFantasy.Core
     {
         public static BlockMapManager Instance { get; private set; }
 
+        public int MinX { get; private set; } = -45;
+        public int MaxX { get; private set; } = 45;
+        public int MinY { get; private set; } = -22;
+        public int MaxY { get; private set; } = 22;
+
         private Transform floorParent;
         private Dictionary<Vector2Int, GameObject> blockObjects = new Dictionary<Vector2Int, GameObject>();
         private Dictionary<Vector2Int, TerrainBlockType> blockTypes = new Dictionary<Vector2Int, TerrainBlockType>();
@@ -48,6 +54,16 @@ namespace GodlessFantasy.Core
         private Sprite safeTileSprite;
         private Sprite stoneTileSprite;
         private Sprite grassTileSprite;
+        private Sprite dirtPathSprite;
+        private Sprite waterTileSprite;
+
+        // Props Sprites
+        private Sprite treeVillageSprite;
+        private Sprite treeDarkSprite;
+        private Sprite torchPostSprite;
+        private Sprite stoneWellSprite;
+        private Sprite woodenFenceSprite;
+        private Sprite dungeonGateSprite;
 
         private string SaveFilePath => Path.Combine(Application.persistentDataPath, "custom_world_map.json");
 
@@ -62,10 +78,21 @@ namespace GodlessFantasy.Core
             safeTileSprite = Resources.Load<Sprite>("tile_safezone");
             stoneTileSprite = Resources.Load<Sprite>("tile_stone");
             grassTileSprite = Resources.Load<Sprite>("tile_grass");
+            dirtPathSprite = Resources.Load<Sprite>("tile_dirt_path");
+            waterTileSprite = Resources.Load<Sprite>("tile_water");
+
+            treeVillageSprite = Resources.Load<Sprite>("prop_tree_village");
+            treeDarkSprite = Resources.Load<Sprite>("prop_tree_dark");
+            torchPostSprite = Resources.Load<Sprite>("prop_torch_post");
+            stoneWellSprite = Resources.Load<Sprite>("prop_stone_well");
+            woodenFenceSprite = Resources.Load<Sprite>("prop_wooden_fence");
+            dungeonGateSprite = Resources.Load<Sprite>("prop_dungeon_gate");
         }
 
-        public void InitializeMap(int minX = -22, int maxX = 22, int minY = -12, int maxY = 12)
+        public void InitializeMap(int minX = -45, int maxX = 45, int minY = -22, int maxY = 22)
         {
+            MinX = minX; MaxX = maxX; MinY = minY; MaxY = maxY;
+
             if (floorParent == null)
             {
                 var existing = GameObject.Find("Environment_Floor");
@@ -79,19 +106,78 @@ namespace GodlessFantasy.Core
                 if (LoadMapFromJson()) return;
             }
 
-            // Ngược lại khởi tạo map mặc định chia 2 vùng Làng Tân Thủ & Rừng Rậm
+            // Khởi tạo map thế giới mở rộng lớn (90m x 44m) chia 3 khu vực phong phú
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
                 {
+                    // Vách tường bao quanh thế giới chống đi lọt ra ngoài
+                    if (x == minX || x == maxX || y == minY || y == maxY)
+                    {
+                        SetBlock(x, y, TerrainBlockType.Wall, false);
+                        continue;
+                    }
+
+                    // Dòng suối tự nhiên uốn lượn tại x = 20 với cầu đá bắc qua ở y = 0..1
+                    if (x == 20 || (x == 21 && y % 3 == 0))
+                    {
+                        if (Mathf.Abs(y) <= 1)
+                        {
+                            SetBlock(x, y, TerrainBlockType.AncientStone, false); // Cầu đá qua sông
+                        }
+                        else
+                        {
+                            SetBlock(x, y, TerrainBlockType.Water, false);
+                        }
+                        continue;
+                    }
+
+                    // Đường đất nện tự nhiên nối liền Làng Tân Thủ -> Cổng -> Rừng
+                    bool isMainRoad = (y >= -1 && y <= 1);
+                    bool isVillageBranch = (x >= -34 && x <= -10 && (y == 8 || y == -8));
+                    bool isPath = isMainRoad || isVillageBranch;
+
                     TerrainBlockType type;
-                    if (x <= -6) type = TerrainBlockType.SafeStone;
-                    else if (x >= 2) type = ((x + y) % 3 == 0) ? TerrainBlockType.Grass : TerrainBlockType.AncientStone;
-                    else type = TerrainBlockType.AncientStone;
+                    if (x <= -8)
+                    {
+                        // Khu vực Làng Tân Thủ (Safe Zone)
+                        if (isPath)
+                        {
+                            type = TerrainBlockType.DirtPath;
+                        }
+                        else if (x <= -36 || y >= 14 || y <= -14)
+                        {
+                            type = TerrainBlockType.Grass;
+                        }
+                        else
+                        {
+                            type = TerrainBlockType.SafeStone;
+                        }
+                    }
+                    else if (x <= 2)
+                    {
+                        // Ranh giới Cổng Làng & Đền Đài Trung Tâm
+                        type = isMainRoad ? TerrainBlockType.AncientStone : TerrainBlockType.DirtPath;
+                    }
+                    else
+                    {
+                        // Khu vực Rừng Rậm Hoang Dã (PvP & Bãi Quái)
+                        if (isMainRoad)
+                        {
+                            type = TerrainBlockType.DirtPath;
+                        }
+                        else
+                        {
+                            type = ((x * 3 + y * 7) % 5 == 0) ? TerrainBlockType.AncientStone : TerrainBlockType.Grass;
+                        }
+                    }
 
                     SetBlock(x, y, type, false);
                 }
             }
+
+            // Đặt các vật thể cảnh quan Props (Cây cối, Ngọn đuốc, Giếng nước, Hàng rào, Cổng Cổ)
+            SpawnLandscapeProps();
         }
 
         /// <summary>
@@ -173,8 +259,8 @@ namespace GodlessFantasy.Core
                     break;
 
                 case TerrainBlockType.Water:
-                    sr.sprite = (stoneTileSprite != null) ? stoneTileSprite : grassTileSprite;
-                    sr.color = new Color(0.12f, 0.45f, 0.95f, 0.95f); // Màu xanh dương nước biển
+                    sr.sprite = (waterTileSprite != null) ? waterTileSprite : stoneTileSprite;
+                    sr.color = Color.white;
                     sr.sortingOrder = -9;
                     if (col == null) col = tileObj.AddComponent<BoxCollider2D>();
                     col.size = new Vector2(0.98f, 0.98f);
@@ -197,7 +283,96 @@ namespace GodlessFantasy.Core
                     if (col != null) Destroy(col);
                     if (overlayTf != null) Destroy(overlayTf.gameObject);
                     break;
+
+                case TerrainBlockType.DirtPath:
+                    sr.sprite = (dirtPathSprite != null) ? dirtPathSprite : stoneTileSprite;
+                    sr.color = Color.white;
+                    sr.sortingOrder = -10;
+                    if (col != null) Destroy(col);
+                    if (overlayTf != null) Destroy(overlayTf.gameObject);
+                    break;
             }
+        }
+
+        private void SpawnLandscapeProps()
+        {
+            Transform propsParent = new GameObject("Environment_Props").transform;
+
+            // 1. Giếng nước đá cổ ở trung tâm làng
+            CreateProp("Prop_Stone_Well", stoneWellSprite, new Vector3(-22f, 0f, 0f), propsParent, new Vector2(0.8f, 0.8f));
+
+            // 2. Cây xanh Làng Tân Thủ
+            Vector3[] villageTreePos = {
+                new Vector3(-35f, 10f, 0), new Vector3(-28f, 12f, 0), new Vector3(-18f, 11f, 0),
+                new Vector3(-35f, -10f, 0), new Vector3(-28f, -12f, 0), new Vector3(-18f, -11f, 0),
+                new Vector3(-12f, 6f, 0), new Vector3(-12f, -6f, 0)
+            };
+            foreach (var pos in villageTreePos)
+            {
+                CreateProp("Village_Tree", treeVillageSprite, pos, propsParent, new Vector2(0.7f, 0.4f), new Vector2(0, -0.6f), sortingOrder: 11);
+            }
+
+            // 3. Hàng rào gỗ bao quanh Làng Tân Thủ
+            for (int fy = -14; fy <= 14; fy += 2)
+            {
+                if (Mathf.Abs(fy) > 2) // Chừa cổng lối đi ở giữa
+                {
+                    CreateProp($"Fence_WestBorder_{fy}", woodenFenceSprite, new Vector3(-8f, fy, 0), propsParent, new Vector2(0.95f, 0.4f));
+                }
+            }
+
+            // 4. Ngọn đuốc thắp sáng (Village Torches & Road Torches)
+            Vector3[] torchPositions = {
+                new Vector3(-28f, 3f, 0), new Vector3(-28f, -3f, 0),
+                new Vector3(-18f, 3f, 0), new Vector3(-18f, -3f, 0),
+                new Vector3(-8.5f, 3f, 0), new Vector3(-8.5f, -3f, 0),
+                new Vector3(2.5f, 3f, 0), new Vector3(2.5f, -3f, 0),
+                new Vector3(18.5f, 3f, 0), new Vector3(18.5f, -3f, 0), // Đầu cầu đá
+                new Vector3(32f, 9f, 0), new Vector3(36f, 9f, 0)       // Trước cửa Cổng Phó Bản
+            };
+            foreach (var tp in torchPositions)
+            {
+                CreateProp("Torch_Post", torchPostSprite, tp, propsParent, new Vector2(0.4f, 0.4f), new Vector2(0, -0.3f), sortingOrder: 10);
+                if (EnvironmentAtmosphereManager.Instance != null)
+                {
+                    EnvironmentAtmosphereManager.Instance.RegisterTorch(tp);
+                }
+            }
+
+            // 5. Cây Rừng Rậm Hắc Ám
+            Vector3[] darkTreePos = {
+                new Vector3(8f, 8f, 0), new Vector3(12f, 14f, 0), new Vector3(15f, -10f, 0),
+                new Vector3(26f, 12f, 0), new Vector3(30f, -8f, 0), new Vector3(38f, -14f, 0),
+                new Vector3(28f, 6f, 0), new Vector3(36f, 14f, 0), new Vector3(10f, -12f, 0)
+            };
+            foreach (var pos in darkTreePos)
+            {
+                CreateProp("Dark_Tree", treeDarkSprite, pos, propsParent, new Vector2(0.7f, 0.4f), new Vector2(0, -0.6f), sortingOrder: 11);
+            }
+
+            // 6. Cổng Đá Cổ Phó Bản Hầm Ngục (Dungeon Gate)
+            CreateProp("Dungeon_Arch_Gate", dungeonGateSprite, new Vector3(34f, 10f, 0), propsParent, new Vector2(1.2f, 0.6f), new Vector2(0, -0.5f), sortingOrder: 12);
+        }
+
+        private GameObject CreateProp(string name, Sprite sprite, Vector3 pos, Transform parent, Vector2? colSize = null, Vector2? colOffset = null, int sortingOrder = 10)
+        {
+            if (sprite == null) return null;
+            GameObject propObj = new GameObject(name);
+            propObj.transform.parent = parent;
+            propObj.transform.position = pos;
+
+            var sr = propObj.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = sortingOrder;
+
+            if (colSize.HasValue)
+            {
+                var col = propObj.AddComponent<BoxCollider2D>();
+                col.size = colSize.Value;
+                if (colOffset.HasValue) col.offset = colOffset.Value;
+            }
+
+            return propObj;
         }
 
         public TerrainBlockType GetBlockType(int x, int y)

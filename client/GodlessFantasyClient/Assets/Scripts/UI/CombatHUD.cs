@@ -985,11 +985,13 @@ namespace GodlessFantasy.UI
 
             GUI.DrawTexture(mapRect, radarBgTex != null ? radarBgTex : Texture2D.whiteTexture);
 
-            float minWx = -22f, maxWx = 22f;
-            float minWy = -12f, maxWy = 12f;
+            float minWx = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MinX : -45f;
+            float maxWx = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MaxX : 45f;
+            float minWy = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MinY : -22f;
+            float maxWy = GodlessFantasy.Core.BlockMapManager.Instance != null ? GodlessFantasy.Core.BlockMapManager.Instance.MaxY : 22f;
 
             // 1. Phân vùng Làng và Rừng
-            float safeRatio = (-6f - minWx) / (maxWx - minWx);
+            float safeRatio = Mathf.Clamp01((-8f - minWx) / (maxWx - minWx));
             float safeW = mapW * safeRatio;
             GUI.color = new Color(0.22f, 0.28f, 0.38f, 0.85f);
             GUI.DrawTexture(new Rect(mapX, mapY, safeW, mapH), Texture2D.whiteTexture);
@@ -1088,9 +1090,9 @@ namespace GodlessFantasy.UI
             }
 
             // Zone & Coord Label
-            string zoneName = (pPos.x <= -6.0f) ? "Làng Tân Thủ" : "Rừng Rậm PvP";
+            string zoneName = (pPos.x <= -8.0f) ? "Làng Tân Thủ" : "Rừng Rậm PvP";
             statBadgeStyle.alignment = TextAnchor.MiddleCenter;
-            statBadgeStyle.normal.textColor = (pPos.x <= -6.0f) ? new Color(0.5f, 0.95f, 0.6f) : new Color(1f, 0.5f, 0.5f);
+            statBadgeStyle.normal.textColor = (pPos.x <= -8.0f) ? new Color(0.5f, 0.95f, 0.6f) : new Color(1f, 0.5f, 0.5f);
             GUI.Label(new Rect(mapX, mapY + mapH - 18, mapW, 16), $"{zoneName} ({pPos.x:F1}, {pPos.y:F1})", statBadgeStyle);
             statBadgeStyle.normal.textColor = Color.white;
 
