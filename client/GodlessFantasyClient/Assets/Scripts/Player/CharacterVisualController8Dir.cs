@@ -263,25 +263,6 @@ namespace GodlessFantasy.Player
 
             // Giữ vững kích thước gốc (Scale 1:1), tuyệt đối không nhân dồn gây bẹp/mỏng nhân vật
             visualRoot.localScale = Vector3.one;
-
-            // Xoay vũ khí theo hướng ngắm (nếu không đang vung chém)
-            if (weaponRenderer != null && !isAttacking)
-            {
-                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
-                Vector2 weaponAim = ((Vector2)mouseWorld - (Vector2)transform.position).normalized;
-                float weaponAngle = Mathf.Atan2(weaponAim.y, Mathf.Abs(weaponAim.x)) * Mathf.Rad2Deg;
-                weaponRenderer.transform.localRotation = Quaternion.Euler(0, 0, weaponAngle * 0.45f);
-
-                // Độ sâu vũ khí (Ra sau lưng khi nhìn lên hướng Bắc)
-                if (CurrentDirection == Direction8.North || CurrentDirection == Direction8.NorthEast || CurrentDirection == Direction8.NorthWest)
-                {
-                    weaponRenderer.sortingOrder = 9;
-                }
-                else
-                {
-                    weaponRenderer.sortingOrder = 15;
-                }
-            }
         }
 
         private void UpdateAnimations()
@@ -300,6 +281,7 @@ namespace GodlessFantasy.Player
                     ghostSpawnTimer = 0f;
                     SpawnGhostAfterimage();
                 }
+                UpdateWeaponVisuals(isMoving: true, bob: 0f, breath: 0f);
                 UpdateFrameSprites(isMoving: true, isDash: true);
                 return;
             }
@@ -315,11 +297,7 @@ namespace GodlessFantasy.Player
                 visualRoot.localPosition = initialVisualPos + new Vector3(0, bob, 0);
                 visualRoot.localRotation = Quaternion.Euler(0, 0, tilt);
 
-                if (weaponRenderer != null && !isAttacking)
-                {
-                    weaponRenderer.transform.localPosition = initialWeaponPos + new Vector3(0, -bob * 0.7f, 0);
-                }
-
+                UpdateWeaponVisuals(isMoving: true, bob: bob, breath: 0f);
                 UpdateFrameSprites(isMoving: true, isDash: false);
             }
             // ================= TRẠNG THÁI NGHỈ (IDLE) =================
@@ -336,13 +314,114 @@ namespace GodlessFantasy.Player
                 visualRoot.localScale = new Vector3(1f - squash, 1f + stretch, 1f);
                 visualRoot.localPosition = initialVisualPos;
 
-                if (weaponRenderer != null && !isAttacking)
-                {
-                    weaponRenderer.transform.localPosition = initialWeaponPos + new Vector3(0, breath * 0.02f, 0);
-                }
-
+                UpdateWeaponVisuals(isMoving: false, bob: 0f, breath: breath);
                 UpdateFrameSprites(isMoving: false, isDash: false);
             }
+        }
+
+        /// <summary>
+        /// Quản lý vị trí, xoay, độ sâu (depth) và bám 8 hướng cho Vũ Khí (Weapon 8-Direction Tracking & Orbit)
+        /// Cách nhân vật 1 khoảng vừa vặn, lơ lửng ma pháp không đâm xuyên vào người.
+        /// </summary>
+        private void UpdateWeaponVisuals(bool isMoving, float bob, float breath)
+        {
+            if (weaponRenderer == null || isAttacking) return;
+
+            // 1. Xác định vị trí mục tiêu (Socket Offset), góc xoay (Angle), lật X (FlipX) và Thứ tự hiển thị (SortingOrder) theo 8 hướng
+            Vector3 targetOffset;
+            float targetAngle;
+            bool flipX = false;
+            int sortingOrder = 15;
+
+            // Tọa độ socket theo từng hướng với khoảng cách orbit ~0.38f - 0.44f
+            switch (CurrentDirection)
+            {
+                case Direction8.East:
+                    targetOffset = new Vector3(0.40f, -0.04f, 0f);
+                    targetAngle = -15f;
+                    flipX = false;
+                    sortingOrder = 15;
+                    break;
+
+                case Direction8.West:
+                    targetOffset = new Vector3(-0.40f, -0.04f, 0f);
+                    targetAngle = 15f;
+                    flipX = true;
+                    sortingOrder = 15;
+                    break;
+
+                case Direction8.South:
+                    // Cầm chếch sang bên hông phải phía trước, nổi bật ở mặt tiền, không che háng/chân
+                    targetOffset = new Vector3(0.32f, -0.16f, 0f);
+                    targetAngle = -22f;
+                    flipX = false;
+                    sortingOrder = 16;
+                    break;
+
+                case Direction8.SouthEast:
+                    targetOffset = new Vector3(0.42f, -0.15f, 0f);
+                    targetAngle = -32f;
+                    flipX = false;
+                    sortingOrder = 16;
+                    break;
+
+                case Direction8.SouthWest:
+                    targetOffset = new Vector3(-0.42f, -0.15f, 0f);
+                    targetAngle = 32f;
+                    flipX = true;
+                    sortingOrder = 16;
+                    break;
+
+                case Direction8.North:
+                    // Ẩn sau lưng khi nhìn lên hướng Bắc (SortingOrder 8)
+                    targetOffset = new Vector3(0.28f, 0.18f, 0f);
+                    targetAngle = 18f;
+                    flipX = false;
+                    sortingOrder = 8;
+                    break;
+
+                case Direction8.NorthEast:
+                    targetOffset = new Vector3(0.38f, 0.15f, 0f);
+                    targetAngle = 12f;
+                    flipX = false;
+                    sortingOrder = 8;
+                    break;
+
+                case Direction8.NorthWest:
+                    targetOffset = new Vector3(-0.38f, 0.15f, 0f);
+                    targetAngle = -12f;
+                    flipX = true;
+                    sortingOrder = 8;
+                    break;
+
+                default:
+                    targetOffset = new Vector3(0.35f, -0.05f, 0f);
+                    targetAngle = 0f;
+                    break;
+            }
+
+            // 2. Tinh chỉnh vi góc theo hướng ngắm chuột (Micro-aim dynamic tilt)
+            if (mainCamera != null)
+            {
+                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
+                Vector2 mouseAim = ((Vector2)mouseWorld - (Vector2)transform.position).normalized;
+                float aimAngle = Mathf.Atan2(mouseAim.y, mouseAim.x) * Mathf.Rad2Deg;
+                float aimTilt = Mathf.Sin(aimAngle * Mathf.Deg2Rad) * 10f;
+                if (flipX) aimTilt = -aimTilt;
+                targetAngle += aimTilt;
+            }
+
+            // 3. Hiệu ứng bồng bềnh lơ lửng / nhấp nhô theo nhịp thở và bước chân
+            float floatY = isMoving ? (-bob * 0.7f) : (breath * 0.025f + Mathf.Sin(Time.time * 2.8f) * 0.015f);
+            targetOffset.y += floatY;
+
+            // 4. Nội suy mượt mà (Smooth Interpolation)
+            weaponRenderer.transform.localPosition = Vector3.Lerp(weaponRenderer.transform.localPosition, targetOffset, Time.deltaTime * 16f);
+            Quaternion targetRot = Quaternion.Euler(0f, 0f, targetAngle);
+            weaponRenderer.transform.localRotation = Quaternion.Slerp(weaponRenderer.transform.localRotation, targetRot, Time.deltaTime * 16f);
+
+            weaponRenderer.flipX = flipX;
+            weaponRenderer.sortingOrder = sortingOrder;
         }
 
         private void UpdateFrameSprites(bool isMoving, bool isDash)
@@ -473,15 +552,55 @@ namespace GodlessFantasy.Player
             else if (cleanElem.Contains("mộc") || cleanElem.Contains("nature") || cleanElem.Contains("wood")) cleanElem = "nature";
             else cleanElem = "fire";
 
-            // 1. Vung vũ khí nhanh
+            // 1. Vung vũ khí nhanh theo hướng đang quay mặt
             Quaternion startRot = weaponRenderer != null ? weaponRenderer.transform.localRotation : Quaternion.identity;
-            Quaternion swingRot = startRot * Quaternion.Euler(0, 0, 75f);
+            bool isFacingLeft = (CurrentDirection == Direction8.West || CurrentDirection == Direction8.NorthWest || CurrentDirection == Direction8.SouthWest);
+            float swingDir = isFacingLeft ? -75f : 75f;
+            Quaternion swingRot = startRot * Quaternion.Euler(0, 0, swingDir);
 
             if (weaponRenderer != null) weaponRenderer.transform.localRotation = swingRot;
 
-            // 2. Chạy 3 frame vệt chém đao khí nguyên tố
+            // 2. Chạy 3 frame vệt chém đao khí nguyên tố theo đúng 8 hướng
             if (slashRenderer != null)
             {
+                Vector3 slashPos = new Vector3(0.42f, 0f, 0f);
+                float slashRot = 0f;
+                bool slashFlipX = false;
+
+                switch (CurrentDirection)
+                {
+                    case Direction8.West:
+                    case Direction8.SouthWest:
+                    case Direction8.NorthWest:
+                        slashPos = new Vector3(-0.45f, 0f, 0f);
+                        slashFlipX = true;
+                        break;
+                    case Direction8.South:
+                        slashPos = new Vector3(0.12f, -0.38f, 0f);
+                        slashRot = -90f;
+                        break;
+                    case Direction8.North:
+                        slashPos = new Vector3(0.12f, 0.38f, 0f);
+                        slashRot = 90f;
+                        break;
+                    case Direction8.SouthEast:
+                        slashPos = new Vector3(0.40f, -0.22f, 0f);
+                        slashRot = -35f;
+                        break;
+                    case Direction8.NorthEast:
+                        slashPos = new Vector3(0.40f, 0.22f, 0f);
+                        slashRot = 35f;
+                        break;
+                    default:
+                        slashPos = new Vector3(0.45f, 0f, 0f);
+                        break;
+                }
+
+                slashRenderer.transform.localPosition = slashPos;
+                slashRenderer.transform.localRotation = Quaternion.Euler(0, 0, slashRot);
+                slashRenderer.flipX = slashFlipX;
+                slashRenderer.sortingOrder = 17;
+
                 slashRenderer.enabled = true;
                 for (int f = 0; f < 3; f++)
                 {
