@@ -182,7 +182,7 @@ namespace GodlessFantasy.UI
             if (GameSettingsModal.Instance != null && GameSettingsModal.Instance.IsOpen) return true;
             if (GodlessFantasy.Player.VillageNPC.IsAnyNPCDialogueOpen) return true;
             if (Instance == null) return false;
-            return Instance.isDrawerOpen || Instance.isGuildModalOpen || Instance.isChatOpen ||
+            return Instance.isGuildModalOpen || Instance.isChatOpen ||
                    (Instance.inventoryManager != null && Instance.inventoryManager.IsDropModalOpen) ||
                    Instance.selectedProfileMember != null;
         }
