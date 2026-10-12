@@ -275,11 +275,14 @@ namespace GodlessFantasy.UI
             if (mx > Screen.width - 200f && my >= 36f && my < 156f)
                 return true;
 
-            // 10. Widget Active Buffs (dưới giờ thế giới mép phải)
+            // 10. Quest Tracker Widget & Active Buffs (dưới giờ thế giới mép phải)
+            if (mx > Screen.width - 200f && my >= 158f && my < 225f)
+                return true;
+
             if (Instance.playerStats != null && Instance.playerStats.ActiveBuffs != null && Instance.playerStats.ActiveBuffs.Count > 0)
             {
                 float buffH = Instance.playerStats.ActiveBuffs.Count * 40f + 10f;
-                if (mx > Screen.width - 190f && my >= 158f && my <= 158f + buffH)
+                if (mx > Screen.width - 190f && my >= 228f && my <= 228f + buffH)
                     return true;
             }
 
@@ -1193,7 +1196,7 @@ namespace GodlessFantasy.UI
             float cardW = 165f;
             float cardH = 34f;
             float startX = Screen.width - cardW - 12f;
-            float startY = 158f;
+            float startY = 228f;
             float cardGap = 6f;
 
             for (int i = 0; i < playerStats.ActiveBuffs.Count; i++)
@@ -2009,6 +2012,13 @@ namespace GodlessFantasy.UI
                     {
                         inventoryManager?.EquipGearItem(item);
                     }
+                    if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                        {
+                            GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager);
+                        }
+                    }
                     pY += btnH + 5;
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "VỨT BỎ", 11, false, new Color(1f, 0.45f, 0.45f)))
                     {
@@ -2400,6 +2410,15 @@ namespace GodlessFantasy.UI
                 if (canRebirth && playerStats != null && playerStats.PerformRebirth())
                 {
                     FloatingDamageManager.ShowFloatingText(playerMovement != null ? playerMovement.transform.position : Vector3.zero, "✨ CHUYỂN SINH THÀNH CÔNG! (+1 RP, +10 STAT)", new Color(1f, 0.4f, 0.9f));
+                }
+            }
+
+            // Nút mở Rương Chuyển Sinh lưu trữ bảo vật
+            if (DrawFantasyButton(new Rect(rebirthBox.x + 12f, rebirthBox.y + 44f, 195f, 24f), "🏛️ RƯƠNG BẢO VẬT REBIRTH (2 Ô)", 10, true, new Color(0.95f, 0.8f, 0.3f)))
+            {
+                if (GodlessFantasy.Player.RebirthVaultManager.Instance != null)
+                {
+                    GodlessFantasy.Player.RebirthVaultManager.Instance.IsVaultOpen = !GodlessFantasy.Player.RebirthVaultManager.Instance.IsVaultOpen;
                 }
             }
 

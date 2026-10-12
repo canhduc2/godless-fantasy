@@ -63,6 +63,7 @@ namespace GodlessFantasy.Core
             gameObject.AddComponent<GodlessFantasy.Player.RebirthVaultManager>();
             gameObject.AddComponent<GodlessFantasy.UI.VillageShopNPCModal>();
             gameObject.AddComponent<GodlessFantasy.UI.DeathScreenModal>();
+            gameObject.AddComponent<GodlessFantasy.Quest.QuestManager>();
             gameObject.AddComponent<ItemDatabase>();
             gameObject.AddComponent<SkillDatabase>();
             gameObject.AddComponent<SkillVFXManager>();
@@ -232,6 +233,18 @@ namespace GodlessFantasy.Core
 
             CreateMapPortal("Portal_Wilderness_To_Village", "Cổng Về Làng Tân Thủ", "Làng Tân Thủ",
                 new Vector3(15.0f, 3.5f, 0), new Vector3(-22.0f, 0f, 0), BgmTrack.Village, new Color(0.25f, 0.95f, 0.55f, 0.85f));
+
+            // Cổng Vào Phó Bản Hầm Ngục Di Tích (Dungeon Crypt Floor 1)
+            CreateMapPortal("Portal_To_Dungeon_Crypt", "Cổng Phó Bản Hầm Ngục Di Tích", "Hầm Ngục Di Tích (Tầng 1)",
+                new Vector3(120.0f, 25.0f, 0), new Vector3(0.0f, -48.0f, 0), BgmTrack.Combat, new Color(0.85f, 0.2f, 1.0f, 0.9f));
+
+            CreateMapPortal("Portal_Dungeon_To_Surface", "Cổng Lên Mặt Đất", "Rừng Rậm Hắc Ám",
+                new Vector3(0.0f, -50.0f, 0), new Vector3(118.0f, 22.0f, 0), BgmTrack.Combat, new Color(0.2f, 0.85f, 1.0f, 0.9f));
+
+            // Quái Vật Trong Phó Bản Hầm Ngục Di Tích (Crypt Floor 1)
+            CreateMonsterTarget("Monster_Crypt_Skeleton_1", "Cốt Binh Di Tích (Tả)", "Lv.4 · Quái Ngục 💀", new Vector3(-6.0f, -42.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 220, attackRange: 1.8f, attackDamage: 24, scale: 1.1f);
+            CreateMonsterTarget("Monster_Crypt_Skeleton_2", "Cốt Binh Di Tích (Hữu)", "Lv.4 · Quái Ngục 💀", new Vector3(6.0f, -42.0f, 0), dummySprite, false, hasAI: true, isBoss: false, maxHp: 220, attackRange: 1.8f, attackDamage: 24, scale: 1.1f);
+            CreateMonsterTarget("Boss_Crypt_Lich", "Đại Vu Yêu Hắc Ám (Dungeon Boss)", "Lv.6 · BOSS NGỤC 🔥", new Vector3(0.0f, -36.0f, 0), dummySprite, false, hasAI: true, isBoss: true, maxHp: 850, attackRange: 3.6f, attackDamage: 45, scale: 1.6f);
 
             // 11. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
             if (FindAnyObjectByType<FloatingDamageManager>() == null)

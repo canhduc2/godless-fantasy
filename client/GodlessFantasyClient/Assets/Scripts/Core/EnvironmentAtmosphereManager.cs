@@ -51,6 +51,7 @@ namespace GodlessFantasy.Core
 
         public float CurrentHour => currentHour;
         public bool IsNight => currentHour >= 19.5f || currentHour < 5.0f;
+        private string lastPhase = "";
 
         private class TorchLightData
         {
@@ -251,6 +252,18 @@ namespace GodlessFantasy.Core
                 // 1 ngày game (24h) = dayDurationMinutes phút thực tế
                 float hoursPerSecond = 24f / (dayDurationMinutes * 60f);
                 currentHour = (currentHour + Time.deltaTime * hoursPerSecond) % 24f;
+
+                string curPhase = GetTimePhaseName();
+                if (!string.IsNullOrEmpty(lastPhase) && curPhase != lastPhase)
+                {
+                    AudioManager.PlayLevelUp();
+                    Combat.FloatingDamageManager.ShowFloatingText(
+                        playerTransform != null ? playerTransform.position + Vector3.up * 1.8f : Vector3.zero,
+                        $"⏰ Chuyển Canh: {GetTimePhaseIcon()} {curPhase} ({GetFormattedTime()})",
+                        new Color(1f, 0.85f, 0.35f)
+                    );
+                }
+                lastPhase = curPhase;
             }
         }
 

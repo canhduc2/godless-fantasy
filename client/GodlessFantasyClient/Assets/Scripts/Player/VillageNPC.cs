@@ -66,6 +66,10 @@ namespace GodlessFantasy.Player
                 else
                 {
                     showDialogue = !showDialogue;
+                    if (showDialogue && npcName.Contains("Eldrin") && Quest.QuestManager.Instance != null)
+                    {
+                        Quest.QuestManager.Instance.ReportProgress("talk_elder", 1);
+                    }
                 }
             }
             if (showDialogue && Input.GetKeyDown(KeyCode.Escape))
@@ -85,6 +89,10 @@ namespace GodlessFantasy.Player
                 else
                 {
                     showDialogue = !showDialogue;
+                    if (showDialogue && npcName.Contains("Eldrin") && Quest.QuestManager.Instance != null)
+                    {
+                        Quest.QuestManager.Instance.ReportProgress("talk_elder", 1);
+                    }
                 }
             }
         }

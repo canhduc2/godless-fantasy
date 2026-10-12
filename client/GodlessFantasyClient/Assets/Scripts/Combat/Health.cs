@@ -88,6 +88,11 @@ namespace GodlessFantasy.Combat
             if (IsInSafeZone)
             {
                 Debug.Log($"[SAFE ZONE] Mục tiêu {gameObject.name} được bảo vệ an toàn, miễn nhiễm {damage} sát thương từ {attackerId}!");
+                // Nếu đánh vào bù nhìn gỗ -> Ghi nhận tiến trình quest rèn luyện
+                if (gameObject.name.Contains("Dummy") && GodlessFantasy.Quest.QuestManager.Instance != null)
+                {
+                    GodlessFantasy.Quest.QuestManager.Instance.ReportProgress("dummy_hit", 1);
+                }
                 return;
             }
 
@@ -137,6 +142,12 @@ namespace GodlessFantasy.Combat
             OnDeath?.Invoke();
             // Đổi màu thành xám tối
             if (spriteRenderer != null) spriteRenderer.color = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+
+            // Ghi nhận nhiệm vụ tiêu diệt quái vật
+            if (!gameObject.CompareTag("Player") && !gameObject.name.Contains("Player") && GodlessFantasy.Quest.QuestManager.Instance != null)
+            {
+                GodlessFantasy.Quest.QuestManager.Instance.ReportProgress("monster_kill", 1);
+            }
 
             // Nếu người chơi chết: Kích hoạt Màn Hình Tử Trận & Cơ chế rơi đồ 50%
             if (gameObject.CompareTag("Player") || gameObject.name.Contains("Player"))

@@ -368,6 +368,16 @@ namespace GodlessFantasy.Core
                 return TerrainBlockType.DirtPath;
             }
 
+            // 7. KHU VỰC PHÓ BẢN HẦM NGỤC DI TÍCH (DUNGEON CRYPT FLOOR 1) TẠI (x: -16..16, y: -58..-32)
+            if (Mathf.Abs(x) <= 16 && y >= -58 && y <= -32)
+            {
+                if (Mathf.Abs(x) == 16 || y == -58 || y == -32)
+                {
+                    return TerrainBlockType.Wall; // Tường đá kiên cố phong ấn hầm ngục
+                }
+                return TerrainBlockType.AncientStone; // Sàn đá cổ di tích
+            }
+
             // Đất rừng xen kẽ tàn tích đá cổ
             return ((x * 5 + y * 11) % 6 == 0) ? TerrainBlockType.AncientStone : TerrainBlockType.Grass;
         }
