@@ -1071,6 +1071,41 @@ namespace GodlessFantasy.UI
                 GUI.color = Color.white;
             }
 
+            // 4.7. Waystone Shrine Dots (Màu tím — điểm hồi sinh)
+            var allShrines = GodlessFantasy.World.WaystoneShrine.AllShrines;
+            if (allShrines != null && allShrines.Count > 0)
+            {
+                var activeShrine = GodlessFantasy.World.WaystoneShrine.ActiveRespawnPoint;
+                float shrineBlinkAlpha = 0.55f + Mathf.PingPong(Time.time * 1.6f, 0.45f); // nhấp nháy nhẹ
+
+                foreach (var shrine in allShrines)
+                {
+                    if (shrine == null) continue;
+                    Vector2 sMapPos = WorldToMinimapPos(shrine.transform.position, mapX, mapY, mapW, mapH, minWx, maxWx, minWy, maxWy);
+
+                    bool isActive = (shrine == activeShrine);
+                    if (isActive)
+                    {
+                        // Điểm hồi sinh đang kích hoạt: tím sáng nhấp nháy, lớn hơn, có viền
+                        float pulseAlpha = shrineBlinkAlpha;
+                        GUI.color = new Color(0.75f, 0.25f, 1.0f, pulseAlpha);
+                        GUI.DrawTexture(new Rect(sMapPos.x - 5, sMapPos.y - 5, 10, 10), Texture2D.whiteTexture);
+                        DrawOutline(new Rect(sMapPos.x - 5, sMapPos.y - 5, 10, 10), new Color(0.4f, 0.0f, 0.6f), 1);
+                        // Quầng sáng nhỏ bên ngoài
+                        GUI.color = new Color(0.85f, 0.45f, 1.0f, pulseAlpha * 0.35f);
+                        GUI.DrawTexture(new Rect(sMapPos.x - 8, sMapPos.y - 8, 16, 16), Texture2D.whiteTexture);
+                    }
+                    else
+                    {
+                        // Trụ chưa kích hoạt: tím xám mờ, nhỏ hơn
+                        GUI.color = new Color(0.55f, 0.2f, 0.75f, 0.7f);
+                        GUI.DrawTexture(new Rect(sMapPos.x - 3, sMapPos.y - 3, 6, 6), Texture2D.whiteTexture);
+                        DrawOutline(new Rect(sMapPos.x - 3, sMapPos.y - 3, 6, 6), new Color(0.2f, 0.05f, 0.35f), 1);
+                    }
+                }
+                GUI.color = Color.white;
+            }
+
             // 5. Player Dot & Radar Pulse
             Vector2 pPos = playerMovement != null ? (Vector2)playerMovement.transform.position : Vector2.zero;
             Vector2 pMapPos = WorldToMinimapPos(pPos, mapX, mapY, mapW, mapH, minWx, maxWx, minWy, maxWy);

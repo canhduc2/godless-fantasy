@@ -161,20 +161,29 @@ namespace GodlessFantasy.Core
             int pcx = Mathf.FloorToInt(playerTransform.position.x / CHUNK_SIZE);
             int pcy = Mathf.FloorToInt(playerTransform.position.y / CHUNK_SIZE);
 
-            // 1. Tải các chunk trong bán kính 2 chunk (5x5 chunks = 80m x 80m quanh người chơi)
-            for (int cx = pcx - 2; cx <= pcx + 2; cx++)
+            // Tự động điều chỉnh bán kính nạp chunk theo Camera zoom (tối thiểu 2 chunk, tối đa 5 chunk khi zoom xa 50m)
+            Camera cam = Camera.main;
+            float halfH = cam != null ? cam.orthographicSize : 10f;
+            float halfW = cam != null ? halfH * cam.aspect : 16f;
+            int radX = Mathf.Clamp(Mathf.CeilToInt(halfW / CHUNK_SIZE) + 1, 2, 5);
+            int radY = Mathf.Clamp(Mathf.CeilToInt(halfH / CHUNK_SIZE) + 1, 2, 4);
+
+            // 1. Tải các chunk trong tầm nhìn mở rộng (lên tới 80m mỗi bên)
+            for (int cx = pcx - radX; cx <= pcx + radX; cx++)
             {
-                for (int cy = pcy - 2; cy <= pcy + 2; cy++)
+                for (int cy = pcy - radY; cy <= pcy + radY; cy++)
                 {
                     LoadChunk(cx, cy);
                 }
             }
 
-            // 2. Gỡ các chunk ở quá xa (> 3 chunks = 48m)
+            // 2. Gỡ các chunk ở quá xa ngoài rìa màn hình (+1 chunk buffer để tránh nạp/hủy liên tục)
+            int unloadRadX = radX + 1;
+            int unloadRadY = radY + 1;
             List<Vector2Int> toUnload = null;
             foreach (var kvp in loadedChunks)
             {
-                if (Mathf.Abs(kvp.Key.x - pcx) > 3 || Mathf.Abs(kvp.Key.y - pcy) > 3)
+                if (Mathf.Abs(kvp.Key.x - pcx) > unloadRadX || Mathf.Abs(kvp.Key.y - pcy) > unloadRadY)
                 {
                     if (toUnload == null) toUnload = new List<Vector2Int>();
                     toUnload.Add(kvp.Key);
@@ -231,6 +240,8 @@ namespace GodlessFantasy.Core
 
         /// <summary>
         /// Tạo một ô địa hình bên trong Chunk GameObject từ mã khối (Block ID) trong TerrainBlockRegistry
+        /// - Đảm bảo 100% liền mạch (Seamless): Luôn có lớp nền đất cơ sở cố định bên dưới để triệt tiêu vĩnh viễn mọi khe hở, lỗ hổng đen giữa các ô!
+        /// - Các khối thực vật / hoa / bụi rậm đung đưa được tạo thành lớp trang trí (Decor Overlay) phía trên nền đất.
         /// </summary>
         private void CreateTileInChunk(int x, int y, ushort blockId, Transform chunkParent)
         {
@@ -241,10 +252,54 @@ namespace GodlessFantasy.Core
             tileObj.transform.parent = chunkParent;
             tileObj.transform.position = new Vector3(x, y, 0);
 
-            var sr = tileObj.AddComponent<SpriteRenderer>();
-            sr.sprite = sp;
-            sr.color = Color.white;
-            sr.sortingOrder = def.sortingOrder;
+            bool isOverlayDecor = (def.category == World.BlockCategory.Foliage || 
+                                   def.category == World.BlockCategory.StealthBush || 
+                                   def.category == World.BlockCategory.InteractiveProp);
+
+            var baseSr = tileObj.AddComponent<SpriteRenderer>();
+
+            if (isOverlayDecor)
+            {
+                // 1. LỚP NỀN ĐẤT ĐÁY (Ground Base): Luôn là thảm cỏ hoặc đất nền kín mít 100%, tĩnh, không xê dịch
+                baseSr.sprite = World.TerrainBlockRegistry.GetSprite(0); // grass_bright
+                baseSr.sortingOrder = -20;
+                baseSr.color = Color.white;
+
+                // 2. LỚP THỰC VẬT / BỤI RẬM TRANG TRÍ (Decor Visual): Nằm trên nền đất
+                GameObject decorObj = new GameObject("Decor_Visual");
+                decorObj.transform.parent = tileObj.transform;
+                decorObj.transform.localPosition = Vector3.zero;
+
+                bool isStealthBush = (def.category == World.BlockCategory.StealthBush);
+                // Bụi rậm ẩn nấp được phóng to xum xuê (1.85x) che kín người chơi
+                decorObj.transform.localScale = isStealthBush ? new Vector3(1.85f, 1.85f, 1f) : Vector3.one;
+
+                var decorSr = decorObj.AddComponent<SpriteRenderer>();
+                decorSr.sprite = sp;
+                // Layer lá cây bụi rậm nằm trên người chơi (Order 14) để phủ trùm lên thân khi bước vào
+                decorSr.sortingOrder = isStealthBush ? 14 : def.sortingOrder;
+                decorSr.color = Color.white;
+
+                // Hoạt ảnh tự nhiên chỉ áp dụng cho lớp cành ngọn trang trí, không bao giờ làm hở nền
+                if (def.animType != World.BlockAnimType.None)
+                {
+                    var animator = decorObj.AddComponent<World.ProceduralFoliageAnimator>();
+                    animator.Setup(def.animType, def.animSpeed, def.animIntensity);
+                }
+            }
+            else
+            {
+                // Khối nền đất / đá lát / mặt nước thông thường
+                baseSr.sprite = sp;
+                baseSr.sortingOrder = def.sortingOrder;
+                baseSr.color = Color.white;
+
+                if (def.animType != World.BlockAnimType.None)
+                {
+                    var animator = tileObj.AddComponent<World.ProceduralFoliageAnimator>();
+                    animator.Setup(def.animType, def.animSpeed, def.animIntensity);
+                }
+            }
 
             // 1. Collider cho tường, đá cản đường hoặc nước sâu
             if (!def.isWalkable || def.isWater)
@@ -258,25 +313,15 @@ namespace GodlessFantasy.Core
             {
                 var trigger = tileObj.AddComponent<BoxCollider2D>();
                 trigger.isTrigger = true;
-                trigger.size = new Vector2(0.95f, 0.95f);
+                trigger.size = new Vector2(1.35f, 1.35f);
                 tileObj.AddComponent<World.StealthBushTrigger>();
-            }
-
-            // 3. Hoạt ảnh tự nhiên (WindSway, WaterWave, FlamePulse, CrystalPulse)
-            if (def.animType != World.BlockAnimType.None)
-            {
-                var animator = tileObj.AddComponent<World.ProceduralFoliageAnimator>();
-                animator.Setup(def.animType, def.animSpeed, def.animIntensity);
             }
         }
 
         /// <summary>
-        /// Thuật toán sinh địa hình thế giới mở rộng lớn (270m x 132m)
-        /// </summary>
-        /// <summary>
-        /// Sinh mã khối thủ tục cho toàn bộ thế giới mở rộng 270m x 132m (Data-Driven Procedural Block Code Generator):
-        /// - Áp dụng hệ thống 48 khối chuẩn mực từ TerrainBlockRegistry.
-        /// - Phân vùng sinh động: Làng Tân Thủ, Nông Trại, Đầm Lầy, Sông Hồ, Cầu Gỗ, Rừng Rậm, Bụi Rậm Ẩn Nấp, Tàn Tích Hầm Ngục.
+        /// Sinh mã khối thủ tục cho toàn bộ thế giới mở rộng 270m x 132m:
+        /// Sử dụng 2D Perlin Noise để sinh thảm cỏ, vạt hoa, khóm cỏ và bụi rậm hoàn toàn tự nhiên hữu cơ!
+        /// Triệt tiêu 100% hiện tượng sọc chéo nhân tạo.
         /// </summary>
         public ushort GetBlockId(int x, int y)
         {
@@ -300,87 +345,104 @@ namespace GodlessFantasy.Core
                 return 22; // stone_dungeon
             }
 
-            // 3. Dòng Sông Ma Thuật (Magic River) uốn lượn tại x = 44..47
-            if (x >= 44 && x <= 47)
+            // 3. Dòng Sông Ma Thuật (Magic River) uốn lượn tại x = 43..48
+            if (x >= 43 && x <= 48)
             {
                 if (Mathf.Abs(y) <= 2) return 26; // wooden_bridge (Cầu gỗ lớn qua sông)
                 if (x == 44 || x == 47) return 12; // water_shallow (Nước nông gợn sóng)
                 return 13; // water_deep (Nước sâu biếc)
             }
             // Bãi cát vàng và lau sậy ven bờ sông
-            if ((x == 43 || x == 48) && Mathf.Abs(y) > 2)
+            if ((x == 42 || x == 49) && Mathf.Abs(y) > 2)
             {
-                if ((x + y) % 6 == 0) return 33; // foliage_tall_reed
+                float reedNoise = Mathf.PerlinNoise(x * 0.25f, y * 0.25f);
+                if (reedNoise > 0.65f) return 33; // foliage_tall_reed
                 return 16; // sand_shore
             }
 
-            // 4. Trục Đại Lộ Cổ Chạy Ngang Qua Thế Giới (y = -2..2)
+            // 4. QUẢNG TRƯỜNG TRUNG TÂM LÀNG TÂN THỦ TẠI (-80, 0) (Ưu tiên cao nhất!)
+            float distToPlaza = Vector2.Distance(new Vector2(x, y), new Vector2(-80, 0));
+            if (distToPlaza <= 14.5f)
+            {
+                if (distToPlaza >= 12.0f) return 29; // safezone_gold (Vành đai đá vàng bảo hộ thần thánh)
+                if (distToPlaza <= 2.2f) return 14;  // water_stream (Hồ nước trung tâm dưới đài phun)
+                return 20; // cobble_plaza (Đá hoa cương sáng lát quảng trường làng)
+            }
+
+            // 5. Trục Đại Lộ Cổ Chạy Ngang Qua Thế Giới (y = -2..2)
             if (y >= -2 && y <= 2)
             {
                 return (x <= -20) ? (ushort)8 : (ushort)9; // dirt_warm_path hoặc dirt_packed_road
             }
 
-            // 5. KHU VỰC ĐẠI ĐÔ THỊ LÀNG TÂN THỦ (x <= -20)
+            // Trục đường Bắc - Nam qua quảng trường làng (-80)
+            if (x >= -82 && x <= -78 && Mathf.Abs(y) <= 25)
+            {
+                return 8; // dirt_warm_path
+            }
+
+            // Trục đường phụ kết nối khu dân cư Đông làng (-50)
+            if (x >= -52 && x <= -48 && Mathf.Abs(y) <= 22)
+            {
+                return 8; // dirt_warm_path
+            }
+
+            // 6. KHU VỰC ĐẠI ĐÔ THỊ LÀNG TÂN THỦ (x <= -20)
             if (x <= -20)
             {
-                // Đường đất nội bộ làng kết nối các khu vực
-                bool isVillageRoad = (x == -80 || x == -50 || y == 25 || y == -25);
-                if (isVillageRoad) return 8; // dirt_warm_path
-
-                // Quảng trường trung tâm làng (-80, 0)
-                float distToPlaza = Vector2.Distance(new Vector2(x, y), new Vector2(-80, 0));
-                if (distToPlaza <= 13f)
+                // Khu nông trại làng (-64 đến -44, y = 10 đến 18)
+                if (x >= -64 && x <= -44 && y >= 10 && y <= 18)
                 {
-                    if (distToPlaza >= 11.5f) return 29; // safezone_gold (Viền đá vàng bảo hộ)
-                    return 20; // cobble_plaza (Đá hoa cương sạch sẽ)
+                    if (x == -64 || x == -44 || y == 10 || y == 18) return 44; // prop_wooden_fence
+                    return 10; // farmland_tilled (Đất luống cày nông trại)
                 }
 
-                // Vườn hoa làng & Khu nông trại
-                if (x >= -60 && x <= -40 && y >= 10 && y <= 20)
-                {
-                    return 10; // farmland_tilled
-                }
+                // Thảm cỏ làng mạc tự nhiên bằng 2D Perlin Noise (Không modulo, không sọc chéo)
+                float fNoise = Mathf.PerlinNoise((x + 800) * 0.12f, (y + 800) * 0.12f);
+                float cNoise = Mathf.PerlinNoise((x + 1200) * 0.18f, (y + 1200) * 0.18f);
 
-                // Cỏ hoa dại làng
-                int seed = Mathf.Abs((x * 7 + y * 13) % 20);
-                if (seed == 1) return 1; // grass_flower_yellow
-                if (seed == 2) return 4; // grass_flower_white
-                if (seed == 3) return 5; // grass_dense_clover
+                if (fNoise > 0.72f) return 1; // grass_flower_yellow (Vạt hoa cúc vàng rực rỡ mọc thành đám tròn)
+                if (fNoise < 0.26f) return 4; // grass_flower_white (Vạt hoa dại trắng)
+                if (cNoise > 0.68f) return 5; // grass_dense_clover (Thảm cỏ ba lá xanh mượt)
 
                 return 0; // grass_bright (Đồng cỏ xanh tươi)
             }
 
-            // 6. VÙNG RANH GIỚI CỔNG LÀNG (-20 < x <= 10)
+            // 7. VÙNG RANH GIỚI CỔNG LÀNG (-20 < x <= 10) — Vùng chuyển tiếp
             if (x <= 10)
             {
-                int rSeed = Mathf.Abs((x * 11 + y * 7) % 25);
-                if (rSeed == 0) return 30; // foliage_stealth_bush (Bụi rậm ẩn nấp)
-                if (rSeed == 1) return 32; // foliage_grass_tuft (Khóm cỏ đung đưa gió)
-                if (rSeed == 2) return 41; // prop_pebble_cluster (Cụm sỏi nhỏ)
-                return 8; // dirt_warm_path
+                float edgeNoise = Mathf.PerlinNoise((x + 2000) * 0.14f, (y + 2000) * 0.14f);
+                float edgeBush = Mathf.PerlinNoise((x + 3000) * 0.20f, (y + 3000) * 0.20f);
+
+                if (edgeBush > 0.75f) return 30; // foliage_stealth_bush (Bụi rậm to né quái)
+                if (edgeNoise > 0.73f) return 38; // foliage_flower_patch (Vạt hoa dã quỳ)
+                if (edgeNoise < 0.27f) return 32; // foliage_grass_tuft (Khóm cỏ đung đưa gió)
+                if (edgeBush < 0.24f) return 5;  // grass_dense_clover
+                return 0; // grass_bright
             }
 
-            // 7. KHU VỰC RỪNG RẬM HOANG DÃ & THUNG LŨNG TÀN TÍCH (x > 10)
+            // 8. KHU VỰC RỪNG RẬM HOANG DÃ & THUNG LŨNG TÀN TÍCH (x > 10)
             // Lối mòn dẫn lên Cổng Phó Bản Hầm Ngục tại (120, 25)
             if (x >= 80 && y >= 23 && y <= 27)
             {
                 return 8; // dirt_warm_path
             }
 
-            // Rừng Rậm: Bụi Rậm Ẩn Nấp phong phú, hoa dại, đá rêu, khúc gỗ mục, khóm cỏ đung đưa
-            int wildSeed = Mathf.Abs((x * 17 + y * 31 + (x ^ y) * 3) % 36);
-            if (wildSeed == 0 || wildSeed == 1) return 30; // foliage_stealth_bush (Bụi rậm ẩn nấp cho người chơi né quái!)
-            if (wildSeed == 2 || wildSeed == 3) return 32; // foliage_grass_tuft (Khóm cỏ đung đưa gió)
-            if (wildSeed == 4) return 38; // foliage_flower_patch (Vạt hoa dã quỳ)
-            if (wildSeed == 5) return 40; // prop_mossy_boulder (Tảng đá rêu)
-            if (wildSeed == 6) return 42; // prop_fallen_log (Khúc gỗ mục có rêu)
-            if (wildSeed == 7) return 3;  // grass_flower_red (Hoa đỏ)
-            if (wildSeed == 8) return 39; // mushroom_giant (Nấm đỏ khổng lồ)
-            if (wildSeed == 9) return 7;  // grass_dark_forest
-            if (wildSeed == 10) return 6; // grass_autumn
+            // Rừng Rậm: 100% sinh bằng 2D Perlin Noise tự nhiên
+            float wildBush = Mathf.PerlinNoise((x + 4000) * 0.14f, (y + 4000) * 0.14f);
+            float wildFlower = Mathf.PerlinNoise((x + 5000) * 0.11f, (y + 5000) * 0.11f);
+            float wildFoliage = Mathf.PerlinNoise((x + 6000) * 0.20f, (y + 6000) * 0.20f);
+
+            if (wildBush > 0.73f) return 30;   // foliage_stealth_bush (Bụi rậm to xum xuê né quái!)
+            if (wildFlower > 0.74f) return 3;  // grass_flower_red (Hoa anh túc đỏ rực)
+            if (wildFlower < 0.25f) return 38; // foliage_flower_patch (Vạt hoa dã quỳ)
+            if (wildFoliage > 0.72f) return 32;// foliage_grass_tuft (Khóm cỏ đung đưa gió)
+            if (wildFoliage < 0.22f) return 39;// mushroom_giant (Nấm đỏ khổng lồ)
+            if (wildBush < 0.20f) return 2;    // grass_flower_blue (Hoa lưu ly biếc)
 
             return 0; // grass_bright (Đồng cỏ xanh tươi)
         }
+
 
         public TerrainBlockType GetBlockType(int x, int y)
         {
@@ -414,10 +476,27 @@ namespace GodlessFantasy.Core
 
         private void SpawnLandscapeProps()
         {
-            // 1. LÀNG TÂN THỦ: Giếng nước đá cổ ở Quảng trường trung tâm (-80, 0)
-            CreateProp("Prop_Stone_Well", stoneWellSprite, new Vector3(-80f, 0f, 0f), propsParent, new Vector2(0.8f, 0.8f));
+            // 1. ĐÀI PHUN NƯỚC THẦN THOẠI (GRAND FOUNTAIN) Ở TRUNG TÂM QUẢNG TRƯỜNG LÀNG (-80, 0)
+            Sprite fountainSprite = Resources.Load<Sprite>("prop_fountain_grand");
+            CreateProp("Grand_Fountain_Plaza", fountainSprite, new Vector3(-80f, 0f, 0f), propsParent, new Vector2(1.8f, 1.2f), new Vector2(0, -0.4f), sortingOrder: 11);
 
-            // 2. Cây xanh râm mát Làng Tân Thủ
+            // 2. BỐN TRỤ NƯỚC THẦN NĂNG (SACRED WATER PILLARS) CANH GIỮ 4 GÓC QUẢNG TRƯỜNG LÀNG
+            Sprite waterPillarSprite = Resources.Load<Sprite>("prop_water_pillar");
+            Vector3[] waterPillarPositions = {
+                new Vector3(-89f, 7f, 0),
+                new Vector3(-89f, -7f, 0),
+                new Vector3(-71f, 7f, 0),
+                new Vector3(-71f, -7f, 0)
+            };
+            foreach (var wp in waterPillarPositions)
+            {
+                CreateProp("Sacred_Water_Pillar", waterPillarSprite, wp, propsParent, new Vector2(0.9f, 0.6f), new Vector2(0, -0.4f), sortingOrder: 11);
+            }
+
+            // 3. Giếng nước đá cổ ở góc làng
+            CreateProp("Prop_Stone_Well", stoneWellSprite, new Vector3(-62f, 8f, 0f), propsParent, new Vector2(0.8f, 0.8f));
+
+            // 4. Cây xanh râm mát Làng Tân Thủ
             Vector3[] villageTreePos = {
                 new Vector3(-95f, 15f, 0), new Vector3(-85f, 20f, 0), new Vector3(-70f, 18f, 0),
                 new Vector3(-95f, -15f, 0), new Vector3(-85f, -20f, 0), new Vector3(-70f, -18f, 0),
@@ -429,7 +508,7 @@ namespace GodlessFantasy.Core
                 CreateProp("Village_Tree", treeVillageSprite, pos, propsParent, new Vector2(0.7f, 0.4f), new Vector2(0, -0.6f), sortingOrder: 11);
             }
 
-            // 3. Hàng rào gỗ bảo vệ Làng Tân Thủ tại ranh giới x = -20
+            // 5. Hàng rào gỗ bảo vệ Làng Tân Thủ tại ranh giới x = -20
             for (int fy = -40; fy <= 40; fy += 3)
             {
                 if (Mathf.Abs(fy) > 3) // Chừa cổng đại lộ rộng mở ở giữa
@@ -438,7 +517,7 @@ namespace GodlessFantasy.Core
                 }
             }
 
-            // 4. Ngọn đuốc thắp sáng bập bùng (Toàn bộ các trục đường chính)
+            // 6. Ngọn đuốc thắp sáng bập bùng (Toàn bộ các trục đường chính)
             Vector3[] torchPositions = {
                 // Quảng trường làng
                 new Vector3(-88f, 4f, 0), new Vector3(-88f, -4f, 0),
@@ -465,7 +544,7 @@ namespace GodlessFantasy.Core
                 }
             }
 
-            // 5. Cây Rừng Rậm Hắc Ám (Phân bố khắp khu vực rừng x = 20 đến 130)
+            // 7. Cây Rừng Rậm Hắc Ám (Phân bố khắp khu vực rừng x = 20 đến 130)
             Vector3[] darkTreePos = {
                 new Vector3(25f, 15f, 0), new Vector3(32f, 28f, 0), new Vector3(30f, -20f, 0),
                 new Vector3(38f, -35f, 0), new Vector3(55f, 20f, 0), new Vector3(65f, -15f, 0),
@@ -478,10 +557,10 @@ namespace GodlessFantasy.Core
                 CreateProp("Dark_Tree", treeDarkSprite, pos, propsParent, new Vector2(0.7f, 0.4f), new Vector2(0, -0.6f), sortingOrder: 11);
             }
 
-            // 6. CỔNG PHÓ BẢN HẦM NGỤC DI TÍCH (Dungeon Arch Gate tại 120, 25)
+            // 8. CỔNG PHÓ BẢN HẦM NGỤC DI TÍCH (Dungeon Arch Gate tại 120, 25)
             CreateProp("Dungeon_Arch_Gate", dungeonGateSprite, new Vector3(120f, 25f, 0), propsParent, new Vector2(1.2f, 0.6f), new Vector2(0, -0.5f), sortingOrder: 12);
 
-            // 7. TRỤ HỒI SINH ĐÁ CỔ KHẮC RUNE (Waystone Shrines) RẢI RÁC KHẮP CÁC KHU VỰC
+            // 9. TRỤ HỒI SINH ĐÁ CỔ KHẮC RUNE (Waystone Shrines) RẢI RÁC KHẮP CÁC KHU VỰC
             CreateWaystoneProp("Waystone_Plaza", "Trụ Quảng Trường Làng", new Vector3(-70f, 2f, 0), true);
             CreateWaystoneProp("Waystone_EastGate", "Trụ Cổng Đông Làng", new Vector3(-22f, 2f, 0), false);
             CreateWaystoneProp("Waystone_Outpost", "Trụ Tiền Đồn Rừng Rậm", new Vector3(18f, 3.5f, 0), false);

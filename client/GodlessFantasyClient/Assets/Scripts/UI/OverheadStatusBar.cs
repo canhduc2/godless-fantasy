@@ -82,6 +82,9 @@ namespace GodlessFantasy.UI
             GUI.depth = FantasyUITheme.DepthOverhead;
 
             if (health != null && health.IsDead) return;
+            // Ẩn hoàn toàn nhãn danh xưng và thanh máu của người chơi khi đang ẩn nấp trong bụi rậm
+            if (entityType == OverheadType.Player && PlayerMovement.IsPlayerInStealth) return;
+
             if (mainCam == null) mainCam = Camera.main;
             if (mainCam == null) return;
 
@@ -104,6 +107,8 @@ namespace GodlessFantasy.UI
             float barH = (entityType == OverheadType.Player) ? 6f : 5f;
             float startX = guiX - barW / 2f;
 
+            Color outlineCol = new Color(0f, 0f, 0f, 0.95f);
+
             // -1. DÒNG TÊN BANG HỘI TRÊN CÙNG (GUILD LABEL - TRÊN CẢ DANH HIỆU)
             if (entityType == OverheadType.Player)
             {
@@ -115,13 +120,8 @@ namespace GodlessFantasy.UI
                     float gH = 15f;
                     Rect gRect = new Rect(guiX - gW / 2f, guiY - 55f, gW, gH);
 
-                    // Đổ bóng đen
-                    titleStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
-                    GUI.Label(new Rect(gRect.x + 1, gRect.y + 1, gRect.width, gRect.height), guildText, titleStyle);
-
-                    // Màu vàng hoàng gia đặc trưng Bang Hội
-                    titleStyle.normal.textColor = new Color(1.0f, 0.85f, 0.25f, 0.95f);
-                    GUI.Label(gRect, guildText, titleStyle);
+                    // Viền đen 8 hướng sắc nét + Màu vàng hoàng gia
+                    DrawOutlinedText(gRect, guildText, titleStyle, new Color(1.0f, 0.85f, 0.25f, 0.95f), outlineCol);
                 }
             }
 
@@ -135,11 +135,7 @@ namespace GodlessFantasy.UI
                 float titleH = 16f;
                 Rect titleRect = new Rect(guiX - titleW / 2f, guiY - 39f, titleW, titleH);
 
-                titleStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
-                GUI.Label(new Rect(titleRect.x + 1, titleRect.y + 1, titleRect.width, titleRect.height), titleText, titleStyle);
-
-                titleStyle.normal.textColor = curTitle.titleColor;
-                GUI.Label(titleRect, titleText, titleStyle);
+                DrawOutlinedText(titleRect, titleText, titleStyle, curTitle.titleColor, outlineCol);
             }
 
             // 1. DÒNG TÊN & CẤP ĐỘ / HỆ / NGUYÊN TỐ (Bản rộng 340px thoáng đãng tuyệt đối không gãy dòng)
@@ -161,12 +157,8 @@ namespace GodlessFantasy.UI
             float plateH = 20f;
             Rect namePlateRect = new Rect(guiX - plateW / 2f, guiY - 24f, plateW, plateH);
 
-            // Đổ bóng đen 1px giúp nét chữ nổi khối sắc sảo trên mọi bối cảnh sàn gạch
-            nameStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
-            GUI.Label(new Rect(namePlateRect.x + 1, namePlateRect.y + 1, namePlateRect.width, namePlateRect.height), nameString, nameStyle);
-
-            nameStyle.normal.textColor = nameColor;
-            GUI.Label(namePlateRect, nameString, nameStyle);
+            // Viền đen 8 hướng giúp chữ hiển thị siêu sắc nét trên mọi bề mặt nền cỏ / đất / nước
+            DrawOutlinedText(namePlateRect, nameString, nameStyle, nameColor, outlineCol);
 
             // 2. KHUNG NỀN THANH MÁU
             Rect hpBgRect = new Rect(startX, guiY, barW, barH);
@@ -251,12 +243,33 @@ namespace GodlessFantasy.UI
             GUI.DrawTexture(new Rect(r.x + r.width - width, r.y, width, r.height), Texture2D.whiteTexture);
         }
 
+        private static void DrawOutlinedText(Rect r, string text, GUIStyle style, Color textColor, Color outlineColor)
+        {
+            style.normal.textColor = outlineColor;
+            // Vẽ viền đen 8 hướng xung quanh
+            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), text, style);
+
+            // Chữ chính ở giữa
+            style.normal.textColor = textColor;
+            GUI.Label(r, text, style);
+        }
+
         private static void InitStyles()
         {
+            var gFont = FantasyUITheme.GetGameFont();
+
             if (nameStyle == null)
             {
                 nameStyle = new GUIStyle(GUI.skin.label)
                 {
+                    font = gFont,
                     fontSize = 12,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
@@ -269,6 +282,7 @@ namespace GodlessFantasy.UI
             {
                 titleStyle = new GUIStyle(GUI.skin.label)
                 {
+                    font = gFont,
                     fontSize = 11,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
@@ -281,6 +295,7 @@ namespace GodlessFantasy.UI
             {
                 hpNumberStyle = new GUIStyle(GUI.skin.label)
                 {
+                    font = gFont,
                     fontSize = 11,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = Color.white }

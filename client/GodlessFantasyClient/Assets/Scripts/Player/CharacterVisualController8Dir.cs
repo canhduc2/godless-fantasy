@@ -243,6 +243,33 @@ namespace GodlessFantasy.Player
             }
         }
 
+        /// <summary>
+        /// Kích hoạt trạng thái Ẩn Thân trong bụi rậm (Stealth Camouflage):
+        /// - Làm mờ trong suốt toàn bộ cơ thể (Body, Quần, Giáp, Mũ, Khăn, Vũ khí) với Alpha = 0.35f
+        /// - Giúp người chơi cảm nhận rõ rệt đang ẩn nấp sau tán lá cây!
+        /// </summary>
+        public void SetStealth(bool inStealth)
+        {
+            float targetAlpha = inStealth ? 0.35f : 1.0f;
+            SetLayerAlpha(bodyRenderer, targetAlpha);
+            SetLayerAlpha(pantsRenderer, targetAlpha);
+            SetLayerAlpha(armorRenderer, targetAlpha);
+            SetLayerAlpha(helmetRenderer, targetAlpha);
+            SetLayerAlpha(scarfRenderer, targetAlpha);
+            SetLayerAlpha(weaponRenderer, targetAlpha);
+            SetLayerAlpha(costumeRenderer, targetAlpha);
+        }
+
+        private void SetLayerAlpha(SpriteRenderer sr, float alpha)
+        {
+            if (sr != null)
+            {
+                Color c = sr.color;
+                c.a = alpha;
+                sr.color = c;
+            }
+        }
+
         private void UpdateDirectionFromAim()
         {
             if (mainCamera == null) mainCamera = Camera.main;

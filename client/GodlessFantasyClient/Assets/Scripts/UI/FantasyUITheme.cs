@@ -50,6 +50,17 @@ namespace GodlessFantasy.UI
         public static readonly Color ColorTextCyan = new Color(0.20f, 0.92f, 1.0f, 1.0f);
         public static readonly Color ColorTextRed = new Color(1.0f, 0.45f, 0.45f, 1.0f);
 
+        private static Font gameFont;
+        public static Font GetGameFont()
+        {
+            if (gameFont == null)
+            {
+                // Nạp phông chữ hệ thống sắc nét (Segoe UI, Tahoma, Arial) hỗ trợ trọn vẹn tiếng Việt có dấu
+                gameFont = Font.CreateDynamicFontFromOSFont(new string[] { "Segoe UI Semibold", "Segoe UI", "Tahoma", "Verdana", "Arial" }, 12);
+            }
+            return gameFont;
+        }
+
         private static GUIStyle squareIconStyle;
         private static GUIStyle rectBtnStyle;
         private static GUIStyle tickerBadgeStyle;
@@ -297,10 +308,14 @@ namespace GodlessFantasy.UI
             // Đổ bóng chữ đen mảnh
             tickerTextStyle.normal.textColor = new Color(0f, 0f, 0f, 0.90f);
             GUI.Label(new Rect(currentOffset + 1, 1, textW, r.height), marqueeContent, tickerTextStyle);
+            // Bản sao thứ 2 — lặp liền mạch không hở
+            GUI.Label(new Rect(currentOffset + travelDistance + 1, 1, textW, r.height), marqueeContent, tickerTextStyle);
 
             // Chữ hiển thị chính màu trắng vàng dịu mắt
             tickerTextStyle.normal.textColor = new Color(0.96f, 0.94f, 0.85f);
             GUI.Label(new Rect(currentOffset, 0, textW, r.height), marqueeContent, tickerTextStyle);
+            // Bản sao thứ 2 — đảm bảo màn hình không bao giờ trống
+            GUI.Label(new Rect(currentOffset + travelDistance, 0, textW, r.height), marqueeContent, tickerTextStyle);
 
             GUI.EndGroup();
         }

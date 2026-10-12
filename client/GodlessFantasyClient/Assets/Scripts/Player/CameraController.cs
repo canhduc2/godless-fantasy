@@ -19,8 +19,8 @@ namespace GodlessFantasy.Player
 
         [Header("Controlled Camera Zoom")]
         [SerializeField] private float minZoom = 2.8f;
-        [SerializeField] private float maxZoom = 8.5f;
-        [SerializeField] private float zoomSensitivity = 1.2f;
+        [SerializeField] private float maxZoom = 30.0f; // Hỗ trợ bao quát tầm nhìn 50m mỗi bên (tổng chiều ngang ~100m+)
+        [SerializeField] private float zoomSensitivity = 1.3f;
         [SerializeField] private float zoomSmoothSpeed = 10.0f;
 
         public static CameraController Instance { get; private set; }
@@ -98,10 +98,30 @@ namespace GodlessFantasy.Player
             bool isBlockedByUI = GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI() || GodlessFantasy.UI.CombatHUD.IsAnyModalOpen();
             if (!isBlockedByUI)
             {
+                // Phím nóng [Z] hoặc Click chuột giữa (Scroll wheel button): Chuyển đổi nhanh Tầm nhìn Tiêu chuẩn (5.0m) <-> Toàn cảnh viễn vọng (50m)
+                bool isTypingChat = GodlessFantasy.UI.CombatHUD.Instance != null && GodlessFantasy.UI.CombatHUD.Instance.IsChatFocused();
+                if (!isTypingChat && (Input.GetKeyDown(KeyCode.Z) || Input.GetMouseButtonDown(2)))
+                {
+                    if (targetZoom > 14f)
+                    {
+                        targetZoom = 5.0f;
+                        GodlessFantasy.Combat.FloatingDamageManager.ShowFloatingText(
+                            Vector3.zero, "🔍 Tầm Nhìn Tiêu Chuẩn [Z]", new Color(0.4f, 0.85f, 1f));
+                    }
+                    else
+                    {
+                        targetZoom = 28.5f; // Đạt cự ly ~50.6m sang mỗi bên với màn hình tỉ lệ 16:9
+                        GodlessFantasy.Combat.FloatingDamageManager.ShowFloatingText(
+                            Vector3.zero, "🔭 Toàn Cảnh Viễn Vọng 50m [Z]", new Color(1f, 0.85f, 0.3f));
+                    }
+                }
+
                 float scroll = GameInput.GetMouseScroll();
                 if (Mathf.Abs(scroll) > 0.01f)
                 {
-                    targetZoom -= scroll * zoomSensitivity;
+                    // Tăng dần độ nhạy cuộn chuột khi zoom xa để thao tác nhanh mượt, không cần cuộn quá nhiều lần
+                    float dynamicSensitivity = zoomSensitivity * (1.0f + (targetZoom - minZoom) * 0.08f);
+                    targetZoom -= scroll * dynamicSensitivity;
                     targetZoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
                 }
             }

@@ -75,8 +75,11 @@ namespace GodlessFantasy.UI
         {
             if (isStyleInitialized && tickLabelStyle != null) return;
 
+            var gFont = FantasyUITheme.GetGameFont();
+
             tickLabelStyle = new GUIStyle(GUI.skin.label)
             {
+                font = gFont,
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
@@ -85,6 +88,7 @@ namespace GodlessFantasy.UI
 
             markerLabelStyle = new GUIStyle(GUI.skin.label)
             {
+                font = gFont,
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
@@ -93,6 +97,7 @@ namespace GodlessFantasy.UI
 
             zeroLabelStyle = new GUIStyle(GUI.skin.label)
             {
+                font = gFont,
                 fontSize = 11,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
@@ -277,8 +282,15 @@ namespace GodlessFantasy.UI
 
         private void DrawShadowedText(Rect r, string text, GUIStyle style, Color textColor)
         {
-            // Đổ bóng đen sắc nét
-            style.normal.textColor = new Color(0f, 0f, 0f, 0.9f);
+            // Viền đen 8 hướng sắc nét
+            style.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), text, style);
+            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), text, style);
             GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), text, style);
 
             // Chữ chính

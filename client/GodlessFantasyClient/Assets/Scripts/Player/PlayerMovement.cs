@@ -39,6 +39,11 @@ namespace GodlessFantasy.Player
         private float clickMarkerTimer = 0f;
         private const float CLICK_MARKER_DURATION = 0.45f;
 
+        // STUCK & COLLISION DETECTION: Đo vận tốc dời hình thực tế để ngắt animation khi va chạm tường/nước
+        private float stuckTimer = 0f;
+        private Vector2 lastPhysicalPos;
+        public float ActualVelocityMagnitude { get; private set; }
+
         public float CurrentDashCooldown
         {
             get
@@ -64,7 +69,8 @@ namespace GodlessFantasy.Player
         }
 
         public bool IsDashing => isDashing;
-        public bool IsMoving => isMovingToTarget || (rb != null && rb.linearVelocity.sqrMagnitude > 0.05f);
+        // Đang di chuyển khi có lệnh di chuyển (hoặc có gia tốc dời hình) hoặc đang lướt
+        public bool IsMoving => (isMovingToTarget && (ActualVelocityMagnitude > 0.08f || stuckTimer < 0.25f)) || isDashing;
         public float DashCooldownRemaining => Mathf.Max(0, (lastDashTime + CurrentDashCooldown) - Time.time);
 
         public static bool IsPlayerInStealth { get; set; } = false;
@@ -76,8 +82,14 @@ namespace GodlessFantasy.Player
             if (spriteRenderer != null)
             {
                 Color c = spriteRenderer.color;
-                c.a = inStealth ? 0.40f : 1.0f;
+                c.a = inStealth ? 0.35f : 1.0f;
                 spriteRenderer.color = c;
+            }
+
+            var visual = GetComponent<CharacterVisualController8Dir>() ?? GetComponentInChildren<CharacterVisualController8Dir>();
+            if (visual != null)
+            {
+                visual.SetStealth(inStealth);
             }
         }
 
@@ -90,6 +102,7 @@ namespace GodlessFantasy.Player
             if (playerStats == null) playerStats = GetComponent<PlayerStats>();
             mainCamera = Camera.main;
             targetPosition = transform.position;
+            lastPhysicalPos = (rb != null) ? rb.position : (Vector2)transform.position;
         }
 
         private void Update()
@@ -108,8 +121,6 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            // Vô hiệu hóa di chuyển bằng WASD theo yêu cầu: Tránh hoàn toàn xung đột với phím Dash [D].
-            // Toàn bộ di chuyển được xử lý 100% bằng Click Chuột (Click-to-Move) chuẩn mực MMORPG/ARPG.
             HandleMouseMovement();
             HandleDashInput();
         }
@@ -118,9 +129,13 @@ namespace GodlessFantasy.Player
         {
             if (isDashing) return;
 
+            Vector2 currentPos = rb.position;
+            float displacement = Vector2.Distance(currentPos, lastPhysicalPos);
+            ActualVelocityMagnitude = displacement / Time.fixedDeltaTime;
+            lastPhysicalPos = currentPos;
+
             if (isMovingToTarget)
             {
-                Vector2 currentPos = rb.position;
                 Vector2 direction = (targetPosition - currentPos);
                 float distance = direction.magnitude;
 
@@ -128,15 +143,34 @@ namespace GodlessFantasy.Player
                 {
                     rb.linearVelocity = Vector2.zero;
                     isMovingToTarget = false;
+                    stuckTimer = 0f;
                 }
                 else
                 {
                     rb.linearVelocity = direction.normalized * CurrentMoveSpeed;
+
+                    // Nếu bị vật thể cản trở (tường, nước, đá) khiến không thể tiến thêm
+                    if (ActualVelocityMagnitude < 0.10f)
+                    {
+                        stuckTimer += Time.fixedDeltaTime;
+                        // Cho thời gian khoan dung 0.5s để người chơi kịp gia tốc khi vừa click
+                        if (stuckTimer >= 0.50f)
+                        {
+                            rb.linearVelocity = Vector2.zero;
+                            isMovingToTarget = false;
+                            stuckTimer = 0f;
+                        }
+                    }
+                    else
+                    {
+                        stuckTimer = 0f;
+                    }
                 }
             }
             else
             {
                 rb.linearVelocity = Vector2.zero;
+                stuckTimer = 0f;
             }
         }
 
@@ -146,6 +180,7 @@ namespace GodlessFantasy.Player
         {
             targetPosition = worldPos;
             isMovingToTarget = true;
+            stuckTimer = -0.2f; // Khởi tạo khoảng trễ gia tốc
             clickMarkerWorldPos = worldPos;
             clickMarkerTimer = CLICK_MARKER_DURATION;
         }
@@ -154,6 +189,7 @@ namespace GodlessFantasy.Player
         {
             targetPosition = worldPos;
             isMovingToTarget = true;
+            stuckTimer = -0.2f;
         }
 
         public void StopMoving()

@@ -52,11 +52,12 @@ namespace GodlessFantasy.World
             switch (animType)
             {
                 case BlockAnimType.WindSway:
-                    // Đung đưa cành lá và ngọn cỏ theo gió
-                    float angle = Mathf.Sin(t) * (intensity * 18f);
-                    transform.localRotation = Quaternion.Euler(0, 0, angle);
-                    float stretch = 1.0f + Mathf.Cos(t * 1.5f) * (intensity * 0.4f);
-                    transform.localScale = new Vector3(initialScale.x, initialScale.y * stretch, initialScale.z);
+                    // Đung đưa nhẹ nhàng phần cành ngọn (Góc nghiêng rất nhỏ ±2.5° quanh gốc)
+                    // TUYỆT ĐỐI không co giãn scale hay dịch chuyển vị trí position để triệt tiêu 100% khe hở giữa các ô tile
+                    float swayAngle = Mathf.Sin(t) * (intensity * 25.0f); // Nghiêng nhẹ ±2.5 độ
+                    transform.localRotation = Quaternion.Euler(0f, 0f, swayAngle);
+                    transform.localPosition = initialPosition;
+                    transform.localScale = initialScale;
                     break;
 
                 case BlockAnimType.WaterWave:
