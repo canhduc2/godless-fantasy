@@ -53,6 +53,8 @@ namespace GodlessFantasy.UI
         // Skill & Item Icons Cache
         private Dictionary<string, Texture2D> iconCache = new Dictionary<string, Texture2D>();
         private Texture2D dashIcon;
+        private Texture2D hudArrowLeftTex;
+        private Texture2D hudArrowRightTex;
 
         // GUIStyles sắc nét
         private GUIStyle boldWhiteStyle;
@@ -659,6 +661,178 @@ namespace GodlessFantasy.UI
             // 2. Thanh 5 ô Chiêu thức [1][2][3][4][SHIFT] (nằm bên phải bảng chỉ số, cách 10px)
             float hotbarStartX = startX + panelW + panelToHotbarGap;
             DrawBottomHotbar(hotbarStartX, slotY, slotSize, slotGap);
+
+            // 3. Hai cánh mũi tên trang trí Pixel Art kẹp 2 bên mép ngoài
+            DrawHudWingArrows(startX, hotbarStartX + hotbarW, slotY, slotSize);
+        }
+
+        private void DrawHudWingArrows(float leftPanelX, float rightHotbarX, float slotY, float slotSize)
+        {
+            EnsureHudArrowTextures();
+            if (hudArrowLeftTex == null || hudArrowRightTex == null) return;
+
+            float arrowW = 22f;
+            float arrowH = slotSize; // 54f (khớp chuẩn độ cao cụm ô chiêu thức)
+
+            // Cánh mũi tên bên trái (ốp mép ngoài Bảng nhân vật, chĩa sang trái ◀)
+            Rect leftRect = new Rect(leftPanelX - arrowW + 1f, slotY, arrowW, arrowH);
+            GUI.color = Color.white;
+            GUI.DrawTexture(leftRect, hudArrowLeftTex);
+
+            // Cánh mũi tên bên phải (ốp mép ngoài ô chiêu [D], chĩa sang phải ▶)
+            Rect rightRect = new Rect(rightHotbarX - 1f, slotY, arrowW, arrowH);
+            GUI.DrawTexture(rightRect, hudArrowRightTex);
+        }
+
+        private void EnsureHudArrowTextures()
+        {
+            if (hudArrowLeftTex == null)
+            {
+                hudArrowLeftTex = LoadTextureSafe("hud_arrow_left") ?? GenerateProceduralArrowTex(true);
+            }
+            if (hudArrowRightTex == null)
+            {
+                hudArrowRightTex = LoadTextureSafe("hud_arrow_right") ?? GenerateProceduralArrowTex(false);
+            }
+        }
+
+        private Texture2D GenerateProceduralArrowTex(bool isLeft)
+        {
+            int w = 22;
+            int h = 54;
+            Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Clamp;
+
+            Color cTrans = new Color(0, 0, 0, 0);
+            Color cOutline = new Color(0.024f, 0.031f, 0.055f, 1f);
+            Color cShadowDark = new Color(0.078f, 0.094f, 0.149f, 1f);
+            Color cGoldHi = new Color(1f, 0.96f, 0.69f, 1f);
+            Color cGoldMid = new Color(0.94f, 0.77f, 0.24f, 1f);
+            Color cGoldDeep = new Color(0.72f, 0.53f, 0.12f, 1f);
+            Color cGoldShadow = new Color(0.43f, 0.29f, 0.06f, 1f);
+            Color cPlateHi = new Color(0.13f, 0.19f, 0.30f, 1f);
+            Color cPlateMid = new Color(0.07f, 0.10f, 0.17f, 1f);
+            Color cPlateDark = new Color(0.04f, 0.05f, 0.09f, 1f);
+            Color cChevHi = new Color(1f, 0.98f, 0.78f, 1f);
+            Color cChevMid = new Color(1f, 0.71f, 0.16f, 1f);
+            Color cChevDeep = new Color(0.78f, 0.43f, 0.06f, 1f);
+            Color cStudHi = new Color(1f, 1f, 0.86f, 1f);
+            Color cStudMid = new Color(0.96f, 0.82f, 0.31f, 1f);
+            Color cStudDark = new Color(0.55f, 0.37f, 0.08f, 1f);
+
+            Color[] cols = new Color[w * h];
+            for (int i = 0; i < cols.Length; i++) cols[i] = cTrans;
+
+            int center_y1 = 26;
+            int center_y2 = 27;
+
+            for (int y = 0; y < h; y++)
+            {
+                int dy = y <= center_y1 ? (center_y1 - y) : (y - center_y2);
+                int outer_x = 1;
+                if (dy == 0) outer_x = 1;
+                else if (dy <= 3) outer_x = 1 + dy;
+                else if (dy <= 10) outer_x = 3 + (int)((dy - 3) * 0.75f);
+                else if (dy <= 20) outer_x = 8 + (int)((dy - 10) * 0.9f);
+                else outer_x = 17 + (int)((dy - 20) * 0.65f);
+                outer_x = Mathf.Min(outer_x, w - 1);
+
+                for (int x = outer_x; x < w; x++)
+                {
+                    Color px = cPlateMid;
+                    if (x == outer_x || (x == w - 1 && dy >= 24) || y == 0 || y == h - 1)
+                    {
+                        px = cOutline;
+                    }
+                    else
+                    {
+                        bool isGoldEdge = (x == outer_x + 1 || (x == outer_x + 2 && dy < 20));
+                        bool isTopEdge = (y == 1 || (y == 2 && x > outer_x + 2));
+                        bool isBotEdge = (y == h - 2 || (y == h - 3 && x > outer_x + 2));
+
+                        if (isGoldEdge || isTopEdge || isBotEdge)
+                        {
+                            if (y < center_y1)
+                                px = (isTopEdge || (x == outer_x + 1 && dy > 10)) ? cGoldHi : cGoldMid;
+                            else if (y > center_y2)
+                                px = isBotEdge ? cGoldShadow : cGoldDeep;
+                            else
+                                px = (x == outer_x + 1) ? cGoldHi : cGoldMid;
+                        }
+                        else if (x == outer_x + 2 || (y == 2 && y < center_y1) || (y == h - 3 && y > center_y2))
+                        {
+                            px = y > center_y2 ? cShadowDark : cPlateHi;
+                        }
+                        else
+                        {
+                            if (y < center_y1)
+                                px = (x > 14 && dy > 12) ? cPlateHi : cPlateMid;
+                            else
+                                px = (x > 14 && dy > 12) ? cPlateDark : cPlateMid;
+                        }
+                    }
+
+                    int writeX = isLeft ? x : (w - 1 - x);
+                    int texY = h - 1 - y; // Unity Texture2D bottom-up
+                    cols[texY * w + writeX] = px;
+                }
+            }
+
+            // Inner chevron
+            int chev_tip_x = 7;
+            for (int cdy = 0; cdy < 16; cdy++)
+            {
+                int cy_top = center_y1 - cdy;
+                int cy_bot = center_y2 + cdy;
+                int cx = chev_tip_x + (int)(cdy * 0.72f);
+                if (cx >= 0 && cx < w - 3)
+                {
+                    if (cdy == 0)
+                    {
+                        SetPixelSafe(cols, w, h, isLeft ? cx : (w - 1 - cx), h - 1 - center_y1, cChevHi);
+                        SetPixelSafe(cols, w, h, isLeft ? cx : (w - 1 - cx), h - 1 - center_y2, cChevHi);
+                        SetPixelSafe(cols, w, h, isLeft ? cx + 1 : (w - 1 - (cx + 1)), h - 1 - center_y1, cChevMid);
+                        SetPixelSafe(cols, w, h, isLeft ? cx + 1 : (w - 1 - (cx + 1)), h - 1 - center_y2, cChevMid);
+                    }
+                    else
+                    {
+                        if (cy_top >= 0 && cy_top < h)
+                        {
+                            SetPixelSafe(cols, w, h, isLeft ? cx : (w - 1 - cx), h - 1 - cy_top, cdy < 8 ? cChevHi : cChevMid);
+                            if (cx + 1 < w - 2) SetPixelSafe(cols, w, h, isLeft ? cx + 1 : (w - 1 - (cx + 1)), h - 1 - cy_top, cChevDeep);
+                        }
+                        if (cy_bot >= 0 && cy_bot < h)
+                        {
+                            SetPixelSafe(cols, w, h, isLeft ? cx : (w - 1 - cx), h - 1 - cy_bot, cdy < 8 ? cChevMid : cChevDeep);
+                            if (cx + 1 < w - 2) SetPixelSafe(cols, w, h, isLeft ? cx + 1 : (w - 1 - (cx + 1)), h - 1 - cy_bot, cChevDeep);
+                        }
+                    }
+                }
+            }
+
+            // Rivets
+            int[] studYs = { 8, h - 10, 26 };
+            foreach (int sy in studYs)
+            {
+                int sx = 18;
+                SetPixelSafe(cols, w, h, isLeft ? sx : (w - 1 - sx), h - 1 - sy, cStudHi);
+                SetPixelSafe(cols, w, h, isLeft ? sx + 1 : (w - 1 - (sx + 1)), h - 1 - sy, cStudMid);
+                SetPixelSafe(cols, w, h, isLeft ? sx : (w - 1 - sx), h - 1 - (sy + 1), cStudMid);
+                SetPixelSafe(cols, w, h, isLeft ? sx + 1 : (w - 1 - (sx + 1)), h - 1 - (sy + 1), cStudDark);
+            }
+
+            tex.SetPixels(cols);
+            tex.Apply();
+            return tex;
+        }
+
+        private static void SetPixelSafe(Color[] cols, int w, int h, int x, int y, Color c)
+        {
+            if (x >= 0 && x < w && y >= 0 && y < h)
+            {
+                cols[y * w + x] = c;
+            }
         }
 
         private void DrawBottomPlayerPanel(Rect panel)
