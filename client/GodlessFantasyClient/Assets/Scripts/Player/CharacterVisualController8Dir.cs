@@ -69,6 +69,7 @@ namespace GodlessFantasy.Player
         private void Awake()
         {
             Instance = this;
+            spriteCache.Clear();
             rb = GetComponent<Rigidbody2D>();
             playerMovement = GetComponent<PlayerMovement>();
             inventoryManager = GetComponent<InventoryManager>();
