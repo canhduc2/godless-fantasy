@@ -19,22 +19,17 @@ namespace GodlessFantasy.Core
     /// </summary>
     public class DemoBootstrapper : MonoBehaviour
     {
-        private static bool isInitialized = false;
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoInitializeDemo()
         {
-            if (isInitialized) return;
-
-            if (FindAnyObjectByType<PlayerMovement>() != null)
+            // Kiểm tra trực tiếp xem trong Scene đang mở đã có Player hoặc DemoBootstrapper chưa
+            if (FindAnyObjectByType<PlayerMovement>() != null || GameObject.Find("[DEMO_BOOTSTRAPPER]") != null)
             {
-                isInitialized = true;
                 return;
             }
 
             GameObject bootstrapperObj = new GameObject("[DEMO_BOOTSTRAPPER]");
             bootstrapperObj.AddComponent<DemoBootstrapper>();
-            isInitialized = true;
         }
 
         private void Start()
