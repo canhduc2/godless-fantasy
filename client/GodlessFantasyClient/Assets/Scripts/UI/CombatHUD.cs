@@ -697,9 +697,9 @@ namespace GodlessFantasy.UI
                 GUI.DrawTexture(new Rect(av.x + 2, av.y + 2, av.width - 4, av.height - 4), activePortrait);
             }
 
-            // Badge Level (Hỗ trợ chạy chữ Marquee vòng lặp nhỏ gọn khi level dài)
+            // Badge Level nằm ngay dưới Avatar (không che mặt nhân vật), thẳng hàng với dòng chỉ số bên cạnh
             int lv = playerStats != null ? playerStats.Level : 1;
-            Rect lvBadge = new Rect(av.x - 1, av.y + av.height - 14, 34, 15);
+            Rect lvBadge = new Rect(av.x, av.y + av.height + 4, av.width, 16);
             GUI.color = new Color(0.85f, 0.25f, 0.10f, 0.98f);
             GUI.DrawTexture(lvBadge, Texture2D.whiteTexture);
             GUI.color = Color.white;
@@ -708,12 +708,12 @@ namespace GodlessFantasy.UI
             var lvStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 9,
+                fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 wordWrap = false,
                 normal = { textColor = Color.white }
             };
-            DrawAutoScrollText(new Rect(lvBadge.x + 1, lvBadge.y, lvBadge.width - 2, lvBadge.height), $"Lv.{lv}", lvStyle, speed: 18f, textColor: Color.white, gap: 8f, forceScroll: true);
+            DrawAutoScrollText(new Rect(lvBadge.x + 1, lvBadge.y, lvBadge.width - 2, lvBadge.height), $"Lv.{lv}", lvStyle, speed: 18f, textColor: Color.white, gap: 8f, forceScroll: false);
 
             float rightColX = panel.x + 53f;
             float rightColW = panel.width - 58f; // 215 - 58 = 157px
@@ -740,11 +740,11 @@ namespace GodlessFantasy.UI
                 if (playerStats != null) playerStats.UseManaPotion();
             });
 
-            // DÒNG DƯỚI CÙNG: THUỘC TÍNH (HỎA) VÀ 4 CHỈ SỐ GỐC (Tự động chạy chữ nếu quá dài)
+            // DÒNG DƯỚI CÙNG: THUỘC TÍNH (HỎA) VÀ 4 CHỈ SỐ GỐC (Nằm ngang hàng với Badge Level, tự động chạy chữ nếu dài)
             statBadgeStyle.alignment = TextAnchor.MiddleLeft;
             statBadgeStyle.fontSize = 9;
             statBadgeStyle.clipping = TextClipping.Clip;
-            Rect row4 = new Rect(panel.x + 6, panel.y + 52, panel.width - 12, 16);
+            Rect row4 = new Rect(rightColX, panel.y + 51, rightColW, 16);
             DrawAutoScrollText(row4, statsText, statBadgeStyle, 20f);
         }
 
