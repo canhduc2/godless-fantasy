@@ -17,7 +17,11 @@ namespace GodlessFantasy.Player
     /// </summary>
     public class InventoryManager : MonoBehaviour
     {
-        public const int INVENTORY_CAPACITY = 24; // Lưới 4 cột x 6 hàng = 24 ô
+        public const int DEFAULT_CAPACITY = 24; // Ban đầu 24 ô (Lưới 4 cột x 6 hàng)
+        public const int MAX_CAPACITY = 96;     // Giới hạn mở khóa tối đa 96 ô (24 hàng x 4 cột)
+        public const int INVENTORY_CAPACITY = 24; // Giữ hằng số để tương thích ngược
+
+        [SerializeField] private int currentCapacity = DEFAULT_CAPACITY;
 
         [SerializeField] private List<InventoryItem> items = new List<InventoryItem>();
 
@@ -40,7 +44,75 @@ namespace GodlessFantasy.Player
         public InventoryItem PendingDropItem => pendingDropItem;
         public float DropCountdown => dropCountdown;
 
-        public bool IsFull => items.Count >= INVENTORY_CAPACITY;
+        public int CurrentCapacity => currentCapacity;
+        public int MaxCapacity => MAX_CAPACITY;
+        public bool IsFull => items.Count >= currentCapacity;
+
+        /// <summary>
+        /// Tính giá mở khóa ô tiếp theo bằng Vàng.
+        /// Mỗi một ô thì tốn nhiều tiền hơn theo công thức bậc 2 lũy tiến:
+        /// - Ô 25: 100 Vàng
+        /// - Ô 26: 168 Vàng
+        /// - Ô 27: 244 Vàng
+        /// - Ô 28: 328 Vàng
+        /// - Ô 29: 420 Vàng
+        /// - Ô 30: 520 Vàng...
+        /// </summary>
+        public int GetNextSlotUnlockCost()
+        {
+            if (currentCapacity >= MAX_CAPACITY) return -1;
+            int extraSlots = currentCapacity - DEFAULT_CAPACITY;
+            return 100 + (extraSlots * 60) + (extraSlots * extraSlots * 8);
+        }
+
+        public bool CanUnlockNextSlot(out string failReason)
+        {
+            if (currentCapacity >= MAX_CAPACITY)
+            {
+                failReason = $"Hành trang đã đạt giới hạn tối đa {MAX_CAPACITY} ô!";
+                return false;
+            }
+
+            int cost = GetNextSlotUnlockCost();
+            if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+            if (playerStats == null)
+            {
+                failReason = "Không tìm thấy dữ liệu thuộc tính người chơi!";
+                return false;
+            }
+
+            if (playerStats.Gold < cost)
+            {
+                failReason = $"Không đủ vàng! Cần {cost:N0} Vàng (Hiện có: {playerStats.Gold:N0} Vàng).";
+                return false;
+            }
+
+            failReason = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Mở khóa thêm 1 ô hành trang bằng Vàng
+        /// </summary>
+        public bool UnlockNextSlot()
+        {
+            if (!CanUnlockNextSlot(out string failReason))
+            {
+                if (!string.IsNullOrEmpty(failReason))
+                {
+                    FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f, $"❌ {failReason}", new Color(1f, 0.35f, 0.35f));
+                }
+                return false;
+            }
+
+            int cost = GetNextSlotUnlockCost();
+            playerStats.Gold -= cost;
+            currentCapacity++;
+
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f, $"🔓 MỞ KHÓA Ô {currentCapacity}! (-{cost:N0} Vàng)", new Color(1f, 0.88f, 0.25f));
+            Debug.Log($"<color=yellow>[HÀNH TRANG]</color> Đã mở khóa thêm ô thứ {currentCapacity}! Chi phí: {cost:N0} Vàng. Vàng còn lại: {playerStats.Gold:N0}");
+            return true;
+        }
 
         public bool CanAddItem(InventoryItem item)
         {
@@ -51,7 +123,7 @@ namespace GodlessFantasy.Player
                 var existing = items.Find(x => x.id == item.id && x.itemType == ItemType.Consumable);
                 if (existing != null) return true;
             }
-            return items.Count < INVENTORY_CAPACITY;
+            return items.Count < currentCapacity;
         }
 
         public bool AddItem(InventoryItem item)
@@ -70,10 +142,10 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            // 2. Chặn tuyệt đối nếu đã đạt giới hạn 24 ô
-            if (items.Count >= INVENTORY_CAPACITY)
+            // 2. Chặn tuyệt đối nếu đã đạt giới hạn ô hiện tại
+            if (items.Count >= currentCapacity)
             {
-                Debug.LogWarning($"<color=red>[HÀNH TRANG ĐẦY]</color> Không thể nhận '{item.itemName}' vì hành trang đã đầy ({items.Count}/{INVENTORY_CAPACITY})!");
+                Debug.LogWarning($"<color=red>[HÀNH TRANG ĐẦY]</color> Không thể nhận '{item.itemName}' vì hành trang đã đầy ({items.Count}/{currentCapacity})!");
                 return false;
             }
 

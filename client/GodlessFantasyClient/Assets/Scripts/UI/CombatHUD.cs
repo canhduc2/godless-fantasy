@@ -1825,17 +1825,75 @@ namespace GodlessFantasy.UI
             int cols = 4;
             var itemsList = inventoryManager != null ? inventoryManager.Items : new List<InventoryItem>();
             int currentSlots = itemsList.Count;
-            int maxSlots = InventoryManager.INVENTORY_CAPACITY;
-            int totalSlots = Mathf.Max(maxSlots, currentSlots);
-            int rows = Mathf.CeilToInt(totalSlots / (float)cols);
+            int maxSlots = inventoryManager != null ? inventoryManager.CurrentCapacity : InventoryManager.DEFAULT_CAPACITY;
+            int maxCapacity = inventoryManager != null ? inventoryManager.MaxCapacity : InventoryManager.MAX_CAPACITY;
+            int unlockCost = inventoryManager != null ? inventoryManager.GetNextSlotUnlockCost() : -1;
+            bool canUnlock = inventoryManager != null && inventoryManager.CanUnlockNextSlot(out _);
+            int currentGold = playerStats != null ? playerStats.Gold : 0;
 
-            boldWhiteStyle.fontSize = 13;
+            // Hiển thị các ô đã mở khóa cùng các ô đang khóa (ít nhất hoàn thiện đủ hàng hiện tại) để người chơi thấy ô khóa
+            int displayLockedCount = (maxSlots < maxCapacity) ? Mathf.Min(cols, maxCapacity - maxSlots) : 0;
+            int totalDisplaySlots = maxSlots + displayLockedCount;
+            int rows = Mathf.CeilToInt(totalDisplaySlots / (float)cols);
+
+            // 1. Tiêu đề Hành Trang & Số ô hiện tại
+            boldWhiteStyle.fontSize = 12;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
             string slotCountColor = (currentSlots >= maxSlots) ? "#ff5555" : "#88d8ff";
-            GUI.Label(new Rect(r.x, r.y, r.width, 20), $"HÀNH TRANG  <color={slotCountColor}>({currentSlots}/{maxSlots})</color>", boldWhiteStyle);
+            GUI.Label(new Rect(r.x, r.y, 130f, 20), $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
 
             float gridAreaW = cols * (slotSize + gap) + 18f; // ~210px
+
+            // 2. Nút Mở Khóa Thêm Ô Hành Trang Bằng Vàng (Giá tăng tiến theo từng ô)
+            if (unlockCost > 0)
+            {
+                Rect unlockBtnRect = new Rect(r.x + 132f, r.y - 1f, 130f, 21f);
+                string btnText = canUnlock ? $"[+ MỞ Ô: {unlockCost:N0}💰]" : $"[+ CẦN {unlockCost:N0}💰]";
+                Color btnBorderCol = canUnlock ? new Color(1f, 0.85f, 0.25f, 1f) : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+                Color btnBgCol = canUnlock ? new Color(0.18f, 0.14f, 0.05f, 0.95f) : new Color(0.1f, 0.1f, 0.1f, 0.85f);
+
+                GUI.color = btnBgCol;
+                GUI.DrawTexture(unlockBtnRect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                DrawOutline(unlockBtnRect, btnBorderCol, 1);
+
+                if (unlockBtnRect.Contains(Event.current.mousePosition))
+                {
+                    DrawOutline(unlockBtnRect, Color.white, 1);
+                    string tip = canUnlock 
+                        ? $"• Mở rộng thêm +1 ô hành trang (Lên {maxSlots + 1} ô)\n• Chi phí: <color=yellow>{unlockCost:N0} Vàng</color>\n• Mỗi ô tiếp theo sẽ tốn nhiều tiền hơn!\n• Vàng hiện có: <color=yellow>{currentGold:N0}</color>"
+                        : $"• Chưa đủ vàng để mở khóa!\n• Cần: <color=yellow>{unlockCost:N0} Vàng</color>\n• Hiện có: <color=yellow>{currentGold:N0} Vàng</color>\n• Thiếu: <color=red>{unlockCost - currentGold:N0} Vàng</color>";
+                    SetTooltip("Mở Khóa Thêm Ô Hành Trang", tip, new Vector2(Event.current.mousePosition.x + 16f, Event.current.mousePosition.y + 16f));
+                }
+
+                statBadgeStyle.fontSize = 10;
+                statBadgeStyle.fontStyle = FontStyle.Bold;
+                statBadgeStyle.alignment = TextAnchor.MiddleCenter;
+                statBadgeStyle.richText = true;
+                statBadgeStyle.normal.textColor = canUnlock ? new Color(1f, 0.90f, 0.35f) : Color.gray;
+                GUI.Label(unlockBtnRect, btnText, statBadgeStyle);
+
+                if (canUnlock && GUI.Button(unlockBtnRect, GUIContent.none, GUIStyle.none))
+                {
+                    inventoryManager?.UnlockNextSlot();
+                }
+            }
+            else
+            {
+                Rect maxBadgeRect = new Rect(r.x + 132f, r.y, 110f, 20f);
+                statBadgeStyle.fontSize = 10;
+                statBadgeStyle.normal.textColor = new Color(0.6f, 0.8f, 0.6f);
+                GUI.Label(maxBadgeRect, "[ĐÃ TỐI ĐA 96 Ô]", statBadgeStyle);
+            }
+
+            // 3. Hiển thị số Vàng hiện có ở góc trên bên phải
+            float goldX = r.x + gridAreaW + 10f;
+            float goldW = r.width - gridAreaW - 12f;
+            standardTextStyle.fontSize = 11;
+            standardTextStyle.alignment = TextAnchor.MiddleRight;
+            GUI.Label(new Rect(goldX, r.y, goldW, 20), $"💰 Vàng: <color=yellow>{currentGold:N0}</color>", standardTextStyle);
+
             float gridAreaH = r.height - 28f;
             Rect scrollAreaRect = new Rect(r.x, r.y + 24f, gridAreaW, gridAreaH);
             float contentH = rows * (slotSize + gap) + 8f;
@@ -1844,11 +1902,55 @@ namespace GodlessFantasy.UI
             // Con lăn chuột + Kéo thanh cuộn (Đúng yêu cầu user: có con lăn kéo thả khi ô đồ tăng lên)
             inventoryScrollPos = GUI.BeginScrollView(scrollAreaRect, inventoryScrollPos, viewRect, false, true);
 
-            for (int index = 0; index < totalSlots; index++)
+            for (int index = 0; index < totalDisplaySlots; index++)
             {
                 int c = index % cols;
                 int row = index / cols;
                 Rect slotRect = new Rect(c * (slotSize + gap), row * (slotSize + gap), slotSize, slotSize);
+
+                // TRƯỜNG HỢP: Ô CHƯA MỞ KHÓA (LOCKED SLOT)
+                if (index >= maxSlots)
+                {
+                    bool isNextUnlockable = (index == maxSlots);
+                    int costForThis = unlockCost;
+
+                    GUI.color = new Color(0.06f, 0.06f, 0.08f, 0.88f);
+                    GUI.DrawTexture(slotRect, Texture2D.whiteTexture);
+                    GUI.color = Color.white;
+
+                    Color lockBorder = isNextUnlockable ? (canUnlock ? new Color(0.95f, 0.8f, 0.25f, 0.85f) : new Color(0.5f, 0.5f, 0.5f, 0.6f)) : new Color(0.25f, 0.25f, 0.25f, 0.4f);
+                    DrawOutline(slotRect, lockBorder, 1);
+
+                    statBadgeStyle.fontSize = 13;
+                    statBadgeStyle.alignment = TextAnchor.MiddleCenter;
+                    statBadgeStyle.richText = true;
+                    statBadgeStyle.normal.textColor = isNextUnlockable ? (canUnlock ? new Color(1f, 0.85f, 0.25f) : Color.gray) : new Color(0.4f, 0.4f, 0.4f);
+                    GUI.Label(new Rect(slotRect.x, slotRect.y + 1, slotRect.width, 22), isNextUnlockable ? "🔒" : "✕", statBadgeStyle);
+
+                    if (isNextUnlockable)
+                    {
+                        statBadgeStyle.fontSize = 8;
+                        statBadgeStyle.alignment = TextAnchor.LowerCenter;
+                        statBadgeStyle.normal.textColor = canUnlock ? new Color(1f, 0.9f, 0.4f) : Color.gray;
+                        GUI.Label(new Rect(slotRect.x, slotRect.y + slotRect.height - 13, slotRect.width, 12), $"{costForThis}💰", statBadgeStyle);
+
+                        if (slotRect.Contains(Event.current.mousePosition))
+                        {
+                            DrawOutline(slotRect, Color.white, 2);
+                            string tip = canUnlock
+                                ? $"• Click để mở thêm ô này!\n• Giá mở khóa: <color=yellow>{costForThis:N0} Vàng</color>\n• Mỗi ô tiếp theo sẽ tốn nhiều tiền hơn!\n• Vàng hiện có: <color=yellow>{currentGold:N0}</color>"
+                                : $"• Ô hành trang đang khóa!\n• Cần: <color=yellow>{costForThis:N0} Vàng</color>\n• Vàng hiện có: <color=yellow>{currentGold:N0}</color>";
+                            SetTooltip($"Mở Khóa Ô #{index + 1}", tip, new Vector2(Event.current.mousePosition.x + 16f, Event.current.mousePosition.y + 16f));
+
+                            if (canUnlock && Event.current.type == EventType.MouseDown && Event.current.button == 0)
+                            {
+                                inventoryManager?.UnlockNextSlot();
+                                Event.current.Use();
+                            }
+                        }
+                    }
+                    continue;
+                }
 
                 DrawDoubleGoldFrame(slotRect, 1);
 

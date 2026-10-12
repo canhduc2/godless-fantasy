@@ -75,32 +75,30 @@ namespace GodlessFantasy.UI
         {
             if (isStyleInitialized && tickLabelStyle != null) return;
 
-            var gFont = FantasyUITheme.GetGameFont();
-
             tickLabelStyle = new GUIStyle(GUI.skin.label)
             {
-                font = gFont,
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
+                richText = true,
                 normal = { textColor = new Color(0.9f, 0.95f, 1f, 0.92f) }
             };
 
             markerLabelStyle = new GUIStyle(GUI.skin.label)
             {
-                font = gFont,
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
+                richText = true,
                 normal = { textColor = new Color(1f, 0.85f, 0.25f, 0.95f) }
             };
 
             zeroLabelStyle = new GUIStyle(GUI.skin.label)
             {
-                font = gFont,
                 fontSize = 11,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
+                richText = true,
                 normal = { textColor = new Color(0.2f, 1f, 0.5f, 1f) }
             };
 
@@ -282,20 +280,22 @@ namespace GodlessFantasy.UI
 
         private void DrawShadowedText(Rect r, string text, GUIStyle style, Color textColor)
         {
-            // Viền đen 8 hướng sắc nét
-            style.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
-            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), text, style);
+            style.richText = true;
 
-            // Chữ chính
-            style.normal.textColor = textColor;
-            GUI.Label(r, text, style);
+            // 1. Viền đen 8 hướng xung quanh
+            string outlineStr = $"<color=#000000>{text}</color>";
+            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), outlineStr, style);
+
+            // 2. Chữ nhân màu nguyên bản ở giữa (Xanh lam, Vàng kim, Xanh lá 0m...)
+            string hex = ColorUtility.ToHtmlStringRGBA(textColor);
+            GUI.Label(r, $"<color=#{hex}>{text}</color>", style);
         }
     }
 }

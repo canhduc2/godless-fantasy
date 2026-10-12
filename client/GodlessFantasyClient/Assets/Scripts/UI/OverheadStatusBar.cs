@@ -245,35 +245,38 @@ namespace GodlessFantasy.UI
 
         private static void DrawOutlinedText(Rect r, string text, GUIStyle style, Color textColor, Color outlineColor)
         {
-            style.normal.textColor = outlineColor;
-            // Vẽ viền đen 8 hướng xung quanh
-            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), text, style);
-            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), text, style);
+            style.richText = true;
 
-            // Chữ chính ở giữa
-            style.normal.textColor = textColor;
-            GUI.Label(r, text, style);
+            // 1. Viền đen 8 hướng xung quanh
+            string hexOutline = ColorUtility.ToHtmlStringRGBA(outlineColor);
+            string outlineStr = $"<color=#{hexOutline}>{text}</color>";
+
+            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), outlineStr, style);
+            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), outlineStr, style);
+
+            // 2. Nhân chữ chính ở giữa với ĐÚNG MÀU SẮC GỐC NGUYÊN BẢN (Vàng, Tím, Xanh lục...)
+            string hexColor = ColorUtility.ToHtmlStringRGBA(textColor);
+            string mainStr = $"<color=#{hexColor}>{text}</color>";
+            GUI.Label(r, mainStr, style);
         }
 
         private static void InitStyles()
         {
-            var gFont = FantasyUITheme.GetGameFont();
-
             if (nameStyle == null)
             {
                 nameStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = gFont,
                     fontSize = 12,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = false,
+                    richText = true,
                     clipping = TextClipping.Overflow
                 };
             }
@@ -282,11 +285,11 @@ namespace GodlessFantasy.UI
             {
                 titleStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = gFont,
                     fontSize = 11,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = false,
+                    richText = true,
                     clipping = TextClipping.Overflow
                 };
             }
@@ -295,9 +298,9 @@ namespace GodlessFantasy.UI
             {
                 hpNumberStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = gFont,
                     fontSize = 11,
                     alignment = TextAnchor.MiddleCenter,
+                    richText = true,
                     normal = { textColor = Color.white }
                 };
             }
