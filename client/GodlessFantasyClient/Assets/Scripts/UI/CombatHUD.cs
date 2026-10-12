@@ -1836,11 +1836,13 @@ namespace GodlessFantasy.UI
             int totalDisplaySlots = maxSlots + displayLockedCount;
             int rows = Mathf.CeilToInt(totalDisplaySlots / (float)cols);
 
-            // 1. Tiêu đề Hành Trang & Số ô hiện tại
+            // 1. Tiêu đề Hành Trang & Số ô hiện tại (Hiệu ứng chữ chạy Marquee)
             boldWhiteStyle.fontSize = 12;
+            boldWhiteStyle.richText = true;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
             string slotCountColor = (currentSlots >= maxSlots) ? "#ff5555" : "#88d8ff";
-            GUI.Label(new Rect(r.x, r.y, 145f, 20), $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>", boldWhiteStyle);
+            string inventoryTitle = $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>";
+            DrawAutoScrollText(new Rect(r.x, r.y, 145f, 20f), inventoryTitle, boldWhiteStyle, speed: 25f, textColor: new Color(1f, 0.85f, 0.35f), gap: 24f, forceScroll: true);
             boldWhiteStyle.normal.textColor = Color.white;
 
             float gridAreaW = cols * (slotSize + gap) + 18f; // ~210px
