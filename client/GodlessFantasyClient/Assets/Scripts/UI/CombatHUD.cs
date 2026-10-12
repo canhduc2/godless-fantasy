@@ -271,15 +271,15 @@ namespace GodlessFantasy.UI
 
             // 8. Bảng thông tin nhân vật nay đã được dời xuống đáy màn hình cạnh Hotbar (không còn ở góc trái trên)
 
-            // 9. Bản đồ nhỏ (Minimap) góc phải trên & nút chat
-            if (mx > Screen.width - 200f && my < 165f)
+            // 9. Bản đồ nhỏ (Minimap) góc phải trên & nút chat (hạ xuống y=36f để không cản trở thước đo đỉnh màn hình)
+            if (mx > Screen.width - 200f && my >= 36f && my < 140f)
                 return true;
 
             // 10. Widget Active Buffs (dưới minimap mép phải)
             if (Instance.playerStats != null && Instance.playerStats.ActiveBuffs != null && Instance.playerStats.ActiveBuffs.Count > 0)
             {
                 float buffH = Instance.playerStats.ActiveBuffs.Count * 40f + 10f;
-                if (mx > Screen.width - 190f && my >= 130f && my <= 135f + buffH)
+                if (mx > Screen.width - 190f && my >= 144f && my <= 144f + buffH)
                     return true;
             }
 
@@ -632,7 +632,7 @@ namespace GodlessFantasy.UI
                                displayedFps >= 30 ? new Color(1f, 0.85f, 0.25f) : new Color(1f, 0.35f, 0.35f);
                 statBadgeStyle.alignment = TextAnchor.MiddleLeft;
                 statBadgeStyle.normal.textColor = fpsCol;
-                GUI.Label(new Rect(14f, 8f, 130f, 18f), $"🟢 {displayedFps} FPS", statBadgeStyle);
+                GUI.Label(new Rect(14f, 36f, 130f, 18f), $"🟢 {displayedFps} FPS", statBadgeStyle);
                 statBadgeStyle.normal.textColor = Color.white;
             }
         }
@@ -980,7 +980,7 @@ namespace GodlessFantasy.UI
             float mapW = 144f;
             float mapH = 96f;
             float mapX = Screen.width - mapW - 16;
-            float mapY = 14;
+            float mapY = 36f; // Hạ xuống dưới thước đo khoảng cách (rulerY = 16f, ticks ~32f)
             Rect mapRect = new Rect(mapX, mapY, mapW, mapH);
 
             GUI.DrawTexture(mapRect, radarBgTex != null ? radarBgTex : Texture2D.whiteTexture);
@@ -1188,7 +1188,7 @@ namespace GodlessFantasy.UI
             float cardW = 165f;
             float cardH = 34f;
             float startX = Screen.width - cardW - 12f;
-            float startY = 135f;
+            float startY = 144f;
             float cardGap = 6f;
 
             for (int i = 0; i < playerStats.ActiveBuffs.Count; i++)
