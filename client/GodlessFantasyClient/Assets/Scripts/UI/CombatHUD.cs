@@ -1836,22 +1836,21 @@ namespace GodlessFantasy.UI
             int totalDisplaySlots = maxSlots + displayLockedCount;
             int rows = Mathf.CeilToInt(totalDisplaySlots / (float)cols);
 
-            // 1. Tiêu đề Hành Trang & Số ô hiện tại (Hiệu ứng chữ chạy Marquee)
+            // 1. Tiêu đề Hành Trang & Số ô hiện tại
             boldWhiteStyle.fontSize = 12;
             boldWhiteStyle.richText = true;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
             string slotCountColor = (currentSlots >= maxSlots) ? "#ff5555" : "#88d8ff";
-            string inventoryTitle = $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>";
-            DrawAutoScrollText(new Rect(r.x, r.y, 145f, 20f), inventoryTitle, boldWhiteStyle, speed: 25f, textColor: new Color(1f, 0.85f, 0.35f), gap: 24f, forceScroll: true);
+            GUI.Label(new Rect(r.x, r.y, 145f, 20), $"HÀNH TRANG <color={slotCountColor}>({currentSlots}/{maxSlots})</color>", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
 
             float gridAreaW = cols * (slotSize + gap) + 18f; // ~210px
 
-            // 2. Nút Mở Khóa Thêm Ô Hành Trang Bằng Vàng (Cách ra 10px để không bị đè chữ)
+            // 2. Nút Mở Khóa Thêm Ô Hành Trang Bằng Vàng (Hiệu ứng chữ chạy Marquee bên trong nút)
             if (unlockCost > 0)
             {
                 Rect unlockBtnRect = new Rect(r.x + 155f, r.y - 1f, 115f, 21f);
-                string btnText = canUnlock ? $"[+ MỞ Ô: {unlockCost:N0}💰]" : $"[+ CẦN {unlockCost:N0}💰]";
+                string btnText = canUnlock ? $"[+ MỞ Ô: {unlockCost:N0} 💰]" : $"[+ CẦN {unlockCost:N0} 💰]";
                 Color btnBorderCol = canUnlock ? new Color(1f, 0.85f, 0.25f, 1f) : new Color(0.5f, 0.5f, 0.5f, 0.7f);
                 Color btnBgCol = canUnlock ? new Color(0.18f, 0.14f, 0.05f, 0.95f) : new Color(0.1f, 0.1f, 0.1f, 0.85f);
 
@@ -1873,8 +1872,12 @@ namespace GodlessFantasy.UI
                 statBadgeStyle.fontStyle = FontStyle.Bold;
                 statBadgeStyle.alignment = TextAnchor.MiddleCenter;
                 statBadgeStyle.richText = true;
-                statBadgeStyle.normal.textColor = canUnlock ? new Color(1f, 0.90f, 0.35f) : Color.gray;
-                GUI.Label(unlockBtnRect, btnText, statBadgeStyle);
+                Color btnTextColor = canUnlock ? new Color(1f, 0.90f, 0.35f) : Color.gray;
+                statBadgeStyle.normal.textColor = btnTextColor;
+
+                // Hiệu ứng chữ chạy Marquee bên trong lòng nút
+                Rect btnInnerRect = new Rect(unlockBtnRect.x + 3f, unlockBtnRect.y + 1f, unlockBtnRect.width - 6f, unlockBtnRect.height - 2f);
+                DrawAutoScrollText(btnInnerRect, btnText, statBadgeStyle, speed: 25f, textColor: btnTextColor, gap: 18f, forceScroll: true);
 
                 if (canUnlock && GUI.Button(unlockBtnRect, GUIContent.none, GUIStyle.none))
                 {
