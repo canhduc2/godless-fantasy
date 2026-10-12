@@ -673,14 +673,15 @@ namespace GodlessFantasy.UI
 
             float arrowW = 22f;
             float arrowH = slotSize; // 54f (khớp chuẩn độ cao cụm ô chiêu thức)
+            float arrowGap = 6f;     // Khoảng cách nhỏ thanh thoát theo yêu cầu của user
 
-            // Cánh mũi tên bên trái (ốp mép ngoài Bảng nhân vật, chĩa sang trái ◀)
-            Rect leftRect = new Rect(leftPanelX - arrowW + 1f, slotY, arrowW, arrowH);
+            // Cánh mũi tên bên trái (cách mép ngoài Bảng nhân vật 6px, chĩa sang trái ◀)
+            Rect leftRect = new Rect(leftPanelX - arrowW - arrowGap, slotY, arrowW, arrowH);
             GUI.color = Color.white;
             GUI.DrawTexture(leftRect, hudArrowLeftTex);
 
-            // Cánh mũi tên bên phải (ốp mép ngoài ô chiêu [D], chĩa sang phải ▶)
-            Rect rightRect = new Rect(rightHotbarX - 1f, slotY, arrowW, arrowH);
+            // Cánh mũi tên bên phải (cách mép ngoài ô chiêu [D] 6px, chĩa sang phải ▶)
+            Rect rightRect = new Rect(rightHotbarX + arrowGap, slotY, arrowW, arrowH);
             GUI.DrawTexture(rightRect, hudArrowRightTex);
         }
 
