@@ -348,6 +348,26 @@
                         </button>
                     </div>
 
+                    <!-- BRIGHTNESS DODGE/BURN TOOLS -->
+                    <div class="pe-tool-group">
+                        <button class="pe-tool-btn" id="tool-dodge" data-tool="dodge" title="Cọ Tăng Sáng Pixel (Dodge Brush) [D]">
+                            ☀️
+                        </button>
+                        <button class="pe-tool-btn" id="tool-burn" data-tool="burn" title="Cọ Làm Tối Pixel (Burn Brush) [K]">
+                            🌙
+                        </button>
+                    </div>
+
+                    <!-- SELECTION TOOLS -->
+                    <div class="pe-tool-group">
+                        <button class="pe-tool-btn" id="tool-select-rect" data-tool="select-rect" title="Vùng Chọn Hộp Chữ Nhật (Marquee Select) [M]">
+                            🔲
+                        </button>
+                        <button class="pe-tool-btn" id="tool-wand" data-tool="wand" title="Đũa Thần Chọn Cùng Màu (Magic Wand) [W]">
+                            🪄
+                        </button>
+                    </div>
+
                     <div class="pe-tool-group">
                         <button class="pe-tool-btn" id="tool-undo" title="Hoàn tác (Undo) [Ctrl+Z]">
                             ↩️
@@ -384,12 +404,106 @@
                     </div>
                     <div class="pe-status-bar">
                         <span id="pe-coord">Toạ độ: X: 0, Y: 0</span>
-                        <span>💡 Phím tắt: [B] Bút chì | [E] Tẩy | [G] Đổ màu | [I] Hút màu | [Ctrl+Z] Undo | [Ctrl+S] Lưu mảnh</span>
+                        <span>💡 Phím tắt: [B] Bút | [E] Tẩy | [G] Đổ màu | [I] Hút | [D] Cọ sáng | [K] Cọ tối | [M] Vùng chọn | [W] Đũa thần | [Ctrl+A] Chọn hết | [Esc] Bỏ chọn | [Ctrl+S] Lưu</span>
                     </div>
                 </div>
 
                 <!-- PALETTE & PROPERTIES (RIGHT) -->
                 <aside class="pe-sidebar">
+                    <!-- SELECTION MANAGEMENT -->
+                    <div class="panel-section">
+                        <h2 class="section-title">🔲 QUẢN LÝ VÙNG CHỌN</h2>
+                        <div class="pe-selection-badge" id="pe-selection-badge">
+                            <span class="sel-icon" id="pe-selection-icon">⭕</span>
+                            <span id="pe-selection-text">Chưa chọn (Áp dụng cả ảnh)</span>
+                        </div>
+                        <div class="selection-actions-grid">
+                            <button class="btn btn-secondary" id="btn-pe-select-all" title="Chọn tất cả pixel có hình (Ctrl+A)">
+                                🔲 Chọn Hết
+                            </button>
+                            <button class="btn btn-secondary" id="btn-pe-deselect" title="Bỏ vùng chọn (Esc / Ctrl+D)">
+                                ❌ Bỏ Chọn
+                            </button>
+                            <button class="btn btn-secondary" id="btn-pe-invert-sel" title="Đảo ngược vùng chọn">
+                                🔄 Đảo Vùng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BRIGHTNESS & COLOR ADJUSTMENT (NÂNG NẤC & SLIDER) -->
+                    <div class="panel-section">
+                        <h2 class="section-title">☀️ TĂNG ĐỘ SÁNG & ĐỔI MÀU</h2>
+                        
+                        <div class="pe-subheading">⚡ Tăng / Giảm Sáng Theo Nấc</div>
+                        <div class="step-buttons-grid">
+                            <button class="btn btn-step btn-bright" data-step="0.05" title="Tăng sáng thêm +5%">
+                                ☀️ +5% Sáng
+                            </button>
+                            <button class="btn btn-step btn-bright" data-step="0.10" title="Tăng sáng thêm +10%">
+                                ☀️ +10% Sáng
+                            </button>
+                            <button class="btn btn-step btn-bright" data-step="0.20" title="Tăng sáng mạnh +20%">
+                                ☀️ +20% Sáng
+                            </button>
+                            <button class="btn btn-step btn-dark" data-step="-0.05" title="Giảm tối bớt -5%">
+                                🌙 -5% Tối
+                            </button>
+                            <button class="btn btn-step btn-dark" data-step="-0.10" title="Giảm tối bớt -10%">
+                                🌙 -10% Tối
+                            </button>
+                            <button class="btn btn-step btn-dark" data-step="-0.20" title="Giảm tối sâu -20%">
+                                🌙 -20% Tối
+                            </button>
+                        </div>
+
+                        <div class="pe-subheading" style="margin-top: 14px;">🎛️ Tinh Chỉnh Sắc Độ Chi Tiết</div>
+                        <div class="pe-slider-control">
+                            <div class="slider-label-row">
+                                <span>Độ Sáng (Lightness):</span>
+                                <span id="val-pe-brightness">0%</span>
+                            </div>
+                            <input type="range" id="slider-pe-brightness" min="-50" max="50" value="0" step="1">
+                        </div>
+
+                        <div class="pe-slider-control">
+                            <div class="slider-label-row">
+                                <span>Đổi Tông Màu (Hue):</span>
+                                <span id="val-pe-hue">0°</span>
+                            </div>
+                            <input type="range" id="slider-pe-hue" min="-180" max="180" value="0" step="5">
+                        </div>
+
+                        <div class="pe-slider-control">
+                            <div class="slider-label-row">
+                                <span>Bão Hòa (Saturation):</span>
+                                <span id="val-pe-sat">0%</span>
+                            </div>
+                            <input type="range" id="slider-pe-sat" min="-50" max="50" value="0" step="1">
+                        </div>
+
+                        <div class="pe-slider-control">
+                            <div class="slider-label-row">
+                                <span>Tương Phản (Contrast):</span>
+                                <span id="val-pe-contrast">0%</span>
+                            </div>
+                            <input type="range" id="slider-pe-contrast" min="-50" max="50" value="0" step="1">
+                        </div>
+
+                        <div class="pe-adjust-btn-row">
+                            <button class="btn btn-primary" id="btn-pe-apply-sliders" title="Áp dụng thay đổi màu và độ sáng cho vùng chọn">
+                                ✨ Áp Dụng Chỉnh Màu
+                            </button>
+                            <button class="btn btn-secondary" id="btn-pe-reset-sliders" title="Đặt lại các thanh trượt về 0">
+                                ↺ Reset
+                            </button>
+                        </div>
+
+                        <div class="pe-subheading" style="margin-top: 14px;">🎨 Nhuộm Màu (Giữ Bóng Đổ)</div>
+                        <button class="btn btn-secondary btn-full" id="btn-pe-tint-color" title="Nhuộm vùng chọn theo màu trên bảng màu nhưng giữ nguyên sáng tối bóng đổ">
+                            🎭 Nhuộm Sang Màu Đang Chọn
+                        </button>
+                    </div>
+
                     <div class="panel-section">
                         <h2 class="section-title">🎨 BẢNG MÀU HIỆN TẠI</h2>
                         <div class="color-picker-box">

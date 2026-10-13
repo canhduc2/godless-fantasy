@@ -111,6 +111,10 @@ class RigWorkshopApp {
         this.peIsDrawing = false;
         this.peLastDrawX = -1;
         this.peLastDrawY = -1;
+        this.peSelectedPixels = new Set();
+        this.peIsSelecting = false;
+        this.peMarqueeStart = null;
+        this.peMarqueeCurrent = null;
 
         // Animation Workshop State
         this.animConfig = null;
@@ -1408,6 +1412,55 @@ class RigWorkshopApp {
         const toolFlipY = document.getElementById('tool-flip-y');
         if (toolFlipY) toolFlipY.addEventListener('click', () => this.peFlipCanvasY());
 
+        // Step Brightness Buttons
+        document.querySelectorAll('.btn-step[data-step]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const step = parseFloat(btn.dataset.step);
+                this.peApplyStepBrightness(step);
+            });
+        });
+
+        // Color & Brightness Adjustment Sliders
+        const sB = document.getElementById('slider-pe-brightness');
+        const sH = document.getElementById('slider-pe-hue');
+        const sS = document.getElementById('slider-pe-sat');
+        const sC = document.getElementById('slider-pe-contrast');
+        if (sB) sB.addEventListener('input', (e) => {
+            const v = e.target.value;
+            document.getElementById('val-pe-brightness').innerText = (v > 0 ? `+${v}%` : `${v}%`);
+        });
+        if (sH) sH.addEventListener('input', (e) => {
+            const v = e.target.value;
+            document.getElementById('val-pe-hue').innerText = (v > 0 ? `+${v}°` : `${v}°`);
+        });
+        if (sS) sS.addEventListener('input', (e) => {
+            const v = e.target.value;
+            document.getElementById('val-pe-sat').innerText = (v > 0 ? `+${v}%` : `${v}%`);
+        });
+        if (sC) sC.addEventListener('input', (e) => {
+            const v = e.target.value;
+            document.getElementById('val-pe-contrast').innerText = (v > 0 ? `+${v}%` : `${v}%`);
+        });
+
+        const btnApplySliders = document.getElementById('btn-pe-apply-sliders');
+        if (btnApplySliders) btnApplySliders.addEventListener('click', () => this.peApplyAdjustSliders());
+
+        const btnResetSliders = document.getElementById('btn-pe-reset-sliders');
+        if (btnResetSliders) btnResetSliders.addEventListener('click', () => this.peResetAdjustSliders());
+
+        const btnTintColor = document.getElementById('btn-pe-tint-color');
+        if (btnTintColor) btnTintColor.addEventListener('click', () => this.peApplyColorTint());
+
+        // Selection Action Buttons
+        const btnSelAll = document.getElementById('btn-pe-select-all');
+        if (btnSelAll) btnSelAll.addEventListener('click', () => this.peSelectAll());
+
+        const btnDeselect = document.getElementById('btn-pe-deselect');
+        if (btnDeselect) btnDeselect.addEventListener('click', () => this.peDeselect());
+
+        const btnInvertSel = document.getElementById('btn-pe-invert-sel');
+        if (btnInvertSel) btnInvertSel.addEventListener('click', () => this.peInvertSelection());
+
         // Mouse events on Pixel Canvas
         this.peCanvas.addEventListener('mousedown', (e) => this.onPeMouseDown(e));
         window.addEventListener('mousemove', (e) => this.onPeMouseMove(e));
@@ -1425,6 +1478,56 @@ class RigWorkshopApp {
         document.getElementById('current-color-preview').style.backgroundColor = hex;
         document.getElementById('input-color-picker').value = hex.startsWith('#') ? hex : '#' + hex;
         document.getElementById('input-hex-code').value = hex.toUpperCase();
+    }
+
+    rgbToHsl(r, g, b) {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0;
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return [h, s, l];
+    }
+
+    hslToRgb(h, s, l) {
+        let r, g, b;
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+
+    hexToHsl(hex) {
+        const c = parseInt(hex.replace('#', ''), 16);
+        const r = (c >> 16) & 255;
+        const g = (c >> 8) & 255;
+        const b = c & 255;
+        return this.rgbToHsl(r, g, b);
     }
 
     openPixelEditorForPart(partFile) {
@@ -1457,6 +1560,13 @@ class RigWorkshopApp {
         this.peHistory = [];
         this.peRedoStack = [];
         this.pushPeHistory();
+
+        this.peSelectedPixels = new Set();
+        this.peIsSelecting = false;
+        this.peMarqueeStart = null;
+        this.peMarqueeCurrent = null;
+        this.updatePeSelectionBadge();
+        this.peResetAdjustSliders();
 
         this.refreshPixelEditorCanvas();
     }
@@ -1516,10 +1626,26 @@ class RigWorkshopApp {
 
     onPeMouseDown(e) {
         if (this.currentTab !== 'pixel') return;
+        const { x, y } = this.getPeCanvasCoords(e);
+
+        if (this.peTool === 'select-rect') {
+            this.peIsSelecting = true;
+            this.peMarqueeStart = { x, y };
+            this.peMarqueeCurrent = { x, y };
+            if (!e.shiftKey) {
+                this.peSelectedPixels.clear();
+            }
+            this.drawPixelCursor(x, y);
+            return;
+        }
+
+        if (this.peTool === 'wand') {
+            this.peSelectMagicWand(x, y, e.shiftKey);
+            return;
+        }
+
         this.peIsDrawing = true;
         this.pushPeHistory();
-
-        const { x, y } = this.getPeCanvasCoords(e);
         this.applyPeTool(x, y);
     }
 
@@ -1528,6 +1654,13 @@ class RigWorkshopApp {
         const { x, y } = this.getPeCanvasCoords(e);
 
         document.getElementById('pe-coord').innerText = `Toạ độ: X: ${x}, Y: ${y}`;
+
+        if (this.peIsSelecting) {
+            this.peMarqueeCurrent = { x, y };
+            this.drawPixelCursor(x, y);
+            return;
+        }
+
         this.drawPixelCursor(x, y);
 
         if (this.peIsDrawing) {
@@ -1538,6 +1671,26 @@ class RigWorkshopApp {
     }
 
     onPeMouseUp() {
+        if (this.peIsSelecting) {
+            this.peIsSelecting = false;
+            if (this.peMarqueeStart && this.peMarqueeCurrent) {
+                const minX = Math.min(this.peMarqueeStart.x, this.peMarqueeCurrent.x);
+                const maxX = Math.max(this.peMarqueeStart.x, this.peMarqueeCurrent.x);
+                const minY = Math.min(this.peMarqueeStart.y, this.peMarqueeCurrent.y);
+                const maxY = Math.max(this.peMarqueeStart.y, this.peMarqueeCurrent.y);
+
+                for (let py = minY; py <= maxY; py++) {
+                    for (let px = minX; px <= maxX; px++) {
+                        this.peSelectedPixels.add(`${px},${py}`);
+                    }
+                }
+            }
+            this.peMarqueeStart = null;
+            this.peMarqueeCurrent = null;
+            this.updatePeSelectionBadge();
+            this.drawPixelCursor();
+        }
+
         this.peIsDrawing = false;
         this.peLastDrawX = -1;
         this.peLastDrawY = -1;
@@ -1558,12 +1711,53 @@ class RigWorkshopApp {
     applyPeTool(x, y) {
         this.peLastDrawX = x;
         this.peLastDrawY = y;
+        const hasSelection = this.peSelectedPixels && this.peSelectedPixels.size > 0;
 
         if (this.peTool === 'pencil') {
-            this.peCtx.fillStyle = this.peColor;
-            this.peCtx.fillRect(x, y, this.peBrushSize, this.peBrushSize);
+            for (let ox = 0; ox < this.peBrushSize; ox++) {
+                for (let oy = 0; oy < this.peBrushSize; oy++) {
+                    const tx = x + ox, ty = y + oy;
+                    if (tx >= 0 && tx < this.peCanvas.width && ty >= 0 && ty < this.peCanvas.height) {
+                        if (!hasSelection || this.peSelectedPixels.has(`${tx},${ty}`)) {
+                            this.peCtx.fillStyle = this.peColor;
+                            this.peCtx.fillRect(tx, ty, 1, 1);
+                        }
+                    }
+                }
+            }
         } else if (this.peTool === 'eraser') {
-            this.peCtx.clearRect(x, y, this.peBrushSize, this.peBrushSize);
+            for (let ox = 0; ox < this.peBrushSize; ox++) {
+                for (let oy = 0; oy < this.peBrushSize; oy++) {
+                    const tx = x + ox, ty = y + oy;
+                    if (tx >= 0 && tx < this.peCanvas.width && ty >= 0 && ty < this.peCanvas.height) {
+                        if (!hasSelection || this.peSelectedPixels.has(`${tx},${ty}`)) {
+                            this.peCtx.clearRect(tx, ty, 1, 1);
+                        }
+                    }
+                }
+            }
+        } else if (this.peTool === 'dodge') {
+            for (let ox = 0; ox < this.peBrushSize; ox++) {
+                for (let oy = 0; oy < this.peBrushSize; oy++) {
+                    const tx = x + ox, ty = y + oy;
+                    if (tx >= 0 && tx < this.peCanvas.width && ty >= 0 && ty < this.peCanvas.height) {
+                        if (!hasSelection || this.peSelectedPixels.has(`${tx},${ty}`)) {
+                            this.peAdjustPixelLightness(tx, ty, 0.08);
+                        }
+                    }
+                }
+            }
+        } else if (this.peTool === 'burn') {
+            for (let ox = 0; ox < this.peBrushSize; ox++) {
+                for (let oy = 0; oy < this.peBrushSize; oy++) {
+                    const tx = x + ox, ty = y + oy;
+                    if (tx >= 0 && tx < this.peCanvas.width && ty >= 0 && ty < this.peCanvas.height) {
+                        if (!hasSelection || this.peSelectedPixels.has(`${tx},${ty}`)) {
+                            this.peAdjustPixelLightness(tx, ty, -0.08);
+                        }
+                    }
+                }
+            }
         } else if (this.peTool === 'eyedropper') {
             const p = this.peCtx.getImageData(x, y, 1, 1).data;
             if (p[3] > 0) {
@@ -1572,6 +1766,20 @@ class RigWorkshopApp {
             }
         } else if (this.peTool === 'bucket') {
             this.floodFill(x, y, this.peColor);
+        }
+    }
+
+    peAdjustPixelLightness(x, y, delta) {
+        const p = this.peCtx.getImageData(x, y, 1, 1);
+        const d = p.data;
+        if (d[3] > 0) {
+            let [h, s, l] = this.rgbToHsl(d[0], d[1], d[2]);
+            l = Math.max(0, Math.min(1, l + delta));
+            const [nr, ng, nb] = this.hslToRgb(h, s, l);
+            d[0] = nr;
+            d[1] = ng;
+            d[2] = nb;
+            this.peCtx.putImageData(p, x, y);
         }
     }
 
@@ -1597,6 +1805,8 @@ class RigWorkshopApp {
 
         if (sr === fr && sg === fg && sb === fb && sa === fa) return;
 
+        const hasSelection = this.peSelectedPixels && this.peSelectedPixels.size > 0;
+
         const match = (idx) => {
             return data[idx] === sr && data[idx + 1] === sg && data[idx + 2] === sb && data[idx + 3] === sa;
         };
@@ -1609,6 +1819,8 @@ class RigWorkshopApp {
             const pos = cy * w + cx;
             if (visited[pos]) continue;
             visited[pos] = 1;
+
+            if (hasSelection && !this.peSelectedPixels.has(`${cx},${cy}`)) continue;
 
             const idx = pos * 4;
             if (!match(idx)) continue;
@@ -1625,6 +1837,264 @@ class RigWorkshopApp {
         }
 
         this.peCtx.putImageData(imgData, 0, 0);
+    }
+
+    peApplyStepBrightness(delta) {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        if (w === 0 || h === 0) return;
+
+        this.pushPeHistory();
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        let count = 0;
+
+        const hasSelection = this.peSelectedPixels && this.peSelectedPixels.size > 0;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (hasSelection && !this.peSelectedPixels.has(`${x},${y}`)) continue;
+                const idx = (y * w + x) * 4;
+                if (d[idx + 3] > 0) {
+                    let [ph, ps, pl] = this.rgbToHsl(d[idx], d[idx + 1], d[idx + 2]);
+                    pl = Math.max(0, Math.min(1, pl + delta));
+                    const [nr, ng, nb] = this.hslToRgb(ph, ps, pl);
+                    d[idx] = nr;
+                    d[idx + 1] = ng;
+                    d[idx + 2] = nb;
+                    count++;
+                }
+            }
+        }
+
+        this.peCtx.putImageData(imgData, 0, 0);
+        const percentText = (delta > 0 ? `+${Math.round(delta * 100)}% Sáng` : `${Math.round(delta * 100)}% Tối`);
+        this.showToast(`${delta > 0 ? '☀️' : '🌙'} Đã tăng/giảm ${percentText} (${count} px)`);
+    }
+
+    peApplyAdjustSliders() {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        if (w === 0 || h === 0) return;
+
+        const brightVal = parseInt(document.getElementById('slider-pe-brightness').value) || 0;
+        const hueVal = parseInt(document.getElementById('slider-pe-hue').value) || 0;
+        const satVal = parseInt(document.getElementById('slider-pe-sat').value) || 0;
+        const contrastVal = parseInt(document.getElementById('slider-pe-contrast').value) || 0;
+
+        if (brightVal === 0 && hueVal === 0 && satVal === 0 && contrastVal === 0) {
+            this.showToast('ℹ️ Các thanh trượt đang ở mức 0', '#6b7280');
+            return;
+        }
+
+        this.pushPeHistory();
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+
+        const bDelta = brightVal / 100;
+        const hDelta = hueVal / 360;
+        const sDelta = satVal / 100;
+        const cFactor = 1 + (contrastVal / 100);
+
+        const hasSelection = this.peSelectedPixels && this.peSelectedPixels.size > 0;
+        let count = 0;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (hasSelection && !this.peSelectedPixels.has(`${x},${y}`)) continue;
+                const idx = (y * w + x) * 4;
+                if (d[idx + 3] > 0) {
+                    let r = d[idx], g = d[idx + 1], b = d[idx + 2];
+                    if (contrastVal !== 0) {
+                        r = Math.max(0, Math.min(255, ((r / 255 - 0.5) * cFactor + 0.5) * 255));
+                        g = Math.max(0, Math.min(255, ((g / 255 - 0.5) * cFactor + 0.5) * 255));
+                        b = Math.max(0, Math.min(255, ((b / 255 - 0.5) * cFactor + 0.5) * 255));
+                    }
+                    let [ph, ps, pl] = this.rgbToHsl(r, g, b);
+                    ph = (ph + hDelta + 1) % 1;
+                    ps = Math.max(0, Math.min(1, ps + sDelta));
+                    pl = Math.max(0, Math.min(1, pl + bDelta));
+                    const [nr, ng, nb] = this.hslToRgb(ph, ps, pl);
+                    d[idx] = nr;
+                    d[idx + 1] = ng;
+                    d[idx + 2] = nb;
+                    count++;
+                }
+            }
+        }
+
+        this.peCtx.putImageData(imgData, 0, 0);
+        this.peResetAdjustSliders();
+        this.showToast(`✨ Đã áp dụng chỉnh màu (${count} pixel)`);
+    }
+
+    peResetAdjustSliders() {
+        const sB = document.getElementById('slider-pe-brightness');
+        const sH = document.getElementById('slider-pe-hue');
+        const sS = document.getElementById('slider-pe-sat');
+        const sC = document.getElementById('slider-pe-contrast');
+        if (sB) sB.value = 0;
+        if (sH) sH.value = 0;
+        if (sS) sS.value = 0;
+        if (sC) sC.value = 0;
+        const vB = document.getElementById('val-pe-brightness');
+        const vH = document.getElementById('val-pe-hue');
+        const vS = document.getElementById('val-pe-sat');
+        const vC = document.getElementById('val-pe-contrast');
+        if (vB) vB.innerText = '0%';
+        if (vH) vH.innerText = '0°';
+        if (vS) vS.innerText = '0%';
+        if (vC) vC.innerText = '0%';
+    }
+
+    peApplyColorTint() {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        if (w === 0 || h === 0) return;
+
+        this.pushPeHistory();
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+
+        const [th, ts, _] = this.hexToHsl(this.peColor);
+        const hasSelection = this.peSelectedPixels && this.peSelectedPixels.size > 0;
+        let count = 0;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (hasSelection && !this.peSelectedPixels.has(`${x},${y}`)) continue;
+                const idx = (y * w + x) * 4;
+                if (d[idx + 3] > 0) {
+                    const [_, __, pl] = this.rgbToHsl(d[idx], d[idx + 1], d[idx + 2]);
+                    const [nr, ng, nb] = this.hslToRgb(th, ts, pl);
+                    d[idx] = nr;
+                    d[idx + 1] = ng;
+                    d[idx + 2] = nb;
+                    count++;
+                }
+            }
+        }
+
+        this.peCtx.putImageData(imgData, 0, 0);
+        this.showToast(`🎭 Đã nhuộm màu ${this.peColor} (${count} px)`);
+    }
+
+    peSelectAll() {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        this.peSelectedPixels.clear();
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const idx = (y * w + x) * 4;
+                if (d[idx + 3] > 0) {
+                    this.peSelectedPixels.add(`${x},${y}`);
+                }
+            }
+        }
+        this.updatePeSelectionBadge();
+        this.drawPixelCursor();
+        this.showToast(`🔲 Đã chọn tất cả (${this.peSelectedPixels.size} px)`);
+    }
+
+    peDeselect() {
+        if (this.peSelectedPixels.size > 0) {
+            this.peSelectedPixels.clear();
+            this.updatePeSelectionBadge();
+            this.drawPixelCursor();
+            this.showToast('❌ Đã bỏ vùng chọn');
+        }
+    }
+
+    peInvertSelection() {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+
+        const newSet = new Set();
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const idx = (y * w + x) * 4;
+                if (d[idx + 3] > 0) {
+                    const key = `${x},${y}`;
+                    if (!this.peSelectedPixels.has(key)) {
+                        newSet.add(key);
+                    }
+                }
+            }
+        }
+        this.peSelectedPixels = newSet;
+        this.updatePeSelectionBadge();
+        this.drawPixelCursor();
+        this.showToast(`🔄 Đã đảo vùng chọn (${this.peSelectedPixels.size} px)`);
+    }
+
+    peSelectMagicWand(startX, startY, isAdd = false) {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        const startIdx = (startY * w + startX) * 4;
+        const sr = data[startIdx];
+        const sg = data[startIdx + 1];
+        const sb = data[startIdx + 2];
+        const sa = data[startIdx + 3];
+
+        if (!isAdd) {
+            this.peSelectedPixels.clear();
+        }
+
+        const match = (idx) => {
+            return Math.abs(data[idx] - sr) <= 8 &&
+                   Math.abs(data[idx + 1] - sg) <= 8 &&
+                   Math.abs(data[idx + 2] - sb) <= 8 &&
+                   Math.abs(data[idx + 3] - sa) <= 8;
+        };
+
+        const queue = [[startX, startY]];
+        const visited = new Uint8Array(w * h);
+
+        while (queue.length > 0) {
+            const [cx, cy] = queue.pop();
+            const pos = cy * w + cx;
+            if (visited[pos]) continue;
+            visited[pos] = 1;
+
+            const idx = pos * 4;
+            if (!match(idx)) continue;
+
+            this.peSelectedPixels.add(`${cx},${cy}`);
+
+            if (cx > 0) queue.push([cx - 1, cy]);
+            if (cx < w - 1) queue.push([cx + 1, cy]);
+            if (cy > 0) queue.push([cx, cy - 1]);
+            if (cy < h - 1) queue.push([cx, cy + 1]);
+        }
+
+        this.updatePeSelectionBadge();
+        this.drawPixelCursor();
+        this.showToast(`🪄 Đũa thần: chọn ${this.peSelectedPixels.size} px`);
+    }
+
+    updatePeSelectionBadge() {
+        const badge = document.getElementById('pe-selection-badge');
+        const text = document.getElementById('pe-selection-text');
+        const icon = document.getElementById('pe-selection-icon');
+        if (!badge || !text) return;
+
+        if (this.peSelectedPixels && this.peSelectedPixels.size > 0) {
+            badge.classList.add('active');
+            if (icon) icon.innerText = '🎯';
+            text.innerText = `Đang chọn: ${this.peSelectedPixels.size} px`;
+        } else {
+            badge.classList.remove('active');
+            if (icon) icon.innerText = '⭕';
+            text.innerText = 'Chưa chọn (Áp dụng cả ảnh)';
+        }
     }
 
     drawPixelCursor(hoverX = -1, hoverY = -1) {
@@ -1650,12 +2120,53 @@ class RigWorkshopApp {
             }
         }
 
-        if (hoverX >= 0 && hoverY >= 0) {
-            this.peCursorCtx.strokeStyle = '#ffffff';
+        // Active Selection Highlight
+        if (this.peSelectedPixels && this.peSelectedPixels.size > 0) {
+            this.peCursorCtx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+            this.peCursorCtx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+            this.peCursorCtx.lineWidth = 0.05;
+            for (const key of this.peSelectedPixels) {
+                const [px, py] = key.split(',').map(Number);
+                this.peCursorCtx.fillRect(px, py, 1, 1);
+                this.peCursorCtx.strokeRect(px, py, 1, 1);
+            }
+        }
+
+        // Active Marquee Drag Box
+        if (this.peIsSelecting && this.peMarqueeStart && this.peMarqueeCurrent) {
+            const minX = Math.min(this.peMarqueeStart.x, this.peMarqueeCurrent.x);
+            const maxX = Math.max(this.peMarqueeStart.x, this.peMarqueeCurrent.x);
+            const minY = Math.min(this.peMarqueeStart.y, this.peMarqueeCurrent.y);
+            const maxY = Math.max(this.peMarqueeStart.y, this.peMarqueeCurrent.y);
+            const boxW = maxX - minX + 1;
+            const boxH = maxY - minY + 1;
+
+            this.peCursorCtx.fillStyle = 'rgba(56, 189, 248, 0.22)';
+            this.peCursorCtx.fillRect(minX, minY, boxW, boxH);
+            this.peCursorCtx.strokeStyle = '#38bdf8';
             this.peCursorCtx.lineWidth = 0.1;
-            this.peCursorCtx.strokeRect(hoverX, hoverY, this.peBrushSize, this.peBrushSize);
+            this.peCursorCtx.strokeRect(minX, minY, boxW, boxH);
+        }
+
+        // Hover Brush Cursor
+        if (hoverX >= 0 && hoverY >= 0) {
+            if (this.peTool === 'dodge') {
+                this.peCursorCtx.strokeStyle = '#fbbf24';
+            } else if (this.peTool === 'burn') {
+                this.peCursorCtx.strokeStyle = '#818cf8';
+            } else if (this.peTool === 'select-rect') {
+                this.peCursorCtx.strokeStyle = '#38bdf8';
+            } else if (this.peTool === 'wand') {
+                this.peCursorCtx.strokeStyle = '#f472b6';
+            } else {
+                this.peCursorCtx.strokeStyle = '#ffffff';
+            }
+            this.peCursorCtx.lineWidth = 0.1;
+            const cursorSize = (this.peTool === 'select-rect' || this.peTool === 'wand' || this.peTool === 'bucket' || this.peTool === 'eyedropper') ? 1 : this.peBrushSize;
+            this.peCursorCtx.strokeRect(hoverX, hoverY, cursorSize, cursorSize);
         }
     }
+
 
     async savePixelPartAndReturn() {
         if (!this.peCurrentPartName) return;
@@ -2511,8 +3022,18 @@ class RigWorkshopApp {
                     e.preventDefault();
                     if (this.currentTab === 'assembler') {
                         this.selectAllParts();
+                    } else if (this.currentTab === 'pixel') {
+                        this.peSelectAll();
                     }
                     return;
+                }
+            } else if (k === 'd') {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                    if (this.currentTab === 'pixel') {
+                        e.preventDefault();
+                        this.peDeselect();
+                        return;
+                    }
                 }
             }
         }
@@ -2603,14 +3124,32 @@ class RigWorkshopApp {
                 this.renderAll();
             }
         } else if (this.currentTab === 'pixel') {
-            if (e.key.toLowerCase() === 'b') {
-                document.getElementById('tool-pencil').click();
+            if (e.key === 'Escape') {
+                this.peDeselect();
+            } else if (e.key.toLowerCase() === 'b') {
+                const btn = document.getElementById('tool-pencil');
+                if (btn) btn.click();
             } else if (e.key.toLowerCase() === 'e') {
-                document.getElementById('tool-eraser').click();
+                const btn = document.getElementById('tool-eraser');
+                if (btn) btn.click();
             } else if (e.key.toLowerCase() === 'g') {
-                document.getElementById('tool-bucket').click();
+                const btn = document.getElementById('tool-bucket');
+                if (btn) btn.click();
             } else if (e.key.toLowerCase() === 'i') {
-                document.getElementById('tool-eyedropper').click();
+                const btn = document.getElementById('tool-eyedropper');
+                if (btn) btn.click();
+            } else if (e.key.toLowerCase() === 'd' && !e.ctrlKey) {
+                const btn = document.getElementById('tool-dodge');
+                if (btn) btn.click();
+            } else if (e.key.toLowerCase() === 'k') {
+                const btn = document.getElementById('tool-burn');
+                if (btn) btn.click();
+            } else if (e.key.toLowerCase() === 'm') {
+                const btn = document.getElementById('tool-select-rect');
+                if (btn) btn.click();
+            } else if (e.key.toLowerCase() === 'w') {
+                const btn = document.getElementById('tool-wand');
+                if (btn) btn.click();
             } else if (e.key.toLowerCase() === 'x') {
                 this.peFlipCanvasX();
             } else if (e.key.toLowerCase() === 'y' && !e.ctrlKey) {
