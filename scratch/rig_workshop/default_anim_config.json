@@ -1,0 +1,62 @@
+{
+  "idle": {
+    "speed": 2.2,
+    "bobAmount": 0.16,
+    "squashAmount": 0.012,
+    "stretchAmount": 0.018,
+    "headTiltAngle": 1.5,
+    "armSwingAngle": 2.5,
+    "bodyLeanAngle": 0.0,
+    "legSwingAngle": 0.0
+  },
+  "walk": {
+    "speed": 8.5,
+    "bobAmount": 0.6,
+    "squashAmount": 0.02,
+    "stretchAmount": 0.02,
+    "headTiltAngle": 0.8,
+    "armSwingAngle": 18.0,
+    "bodyLeanAngle": 1.2,
+    "legSwingAngle": 22.0
+  },
+  "run": {
+    "speed": 13.5,
+    "bobAmount": 1.1,
+    "squashAmount": 0.035,
+    "stretchAmount": 0.035,
+    "headTiltAngle": 1.8,
+    "armSwingAngle": 28.0,
+    "bodyLeanAngle": 2.5,
+    "legSwingAngle": 36.0
+  },
+  "dash": {
+    "speed": 0.0,
+    "bobAmount": 0.0,
+    "squashAmount": 0.14,
+    "stretchAmount": -0.18,
+    "headTiltAngle": -5.0,
+    "armSwingAngle": -40.0,
+    "bodyLeanAngle": -12.0,
+    "legSwingAngle": 25.0
+  },
+  "attack": {
+    "speed": 6.0,
+    "bobAmount": 0.3,
+    "squashAmount": 0.03,
+    "stretchAmount": 0.03,
+    "headTiltAngle": 2.0,
+    "armSwingAngle": 45.0,
+    "bodyLeanAngle": 4.0,
+    "legSwingAngle": 10.0
+  },
+  "hurt": {
+    "speed": 35.0,
+    "bobAmount": 0.5,
+    "squashAmount": 0.08,
+    "stretchAmount": -0.05,
+    "headTiltAngle": 8.0,
+    "armSwingAngle": -20.0,
+    "bodyLeanAngle": -8.0,
+    "legSwingAngle": 5.0
+  }
+}

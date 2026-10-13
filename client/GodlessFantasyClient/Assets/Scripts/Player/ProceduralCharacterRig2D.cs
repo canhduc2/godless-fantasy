@@ -18,9 +18,98 @@ namespace GodlessFantasy.Player
     /// ║  • Đồng bộ 100% với CombatHUD, BasicAttack, SkillAiming, Inventory         ║
     /// ╚══════════════════════════════════════════════════════════════════════════════╝
     /// </summary>
+    // ─── CONFIGURATION SCHEMAS (rig_config.json & animation_config.json) ───
+    [System.Serializable]
+    public class PartConfig
+    {
+        public string file;
+        public int x;
+        public int y;
+        public int z = 10;
+        public bool visible = true;
+        public bool flip_x = false;
+        public bool flip_y = false;
+    }
+
+    [System.Serializable]
+    public class DirectionConfig
+    {
+        public PartConfig idle_head;
+        public PartConfig idle_body;
+        public PartConfig idle_arm_left;
+        public PartConfig idle_arm_right;
+        public PartConfig idle_leg_left;
+        public PartConfig idle_leg_right;
+    }
+
+    [System.Serializable]
+    public class GenderConfig
+    {
+        public DirectionConfig south;
+        public DirectionConfig south_east;
+        public DirectionConfig east;
+        public DirectionConfig north_east;
+        public DirectionConfig north;
+        public DirectionConfig north_west;
+        public DirectionConfig west;
+        public DirectionConfig south_west;
+
+        public DirectionConfig GetDir(Direction8 d)
+        {
+            switch (d)
+            {
+                case Direction8.North:     return north;
+                case Direction8.NorthEast: return north_east;
+                case Direction8.East:      return east;
+                case Direction8.SouthEast: return south_east;
+                case Direction8.South:     return south;
+                case Direction8.SouthWest: return south_west;
+                case Direction8.West:      return west;
+                case Direction8.NorthWest: return north_west;
+                default:                   return south;
+            }
+        }
+    }
+
+    [System.Serializable]
+    public class FullRigConfig
+    {
+        public GenderConfig female;
+        public GenderConfig male;
+    }
+
+    [System.Serializable]
+    public class AnimStateData
+    {
+        public float speed = 1f;
+        public float bobAmount = 0.5f;
+        public float squashAmount = 0f;
+        public float stretchAmount = 0f;
+        public float headTiltAngle = 0f;
+        public float armSwingAngle = 0f;
+        public float bodyLeanAngle = 0f;
+        public float legSwingAngle = 0f;
+    }
+
+    [System.Serializable]
+    public class RigAnimationConfig
+    {
+        public AnimStateData idle;
+        public AnimStateData walk;
+        public AnimStateData run;
+        public AnimStateData dash;
+        public AnimStateData attack;
+        public AnimStateData hurt;
+    }
+
     public class ProceduralCharacterRig2D : MonoBehaviour
     {
         public static ProceduralCharacterRig2D Instance { get; private set; }
+
+        // ─── DYNAMIC CONFIGURATIONS LOADED FROM RESOURCES ───────────────
+        [Header("Cấu Hình Động (Nạp từ Resources)")]
+        public FullRigConfig      fullRigConfig;
+        public RigAnimationConfig animConfig;
 
         // ─── PUBLIC STATE ───────────────────────────────────────────────
         public bool       IsFemale   = false;
@@ -54,6 +143,16 @@ namespace GodlessFantasy.Player
         private Transform jointSlash;
         private Transform jointCostume;
 
+        // Visual offset transforms (con của từng khớp, bù trừ pivot để ảnh gốc đặt đúng toạ độ pixel)
+        private Transform sprBodyObj;
+        private Transform sprHeadObj;
+        private Transform sprHairFrontObj;
+        private Transform sprHairBackObj;
+        private Transform sprArmLObj;
+        private Transform sprArmRObj;
+        private Transform sprLegLObj;
+        private Transform sprLegRObj;
+
         // ─── SPRITE RENDERERS ────────────────────────────────────────────
         private SpriteRenderer srHairBack;
         private SpriteRenderer srLegL;
@@ -82,14 +181,13 @@ namespace GodlessFantasy.Player
 
         private Vector3 rootOrigin;
 
-        // ─── ANATOMICAL JOINT PIVOTS (Local-space relative to RigRoot) ───
-        // Khi rotation = 0, sprite offset = -jointPivot -> vị trí sprite bằng (0,0,0) tuyệt đối
-        private static readonly Vector3 PIVOT_HEAD     = new Vector3( 0.00f, 0.48f, 0f);
-        private static readonly Vector3 PIVOT_ARM_L    = new Vector3(-0.16f, 0.38f, 0f);
-        private static readonly Vector3 PIVOT_ARM_R    = new Vector3( 0.16f, 0.38f, 0f);
-        private static readonly Vector3 PIVOT_LEG_L    = new Vector3(-0.08f, 0.18f, 0f);
-        private static readonly Vector3 PIVOT_LEG_R    = new Vector3( 0.08f, 0.18f, 0f);
-        private static readonly Vector3 PIVOT_BODY     = new Vector3( 0.00f, 0.28f, 0f);
+        // ─── JOINT PIVOTS (Mặc định Fallback trước khi nạp cấu hình) ───────
+        private static readonly Vector3 DEFAULT_PIVOT_HEAD  = new Vector3( 0.00f, 0.48f, 0f);
+        private static readonly Vector3 DEFAULT_PIVOT_ARM_L = new Vector3(-0.16f, 0.38f, 0f);
+        private static readonly Vector3 DEFAULT_PIVOT_ARM_R = new Vector3( 0.16f, 0.38f, 0f);
+        private static readonly Vector3 DEFAULT_PIVOT_LEG_L = new Vector3(-0.08f, 0.18f, 0f);
+        private static readonly Vector3 DEFAULT_PIVOT_LEG_R = new Vector3( 0.08f, 0.18f, 0f);
+        private static readonly Vector3 DEFAULT_PIVOT_BODY  = new Vector3( 0.00f, 0.28f, 0f);
 
         // ════════════════════════════════════════════════════════════════
         //  AWAKE & SETUP
@@ -97,6 +195,7 @@ namespace GodlessFantasy.Player
         private void Awake()
         {
             Instance         = this;
+            sprCache.Clear();
             rb               = GetComponent<Rigidbody2D>();
             movement         = GetComponent<PlayerMovement>();
             inventoryManager = GetComponent<InventoryManager>();
@@ -109,7 +208,29 @@ namespace GodlessFantasy.Player
             var oldSr = GetComponent<SpriteRenderer>();
             if (oldSr != null) oldSr.enabled = false;
 
+            LoadConfigs();
             BuildRigHierarchy();
+        }
+
+        /// <summary>
+        /// Nạp toàn bộ cấu hình toạ độ khớp xương và thông số hoạt ảnh từ Unity Resources (rig_config.json & animation_config.json)
+        /// Tuyệt đối tin tưởng cấu hình nạp vào, không hardcode thông số.
+        /// </summary>
+        public void LoadConfigs()
+        {
+            var rigText = Resources.Load<TextAsset>("Characters/Rig/rig_config");
+            if (rigText != null && !string.IsNullOrEmpty(rigText.text))
+            {
+                try { fullRigConfig = JsonUtility.FromJson<FullRigConfig>(rigText.text); }
+                catch (System.Exception e) { Debug.LogWarning($"[ProceduralCharacterRig2D] Lỗi đọc rig_config: {e.Message}"); }
+            }
+
+            var animText = Resources.Load<TextAsset>("Characters/Rig/animation_config");
+            if (animText != null && !string.IsNullOrEmpty(animText.text))
+            {
+                try { animConfig = JsonUtility.FromJson<RigAnimationConfig>(animText.text); }
+                catch (System.Exception e) { Debug.LogWarning($"[ProceduralCharacterRig2D] Lỗi đọc animation_config: {e.Message}"); }
+            }
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -134,32 +255,32 @@ namespace GodlessFantasy.Player
             // 8=HairBack, 9=LegL, 10=LegR, 11=Body, 12=ArmL, 13=ArmR, 14=Head, 15=HairFront, 16=Weapon, 17=Slash
 
             // Khớp Thân
-            jointBody = CreateJoint("Joint_Body", PIVOT_BODY);
-            var sprBodyObj = CreateOffsetVisual(jointBody, "Sprite_Body", -PIVOT_BODY);
+            jointBody = CreateJoint("Joint_Body", DEFAULT_PIVOT_BODY);
+            sprBodyObj = CreateOffsetVisual(jointBody, "Sprite_Body", -DEFAULT_PIVOT_BODY);
             srBody = EnsureSR(sprBodyObj, 11);
 
             // Khớp Đầu & Tóc (Xoay quanh cổ)
-            jointHead = CreateJoint("Joint_Head", PIVOT_HEAD);
-            var sprHairBackObj  = CreateOffsetVisual(jointHead, "Sprite_HairBack",  -PIVOT_HEAD);
-            var sprHeadObj      = CreateOffsetVisual(jointHead, "Sprite_Head",      -PIVOT_HEAD);
-            var sprHairFrontObj = CreateOffsetVisual(jointHead, "Sprite_HairFront", -PIVOT_HEAD);
+            jointHead = CreateJoint("Joint_Head", DEFAULT_PIVOT_HEAD);
+            sprHairBackObj  = CreateOffsetVisual(jointHead, "Sprite_HairBack",  -DEFAULT_PIVOT_HEAD);
+            sprHeadObj      = CreateOffsetVisual(jointHead, "Sprite_Head",      -DEFAULT_PIVOT_HEAD);
+            sprHairFrontObj = CreateOffsetVisual(jointHead, "Sprite_HairFront", -DEFAULT_PIVOT_HEAD);
             srHairBack  = EnsureSR(sprHairBackObj,  8);
             srHead      = EnsureSR(sprHeadObj,      14);
             srHairFront = EnsureSR(sprHairFrontObj, 15);
 
             // Khớp Tay Trái & Tay Phải (Xoay quanh vai)
-            jointArmLeft  = CreateJoint("Joint_ArmLeft",  PIVOT_ARM_L);
-            jointArmRight = CreateJoint("Joint_ArmRight", PIVOT_ARM_R);
-            var sprArmLObj = CreateOffsetVisual(jointArmLeft,  "Sprite_ArmL", -PIVOT_ARM_L);
-            var sprArmRObj = CreateOffsetVisual(jointArmRight, "Sprite_ArmR", -PIVOT_ARM_R);
+            jointArmLeft  = CreateJoint("Joint_ArmLeft",  DEFAULT_PIVOT_ARM_L);
+            jointArmRight = CreateJoint("Joint_ArmRight", DEFAULT_PIVOT_ARM_R);
+            sprArmLObj = CreateOffsetVisual(jointArmLeft,  "Sprite_ArmL", -DEFAULT_PIVOT_ARM_L);
+            sprArmRObj = CreateOffsetVisual(jointArmRight, "Sprite_ArmR", -DEFAULT_PIVOT_ARM_R);
             srArmL = EnsureSR(sprArmLObj, 12);
             srArmR = EnsureSR(sprArmRObj, 13);
 
             // Khớp Chân Trái & Chân Phải (Xoay quanh hông)
-            jointLegLeft  = CreateJoint("Joint_LegLeft",  PIVOT_LEG_L);
-            jointLegRight = CreateJoint("Joint_LegRight", PIVOT_LEG_R);
-            var sprLegLObj = CreateOffsetVisual(jointLegLeft,  "Sprite_LegL", -PIVOT_LEG_L);
-            var sprLegRObj = CreateOffsetVisual(jointLegRight, "Sprite_LegR", -PIVOT_LEG_R);
+            jointLegLeft  = CreateJoint("Joint_LegLeft",  DEFAULT_PIVOT_LEG_L);
+            jointLegRight = CreateJoint("Joint_LegRight", DEFAULT_PIVOT_LEG_R);
+            sprLegLObj = CreateOffsetVisual(jointLegLeft,  "Sprite_LegL", -DEFAULT_PIVOT_LEG_L);
+            sprLegRObj = CreateOffsetVisual(jointLegRight, "Sprite_LegR", -DEFAULT_PIVOT_LEG_R);
             srLegL = EnsureSR(sprLegLObj, 9);
             srLegR = EnsureSR(sprLegRObj, 10);
 
@@ -249,10 +370,125 @@ namespace GodlessFantasy.Player
             srLegR.flipX = false;
 
             UpdateSortingOrders(FacingDir);
+            UpdateJointPivots(FacingDir);
+        }
+
+        /// <summary>
+        /// Tính toán toạ độ xoay của các khớp xương hoàn toàn tự động từ toạ độ (x, y) của cấu hình rig_config.json.
+        /// Tuyệt đối tin tưởng cấu hình nạp vào, không tự chỉnh sửa hay fix cứng thông số.
+        /// </summary>
+        public void UpdateJointPivots(Direction8 d)
+        {
+            if (fullRigConfig == null) return;
+            var gConfig = IsFemale ? fullRigConfig.female : fullRigConfig.male;
+            if (gConfig == null) return;
+            var dConfig = gConfig.GetDir(d);
+            if (dConfig == null) return;
+
+            // Texture 64x64, PPU = 32, SpritePivot = (0.5f, 0.1f) => (32px từ trái, 6.4px từ đáy ảnh)
+            // Toạ độ Unity tương đối với RigRoot (tâm 0,0 là điểm chân):
+            Vector3 PixelToUnity(float px, float py)
+            {
+                float ux = (px - 32.0f) / 32.0f;
+                float uy = ((64.0f - py) - 6.4f) / 32.0f;
+                return new Vector3(ux, uy, 0f);
+            }
+
+            // 1. Khớp Cổ / Đầu: neo ở điểm nối giữa đầu và thân
+            if (dConfig.idle_head != null)
+            {
+                Vector3 pHead = PixelToUnity(dConfig.idle_head.x + 8f, dConfig.idle_head.y + 19f);
+                SetJointPivot(jointHead, sprHeadObj, pHead);
+                if (sprHairBackObj != null) sprHairBackObj.localPosition = -pHead;
+                if (sprHairFrontObj != null) sprHairFrontObj.localPosition = -pHead;
+            }
+
+            // 2. Khớp Vai Trái & Khớp Vai Phải: neo ở đầu khớp cánh tay
+            if (dConfig.idle_arm_left != null)
+            {
+                Vector3 pArmL = PixelToUnity(dConfig.idle_arm_left.x + 3f, dConfig.idle_arm_left.y + 2f);
+                SetJointPivot(jointArmLeft, sprArmLObj, pArmL);
+            }
+            if (dConfig.idle_arm_right != null)
+            {
+                Vector3 pArmR = PixelToUnity(dConfig.idle_arm_right.x + 3f, dConfig.idle_arm_right.y + 2f);
+                SetJointPivot(jointArmRight, sprArmRObj, pArmR);
+            }
+
+            // 3. Khớp Hông Trái & Khớp Hông Phải: neo ở đầu khớp đùi
+            if (dConfig.idle_leg_left != null)
+            {
+                Vector3 pLegL = PixelToUnity(dConfig.idle_leg_left.x + 3f, dConfig.idle_leg_left.y + 2f);
+                SetJointPivot(jointLegLeft, sprLegLObj, pLegL);
+            }
+            if (dConfig.idle_leg_right != null)
+            {
+                Vector3 pLegR = PixelToUnity(dConfig.idle_leg_right.x + 3f, dConfig.idle_leg_right.y + 2f);
+                SetJointPivot(jointLegRight, sprLegRObj, pLegR);
+            }
+
+            // 4. Khớp Thân: neo ở trọng tâm eo / hông
+            if (dConfig.idle_body != null)
+            {
+                Vector3 pBody = PixelToUnity(dConfig.idle_body.x + 6f, dConfig.idle_body.y + 12f);
+                SetJointPivot(jointBody, sprBodyObj, pBody);
+            }
+        }
+
+        private void SetJointPivot(Transform joint, Transform visual, Vector3 pivotPos)
+        {
+            if (joint == null || visual == null) return;
+            joint.localPosition = pivotPos;
+            visual.localPosition = -pivotPos;
         }
 
         private void UpdateSortingOrders(Direction8 d)
         {
+            // Tuyệt đối tin tưởng cấu hình rig_config.json được nạp vào
+            if (fullRigConfig != null)
+            {
+                var gConfig = IsFemale ? fullRigConfig.female : fullRigConfig.male;
+                if (gConfig != null)
+                {
+                    var dConfig = gConfig.GetDir(d);
+                    if (dConfig != null)
+                    {
+                        if (srHead != null && dConfig.idle_head != null)
+                        {
+                            srHead.sortingOrder = dConfig.idle_head.z;
+                            srHead.enabled = dConfig.idle_head.visible;
+                        }
+                        if (srBody != null && dConfig.idle_body != null)
+                        {
+                            srBody.sortingOrder = dConfig.idle_body.z;
+                            srBody.enabled = dConfig.idle_body.visible;
+                        }
+                        if (srArmL != null && dConfig.idle_arm_left != null)
+                        {
+                            srArmL.sortingOrder = dConfig.idle_arm_left.z;
+                            srArmL.enabled = dConfig.idle_arm_left.visible;
+                        }
+                        if (srArmR != null && dConfig.idle_arm_right != null)
+                        {
+                            srArmR.sortingOrder = dConfig.idle_arm_right.z;
+                            srArmR.enabled = dConfig.idle_arm_right.visible;
+                        }
+                        if (srLegL != null && dConfig.idle_leg_left != null)
+                        {
+                            srLegL.sortingOrder = dConfig.idle_leg_left.z;
+                            srLegL.enabled = dConfig.idle_leg_left.visible;
+                        }
+                        if (srLegR != null && dConfig.idle_leg_right != null)
+                        {
+                            srLegR.sortingOrder = dConfig.idle_leg_right.z;
+                            srLegR.enabled = dConfig.idle_leg_right.visible;
+                        }
+                        return;
+                    }
+                }
+            }
+
+            // Fallback nếu chưa nạp được cấu hình
             switch (d)
             {
                 case Direction8.East:
@@ -354,46 +590,68 @@ namespace GodlessFantasy.Player
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  IDLE — Thở Nhẹ Squash & Stretch Tự Nhiên
+        //  IDLE — Thở Nhẹ Squash & Stretch Tự Nhiên (Nạp 100% từ animConfig)
         // ════════════════════════════════════════════════════════════════
         private void AnimateIdle()
         {
-            cycleTimer   = 0f;
-            breathTimer += Time.deltaTime * 2.2f;
+            cycleTimer = 0f;
+            var c = animConfig?.idle;
+            float speed      = c != null ? c.speed : 2.2f;
+            float squash     = c != null ? c.squashAmount : 0.012f;
+            float stretch    = c != null ? c.stretchAmount : 0.018f;
+            float bobPixels  = c != null ? c.bobAmount : 0.16f;
+            float headAng    = c != null ? c.headTiltAngle : 1.5f;
+            float armAng     = c != null ? c.armSwingAngle : 2.5f;
+            float leanAng    = c != null ? c.bodyLeanAngle : 0f;
+            float legAng     = c != null ? c.legSwingAngle : 0f;
+
+            breathTimer += Time.deltaTime * speed;
             float breath = Mathf.Sin(breathTimer);
-            float squash = breath * 0.012f;
-            float stretch= breath * 0.018f;
 
-            partRoot.localPosition = rootOrigin + new Vector3(0f, breath * 0.005f, 0f);
-            partRoot.localScale    = new Vector3(1f - squash, 1f + stretch, 1f);
-            partRoot.localRotation = Quaternion.identity;
+            // 1 pixel nhấp nhô = 1/32 đơn vị Unity PPU
+            float bobUnity = (bobPixels / 32f) * breath;
+            partRoot.localPosition = rootOrigin + new Vector3(0f, bobUnity, 0f);
+            partRoot.localScale    = new Vector3(1f - breath * squash, 1f + breath * stretch, 1f);
+            partRoot.localRotation = Quaternion.Euler(0f, 0f, breath * leanAng);
 
-            // Đầu và tóc đung đưa nhẹ theo nhịp thở
-            jointHead.localRotation = Quaternion.Euler(0f, 0f, breath * 1.5f);
+            // Đầu và tóc đung đưa theo cấu hình
+            jointHead.localRotation = Quaternion.Euler(0f, 0f, breath * headAng);
 
-            // Hai tay đung đưa nhẹ nhàng
-            float armF = Mathf.Sin(breathTimer * 1.1f) * 2.5f;
+            // Hai tay đung đưa theo cấu hình
+            float armF = Mathf.Sin(breathTimer * 1.1f) * armAng;
             jointArmLeft.localRotation  = Quaternion.Euler(0f, 0f,  armF);
             jointArmRight.localRotation = Quaternion.Euler(0f, 0f, -armF);
 
-            // Hai chân đứng yên
-            jointLegLeft.localRotation  = Quaternion.identity;
-            jointLegRight.localRotation = Quaternion.identity;
+            // Khớp chân (nếu có góc cài đặt trong cấu hình)
+            if (Mathf.Abs(legAng) > 0.001f)
+            {
+                jointLegLeft.localRotation  = Quaternion.Euler(0f, 0f,  breath * legAng);
+                jointLegRight.localRotation = Quaternion.Euler(0f, 0f, -breath * legAng);
+            }
+            else
+            {
+                jointLegLeft.localRotation  = Quaternion.identity;
+                jointLegRight.localRotation = Quaternion.identity;
+            }
             jointBody.localRotation     = Quaternion.identity;
 
             ghostTimer = 0f;
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  WALK / RUN — Khớp Xương Xoay Nhịp Nhàng 60fps
+        //  WALK / RUN — Khớp Xương Xoay Nhịp Nhàng 60fps (Nạp 100% từ animConfig)
         // ════════════════════════════════════════════════════════════════
         private void AnimateWalkRun(bool run)
         {
-            float speed   = run ? 13.5f : 8.5f;
-            float legAng  = run ? 36f   : 22f;
-            float armAng  = run ? 28f   : 18f;
-            float bobAmt  = run ? 0.035f: 0.018f;
-            float leanAmt = run ? 2.5f  : 1.2f;
+            var c = animConfig != null ? (run ? animConfig.run : animConfig.walk) : null;
+            float speed     = c != null ? c.speed : (run ? 13.5f : 8.5f);
+            float legAng    = c != null ? c.legSwingAngle : (run ? 36f : 22f);
+            float armAng    = c != null ? c.armSwingAngle : (run ? 28f : 18f);
+            float bobPixels = c != null ? c.bobAmount : (run ? 1.1f : 0.6f);
+            float leanAmt   = c != null ? c.bodyLeanAngle : (run ? 2.5f : 1.2f);
+            float headAng   = c != null ? c.headTiltAngle : (run ? 1.8f : 0.8f);
+            float squash    = c != null ? c.squashAmount : 0.02f;
+            float stretch   = c != null ? c.stretchAmount : 0.02f;
 
             cycleTimer  += Time.deltaTime * speed;
             breathTimer += Time.deltaTime * 0.4f;
@@ -401,22 +659,23 @@ namespace GodlessFantasy.Player
             float sinT   = Mathf.Sin(cycleTimer);
             float absSin = Mathf.Abs(sinT);
 
-            // Thân: nhấp nhô theo bước chân + nghiêng theo gia tốc
-            partRoot.localPosition = rootOrigin + new Vector3(0f, absSin * bobAmt, 0f);
-            partRoot.localScale    = Vector3.one;
+            // Nhấp nhô lên xuống chuẩn theo bobAmount từ cấu hình
+            float bobUnity = (bobPixels / 32f) * absSin;
+            partRoot.localPosition = rootOrigin + new Vector3(0f, bobUnity, 0f);
+            partRoot.localScale    = new Vector3(1f - absSin * squash, 1f + absSin * stretch, 1f);
             partRoot.localRotation = Quaternion.identity;
             jointBody.localRotation= Quaternion.Euler(0f, 0f, sinT * leanAmt);
 
-            // Khớp Chân: xoay so le quanh khớp hông Hip Joint
+            // Khớp Chân: xoay so le quanh khớp hông từ cấu hình
             jointLegLeft.localRotation  = Quaternion.Euler(0f, 0f,  sinT * legAng);
             jointLegRight.localRotation = Quaternion.Euler(0f, 0f, -sinT * legAng);
 
-            // Khớp Tay: counter-swing so le đối xứng với bước chân
+            // Khớp Tay: counter-swing so le đối xứng với bước chân từ cấu hình
             jointArmLeft.localRotation  = Quaternion.Euler(0f, 0f, -sinT * armAng);
             jointArmRight.localRotation = Quaternion.Euler(0f, 0f,  sinT * armAng);
 
-            // Khớp Đầu: chống rung nhẹ (Anti-bobbing counter-tilt)
-            jointHead.localRotation = Quaternion.Euler(0f, 0f, -sinT * (run ? 1.8f : 0.8f));
+            // Khớp Đầu: gật/ngửa theo cấu hình
+            jointHead.localRotation = Quaternion.Euler(0f, 0f, -sinT * headAng);
 
             // Hiệu ứng bóng mờ (Ghost Trail) khi chạy nhanh (Sprint)
             if (run)
@@ -432,20 +691,29 @@ namespace GodlessFantasy.Player
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  DASH — Lướt Ép Dẹp Khí Động Học + Ghost Trail
+        //  DASH — Lướt Ép Dẹp Khí Động Học + Ghost Trail (Nạp 100% từ animConfig)
         // ════════════════════════════════════════════════════════════════
         private void AnimateDash()
         {
-            partRoot.localScale    = new Vector3(1.18f, 0.86f, 1f);
-            partRoot.localPosition = rootOrigin;
+            var c = animConfig?.dash;
+            float squash    = c != null ? c.squashAmount : 0.14f;
+            float stretch   = c != null ? c.stretchAmount : -0.18f;
+            float lean      = c != null ? c.bodyLeanAngle : -12f;
+            float headAng   = c != null ? c.headTiltAngle : -5f;
+            float armAng    = c != null ? c.armSwingAngle : -40f;
+            float legAng    = c != null ? c.legSwingAngle : 25f;
+            float bobPixels = c != null ? c.bobAmount : 0f;
+
+            partRoot.localScale    = new Vector3(1f + squash, 1f + stretch, 1f);
+            partRoot.localPosition = rootOrigin + new Vector3(0f, (bobPixels / 32f), 0f);
             partRoot.localRotation = Quaternion.identity;
 
-            jointHead.localRotation     = Quaternion.identity;
-            jointArmLeft.localRotation  = Quaternion.identity;
-            jointArmRight.localRotation = Quaternion.identity;
-            jointLegLeft.localRotation  = Quaternion.identity;
-            jointLegRight.localRotation = Quaternion.identity;
-            jointBody.localRotation     = Quaternion.identity;
+            jointHead.localRotation     = Quaternion.Euler(0f, 0f, headAng);
+            jointArmLeft.localRotation  = Quaternion.Euler(0f, 0f,  armAng);
+            jointArmRight.localRotation = Quaternion.Euler(0f, 0f, -armAng);
+            jointLegLeft.localRotation  = Quaternion.Euler(0f, 0f,  legAng);
+            jointLegRight.localRotation = Quaternion.Euler(0f, 0f, -legAng);
+            jointBody.localRotation     = Quaternion.Euler(0f, 0f, lean);
 
             ghostTimer += Time.deltaTime;
             if (ghostTimer > 0.04f)
@@ -456,7 +724,7 @@ namespace GodlessFantasy.Player
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  ATTACK — Vung Vũ Khí & Vệt Đao Khí Nguyên Tố (Elemental Slash)
+        //  ATTACK — Vung Vũ Khí & Vệt Đao Khí Nguyên Tố (Nạp 100% từ animConfig)
         // ════════════════════════════════════════════════════════════════
         public void TriggerAttack(string element = "Hỏa", bool isCast = false)
         {
@@ -479,14 +747,29 @@ namespace GodlessFantasy.Player
             else cleanElem = "fire";
 
             bool isFacingLeft = (FacingDir == Direction8.West || FacingDir == Direction8.NorthWest || FacingDir == Direction8.SouthWest);
-            float swingDir = isFacingLeft ? -75f : 75f;
+
+            var c = animConfig?.attack;
+            float swingAngle = c != null ? c.armSwingAngle : 45f;
+            float bodyLean   = c != null ? c.bodyLeanAngle : 4f;
+            float headTilt   = c != null ? c.headTiltAngle : 2f;
+            float legSwing   = c != null ? c.legSwingAngle : 10f;
+
+            float swingDir = isFacingLeft ? -swingAngle : swingAngle;
 
             // 1. Vung khớp tay cầm vũ khí & xoay vũ khí
-            Quaternion origArmRot = jointArmRight.localRotation;
-            Quaternion origWepRot = jointWeapon.localRotation;
+            Quaternion origArmRot   = jointArmRight.localRotation;
+            Quaternion origWepRot   = jointWeapon.localRotation;
+            Quaternion origBodyRot  = jointBody.localRotation;
+            Quaternion origHeadRot  = jointHead.localRotation;
+            Quaternion origLegLRot  = jointLegLeft.localRotation;
+            Quaternion origLegRRot  = jointLegRight.localRotation;
 
-            jointArmRight.localRotation = origArmRot * Quaternion.Euler(0, 0, swingDir * 0.7f);
-            jointWeapon.localRotation   = origWepRot * Quaternion.Euler(0, 0, swingDir);
+            jointArmRight.localRotation = origArmRot * Quaternion.Euler(0, 0, swingDir);
+            jointWeapon.localRotation   = origWepRot * Quaternion.Euler(0, 0, swingDir * 1.3f);
+            jointBody.localRotation     = Quaternion.Euler(0, 0, isFacingLeft ? -bodyLean : bodyLean);
+            jointHead.localRotation     = Quaternion.Euler(0, 0, isFacingLeft ? -headTilt : headTilt);
+            jointLegLeft.localRotation  = Quaternion.Euler(0, 0, isFacingLeft ? legSwing : -legSwing);
+            jointLegRight.localRotation = Quaternion.Euler(0, 0, isFacingLeft ? -legSwing : legSwing);
 
             // 2. Định vị Vệt Chém Nguyên Tố theo đúng 8 hướng
             if (srSlash != null)
@@ -544,11 +827,15 @@ namespace GodlessFantasy.Player
 
             jointArmRight.localRotation = origArmRot;
             jointWeapon.localRotation   = origWepRot;
+            jointBody.localRotation     = origBodyRot;
+            jointHead.localRotation     = origHeadRot;
+            jointLegLeft.localRotation  = origLegLRot;
+            jointLegRight.localRotation = origLegRRot;
             isAttacking = false;
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  HURT — Recoil Giật Lùi & Chớp Đỏ
+        //  HURT — Recoil Giật Lùi & Chớp Đỏ (Nạp 100% từ animConfig)
         // ════════════════════════════════════════════════════════════════
         public void TriggerHurt()
         {
@@ -559,14 +846,28 @@ namespace GodlessFantasy.Player
         {
             hurtTimer -= Time.deltaTime;
             float flash = Mathf.PingPong(hurtTimer * 14f, 1f);
-            Color c     = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.25f), flash);
+            Color cCol  = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.25f), flash);
 
             foreach (var sr in new[] { srHairFront, srHead, srBody, srArmL, srArmR, srLegL, srLegR, srCostume })
-                if (sr != null) sr.color = c;
+                if (sr != null) sr.color = cCol;
 
-            float jerk = Mathf.Sin(hurtTimer * 20f) * 0.04f;
+            var c = animConfig?.hurt;
+            float speed   = c != null ? c.speed : 35f;
+            float bobPix  = c != null ? c.bobAmount : 0.5f;
+            float leanAng = c != null ? c.bodyLeanAngle : -8f;
+            float headAng = c != null ? c.headTiltAngle : 8f;
+            float armAng  = c != null ? c.armSwingAngle : -20f;
+            float squash  = c != null ? c.squashAmount : 0.08f;
+            float stretch = c != null ? c.stretchAmount : -0.05f;
+
+            float jerk = Mathf.Sin(hurtTimer * speed) * (bobPix / 32f);
             partRoot.localPosition = rootOrigin + new Vector3(-jerk, 0f, 0f);
-            partRoot.localRotation = Quaternion.Euler(0f, 0f, jerk * 80f);
+            partRoot.localRotation = Quaternion.Euler(0f, 0f, jerk * (leanAng * 5f));
+            partRoot.localScale    = new Vector3(1f + squash, 1f + stretch, 1f);
+
+            jointHead.localRotation     = Quaternion.Euler(0f, 0f, headAng);
+            jointArmLeft.localRotation  = Quaternion.Euler(0f, 0f, armAng);
+            jointArmRight.localRotation = Quaternion.Euler(0f, 0f, armAng);
 
             if (hurtTimer <= 0f)
             {
@@ -574,6 +875,10 @@ namespace GodlessFantasy.Player
                     if (sr != null) sr.color = Color.white;
                 partRoot.localRotation = Quaternion.identity;
                 partRoot.localPosition = rootOrigin;
+                partRoot.localScale    = Vector3.one;
+                jointHead.localRotation = Quaternion.identity;
+                jointArmLeft.localRotation = Quaternion.identity;
+                jointArmRight.localRotation = Quaternion.identity;
             }
         }
 
@@ -740,10 +1045,20 @@ namespace GodlessFantasy.Player
             if (Input.GetKeyDown(KeyCode.G))
             {
                 IsFemale = !IsFemale;
+                sprCache.Clear();
                 LoadDirectionSprites();
                 string label = IsFemale ? "Nữ Anime (Croptop)" : "Nam Anime (Áo Ba Lỗ)";
                 FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f,
                     $"🚻 {label} [G]", new Color(0.3f, 0.9f, 1f));
+            }
+
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                sprCache.Clear();
+                LoadConfigs();
+                LoadDirectionSprites();
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f,
+                    "🔄 Đã nạp lại Rig Sprites & Cấu Hình Hoạt Ảnh mới nhất từ ổ đĩa! [F5]", Color.green);
             }
 
             if (Input.GetKeyDown(KeyCode.K))

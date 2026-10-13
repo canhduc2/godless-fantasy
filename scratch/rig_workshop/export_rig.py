@@ -63,7 +63,9 @@ def export_all_rigs(config=None, config_path=None):
                 img = get_part_img(file_name, part_conf.get('flip_x', False), part_conf.get('flip_y', False))
                 x = int(part_conf.get('x', 0))
                 y = int(part_conf.get('y', 0))
-                composite.paste(img, (x, y), img)
+                layer = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+                layer.paste(img, (x, y))
+                composite = Image.alpha_composite(composite, layer)
 
             composite.save(os.path.join(target_dir, 'body.png'))
             composite_sprites[(gender, direction)] = composite
@@ -78,13 +80,19 @@ def export_all_rigs(config=None, config_path=None):
                         img = get_part_img(file_name, part_conf.get('flip_x', False), part_conf.get('flip_y', False))
                         x = int(part_conf.get('x', 0))
                         y = int(part_conf.get('y', 0))
-                        part_canvas.paste(img, (x, y), img)
+                        part_canvas.paste(img, (x, y))
                 part_canvas.save(os.path.join(target_dir, f"{part_key}.png"))
 
-    # Also save rig_config.json into Unity Resources for runtime access
+    # Also save rig_config.json and animation_config.json into Unity Resources for runtime access
     unity_config_path = os.path.join(CLIENT_RIG_ROOT, "rig_config.json")
     with open(unity_config_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
+
+    anim_config_src = os.path.join(SCRIPT_DIR, "animation_config.json")
+    if os.path.exists(anim_config_src):
+        unity_anim_path = os.path.join(CLIENT_RIG_ROOT, "animation_config.json")
+        with open(anim_config_src, "r", encoding="utf-8") as f_src, open(unity_anim_path, "w", encoding="utf-8") as f_dst:
+            f_dst.write(f_src.read())
     tile_size = 192
     montage = Image.new('RGBA', (tile_size * 8, tile_size * 2), (238, 238, 238, 255))
     for row_idx, gender in enumerate(['female', 'male']):

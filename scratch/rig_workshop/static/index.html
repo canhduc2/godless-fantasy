@@ -26,6 +26,9 @@
                 <button class="ws-tab-btn" id="tab-btn-pixel" data-tab="pixel">
                     <span class="icon">🎨</span> Xưởng Vẽ Pixel
                 </button>
+                <button class="ws-tab-btn" id="tab-btn-anim" data-tab="anim">
+                    <span class="icon">🎬</span> Xưởng Hoạt Ảnh
+                </button>
             </div>
 
             <!-- GENDER PICKER (Active in Assembler) -->
@@ -115,6 +118,9 @@
                         <div class="checkbox-row">
                             <label><input type="checkbox" id="check-snap" checked> 🧲 Hít vào tâm & Gợi ý gióng hàng (Snap Guides)</label>
                         </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="check-ruler" checked> 📏 Thước đo Pixel (Top & Left Rulers)</label>
+                        </div>
                     </div>
 
                     <div class="panel-section">
@@ -173,12 +179,17 @@
                         </div>
                     </div>
 
-                    <div class="canvas-wrapper checker-bg" id="canvas-wrapper">
-                        <canvas id="main-canvas" width="64" height="64"></canvas>
-                        <canvas id="guide-canvas" width="64" height="64" class="guide-canvas"></canvas>
-                        <div id="selection-box" class="selection-box"></div>
-                        <div id="selection-boxes-container"></div>
-                        <div id="marquee-box" class="marquee-box"></div>
+                    <div class="canvas-assembly-frame" id="canvas-assembly-frame">
+                        <div class="ruler-corner" id="ruler-corner" title="Nhấp đúp để căn giữa góc nhìn (Đơn vị: Pixel 64x64)">px</div>
+                        <canvas id="ruler-x" class="ruler-x" height="22"></canvas>
+                        <canvas id="ruler-y" class="ruler-y" width="22"></canvas>
+                        <div class="canvas-wrapper checker-bg" id="canvas-wrapper">
+                            <canvas id="main-canvas" width="64" height="64"></canvas>
+                            <canvas id="guide-canvas" width="64" height="64" class="guide-canvas"></canvas>
+                            <div id="selection-box" class="selection-box"></div>
+                            <div id="selection-boxes-container"></div>
+                            <div id="marquee-box" class="marquee-box"></div>
+                        </div>
                     </div>
 
                     <div class="viewport-footer">
@@ -411,6 +422,230 @@
                         </div>
                         <div class="checkbox-row">
                             <label><input type="checkbox" id="check-pe-grid" checked> Hiển thị lưới Pixel</label>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             VIEW 3: ANIMATION WORKSHOP (XƯỞNG HOẠT ẢNH)
+             ============================================================ -->
+        <div id="view-anim" class="tab-view">
+            <div class="anim-workspace">
+                <!-- LEFT SIDEBAR: STATES & PLAYBACK -->
+                <aside class="anim-sidebar left-panel">
+                    <div class="panel-section">
+                        <h2 class="section-title">🎬 TRẠNG THÁI HOẠT ẢNH</h2>
+                        <div class="anim-state-grid">
+                            <button class="anim-state-btn active" data-state="idle">
+                                <span class="icon">🧘</span>
+                                <div class="state-info">
+                                    <span class="state-name">Đứng Thở</span>
+                                    <span class="state-en">Idle</span>
+                                </div>
+                            </button>
+                            <button class="anim-state-btn" data-state="walk">
+                                <span class="icon">🚶</span>
+                                <div class="state-info">
+                                    <span class="state-name">Đi Bộ</span>
+                                    <span class="state-en">Walk</span>
+                                </div>
+                            </button>
+                            <button class="anim-state-btn" data-state="run">
+                                <span class="icon">🏃</span>
+                                <div class="state-info">
+                                    <span class="state-name">Chạy Nhanh</span>
+                                    <span class="state-en">Run</span>
+                                </div>
+                            </button>
+                            <button class="anim-state-btn" data-state="dash">
+                                <span class="icon">⚡</span>
+                                <div class="state-info">
+                                    <span class="state-name">Lướt Gió</span>
+                                    <span class="state-en">Dash</span>
+                                </div>
+                            </button>
+                            <button class="anim-state-btn" data-state="attack">
+                                <span class="icon">⚔️</span>
+                                <div class="state-info">
+                                    <span class="state-name">Chém Đao</span>
+                                    <span class="state-en">Attack</span>
+                                </div>
+                            </button>
+                            <button class="anim-state-btn" data-state="hurt">
+                                <span class="icon">💥</span>
+                                <div class="state-info">
+                                    <span class="state-name">Bị Thương</span>
+                                    <span class="state-en">Hurt</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h2 class="section-title">🧭 HƯỚNG QUAN SÁT (8 HƯỚNG)</h2>
+                        <div class="compass-grid">
+                            <button class="anim-dir-btn" data-dir="north_west">↖ NW</button>
+                            <button class="anim-dir-btn" data-dir="north">⬆ N</button>
+                            <button class="anim-dir-btn" data-dir="north_east">↗ NE</button>
+                            <button class="anim-dir-btn" data-dir="west">⬅ W</button>
+                            <div class="compass-center">64x64</div>
+                            <button class="anim-dir-btn" data-dir="east">➡ E</button>
+                            <button class="anim-dir-btn" data-dir="south_west">↙ SW</button>
+                            <button class="anim-dir-btn active" data-dir="south">⬇ S</button>
+                            <button class="anim-dir-btn" data-dir="south_east">↘ SE</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h2 class="section-title">⏱️ ĐIỀU KHIỂN PHÁT (PLAYBACK)</h2>
+                        <div class="playback-controls">
+                            <button class="btn btn-primary" id="btn-anim-play-pause" style="width:100%;margin-bottom:8px">
+                                ⏸️ Tạm Dừng
+                            </button>
+                            <div class="playback-speed-group">
+                                <button class="mini-btn" data-speed="0.5">0.5x</button>
+                                <button class="mini-btn active" data-speed="1.0">1.0x</button>
+                                <button class="mini-btn" data-speed="1.5">1.5x</button>
+                                <button class="mini-btn" data-speed="2.0">2.0x</button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- CENTER VIEWPORT: ANIMATION PREVIEW CANVAS -->
+                <main class="anim-viewport-container">
+                    <div class="viewport-header">
+                        <div class="current-info">
+                            <span class="info-badge info-accent" id="anim-badge-state">🧘 Đứng Thở (Idle)</span>
+                            <span class="info-badge" id="anim-badge-dir">South (Trước)</span>
+                            <span class="info-badge" id="anim-badge-fps">60 FPS</span>
+                        </div>
+                        <div class="viewport-actions">
+                            <div class="setting-row" style="margin-bottom:0">
+                                <label style="font-size:12px">Zoom:</label>
+                                <select id="select-anim-zoom" style="padding:4px 8px;font-size:12px">
+                                    <option value="6">6x</option>
+                                    <option value="8" selected>8x (512px)</option>
+                                    <option value="10">10x</option>
+                                    <option value="12">12x</option>
+                                </select>
+                            </div>
+                            <div class="checkbox-row" style="margin-bottom:0">
+                                <label style="font-size:12px"><input type="checkbox" id="check-anim-shadow" checked> Bóng Đổ</label>
+                            </div>
+                            <div class="checkbox-row" style="margin-bottom:0">
+                                <label style="font-size:12px"><input type="checkbox" id="check-anim-pivots"> Tâm Khớp</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anim-canvas-wrapper" id="anim-canvas-wrapper">
+                        <canvas id="anim-canvas" width="64" height="64"></canvas>
+                    </div>
+
+                    <div class="viewport-footer">
+                        <div class="coord-indicator" id="anim-telemetry">
+                            Nhịp: 0.00s | Bob: +0.00px | Thân: 0.0° | Đầu: 0.0° | Tay: 0.0° | Chân: 0.0°
+                        </div>
+                        <div class="hint-text">✨ Khớp xương 2D tính toán toạ độ và xoay mượt mà 60fps theo thời gian thực</div>
+                    </div>
+                </main>
+
+                <!-- RIGHT SIDEBAR: PARAMETERS & SLIDERS -->
+                <aside class="anim-sidebar right-panel">
+                    <div class="panel-section">
+                        <div class="section-title-row">
+                            <h2 class="section-title">⚙️ THÔNG SỐ HOẠT ẢNH</h2>
+                            <span class="state-pill" id="anim-active-pill">IDLE</span>
+                        </div>
+                        <p class="panel-hint">Chỉnh sửa thông số hoạt ảnh chuyển động đồng bộ 1:1 với Unity Engine.</p>
+
+                        <div class="anim-param-list">
+                            <!-- 1. Tốc độ chu kỳ -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>🔄 Tốc độ chu kỳ (speed):</label>
+                                    <input type="number" id="num-anim-speed" step="0.1" min="0" max="50">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-speed" min="0.5" max="40" step="0.1">
+                            </div>
+
+                            <!-- 2. Nhấp nhô lên xuống -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>↕️ Nhấp nhô lên xuống (bobAmount px):</label>
+                                    <input type="number" id="num-anim-bob" step="0.05" min="0" max="5">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-bob" min="0" max="3" step="0.02">
+                            </div>
+
+                            <!-- 3. Nghiêng thân mình -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>↔️ Nghiêng thân mình (bodyLeanAngle °):</label>
+                                    <input type="number" id="num-anim-lean" step="0.5" min="-45" max="45">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-lean" min="-30" max="30" step="0.5">
+                            </div>
+
+                            <!-- 4. Góc gật/ngửa đầu -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>👤 Góc gật / ngửa đầu (headTiltAngle °):</label>
+                                    <input type="number" id="num-anim-head" step="0.5" min="-30" max="30">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-head" min="-25" max="25" step="0.5">
+                            </div>
+
+                            <!-- 5. Biên độ vung tay -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>💪 Biên độ vung tay (armSwingAngle °):</label>
+                                    <input type="number" id="num-anim-arm" step="1" min="-90" max="90">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-arm" min="-60" max="60" step="1">
+                            </div>
+
+                            <!-- 6. Biên độ bước chân -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>🦵 Biên độ bước chân (legSwingAngle °):</label>
+                                    <input type="number" id="num-anim-leg" step="1" min="0" max="70">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-leg" min="0" max="60" step="1">
+                            </div>
+
+                            <!-- 7. Co dẹp ngang Squash -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>🫧 Co dẹp ngang (squashAmount):</label>
+                                    <input type="number" id="num-anim-squash" step="0.005" min="-0.5" max="0.5">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-squash" min="-0.3" max="0.3" step="0.005">
+                            </div>
+
+                            <!-- 8. Kéo giãn dọc Stretch -->
+                            <div class="anim-slider-group">
+                                <div class="slider-header">
+                                    <label>📏 Kéo giãn dọc (stretchAmount):</label>
+                                    <input type="number" id="num-anim-stretch" step="0.005" min="-0.5" max="0.5">
+                                </div>
+                                <input type="range" class="param-slider" id="slider-anim-stretch" min="-0.3" max="0.3" step="0.005">
+                            </div>
+                        </div>
+
+                        <div class="anim-action-buttons">
+                            <button class="btn btn-primary btn-block" id="btn-save-anim">
+                                💾 LƯU HOẠT ẢNH & XUẤT RA UNITY
+                            </button>
+                            <button class="btn btn-secondary btn-block" id="btn-reset-anim-state">
+                                ↺ Khôi phục trạng thái này về mặc định
+                            </button>
+                            <button class="btn btn-secondary btn-block" id="btn-reset-all-anim">
+                                🔄 Khôi phục toàn bộ hoạt ảnh
+                            </button>
                         </div>
                     </div>
                 </aside>

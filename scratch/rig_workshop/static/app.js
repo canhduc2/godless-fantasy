@@ -59,6 +59,15 @@ class RigWorkshopApp {
         if (this.guideCtx) this.guideCtx.imageSmoothingEnabled = false;
         this.contextMenu = document.getElementById('context-menu');
 
+        // Pixel Rulers
+        this.assemblyFrame = document.getElementById('canvas-assembly-frame');
+        this.rulerCorner = document.getElementById('ruler-corner');
+        this.rulerX = document.getElementById('ruler-x');
+        this.rulerY = document.getElementById('ruler-y');
+        this.showRulers = true;
+        this.lastRulerCursorX = -1;
+        this.lastRulerCursorY = -1;
+
         // Snap & Guides
         this.snapEnabled = true;
         this.activeGuides = [];
@@ -102,6 +111,20 @@ class RigWorkshopApp {
         this.peIsDrawing = false;
         this.peLastDrawX = -1;
         this.peLastDrawY = -1;
+
+        // Animation Workshop State
+        this.animConfig = null;
+        this.currentAnimState = 'idle';
+        this.animZoom = 8;
+        this.isAnimPlaying = true;
+        this.animPlaybackSpeed = 1.0;
+        this.animTimer = 0;
+        this.lastAnimFrameTime = performance.now();
+        this.animCanvas = document.getElementById('anim-canvas');
+        this.animCtx = this.animCanvas ? this.animCanvas.getContext('2d') : null;
+        if (this.animCtx) this.animCtx.imageSmoothingEnabled = false;
+        this.showAnimShadow = true;
+        this.showAnimPivots = false;
 
         this.init();
     }
@@ -157,6 +180,214 @@ class RigWorkshopApp {
         this.activeGuides = [];
         if (this.guideCtx) {
             this.guideCtx.clearRect(0, 0, 64, 64);
+        }
+    }
+
+    // ============================================================
+    // PIXEL RULERS (TOP X & LEFT Y)
+    // ============================================================
+    drawRulers(cursorX = undefined, cursorY = undefined) {
+        if (!this.rulerX || !this.rulerY || !this.showRulers) return;
+        if (cursorX === -1 && cursorY === -1) {
+            this.lastRulerCursorX = -1;
+            this.lastRulerCursorY = -1;
+        } else if (cursorX !== undefined) {
+            this.lastRulerCursorX = cursorX;
+            this.lastRulerCursorY = cursorY;
+        }
+
+        const curX = this.lastRulerCursorX;
+        const curY = this.lastRulerCursorY;
+
+        const size = 64 * this.zoom;
+        const rxCtx = this.rulerX.getContext('2d');
+        const ryCtx = this.rulerY.getContext('2d');
+        if (!rxCtx || !ryCtx) return;
+
+        // Selected part bounds for range highlight
+        const dirData = this.getCurrentDirData();
+        let selRangeX = null, selRangeY = null;
+        if (dirData && this.selectedPartKeys.size > 0) {
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (const k of this.selectedPartKeys) {
+                const p = dirData[k];
+                if (!p || p.visible === false) continue;
+                const img = this.getImage(p.file);
+                const pw = img && img.complete ? img.naturalWidth : 16;
+                const ph = img && img.complete ? img.naturalHeight : 16;
+                minX = Math.min(minX, p.x);
+                maxX = Math.max(maxX, p.x + pw);
+                minY = Math.min(minY, p.y);
+                maxY = Math.max(maxY, p.y + ph);
+            }
+            if (minX !== Infinity) {
+                selRangeX = { min: minX, max: maxX };
+                selRangeY = { min: minY, max: maxY };
+            }
+        }
+
+        // ──────────────────────────────────────────
+        // 1. TOP RULER (X-AXIS)
+        // ──────────────────────────────────────────
+        rxCtx.clearRect(0, 0, size, 22);
+        rxCtx.fillStyle = '#16171a';
+        rxCtx.fillRect(0, 0, size, 22);
+
+        // Highlight selected part range on X
+        if (selRangeX) {
+            rxCtx.fillStyle = 'rgba(59, 130, 246, 0.22)';
+            rxCtx.fillRect(selRangeX.min * this.zoom, 0, (selRangeX.max - selRangeX.min) * this.zoom, 22);
+        }
+
+        rxCtx.font = '9px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+        rxCtx.textAlign = 'center';
+        rxCtx.textBaseline = 'top';
+
+        for (let p = 0; p <= 64; p++) {
+            const sx = Math.floor(p * this.zoom);
+            const isCenter = (p === 32);
+            const isMajor = (p % 8 === 0);
+            const isMid = (p % 4 === 0);
+
+            if (isCenter) {
+                // Center Axis X = 32 Highlight (Cyan neon)
+                rxCtx.fillStyle = '#38bdf8';
+                rxCtx.fillRect(sx, 0, 1, 22);
+                rxCtx.fillStyle = '#38bdf8';
+                rxCtx.fillText('32', sx, 2);
+            } else if (isMajor) {
+                rxCtx.strokeStyle = '#71717a';
+                rxCtx.lineWidth = 1;
+                rxCtx.beginPath();
+                rxCtx.moveTo(sx + 0.5, 12);
+                rxCtx.lineTo(sx + 0.5, 22);
+                rxCtx.stroke();
+
+                rxCtx.fillStyle = '#a1a1aa';
+                let labelX = sx;
+                if (p === 0) labelX = sx + 7;
+                else if (p === 64) labelX = sx - 7;
+                rxCtx.fillText(p.toString(), labelX, 2);
+            } else if (isMid) {
+                rxCtx.strokeStyle = '#52525b';
+                rxCtx.lineWidth = 1;
+                rxCtx.beginPath();
+                rxCtx.moveTo(sx + 0.5, 16);
+                rxCtx.lineTo(sx + 0.5, 22);
+                rxCtx.stroke();
+            } else if (this.zoom >= 8) {
+                // Minor tick every 1px
+                rxCtx.strokeStyle = '#3f3f46';
+                rxCtx.lineWidth = 1;
+                rxCtx.beginPath();
+                rxCtx.moveTo(sx + 0.5, 19);
+                rxCtx.lineTo(sx + 0.5, 22);
+                rxCtx.stroke();
+            }
+        }
+
+        // Cursor tracker on X (aligned 100% to ruler tick mark at curX * this.zoom)
+        if (curX >= 0 && curX <= 64) {
+            const cx = Math.floor(curX * this.zoom);
+            // Subtle 1-pixel cell highlight band
+            if (this.zoom >= 4) {
+                rxCtx.fillStyle = 'rgba(245, 158, 11, 0.20)';
+                rxCtx.fillRect(cx, 0, this.zoom, 22);
+            }
+
+            // Crisp vertical indicator line matching ruler tick
+            rxCtx.fillStyle = '#f59e0b';
+            rxCtx.fillRect(cx, 0, 1, 22);
+
+            // Little top arrow pointer centered on tick
+            rxCtx.beginPath();
+            rxCtx.moveTo(cx - 3, 0);
+            rxCtx.lineTo(cx + 4, 0);
+            rxCtx.lineTo(cx + 0.5, 4.5);
+            rxCtx.closePath();
+            rxCtx.fill();
+        }
+
+        // ──────────────────────────────────────────
+        // 2. LEFT RULER (Y-AXIS)
+        // ──────────────────────────────────────────
+        ryCtx.clearRect(0, 0, 22, size);
+        ryCtx.fillStyle = '#16171a';
+        ryCtx.fillRect(0, 0, 22, size);
+
+        // Highlight selected part range on Y
+        if (selRangeY) {
+            ryCtx.fillStyle = 'rgba(59, 130, 246, 0.22)';
+            ryCtx.fillRect(0, selRangeY.min * this.zoom, 22, (selRangeY.max - selRangeY.min) * this.zoom);
+        }
+
+        ryCtx.font = '9px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+        ryCtx.textAlign = 'right';
+        ryCtx.textBaseline = 'middle';
+
+        for (let p = 0; p <= 64; p++) {
+            const sy = Math.floor(p * this.zoom);
+            const isCenter = (p === 32);
+            const isMajor = (p % 8 === 0);
+            const isMid = (p % 4 === 0);
+
+            if (isCenter) {
+                // Center Axis Y = 32 Highlight (Cyan neon)
+                ryCtx.fillStyle = '#38bdf8';
+                ryCtx.fillRect(0, sy, 22, 1);
+                ryCtx.fillStyle = '#38bdf8';
+                ryCtx.fillText('32', 18, sy);
+            } else if (isMajor) {
+                ryCtx.strokeStyle = '#71717a';
+                ryCtx.lineWidth = 1;
+                ryCtx.beginPath();
+                ryCtx.moveTo(12, sy + 0.5);
+                ryCtx.lineTo(22, sy + 0.5);
+                ryCtx.stroke();
+
+                ryCtx.fillStyle = '#a1a1aa';
+                let labelY = sy;
+                if (p === 0) labelY = sy + 5;
+                else if (p === 64) labelY = sy - 5;
+                ryCtx.fillText(p.toString(), 11, labelY);
+            } else if (isMid) {
+                ryCtx.strokeStyle = '#52525b';
+                ryCtx.lineWidth = 1;
+                ryCtx.beginPath();
+                ryCtx.moveTo(16, sy + 0.5);
+                ryCtx.lineTo(22, sy + 0.5);
+                ryCtx.stroke();
+            } else if (this.zoom >= 8) {
+                // Minor tick every 1px
+                ryCtx.strokeStyle = '#3f3f46';
+                ryCtx.lineWidth = 1;
+                ryCtx.beginPath();
+                ryCtx.moveTo(19, sy + 0.5);
+                ryCtx.lineTo(22, sy + 0.5);
+                ryCtx.stroke();
+            }
+        }
+
+        // Cursor tracker on Y (aligned 100% to ruler tick mark at curY * this.zoom)
+        if (curY >= 0 && curY <= 64) {
+            const cy = Math.floor(curY * this.zoom);
+            // Subtle 1-pixel cell highlight band
+            if (this.zoom >= 4) {
+                ryCtx.fillStyle = 'rgba(245, 158, 11, 0.20)';
+                ryCtx.fillRect(0, cy, 22, this.zoom);
+            }
+
+            // Crisp horizontal indicator line matching ruler tick
+            ryCtx.fillStyle = '#f59e0b';
+            ryCtx.fillRect(0, cy, 22, 1);
+
+            // Little left arrow pointer centered on tick
+            ryCtx.beginPath();
+            ryCtx.moveTo(0, cy - 3);
+            ryCtx.lineTo(0, cy + 4);
+            ryCtx.lineTo(4.5, cy + 0.5);
+            ryCtx.closePath();
+            ryCtx.fill();
         }
     }
 
@@ -404,7 +635,11 @@ class RigWorkshopApp {
     }
 
     updatePanTransform() {
-        this.wrapper.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+        if (this.assemblyFrame) {
+            this.assemblyFrame.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+        } else {
+            this.wrapper.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+        }
     }
 
     resetPan() {
@@ -417,10 +652,13 @@ class RigWorkshopApp {
     async init() {
         this.setupEventListeners();
         this.setupPixelEditor();
+        this.setupAnimEditor();
         await this.loadPartsList();
         await this.loadConfig();
+        await this.loadAnimConfig();
         this.updateZoom();
         this.renderAll();
+        this.startAnimLoop();
     }
 
     // ============================================================
@@ -496,6 +734,11 @@ class RigWorkshopApp {
             document.getElementById('tab-btn-pixel').classList.add('active');
             document.getElementById('header-gender-selector').style.display = 'none';
             this.refreshPixelEditorCanvas();
+        } else if (tabName === 'anim') {
+            document.getElementById('view-anim').classList.add('active');
+            document.getElementById('tab-btn-anim').classList.add('active');
+            document.getElementById('header-gender-selector').style.display = 'flex';
+            this.onSwitchToAnimTab();
         }
     }
 
@@ -508,6 +751,7 @@ class RigWorkshopApp {
         this.renderLayersPanel();
         this.renderInspector();
         this.renderGallery();
+        this.drawRulers();
     }
 
     renderMainCanvas() {
@@ -1068,7 +1312,22 @@ class RigWorkshopApp {
         }
         this.wrapper.style.width = `${size}px`;
         this.wrapper.style.height = `${size}px`;
+
+        if (this.rulerX) {
+            this.rulerX.width = size;
+            this.rulerX.height = 22;
+            this.rulerX.style.width = `${size}px`;
+            this.rulerX.style.height = '22px';
+        }
+        if (this.rulerY) {
+            this.rulerY.width = 22;
+            this.rulerY.height = size;
+            this.rulerY.style.width = '22px';
+            this.rulerY.style.height = `${size}px`;
+        }
+
         this.updateSelectionBox();
+        this.drawRulers();
     }
 
     // ============================================================
@@ -1500,6 +1759,8 @@ class RigWorkshopApp {
             const part = dirData && this.selectedPartKey ? dirData[this.selectedPartKey] : null;
             this.openPixelEditorForPart(part ? part.file : 'female_torso_front');
         });
+        const tabBtnAnim = document.getElementById('tab-btn-anim');
+        if (tabBtnAnim) tabBtnAnim.addEventListener('click', () => this.switchTab('anim'));
 
         // Gender Buttons
         document.getElementById('btn-gender-female').addEventListener('click', () => this.setGender('female'));
@@ -1544,6 +1805,7 @@ class RigWorkshopApp {
         this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
         window.addEventListener('mousemove', (e) => this.onMouseMove(e));
         window.addEventListener('mouseup', () => this.onMouseUp());
+        this.canvas.addEventListener('mouseleave', () => this.drawRulers(-1, -1));
 
         // Context Menu handling
         this.canvas.addEventListener('contextmenu', (e) => {
@@ -1748,6 +2010,22 @@ class RigWorkshopApp {
             this.hideContextMenu();
             this.selectAllParts();
         });
+
+        // Ruler Checkbox & Ruler Corner
+        const chkRuler = document.getElementById('check-ruler');
+        if (chkRuler) {
+            chkRuler.addEventListener('change', (e) => {
+                this.showRulers = e.target.checked;
+                if (this.assemblyFrame) {
+                    this.assemblyFrame.classList.toggle('hide-rulers', !this.showRulers);
+                }
+                this.drawRulers();
+                this.showToast(this.showRulers ? '📏 Đã BẬT thước đo Pixel!' : '⚪ Đã TẮT thước đo!');
+            });
+        }
+        if (this.rulerCorner) {
+            this.rulerCorner.addEventListener('click', () => this.resetPan());
+        }
     }
 
     // ============================================================
@@ -2042,6 +2320,22 @@ class RigWorkshopApp {
         const clientX = e.clientX - rect.left;
         const clientY = e.clientY - rect.top;
 
+        const pixelX = Math.floor(clientX / this.zoom);
+        const pixelY = Math.floor(clientY / this.zoom);
+
+        // Update Pixel Rulers Cursor Tracker
+        if (clientX >= 0 && clientX < rect.width && clientY >= 0 && clientY < rect.height) {
+            const pixelX = Math.floor(clientX / this.zoom);
+            const pixelY = Math.floor(clientY / this.zoom);
+            if (pixelX >= 0 && pixelX <= 64 && pixelY >= 0 && pixelY <= 64) {
+                this.drawRulers(pixelX, pixelY);
+            } else {
+                this.drawRulers(-1, -1);
+            }
+        } else {
+            this.drawRulers(-1, -1);
+        }
+
         // 1. Marquee Selection update
         if (this.isMarqueeSelecting) {
             const curX = Math.max(0, Math.min(rect.width, clientX));
@@ -2092,9 +2386,6 @@ class RigWorkshopApp {
         }
 
         // 2. Dragging Selected Parts with Smart Snap & Guidelines
-        const pixelX = Math.floor(clientX / this.zoom);
-        const pixelY = Math.floor(clientY / this.zoom);
-
         if (this.isDragging && this._selectedPartKeys.size > 0) {
             const dirData = this.getCurrentDirData();
             if (!dirData) return;
@@ -2389,6 +2680,455 @@ class RigWorkshopApp {
         a.click();
         URL.revokeObjectURL(url);
         this.showToast('📥 Đã tải file JSON về máy!');
+    }
+
+    // ============================================================
+    // ANIMATION WORKSHOP ENGINE (VIEW 3)
+    // ============================================================
+    async loadAnimConfig() {
+        try {
+            const res = await fetch('/api/anim_config');
+            this.animConfig = await res.json();
+            this.updateAnimInputsFromConfig();
+        } catch (e) {
+            console.error('Failed to load anim config:', e);
+        }
+    }
+
+    onSwitchToAnimTab() {
+        this.updateAnimZoom();
+        this.updateAnimHeaderBadges();
+        this.updateAnimInputsFromConfig();
+        this.syncAnimCompassButtons();
+    }
+
+    updateAnimZoom() {
+        if (!this.animCanvas) return;
+        const size = 64 * this.animZoom;
+        this.animCanvas.style.width = `${size}px`;
+        this.animCanvas.style.height = `${size}px`;
+    }
+
+    updateAnimHeaderBadges() {
+        const bState = document.getElementById('anim-badge-state');
+        const bDir = document.getElementById('anim-badge-dir');
+        const pill = document.getElementById('anim-active-pill');
+
+        const stateLabels = {
+            idle: '🧘 Đứng Thở (Idle)',
+            walk: '🚶 Đi Bộ (Walk)',
+            run: '🏃 Chạy Nhanh (Run)',
+            dash: '⚡ Lướt Gió (Dash)',
+            attack: '⚔️ Chém Đao (Attack)',
+            hurt: '💥 Bị Thương (Hurt)'
+        };
+        if (bState) bState.innerText = stateLabels[this.currentAnimState] || this.currentAnimState;
+        if (bDir) bDir.innerText = DIR_LABELS_VI[this.currentDir] || this.currentDir;
+        if (pill) pill.innerText = this.currentAnimState.toUpperCase();
+    }
+
+    syncAnimCompassButtons() {
+        document.querySelectorAll('.anim-dir-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.dir === this.currentDir);
+        });
+    }
+
+    updateAnimInputsFromConfig() {
+        if (!this.animConfig || !this.animConfig[this.currentAnimState]) return;
+        const c = this.animConfig[this.currentAnimState];
+
+        const setVal = (param, val) => {
+            const slider = document.getElementById(`slider-anim-${param}`);
+            const num = document.getElementById(`num-anim-${param}`);
+            if (slider) slider.value = val !== undefined ? val : 0;
+            if (num) num.value = val !== undefined ? val : 0;
+        };
+
+        setVal('speed', c.speed);
+        setVal('bob', c.bobAmount);
+        setVal('lean', c.bodyLeanAngle);
+        setVal('head', c.headTiltAngle);
+        setVal('arm', c.armSwingAngle);
+        setVal('leg', c.legSwingAngle);
+        setVal('squash', c.squashAmount);
+        setVal('stretch', c.stretchAmount);
+
+        this.updateAnimHeaderBadges();
+    }
+
+    setupAnimEditor() {
+        // State selection buttons
+        document.querySelectorAll('.anim-state-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.anim-state-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentAnimState = btn.dataset.state;
+                this.updateAnimInputsFromConfig();
+            });
+        });
+
+        // Direction buttons
+        document.querySelectorAll('.anim-dir-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setDirection(btn.dataset.dir);
+                this.syncAnimCompassButtons();
+                this.updateAnimHeaderBadges();
+            });
+        });
+
+        // Play / Pause button
+        const btnPlay = document.getElementById('btn-anim-play-pause');
+        if (btnPlay) {
+            btnPlay.addEventListener('click', () => {
+                this.isAnimPlaying = !this.isAnimPlaying;
+                btnPlay.innerText = this.isAnimPlaying ? '⏸️ Tạm Dừng' : '▶️ Tiếp Tục';
+                btnPlay.className = this.isAnimPlaying ? 'btn btn-primary' : 'btn btn-secondary';
+                btnPlay.style.width = '100%';
+                btnPlay.style.marginBottom = '8px';
+            });
+        }
+
+        // Speed buttons
+        document.querySelectorAll('.playback-speed-group .mini-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.playback-speed-group .mini-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.animPlaybackSpeed = parseFloat(btn.dataset.speed) || 1.0;
+            });
+        });
+
+        // Zoom dropdown
+        const selectZoom = document.getElementById('select-anim-zoom');
+        if (selectZoom) {
+            selectZoom.addEventListener('change', (e) => {
+                this.animZoom = parseInt(e.target.value) || 8;
+                this.updateAnimZoom();
+            });
+        }
+
+        // Checkboxes
+        const checkShadow = document.getElementById('check-anim-shadow');
+        if (checkShadow) {
+            checkShadow.addEventListener('change', (e) => {
+                this.showAnimShadow = e.target.checked;
+            });
+        }
+
+        const checkPivots = document.getElementById('check-anim-pivots');
+        if (checkPivots) {
+            checkPivots.addEventListener('change', (e) => {
+                this.showAnimPivots = e.target.checked;
+            });
+        }
+
+        // Wire parameter sliders & number inputs
+        const paramsMap = {
+            'speed': 'speed',
+            'bob': 'bobAmount',
+            'lean': 'bodyLeanAngle',
+            'head': 'headTiltAngle',
+            'arm': 'armSwingAngle',
+            'leg': 'legSwingAngle',
+            'squash': 'squashAmount',
+            'stretch': 'stretchAmount'
+        };
+
+        for (const [idKey, cfgKey] of Object.entries(paramsMap)) {
+            const slider = document.getElementById(`slider-anim-${idKey}`);
+            const num = document.getElementById(`num-anim-${idKey}`);
+
+            if (slider && num) {
+                const updateParam = (val) => {
+                    if (!this.animConfig) return;
+                    if (!this.animConfig[this.currentAnimState]) {
+                        this.animConfig[this.currentAnimState] = {};
+                    }
+                    this.animConfig[this.currentAnimState][cfgKey] = val;
+                };
+
+                slider.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    num.value = val;
+                    updateParam(val);
+                });
+
+                num.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    slider.value = val;
+                    updateParam(val);
+                });
+            }
+        }
+
+        // Save Anim Config button
+        const btnSave = document.getElementById('btn-save-anim');
+        if (btnSave) {
+            btnSave.addEventListener('click', () => this.saveAnimConfig());
+        }
+
+        // Reset current state button
+        const btnResetState = document.getElementById('btn-reset-anim-state');
+        if (btnResetState) {
+            btnResetState.addEventListener('click', () => this.resetAnimCurrentState());
+        }
+
+        // Reset all anim button
+        const btnResetAll = document.getElementById('btn-reset-all-anim');
+        if (btnResetAll) {
+            btnResetAll.addEventListener('click', () => this.resetAnimAll());
+        }
+    }
+
+    async saveAnimConfig() {
+        if (!this.animConfig) return;
+        try {
+            const res = await fetch('/api/save_anim_config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.animConfig)
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.showToast('💾 Đã lưu cấu hình hoạt ảnh & xuất ra Unity Resources! Nhấn [F5] trong Unity để nạp ngay.', '#065f46');
+            } else {
+                this.showToast('❌ Lỗi khi lưu cấu hình hoạt ảnh: ' + data.error, '#dc2626');
+            }
+        } catch (e) {
+            this.showToast('❌ Lỗi kết nối máy chủ: ' + e.message, '#dc2626');
+        }
+    }
+
+    async resetAnimCurrentState() {
+        try {
+            const res = await fetch('/api/default_anim_config');
+            const defData = await res.json();
+            if (defData && defData[this.currentAnimState]) {
+                this.animConfig[this.currentAnimState] = { ...defData[this.currentAnimState] };
+                this.updateAnimInputsFromConfig();
+                this.showToast(`↺ Đã khôi phục trạng thái [${this.currentAnimState}] về mặc định!`);
+            }
+        } catch (e) {
+            this.showToast('❌ Không thể tải cấu hình mặc định: ' + e.message, '#dc2626');
+        }
+    }
+
+    async resetAnimAll() {
+        try {
+            const res = await fetch('/api/default_anim_config');
+            const defData = await res.json();
+            if (defData) {
+                this.animConfig = JSON.parse(JSON.stringify(defData));
+                this.updateAnimInputsFromConfig();
+                this.showToast('🔄 Đã khôi phục toàn bộ hoạt ảnh về mặc định!');
+            }
+        } catch (e) {
+            this.showToast('❌ Không thể tải cấu hình mặc định: ' + e.message, '#dc2626');
+        }
+    }
+
+    startAnimLoop() {
+        const loop = (timestamp) => {
+            const dt = Math.min((timestamp - this.lastAnimFrameTime) / 1000, 0.1);
+            this.lastAnimFrameTime = timestamp;
+
+            if (this.currentTab === 'anim' && this.animConfig) {
+                this.updateAndRenderAnim(dt);
+            }
+            requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+    }
+
+    updateAndRenderAnim(dt) {
+        if (!this.animCtx || !this.animConfig) return;
+        const c = this.animConfig[this.currentAnimState] || {};
+        const speed = (c.speed !== undefined ? c.speed : 1.0) * this.animPlaybackSpeed;
+
+        if (this.isAnimPlaying) {
+            this.animTimer += dt * speed;
+        }
+
+        // Calculate motions matching Unity harmonic formulas
+        let bobY = 0;
+        let squashX = 1;
+        let stretchY = 1;
+        let rootLean = 0;
+        let bodyAngle = 0;
+        let headAngle = 0;
+        let armLAngle = 0;
+        let armRAngle = 0;
+        let legLAngle = 0;
+        let legRAngle = 0;
+
+        const bobAmt = c.bobAmount || 0;
+        const leanAmt = (c.bodyLeanAngle || 0) * Math.PI / 180;
+        const headAmt = (c.headTiltAngle || 0) * Math.PI / 180;
+        const armAmt = (c.armSwingAngle || 0) * Math.PI / 180;
+        const legAmt = (c.legSwingAngle || 0) * Math.PI / 180;
+        const squashAmt = c.squashAmount || 0;
+        const stretchAmt = c.stretchAmount || 0;
+
+        if (this.currentAnimState === 'idle') {
+            const breath = Math.sin(this.animTimer);
+            bobY = breath * bobAmt;
+            squashX = 1 - breath * squashAmt;
+            stretchY = 1 + breath * stretchAmt;
+            rootLean = breath * leanAmt;
+            headAngle = breath * headAmt;
+            armLAngle = Math.sin(this.animTimer * 1.1) * armAmt;
+            armRAngle = -armLAngle;
+            legLAngle = breath * legAmt;
+            legRAngle = -legLAngle;
+        } else if (this.currentAnimState === 'walk' || this.currentAnimState === 'run') {
+            const sinT = Math.sin(this.animTimer);
+            const absSin = Math.abs(sinT);
+            bobY = absSin * bobAmt;
+            squashX = 1 - absSin * squashAmt;
+            stretchY = 1 + absSin * stretchAmt;
+            bodyAngle = sinT * leanAmt;
+            headAngle = -sinT * headAmt;
+            legLAngle = sinT * legAmt;
+            legRAngle = -legLAngle;
+            armLAngle = -sinT * armAmt;
+            armRAngle = -armLAngle;
+        } else if (this.currentAnimState === 'dash') {
+            squashX = 1 + squashAmt;
+            stretchY = 1 + stretchAmt;
+            bobY = bobAmt;
+            bodyAngle = leanAmt;
+            headAngle = headAmt;
+            armLAngle = armAmt;
+            armRAngle = -armAmt;
+            legLAngle = legAmt;
+            legRAngle = -legAmt;
+        } else if (this.currentAnimState === 'attack') {
+            const progress = Math.sin(this.animTimer);
+            bobY = Math.abs(progress) * bobAmt;
+            squashX = 1 - Math.abs(progress) * squashAmt;
+            stretchY = 1 + Math.abs(progress) * stretchAmt;
+            bodyAngle = progress * leanAmt;
+            headAngle = progress * headAmt;
+            armRAngle = progress * armAmt;
+            armLAngle = -progress * armAmt * 0.4;
+            legLAngle = progress * legAmt;
+            legRAngle = -legLAngle;
+        } else if (this.currentAnimState === 'hurt') {
+            const jerk = Math.sin(this.animTimer * 10);
+            bobY = -Math.abs(jerk) * bobAmt;
+            squashX = 1 + squashAmt;
+            stretchY = 1 + stretchAmt;
+            rootLean = jerk * leanAmt;
+            headAngle = headAmt;
+            armLAngle = armAmt;
+            armRAngle = armAmt;
+        }
+
+        // Update live telemetry footer
+        const telemetry = document.getElementById('anim-telemetry');
+        if (telemetry) {
+            telemetry.innerText = `Nhịp: ${(this.animTimer % 6.28).toFixed(2)}s | Bob: ${bobY.toFixed(2)}px | Thân: ${(bodyAngle * 180 / Math.PI).toFixed(1)}° | Đầu: ${(headAngle * 180 / Math.PI).toFixed(1)}° | Tay: ${(armLAngle * 180 / Math.PI).toFixed(1)}° | Chân: ${(legLAngle * 180 / Math.PI).toFixed(1)}°`;
+        }
+
+        // Draw Canvas (64x64)
+        this.animCtx.clearRect(0, 0, 64, 64);
+
+        // Ground shadow
+        if (this.showAnimShadow) {
+            this.animCtx.save();
+            this.animCtx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            this.animCtx.beginPath();
+            this.animCtx.ellipse(32, 53, 10, 4, 0, 0, Math.PI * 2);
+            this.animCtx.fill();
+            this.animCtx.restore();
+        }
+
+        const dirData = this.getCurrentDirData();
+        if (!dirData) return;
+
+        const parts = PART_KEYS.map(key => ({
+            key,
+            ...dirData[key]
+        })).filter(p => p && p.visible !== false);
+
+        parts.sort((a, b) => (a.z || 10) - (b.z || 10));
+
+        // Feet origin in 64x64 is at x = 32, y = 53
+        const FEET_X = 32;
+        const FEET_Y = 53;
+
+        for (const part of parts) {
+            const img = this.getImage(part.file);
+            if (!img || !img.complete || img.naturalWidth === 0) continue;
+
+            const px = Math.round(part.x || 0);
+            const py = Math.round(part.y || 0);
+            const pw = img.naturalWidth;
+            const ph = img.naturalHeight;
+
+            // Compute joint pivot for this part
+            let jointPivotX = px + pw / 2;
+            let jointPivotY = py + ph / 2;
+            let partAngle = 0;
+
+            if (part.key === 'idle_head') {
+                jointPivotX = px + 8;
+                jointPivotY = py + 19;
+                partAngle = headAngle;
+            } else if (part.key === 'idle_body') {
+                jointPivotX = px + 6;
+                jointPivotY = py + 12;
+                partAngle = bodyAngle;
+            } else if (part.key === 'idle_arm_left') {
+                jointPivotX = px + 3;
+                jointPivotY = py + 2;
+                partAngle = armLAngle;
+            } else if (part.key === 'idle_arm_right') {
+                jointPivotX = px + 3;
+                jointPivotY = py + 2;
+                partAngle = armRAngle;
+            } else if (part.key === 'idle_leg_left') {
+                jointPivotX = px + 3;
+                jointPivotY = py + 2;
+                partAngle = legLAngle;
+            } else if (part.key === 'idle_leg_right') {
+                jointPivotX = px + 3;
+                jointPivotY = py + 2;
+                partAngle = legRAngle;
+            }
+
+            this.animCtx.save();
+
+            // 1. Root Bobbing & Lean
+            this.animCtx.translate(FEET_X, FEET_Y);
+            this.animCtx.translate(0, -bobY);
+            this.animCtx.rotate(rootLean);
+            this.animCtx.scale(squashX, stretchY);
+            this.animCtx.translate(-FEET_X, -FEET_Y);
+
+            // 2. Part Joint Rotation
+            this.animCtx.translate(jointPivotX, jointPivotY);
+            this.animCtx.rotate(partAngle);
+            this.animCtx.translate(-jointPivotX, -jointPivotY);
+
+            // 3. Draw Part (handling flip_x / flip_y)
+            if (part.flip_x || part.flip_y) {
+                this.animCtx.save();
+                this.animCtx.translate(px + (part.flip_x ? pw : 0), py + (part.flip_y ? ph : 0));
+                this.animCtx.scale(part.flip_x ? -1 : 1, part.flip_y ? -1 : 1);
+                this.animCtx.drawImage(img, 0, 0);
+                this.animCtx.restore();
+            } else {
+                this.animCtx.drawImage(img, px, py);
+            }
+
+            // 4. Pivot visualization
+            if (this.showAnimPivots) {
+                this.animCtx.fillStyle = '#f43f5e';
+                this.animCtx.fillRect(jointPivotX - 1, jointPivotY - 1, 2, 2);
+            }
+
+            this.animCtx.restore();
+        }
     }
 
     importJson(e) {

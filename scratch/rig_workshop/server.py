@@ -16,6 +16,8 @@ PARTS_DIR = os.path.join(WORKSHOP_DIR, 'parts')
 PARTS_BACKUP_DIR = os.path.join(WORKSHOP_DIR, 'parts_backup')
 CONFIG_PATH = os.path.join(WORKSHOP_DIR, 'config.json')
 DEFAULT_CONFIG_PATH = os.path.join(WORKSHOP_DIR, 'default_config.json')
+ANIM_CONFIG_PATH = os.path.join(WORKSHOP_DIR, 'animation_config.json')
+DEFAULT_ANIM_CONFIG_PATH = os.path.join(WORKSHOP_DIR, 'default_anim_config.json')
 
 # Ensure backup of parts exists
 os.makedirs(PARTS_BACKUP_DIR, exist_ok=True)
@@ -72,6 +74,21 @@ class RigWorkshopHandler(http.server.SimpleHTTPRequestHandler):
 
         if path == '/api/default_config':
             with open(DEFAULT_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self.send_json(data)
+            return
+
+        if path == '/api/anim_config':
+            cfg_file = ANIM_CONFIG_PATH if os.path.exists(ANIM_CONFIG_PATH) else DEFAULT_ANIM_CONFIG_PATH
+            if not os.path.exists(cfg_file):
+                cfg_file = DEFAULT_ANIM_CONFIG_PATH
+            with open(cfg_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self.send_json(data)
+            return
+
+        if path == '/api/default_anim_config':
+            with open(DEFAULT_ANIM_CONFIG_PATH, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             self.send_json(data)
             return
@@ -160,6 +177,26 @@ class RigWorkshopHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json({"success": True, "message": f"Đã khôi phục mảnh {part_name} về ảnh gốc!"})
                 else:
                     self.send_json({"success": False, "error": "Không tìm thấy bản lưu gốc"}, status=404)
+            except Exception as e:
+                self.send_json({"success": False, "error": str(e)}, status=500)
+            return
+
+        if path == '/api/save_anim_config':
+            try:
+                anim_data = json.loads(body.decode('utf-8'))
+                with open(ANIM_CONFIG_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(anim_data, f, indent=2, ensure_ascii=False)
+                
+                # Copy directly into Unity Resources
+                unity_anim_path = os.path.join(export_rig.CLIENT_RIG_ROOT, "animation_config.json")
+                if os.path.exists(export_rig.CLIENT_RIG_ROOT):
+                    with open(unity_anim_path, 'w', encoding='utf-8') as f:
+                        json.dump(anim_data, f, indent=2, ensure_ascii=False)
+
+                self.send_json({
+                    "success": True,
+                    "message": "Đã lưu cấu hình hoạt ảnh và xuất thẳng ra Unity Resources! Nhấn F5 trong Unity để nạp ngay."
+                })
             except Exception as e:
                 self.send_json({"success": False, "error": str(e)}, status=500)
             return
