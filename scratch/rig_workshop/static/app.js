@@ -80,6 +80,10 @@ class RigWorkshopApp {
         this.isColorMatchPicking = false;
         this.colorMatchSourcePartKey = null;
         this.colorHarmonizeHistory = [];
+        this.colorMatchTargetBox = document.getElementById('color-match-target-box');
+        this.cmtbBadge = document.getElementById('cmtb-badge');
+        this._partAlphaDataCache = new Map();
+        this.hoveredColorMatchTargetKey = null;
 
         // Dragging, Panning & Marquee selection state
         this.toolMode = 'select'; // 'select' or 'pan'
@@ -699,8 +703,9 @@ class RigWorkshopApp {
         if (this.imageCache.has(fileName) && !forceReload) {
             return this.imageCache.get(fileName);
         }
+        const cleanFile = fileName.endsWith('.png') ? fileName : `${fileName}.png`;
         const img = new Image();
-        img.src = `/parts/${fileName}.png?t=${Date.now()}`;
+        img.src = `/parts/${cleanFile}?t=${Date.now()}`;
         img.onload = () => {
             if (this.currentTab === 'assembler') {
                 this.renderMainCanvas();
@@ -713,7 +718,117 @@ class RigWorkshopApp {
 
     invalidatePartCache(fileName) {
         this.imageCache.delete(fileName);
-        this.getImage(fileName, true);
+        if (this._partAlphaDataCache) this._partAlphaDataCache.delete(fileName);
+        return this.getImage(fileName, true);
+    }
+
+    isPartPixelOpaque(p, pixelX, pixelY) {
+        const img = this.getImage(p.file);
+        if (!img || !img.complete || img.naturalWidth === 0) return false;
+
+        const lx = pixelX - p.x;
+        const ly = pixelY - p.y;
+        if (lx < 0 || ly < 0 || lx >= img.naturalWidth || ly >= img.naturalHeight) return false;
+
+        if (!this._partAlphaDataCache) this._partAlphaDataCache = new Map();
+        let alphaData = this._partAlphaDataCache.get(p.file);
+        if (!alphaData || alphaData.width !== img.naturalWidth || alphaData.height !== img.naturalHeight) {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            const ctx = c.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, c.width, c.height);
+            alphaData = {
+                width: c.width,
+                height: c.height,
+                data: imgData.data
+            };
+            this._partAlphaDataCache.set(p.file, alphaData);
+        }
+
+        const idx = (ly * alphaData.width + lx) * 4 + 3;
+        return alphaData.data[idx] > 20;
+    }
+
+    getPartAtPixel(pixelX, pixelY, excludeKey = null) {
+        const dirData = this.getCurrentDirData();
+        if (!dirData) return null;
+
+        const parts = PART_KEYS.map(key => ({
+            key,
+            ...dirData[key]
+        })).filter(p => p && p.visible !== false && p.key !== excludeKey);
+
+        // Sort descending by Z so top layer is tested first
+        parts.sort((a, b) => (b.z || 10) - (a.z || 10));
+
+        // 1. Pixel-perfect pass (exact non-transparent pixel)
+        for (const p of parts) {
+            const img = this.getImage(p.file);
+            if (!img || !img.complete || img.naturalWidth === 0) continue;
+            const pw = img.naturalWidth;
+            const ph = img.naturalHeight;
+
+            if (pixelX >= p.x && pixelX < p.x + pw &&
+                pixelY >= p.y && pixelY < p.y + ph) {
+                if (this.isPartPixelOpaque(p, pixelX, pixelY)) {
+                    return p.key;
+                }
+            }
+        }
+
+        // 2. Fallback pass (bounding box)
+        for (const p of parts) {
+            const img = this.getImage(p.file);
+            if (!img || !img.complete || img.naturalWidth === 0) continue;
+            const pw = img.naturalWidth;
+            const ph = img.naturalHeight;
+
+            if (pixelX >= p.x && pixelX < p.x + pw &&
+                pixelY >= p.y && pixelY < p.y + ph) {
+                return p.key;
+            }
+        }
+
+        return null;
+    }
+
+    updateColorMatchTargetHover(targetKey) {
+        if (!this.colorMatchTargetBox) {
+            this.colorMatchTargetBox = document.getElementById('color-match-target-box');
+            this.cmtbBadge = document.getElementById('cmtb-badge');
+        }
+        if (!this.colorMatchTargetBox) return;
+
+        if (!this.isColorMatchPicking || !targetKey || targetKey === this.colorMatchSourcePartKey) {
+            this.colorMatchTargetBox.style.display = 'none';
+            this.hoveredColorMatchTargetKey = null;
+            return;
+        }
+
+        const dirData = this.getCurrentDirData();
+        const part = dirData ? dirData[targetKey] : null;
+        if (!part || !part.visible) {
+            this.colorMatchTargetBox.style.display = 'none';
+            this.hoveredColorMatchTargetKey = null;
+            return;
+        }
+
+        const img = this.getImage(part.file);
+        const pw = img && img.complete && img.naturalWidth > 0 ? img.naturalWidth : 16;
+        const ph = img && img.complete && img.naturalHeight > 0 ? img.naturalHeight : 16;
+
+        this.hoveredColorMatchTargetKey = targetKey;
+        this.colorMatchTargetBox.style.display = 'block';
+        this.colorMatchTargetBox.style.left = `${part.x * this.zoom}px`;
+        this.colorMatchTargetBox.style.top = `${part.y * this.zoom}px`;
+        this.colorMatchTargetBox.style.width = `${pw * this.zoom}px`;
+        this.colorMatchTargetBox.style.height = `${ph * this.zoom}px`;
+
+        if (this.cmtbBadge) {
+            this.cmtbBadge.innerText = `🎯 Mẫu màu: ${PART_NAMES_VI[targetKey] || targetKey}`;
+        }
     }
 
     getCurrentDirData() {
@@ -1082,12 +1197,18 @@ class RigWorkshopApp {
                 }
             });
 
-            item.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                if (!this.selectedPartKeys.has(part.key)) {
-                    this.selectPart(part.key);
+            item.addEventListener('mouseenter', () => {
+                if (this.isColorMatchPicking && part.key !== this.colorMatchSourcePartKey) {
+                    item.classList.add('picking-target-hover');
+                    this.updateColorMatchTargetHover(part.key);
                 }
-                this.showContextMenu(e.clientX, e.clientY);
+            });
+
+            item.addEventListener('mouseleave', () => {
+                item.classList.remove('picking-target-hover');
+                if (this.isColorMatchPicking) {
+                    this.updateColorMatchTargetHover(null);
+                }
             });
 
             list.appendChild(item);
@@ -1673,123 +1794,81 @@ class RigWorkshopApp {
         const sD = sourceImgData.data;
         const tD = targetImgData.data;
 
-        // 1. Gather Target Lab statistics
-        const tLabs = [];
+        // 1. Gather Target pixels (alpha > 40)
+        let tPixels = [];
         for (let i = 0; i < tD.length; i += 4) {
             if (tD[i + 3] > 40) {
                 const lab = this.rgbToLab(tD[i], tD[i + 1], tD[i + 2]);
                 if (lab[0] >= 16) {
-                    tLabs.push(lab);
+                    tPixels.push(lab);
                 }
             }
         }
-        if (tLabs.length < 5) {
+        if (tPixels.length < 5) {
             for (let i = 0; i < tD.length; i += 4) {
                 if (tD[i + 3] > 40) {
-                    tLabs.push(this.rgbToLab(tD[i], tD[i + 1], tD[i + 2]));
+                    tPixels.push(this.rgbToLab(tD[i], tD[i + 1], tD[i + 2]));
                 }
             }
         }
-        if (tLabs.length === 0) return 0;
+        if (tPixels.length === 0) return 0;
 
-        let meanLt = 0, meanAt = 0, meanBt = 0;
-        for (const lab of tLabs) {
-            meanLt += lab[0];
-            meanAt += lab[1];
-            meanBt += lab[2];
-        }
-        meanLt /= tLabs.length;
-        meanAt /= tLabs.length;
-        meanBt /= tLabs.length;
+        // Sort target pixels by Lightness L
+        tPixels.sort((a, b) => a[0] - b[0]);
 
-        let varLt = 0, varAt = 0, varBt = 0;
-        for (const lab of tLabs) {
-            varLt += (lab[0] - meanLt) * (lab[0] - meanLt);
-            varAt += (lab[1] - meanAt) * (lab[1] - meanAt);
-            varBt += (lab[2] - meanBt) * (lab[2] - meanBt);
-        }
-        const stdLt = Math.sqrt(varLt / tLabs.length) || 1;
-        const stdAt = Math.sqrt(varAt / tLabs.length) || 1;
-        const stdBt = Math.sqrt(varBt / tLabs.length) || 1;
-
-        // 2. Gather Source Lab statistics
-        const sLabs = [];
-        for (let i = 0; i < sD.length; i += 4) {
-            if (sD[i + 3] > 40) {
-                const lab = this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]);
-                if (lab[0] >= 16) {
-                    sLabs.push(lab);
-                }
-            }
-        }
-        if (sLabs.length < 5) {
-            for (let i = 0; i < sD.length; i += 4) {
-                if (sD[i + 3] > 40) {
-                    sLabs.push(this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]));
-                }
-            }
-        }
-        if (sLabs.length === 0) return 0;
-
-        let meanLs = 0, meanAs = 0, meanBs = 0;
-        for (const lab of sLabs) {
-            meanLs += lab[0];
-            meanAs += lab[1];
-            meanBs += lab[2];
-        }
-        meanLs /= sLabs.length;
-        meanAs /= sLabs.length;
-        meanBs /= sLabs.length;
-
-        let varLs = 0, varAs = 0, varBs = 0;
-        for (const lab of sLabs) {
-            varLs += (lab[0] - meanLs) * (lab[0] - meanLs);
-            varAs += (lab[1] - meanAs) * (lab[1] - meanAs);
-            varBs += (lab[2] - meanBs) * (lab[2] - meanBs);
-        }
-        const stdLs = Math.sqrt(varLs / sLabs.length) || 1;
-        const stdAs = Math.sqrt(varAs / sLabs.length) || 1;
-        const stdBs = Math.sqrt(varBs / sLabs.length) || 1;
-
-        const scaleL = Math.min(2.2, Math.max(0.45, stdLt / (stdLs + 0.001)));
-        const scaleA = Math.min(2.2, Math.max(0.45, stdAt / (stdAs + 0.001)));
-        const scaleB = Math.min(2.2, Math.max(0.45, stdBt / (stdBs + 0.001)));
-
-        // 3. Reinhard Transfer
-        let modifiedCount = 0;
+        // 2. Gather Source pixels
         const hasSelection = selectedPixelsSet && selectedPixelsSet.size > 0 && sourceWidth > 0;
-
+        const sPixels = [];
         for (let i = 0; i < sD.length; i += 4) {
             if (sD[i + 3] <= 10) continue;
-
             if (hasSelection) {
                 const pxIdx = i / 4;
                 const px = pxIdx % sourceWidth;
                 const py = Math.floor(pxIdx / sourceWidth);
                 if (!selectedPixelsSet.has(`${px},${py}`)) continue;
             }
+            const lab = this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]);
+            sPixels.push({
+                idx: i,
+                L: lab[0],
+                a: lab[1],
+                b: lab[2]
+            });
+        }
+        if (sPixels.length === 0) return 0;
 
-            const [curL, curA, curB] = this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]);
+        // Sort source pixels by Lightness L
+        sPixels.sort((a, b) => a.L - b.L);
 
-            let newL = meanLt + (curL - meanLs) * scaleL;
-            let newA = meanAt + (curA - meanAs) * scaleA;
-            let newB = meanBt + (curB - meanBs) * scaleB;
-            newL = Math.max(0, Math.min(100, newL));
+        // 3. Map colors using quantile ramp matching
+        let modifiedCount = 0;
+        const sCount = sPixels.length;
+        const tCount = tPixels.length;
 
-            let finL = newL;
-            let finA = newA;
-            let finB = newB;
-            if (curL < 18) {
-                const w = Math.max(0, Math.min(1, curL / 18));
-                finL = (1 - w) * curL + w * newL;
-                finA = (1 - w) * curA + w * newA;
-                finB = (1 - w) * curB + w * newB;
+        for (let i = 0; i < sCount; i++) {
+            const sp = sPixels[i];
+            const q = sCount > 1 ? i / (sCount - 1) : 0.5;
+            const tIdx = Math.min(tCount - 1, Math.max(0, Math.round(q * (tCount - 1))));
+            const [tL, ta, tb] = tPixels[tIdx];
+
+            let finL, finA, finB;
+            if (sp.L < 16) {
+                // Outline protection: preserve dark shading, smoothly blend tone opponent
+                const w = Math.max(0, Math.min(1, sp.L / 16));
+                finL = sp.L;
+                finA = (1 - w) * sp.a + w * ta;
+                finB = (1 - w) * sp.b + w * tb;
+            } else {
+                // Adopt target color palette & luminance ramp
+                finL = tL;
+                finA = ta;
+                finB = tb;
             }
 
-            const [finR, finG, finB_rgb] = this.labToRgb(finL, finA, finB);
-            sD[i] = finR;
-            sD[i + 1] = finG;
-            sD[i + 2] = finB_rgb;
+            const [nr, ng, nb] = this.labToRgb(finL, finA, finB);
+            sD[sp.idx] = nr;
+            sD[sp.idx + 1] = ng;
+            sD[sp.idx + 2] = nb;
             modifiedCount++;
         }
 
@@ -1816,12 +1895,19 @@ class RigWorkshopApp {
     endColorMatchPickMode() {
         this.isColorMatchPicking = false;
         this.colorMatchSourcePartKey = null;
+        this.hoveredColorMatchTargetKey = null;
 
         const banner = document.getElementById('color-match-banner');
         if (banner) banner.style.display = 'none';
 
         const frame = document.getElementById('canvas-assembly-frame');
         if (frame) frame.classList.remove('picking-color-match');
+
+        if (this.colorMatchTargetBox) {
+            this.colorMatchTargetBox.style.display = 'none';
+        }
+
+        document.querySelectorAll('.layer-item.picking-target-hover').forEach(el => el.classList.remove('picking-target-hover'));
 
         this.updateSelectionBox();
     }
@@ -1846,11 +1932,12 @@ class RigWorkshopApp {
             const ensureLoaded = (file) => new Promise((resolve, reject) => {
                 const img = this.getImage(file);
                 if (img && img.complete && img.naturalWidth > 0) return resolve(img);
+                const cleanFile = file.endsWith('.png') ? file : `${file}.png`;
                 const temp = new Image();
                 temp.crossOrigin = 'anonymous';
                 temp.onload = () => resolve(temp);
                 temp.onerror = () => reject(new Error(`Không thể nạp ảnh: ${file}`));
-                temp.src = `/parts/${file}?t=${Date.now()}`;
+                temp.src = `/parts/${cleanFile}?t=${Date.now()}`;
             });
 
             const [sourceImg, targetImg] = await Promise.all([
@@ -1881,6 +1968,15 @@ class RigWorkshopApp {
             sCtx.putImageData(sImgData, 0, 0);
             const newPngDataUrl = sCanvas.toDataURL('image/png');
 
+            // 1. Instantly update in-memory cache and re-render so sprite NEVER disappears
+            const localImg = new Image();
+            localImg.src = newPngDataUrl;
+            await new Promise((res) => { localImg.onload = res; localImg.onerror = res; });
+            this.imageCache.set(sourcePart.file, localImg);
+            if (this._partAlphaDataCache) this._partAlphaDataCache.delete(sourcePart.file);
+            this.renderAll();
+
+            // 2. Persist to server via /api/save_part
             const res = await fetch('/api/save_part', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1892,13 +1988,6 @@ class RigWorkshopApp {
 
             const result = await res.json();
             if (result.success) {
-                this.invalidatePartCache(sourcePart.file);
-                const refreshedImg = new Image();
-                refreshedImg.src = `/parts/${sourcePart.file}?t=${Date.now()}`;
-                await new Promise((res) => { refreshedImg.onload = res; refreshedImg.onerror = res; });
-                this.imageCache.set(sourcePart.file, refreshedImg);
-
-                this.renderAll();
                 this.showToast(`✨ Đã đồng bộ màu cho "${sourceNameVi}" theo phong cách của "${targetNameVi}" (${count} px)!`, '#10b981');
             } else {
                 this.showToast(`❌ Lỗi lưu ảnh: ${result.error}`, '#ef4444');
@@ -2472,7 +2561,8 @@ class RigWorkshopApp {
             await new Promise((res, rej) => {
                 targetImg.onload = res;
                 targetImg.onerror = () => rej(new Error(`Không thể nạp ảnh: ${chosenTarget.file}`));
-                targetImg.src = `/parts/${chosenTarget.file}?t=${Date.now()}`;
+            const cleanTargetFile = chosenTarget.file.endsWith('.png') ? chosenTarget.file : `${chosenTarget.file}.png`;
+            targetImg.src = `/parts/${cleanTargetFile}?t=${Date.now()}`;
             });
 
             const tCanvas = document.createElement('canvas');
@@ -3232,26 +3322,7 @@ class RigWorkshopApp {
         const dirData = this.getCurrentDirData();
         if (!dirData) return;
 
-        const parts = PART_KEYS.map(key => ({
-            key,
-            ...dirData[key]
-        })).filter(p => p && p.visible !== false);
-
-        parts.sort((a, b) => (b.z || 10) - (a.z || 10));
-
-        let hitKey = null;
-        for (const p of parts) {
-            const img = this.getImage(p.file);
-            if (!img || !img.complete) continue;
-            const pw = img.naturalWidth;
-            const ph = img.naturalHeight;
-
-            if (pixelX >= p.x && pixelX < p.x + pw &&
-                pixelY >= p.y && pixelY < p.y + ph) {
-                hitKey = p.key;
-                break;
-            }
-        }
+        const hitKey = this.getPartAtPixel(pixelX, pixelY);
 
         if (this.isColorMatchPicking) {
             if (hitKey) {
@@ -3346,24 +3417,9 @@ class RigWorkshopApp {
         const dirData = this.getCurrentDirData();
         if (!dirData) return;
 
-        const parts = PART_KEYS.map(key => ({
-            key,
-            ...dirData[key]
-        })).filter(p => p && p.visible !== false);
-
-        parts.sort((a, b) => (b.z || 10) - (a.z || 10));
-
-        for (const p of parts) {
-            const img = this.getImage(p.file);
-            if (!img || !img.complete) continue;
-            const pw = img.naturalWidth;
-            const ph = img.naturalHeight;
-
-            if (pixelX >= p.x && pixelX < p.x + pw &&
-                pixelY >= p.y && pixelY < p.y + ph) {
-                this.selectPart(p.key);
-                break;
-            }
+        const hitKey = this.getPartAtPixel(pixelX, pixelY);
+        if (hitKey) {
+            this.selectPart(hitKey);
         }
 
         this.showContextMenu(e.clientX, e.clientY);
@@ -3387,6 +3443,16 @@ class RigWorkshopApp {
 
         const pixelX = Math.floor(clientX / this.zoom);
         const pixelY = Math.floor(clientY / this.zoom);
+
+        // Update Color Match Target Hover Box
+        if (this.isColorMatchPicking) {
+            if (clientX >= 0 && clientX < rect.width && clientY >= 0 && clientY < rect.height) {
+                const targetKey = this.getPartAtPixel(pixelX, pixelY, this.colorMatchSourcePartKey);
+                this.updateColorMatchTargetHover(targetKey);
+            } else {
+                this.updateColorMatchTargetHover(null);
+            }
+        }
 
         // Update Pixel Rulers Cursor Tracker
         if (clientX >= 0 && clientX < rect.width && clientY >= 0 && clientY < rect.height) {

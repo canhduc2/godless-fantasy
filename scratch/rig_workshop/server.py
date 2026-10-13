@@ -62,6 +62,8 @@ class RigWorkshopHandler(http.server.SimpleHTTPRequestHandler):
         if path.startswith('/parts/'):
             fname = path[len('/parts/'):]
             fpath = os.path.join(PARTS_DIR, fname)
+            if not os.path.exists(fpath) and not fname.endswith('.png'):
+                fpath = os.path.join(PARTS_DIR, f"{fname}.png")
             self.serve_file(fpath, 'image/png')
             return
 
