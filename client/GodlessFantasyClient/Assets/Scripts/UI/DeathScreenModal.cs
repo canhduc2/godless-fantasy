@@ -46,15 +46,16 @@ namespace GodlessFantasy.UI
             titleStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 24,
+                fontSize = 19,
                 fontStyle = FontStyle.Bold,
-                normal = { textColor = new Color(1f, 0.2f, 0.2f, 1f) }
+                wordWrap = false,
+                normal = { textColor = new Color(1f, 0.25f, 0.25f, 1f) }
             };
 
             warningStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 13,
+                fontSize = 12,
                 wordWrap = true,
                 normal = { textColor = new Color(1f, 0.85f, 0.35f, 0.95f) }
             };
@@ -63,14 +64,16 @@ namespace GodlessFantasy.UI
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 12,
+                wordWrap = true,
                 normal = { textColor = new Color(0.9f, 0.65f, 0.35f, 1f) }
             };
 
             btnStyle = new GUIStyle(GUI.skin.button)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 14,
+                fontSize = 13,
                 fontStyle = FontStyle.Bold,
+                wordWrap = false,
                 normal = { textColor = Color.white }
             };
 
@@ -119,9 +122,9 @@ namespace GodlessFantasy.UI
             InitStyles();
             GUI.depth = -300; // Nằm trên tất cả các cửa sổ khác
 
-            // 1. MÀN HÌNH ĐEN NGÒM TỐI TĂM (BLACKOUT VIGNETTE)
+            // 1. MÀN HÌNH ĐEN NGÒM TỐI TĂM (BLACKOUT VIGNETTE - Giữ 65% để người chơi thấy rõ map và đồ rơi xung quanh xác)
             float alpha = Mathf.Clamp01((Time.time - deathTime) * 1.8f);
-            GUI.color = new Color(0.02f, 0.02f, 0.04f, 0.94f * alpha);
+            GUI.color = new Color(0.02f, 0.02f, 0.04f, 0.65f * alpha);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
 
             // Viền máu đỏ mờ bốn góc màn hình
@@ -133,8 +136,8 @@ namespace GodlessFantasy.UI
             GUI.color = Color.white;
 
             // 2. KHUNG HỘP THÔNG BÁO TỬ TRẬN
-            float boxW = Mathf.Min(520f, Screen.width - 40f);
-            float boxH = 340f;
+            float boxW = Mathf.Min(560f, Screen.width - 24f);
+            float boxH = 350f;
             float boxX = (Screen.width - boxW) / 2f;
             float boxY = (Screen.height - boxH) / 2f;
             Rect boxRect = new Rect(boxX, boxY, boxW, boxH);
@@ -146,35 +149,34 @@ namespace GodlessFantasy.UI
             DrawDoubleGoldFrame(boxRect, new Color(0.85f, 0.25f, 0.25f, 0.95f), new Color(0.45f, 0.15f, 0.15f, 0.95f));
 
             // Tiêu đề
-            GUI.Label(new Rect(boxX, boxY + 22, boxW, 36), "☠️ BẠN ĐÃ TỬ TRẬN TRÊN CHIẾN TRƯỜNG! ☠️", titleStyle);
+            GUI.Label(new Rect(boxX, boxY + 18, boxW, 28), "☠️ BẠN ĐÃ TỬ TRẬN TRÊN CHIẾN TRƯỜNG! ☠️", titleStyle);
 
-            // Cảnh báo mất mát theo đúng luật MMORPG Hardcore
-            string warnText = "<color=#ff5252>⚠️ RỦI RO CHIẾN TRANH:</color> 50% Vật phẩm không nằm trong 5 Ô Bảo Vệ Vĩnh Viễn đã rơi tự do ra sàn đất cho người khác nhặt!";
-            GUI.Label(new Rect(boxX + 24, boxY + 70, boxW - 48, 44), warnText, warningStyle);
+            // Cảnh báo mất mát 5% theo yêu cầu
+            string warnText = "<color=#ff5252>⚠️ RỦI RO CHIẾN TRANH:</color> 5% Vật phẩm ngoài các ô cường hóa bảo vệ bị bật tung ra sàn map tại vị trí chết.";
+            GUI.Label(new Rect(boxX + 24, boxY + 52, boxW - 48, 24), warnText, warningStyle);
 
-            // Thông báo 5 ô bảo vệ vĩnh viễn
-            string protectText = "<color=#69f0ae>🛡️ 5 Ô BẢO VỆ VĨNH VIỄN:</color> Đồ trong 5 ô này được niêm phong an toàn tuyệt đối 100%!";
-            GUI.Label(new Rect(boxX + 24, boxY + 118, boxW - 48, 26), protectText, warningStyle);
-
-            // Danh sách đồ rơi
-            Rect dropListBox = new Rect(boxX + 30, boxY + 152, boxW - 60, 95);
+            // Danh sách đồ rơi (Mở rộng diện tích rộng rãi)
+            Rect dropListBox = new Rect(boxX + 24, boxY + 84, boxW - 48, 190);
             GUI.color = new Color(0.03f, 0.04f, 0.07f, 0.85f);
             GUI.DrawTexture(dropListBox, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             if (droppedItemNames.Count > 0)
             {
-                string droppedSummary = $"Đã rơi {droppedItemNames.Count} món:\n" + string.Join(", ", droppedItemNames);
-                GUI.Label(new Rect(dropListBox.x + 8, dropListBox.y + 8, dropListBox.width - 16, dropListBox.height - 16), droppedSummary, itemStyle);
+                string droppedSummary = $"💥 ĐÃ RƠI TUNG {droppedItemNames.Count} MÓN RA MAP TẠI VỊ TRÍ CHẾT:\n• " +
+                    string.Join("\n• ", droppedItemNames) +
+                    "\n\n<color=#40c4ff><i>(Toàn bộ đồ đang nằm trên sàn đất tại nơi bạn hy sinh. Bạn có thể quay lại bấm [F] để nhặt!)</i></color>";
+                GUI.Label(new Rect(dropListBox.x + 12, dropListBox.y + 10, dropListBox.width - 24, dropListBox.height - 20), droppedSummary, itemStyle);
             }
             else
             {
-                GUI.Label(new Rect(dropListBox.x + 8, dropListBox.y + 30, dropListBox.width - 16, 30), "May mắn! Toàn bộ đồ đạc của bạn nằm trong vùng bảo vệ, không bị rơi món nào.", itemStyle);
+                GUI.Label(new Rect(dropListBox.x + 8, dropListBox.y + 70, dropListBox.width - 16, 40), "✨ May mắn! Toàn bộ đồ đạc của bạn nằm trong các ô cường hóa bảo vệ vĩnh viễn, không bị rơi món nào.", itemStyle);
             }
 
             // Nút Hồi sinh
             string locName = GodlessFantasy.World.WaystoneShrine.GetRespawnLocationName();
-            Rect btnRect = new Rect(boxX + (boxW - 320f) / 2f, boxY + boxH - 65, 320f, 44);
+            float btnW = Mathf.Min(400f, boxW - 48f);
+            Rect btnRect = new Rect(boxX + (boxW - btnW) / 2f, boxY + boxH - 58, btnW, 42);
             GUI.color = new Color(0.2f, 0.75f, 0.35f, 1f);
             if (GUI.Button(btnRect, $"✨ HỒI SINH: {locName.ToUpper()} [SPACE]", btnStyle))
             {

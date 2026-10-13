@@ -413,6 +413,22 @@ kbd {
     color: #60a5fa;
 }
 
+.tool-mode-group {
+    display: inline-flex;
+    background: var(--bg-card);
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    gap: 3px;
+    align-items: center;
+}
+
+.tool-mode-group .mini-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 8px;
+}
+
 .mini-btn {
     background: var(--bg-panel);
     border: 1px solid var(--border);
@@ -428,6 +444,12 @@ kbd {
 .mini-btn:hover {
     color: var(--text-main);
     background: var(--bg-card);
+}
+
+.mini-btn.active {
+    background: var(--accent) !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px var(--accent-glow);
 }
 
 .canvas-wrapper {
@@ -463,6 +485,90 @@ kbd {
     background: rgba(59, 130, 246, 0.12);
     pointer-events: none;
     display: none;
+    z-index: 12;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+}
+
+.multi-selection-item {
+    position: absolute;
+    border: 1px dashed #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+    pointer-events: none;
+    z-index: 11;
+}
+
+.marquee-box {
+    position: absolute;
+    border: 1px dashed #38bdf8;
+    background: rgba(56, 189, 248, 0.18);
+    pointer-events: none;
+    display: none;
+    z-index: 20;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.guide-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 15;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.arrange-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.arrange-btn {
+    font-size: 11px;
+    padding: 7px 4px;
+    justify-content: center;
+    text-align: center;
+}
+
+.arrange-btn:hover {
+    border-color: var(--accent);
+    color: #fff;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.batch-inspector-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.batch-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #93c5fd;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.batch-part-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.part-chip {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-main);
 }
 
 .viewport-footer {

@@ -177,20 +177,25 @@ namespace GodlessFantasy.Core
             }
 
             // 7. Tạo Dàn NPC Làng Tân Thủ Hoàn Chỉnh (Trưởng Làng, Shop, Thợ Rèn, Dược Sư, Sứ Giả RP)
-            Sprite npcElderSprite = Resources.Load<Sprite>("npc_elder");
+            Sprite npcElderSprite = Resources.Load<Sprite>("npc_elder") ?? dummySprite;
+            Sprite npcMerchantSprite = Resources.Load<Sprite>("npc_merchant") ?? npcElderSprite;
+            Sprite npcBlacksmithSprite = Resources.Load<Sprite>("npc_blacksmith") ?? npcElderSprite;
+            Sprite npcAlchemistSprite = Resources.Load<Sprite>("npc_alchemist") ?? npcElderSprite;
+            Sprite npcRebirthSprite = Resources.Load<Sprite>("npc_rebirth") ?? npcElderSprite;
+
             CreateVillageNPC("NPC_Elder_Eldrin", "Trưởng Làng Eldrin", "NPC 💬", new Vector3(-72.0f, 2.0f, 0), npcElderSprite, false, GodlessFantasy.UI.VillageNPCType.Merchant,
                 "Chào mừng dũng sĩ đến với Đại Đô Thị Làng Tân Thủ! Hãy ghé thăm các hàng quán chuẩn bị hành trang trước khi ra trận.");
 
-            CreateVillageNPC("NPC_Merchant_Barnaby", "Thương Nhân Barnaby", "Shop 🛒", new Vector3(-65.0f, 6.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Merchant,
+            CreateVillageNPC("NPC_Merchant_Barnaby", "Thương Nhân Barnaby", "Shop 🛒", new Vector3(-65.0f, 6.0f, 0), npcMerchantSprite, true, GodlessFantasy.UI.VillageNPCType.Merchant,
                 "Cửa hàng bán đầy đủ bình máu HP, bình mana MP và cuộn chiêu sơ cấp!");
 
-            CreateVillageNPC("NPC_Blacksmith_Vulkan", "Thợ Rèn Vulkan", "Thợ Rèn 🔨", new Vector3(-65.0f, -6.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Blacksmith,
+            CreateVillageNPC("NPC_Blacksmith_Vulkan", "Thợ Rèn Vulkan", "Thợ Rèn 🔨", new Vector3(-65.0f, -6.0f, 0), npcBlacksmithSprite, true, GodlessFantasy.UI.VillageNPCType.Blacksmith,
                 "Ta có thể cường hóa đập đồ trang bị của ngươi lên +1 đến +10!");
 
-            CreateVillageNPC("NPC_Alchemist_Morgana", "Phù Thủy Morgana", "Dược Sư 🔮", new Vector3(-55.0f, 6.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Alchemist,
+            CreateVillageNPC("NPC_Alchemist_Morgana", "Phù Thủy Morgana", "Dược Sư 🔮", new Vector3(-55.0f, 6.0f, 0), npcAlchemistSprite, true, GodlessFantasy.UI.VillageNPCType.Alchemist,
                 "Thuốc lắc cuồng nộ và nước thánh giải nguyền của ta sẽ tăng cường sức mạnh chiến đấu của ngươi!");
 
-            CreateVillageNPC("NPC_Rebirth_Kaelen", "Sứ Giả Kaelen", "Chuyển Sinh 🏛️", new Vector3(-92.0f, 15.0f, 0), npcElderSprite, true, GodlessFantasy.UI.VillageNPCType.Rebirth,
+            CreateVillageNPC("NPC_Rebirth_Kaelen", "Sứ Giả Kaelen", "Chuyển Sinh 🏛️", new Vector3(-92.0f, 15.0f, 0), npcRebirthSprite, true, GodlessFantasy.UI.VillageNPCType.Rebirth,
                 "Đổi điểm RP lấy bí thuật cổ đại, hoặc mở Rương Chuyển Sinh lưu giữ 2 món bảo vật!");
 
             // 8. Cấu Hình Camera Centered Parallax Tracking
@@ -267,10 +272,36 @@ namespace GodlessFantasy.Core
                 new GameObject("[PROCEDURAL_VFX_ENGINE]").AddComponent<ProceduralVFXEngine>();
             }
 
+            // 13. Khởi tạo Hệ Thống Nhiệm Vụ & Sổ Tay Nhiệm Vụ Phím [L]
+            if (FindAnyObjectByType<Quest.QuestManager>() == null)
+            {
+                new GameObject("[QUEST_MANAGER]").AddComponent<Quest.QuestManager>();
+            }
+
+            // 14. Khởi tạo Môi Trường & Ánh Sáng 2D Động, Sương Mù & Chu Kỳ Ngày/Đêm
+            if (FindAnyObjectByType<EnvironmentAtmosphereManager>() == null)
+            {
+                new GameObject("[ENVIRONMENT_ATMOSPHERE_MANAGER]").AddComponent<EnvironmentAtmosphereManager>();
+            }
+
+            // 15. Khởi tạo Rương Chuyển Sinh, Màn Hình Tử Trận & Modal NPC
+            if (FindAnyObjectByType<Player.RebirthVaultManager>() == null)
+            {
+                new GameObject("[REBIRTH_VAULT_MANAGER]").AddComponent<Player.RebirthVaultManager>();
+            }
+            if (FindAnyObjectByType<UI.DeathScreenModal>() == null)
+            {
+                new GameObject("[DEATH_SCREEN_MODAL]").AddComponent<UI.DeathScreenModal>();
+            }
+            if (FindAnyObjectByType<UI.VillageShopNPCModal>() == null)
+            {
+                new GameObject("[VILLAGE_SHOP_NPC_MODAL]").AddComponent<UI.VillageShopNPCModal>();
+            }
+
             GameObject hudObj = new GameObject("Combat_HUD");
             hudObj.AddComponent<CombatHUD>();
 
-            Debug.Log("<color=green>[SquiRRels Studio] Thế giới Alpha Slice đã hoàn thiện 100%: Quái AI Telegraph & Cổng Dịch Chuyển & Hệ Thống Procedural VFX 140 Biến Thể đã kích hoạt!</color>");
+            Debug.Log("<color=green>[SquiRRels Studio] Thế giới Alpha Slice đã hoàn thiện 100%: Dàn NPC & Quái AI & Cổng Dịch Chuyển & Chu Kỳ Ngày Đêm & Hệ Thống Nhiệm Vụ [L] đã kích hoạt!</color>");
         }
 
         private void CreateMapPortal(string objName, string portalTitle, string destZoneName, Vector3 worldPos, Vector3 destCoord, BgmTrack bgm, Color glowColor)

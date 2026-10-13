@@ -45,6 +45,7 @@ namespace GodlessFantasy.Player
         public int quantity = 1;
         public bool isEquipped = false;
         public int equippedHotbarSlot = -1; // 0..3 nếu là SkillScroll đang gắn vào ô 1..4
+        public int slotIndex = -1;          // Vị trí ô cụ thể trong hành trang (0..currentCapacity - 1)
         public string description;
         public string statsInfo;
         public SkillScrollData scrollData;
@@ -131,6 +132,7 @@ namespace GodlessFantasy.Player
             var copy = new InventoryItem(id, itemName, itemType, equipSlot, tierRank, tierColor, iconName, statsInfo, description, quantity, scrollData, requiredClass, element);
             copy.isEquipped = isEquipped;
             copy.equippedHotbarSlot = equippedHotbarSlot;
+            copy.slotIndex = slotIndex;
             return copy;
         }
     }

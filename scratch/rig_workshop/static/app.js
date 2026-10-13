@@ -39,27 +39,52 @@ class RigWorkshopApp {
         this.config = null;
         this.currentGender = 'female';
         this.currentDir = 'south';
-        this.selectedPartKey = 'idle_body';
+        this._selectedPartKeys = new Set(['idle_body']);
         this.zoom = 8;
         this.showGrid = true;
         this.showBbox = true;
         this.availableParts = [];
         this.imageCache = new Map();
 
-        // Assembler Canvas
+        // Assembler Canvas & Overlays
         this.canvas = document.getElementById('main-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.ctx.imageSmoothingEnabled = false;
         this.wrapper = document.getElementById('canvas-wrapper');
         this.selectionBox = document.getElementById('selection-box');
+        this.selectionBoxesContainer = document.getElementById('selection-boxes-container');
+        this.marqueeBox = document.getElementById('marquee-box');
+        this.guideCanvas = document.getElementById('guide-canvas');
+        this.guideCtx = this.guideCanvas ? this.guideCanvas.getContext('2d') : null;
+        if (this.guideCtx) this.guideCtx.imageSmoothingEnabled = false;
         this.contextMenu = document.getElementById('context-menu');
 
-        // Dragging state
+        // Snap & Guides
+        this.snapEnabled = true;
+        this.activeGuides = [];
+
+        // Assembler History (Undo / Redo)
+        this.assemblerHistory = [];
+        this.assemblerRedoStack = [];
+
+        // Dragging, Panning & Marquee selection state
+        this.toolMode = 'select'; // 'select' or 'pan'
+        this.panX = 0;
+        this.panY = 0;
         this.isDragging = false;
+        this.isPanning = false;
+        this.isMarqueeSelecting = false;
+        this.isSpacePressed = false;
+        this.panStartX = 0;
+        this.panStartY = 0;
+        this.panStartOffsetX = 0;
+        this.panStartOffsetY = 0;
         this.dragStartX = 0;
         this.dragStartY = 0;
-        this.dragStartPartX = 0;
-        this.dragStartPartY = 0;
+        this.dragStartPositions = new Map(); // key -> { x, y }
+        this.marqueeStartX = 0;
+        this.marqueeStartY = 0;
+        this.marqueeInitialSelection = new Set();
 
         // Pixel Editor State
         this.peCurrentPartName = '';
@@ -79,6 +104,314 @@ class RigWorkshopApp {
         this.peLastDrawY = -1;
 
         this.init();
+    }
+
+    get selectedPartKeys() {
+        return this._selectedPartKeys;
+    }
+    set selectedPartKeys(val) {
+        this._selectedPartKeys = new Set(val);
+    }
+
+    get selectedPartKey() {
+        const it = this._selectedPartKeys.values().next();
+        return it.done ? null : it.value;
+    }
+    set selectedPartKey(key) {
+        this._selectedPartKeys.clear();
+        if (key) this._selectedPartKeys.add(key);
+    }
+
+    // ============================================================
+    // SNAP GUIDES & SMART ALIGNMENT
+    // ============================================================
+    drawSnapGuides() {
+        if (!this.guideCanvas || !this.guideCtx) return;
+        this.guideCtx.clearRect(0, 0, 64, 64);
+        if (!this.snapEnabled || !this.activeGuides || this.activeGuides.length === 0) return;
+
+        this.guideCtx.save();
+        for (const g of this.activeGuides) {
+            if (g.type === 'vert') {
+                this.guideCtx.strokeStyle = '#f43f5e'; // Neon pink vertical center line
+                this.guideCtx.lineWidth = 1;
+                this.guideCtx.setLineDash([2, 2]);
+                this.guideCtx.beginPath();
+                this.guideCtx.moveTo(g.pos + 0.5, 0);
+                this.guideCtx.lineTo(g.pos + 0.5, 64);
+                this.guideCtx.stroke();
+            } else if (g.type === 'horiz') {
+                this.guideCtx.strokeStyle = '#06b6d4'; // Neon cyan horizontal center line
+                this.guideCtx.lineWidth = 1;
+                this.guideCtx.setLineDash([2, 2]);
+                this.guideCtx.beginPath();
+                this.guideCtx.moveTo(0, g.pos + 0.5);
+                this.guideCtx.lineTo(64, g.pos + 0.5);
+                this.guideCtx.stroke();
+            }
+        }
+        this.guideCtx.restore();
+    }
+
+    clearSnapGuides() {
+        this.activeGuides = [];
+        if (this.guideCtx) {
+            this.guideCtx.clearRect(0, 0, 64, 64);
+        }
+    }
+
+    // ============================================================
+    // ARRANGE & ALIGN ENGINE
+    // ============================================================
+    alignSelected(alignment) {
+        const dirData = this.getCurrentDirData();
+        if (!dirData || this.selectedPartKeys.size === 0) return;
+        this.pushAssemblerHistory();
+
+        const parts = Array.from(this.selectedPartKeys).map(k => {
+            const p = dirData[k];
+            const img = this.getImage(p.file);
+            return {
+                key: k,
+                part: p,
+                w: img && img.complete ? img.naturalWidth : 16,
+                h: img && img.complete ? img.naturalHeight : 16
+            };
+        });
+
+        const minX = Math.min(...parts.map(p => p.part.x));
+        const maxX = Math.max(...parts.map(p => p.part.x + p.w));
+        const minY = Math.min(...parts.map(p => p.part.y));
+        const maxY = Math.max(...parts.map(p => p.part.y + p.h));
+        const groupW = maxX - minX;
+        const groupH = maxY - minY;
+
+        switch (alignment) {
+            case 'left':
+                if (parts.length > 1) {
+                    parts.forEach(p => p.part.x = minX);
+                } else {
+                    parts[0].part.x = 0;
+                }
+                this.showToast('⇤ Đã căn mép Trái!');
+                break;
+            case 'center_x':
+                if (parts.length > 1) {
+                    const targetLeft = Math.round(32 - groupW / 2);
+                    const diff = targetLeft - minX;
+                    parts.forEach(p => p.part.x += diff);
+                } else {
+                    parts[0].part.x = Math.round(32 - parts[0].w / 2);
+                }
+                this.showToast('⇋ Đã căn giữa theo trục X = 32!');
+                break;
+            case 'right':
+                if (parts.length > 1) {
+                    parts.forEach(p => p.part.x = maxX - p.w);
+                } else {
+                    parts[0].part.x = 64 - parts[0].w;
+                }
+                this.showToast('⇥ Đã căn mép Phải!');
+                break;
+            case 'top':
+                if (parts.length > 1) {
+                    parts.forEach(p => p.part.y = minY);
+                } else {
+                    parts[0].part.y = 0;
+                }
+                this.showToast('⤒ Đã căn mép Trên!');
+                break;
+            case 'center_y':
+                if (parts.length > 1) {
+                    const targetTop = Math.round(32 - groupH / 2);
+                    const diff = targetTop - minY;
+                    parts.forEach(p => p.part.y += diff);
+                } else {
+                    parts[0].part.y = Math.round(32 - parts[0].h / 2);
+                }
+                this.showToast('⇅ Đã căn giữa theo trục Y = 32!');
+                break;
+            case 'bottom':
+                if (parts.length > 1) {
+                    parts.forEach(p => p.part.y = maxY - p.h);
+                } else {
+                    parts[0].part.y = 64 - parts[0].h;
+                }
+                this.showToast('⤓ Đã căn mép Dưới!');
+                break;
+        }
+
+        this.renderAll();
+    }
+
+    distributeSelected(axis) {
+        const dirData = this.getCurrentDirData();
+        if (!dirData || this.selectedPartKeys.size < 3) {
+            this.showToast('ℹ️ Cần chọn ít nhất 3 bộ phận để dãn đều khoảng cách!', '#3b82f6');
+            return;
+        }
+        this.pushAssemblerHistory();
+
+        const parts = Array.from(this.selectedPartKeys).map(k => {
+            const p = dirData[k];
+            const img = this.getImage(p.file);
+            return {
+                key: k,
+                part: p,
+                w: img && img.complete ? img.naturalWidth : 16,
+                h: img && img.complete ? img.naturalHeight : 16
+            };
+        });
+
+        if (axis === 'horizontal') {
+            parts.sort((a, b) => a.part.x - b.part.x);
+            const first = parts[0];
+            const last = parts[parts.length - 1];
+            const totalWidthOfParts = parts.reduce((sum, p) => sum + p.w, 0);
+            const span = (last.part.x + last.w) - first.part.x;
+            const availableSpace = span - totalWidthOfParts;
+            const gap = availableSpace / (parts.length - 1);
+
+            let currentX = first.part.x;
+            for (let i = 0; i < parts.length; i++) {
+                parts[i].part.x = Math.round(currentX);
+                currentX += parts[i].w + gap;
+            }
+            this.showToast('↔️ Đã dãn đều khoảng cách ngang!');
+        } else if (axis === 'vertical') {
+            parts.sort((a, b) => a.part.y - b.part.y);
+            const first = parts[0];
+            const last = parts[parts.length - 1];
+            const totalHeightOfParts = parts.reduce((sum, p) => sum + p.h, 0);
+            const span = (last.part.y + last.h) - first.part.y;
+            const availableSpace = span - totalHeightOfParts;
+            const gap = availableSpace / (parts.length - 1);
+
+            let currentY = first.part.y;
+            for (let i = 0; i < parts.length; i++) {
+                parts[i].part.y = Math.round(currentY);
+                currentY += parts[i].h + gap;
+            }
+            this.showToast('↕️ Đã dãn đều khoảng cách dọc!');
+        }
+
+        this.renderAll();
+    }
+
+    bringSelectedToFront() {
+        const dirData = this.getCurrentDirData();
+        if (!dirData || this.selectedPartKeys.size === 0) return;
+        this.pushAssemblerHistory();
+
+        let maxZ = 0;
+        for (const k of PART_KEYS) {
+            if (dirData[k]) maxZ = Math.max(maxZ, dirData[k].z || 10);
+        }
+
+        let offset = 1;
+        for (const k of this.selectedPartKeys) {
+            if (dirData[k]) {
+                dirData[k].z = maxZ + offset;
+                offset++;
+            }
+        }
+        this.renderAll();
+        this.showToast('⏫ Đã đưa nhóm bộ phận lên đỉnh ngoài cùng!');
+    }
+
+    sendSelectedToBack() {
+        const dirData = this.getCurrentDirData();
+        if (!dirData || this.selectedPartKeys.size === 0) return;
+        this.pushAssemblerHistory();
+
+        let minZ = 100;
+        for (const k of PART_KEYS) {
+            if (dirData[k]) minZ = Math.min(minZ, dirData[k].z || 10);
+        }
+
+        const baseZ = Math.max(0, minZ - this.selectedPartKeys.size);
+        let offset = 0;
+        for (const k of this.selectedPartKeys) {
+            if (dirData[k]) {
+                dirData[k].z = Math.max(0, baseZ + offset);
+                offset++;
+            }
+        }
+        this.renderAll();
+        this.showToast('⏬ Đã đưa nhóm bộ phận xuống đáy trong cùng!');
+    }
+
+    // ============================================================
+    // UNDO & REDO ENGINE FOR ASSEMBLER
+    // ============================================================
+    pushAssemblerHistory() {
+        if (!this.config) return;
+        const snapshot = JSON.stringify(this.config);
+        if (this.assemblerHistory.length > 0 && this.assemblerHistory[this.assemblerHistory.length - 1] === snapshot) {
+            return;
+        }
+        this.assemblerHistory.push(snapshot);
+        if (this.assemblerHistory.length > 50) this.assemblerHistory.shift();
+        this.assemblerRedoStack = [];
+    }
+
+    undoAssembler() {
+        if (this.assemblerHistory.length > 0) {
+            const current = JSON.stringify(this.config);
+            this.assemblerRedoStack.push(current);
+            const prev = this.assemblerHistory.pop();
+            this.config = JSON.parse(prev);
+            this.renderAll();
+            this.showToast('↩️ Hoàn tác thao tác (Undo)', '#4b5563');
+        } else {
+            this.showToast('ℹ️ Không còn thao tác nào để hoàn tác', '#3b82f6');
+        }
+    }
+
+    redoAssembler() {
+        if (this.assemblerRedoStack.length > 0) {
+            const current = JSON.stringify(this.config);
+            this.assemblerHistory.push(current);
+            const next = this.assemblerRedoStack.pop();
+            this.config = JSON.parse(next);
+            this.renderAll();
+            this.showToast('↪️ Làm lại thao tác (Redo)', '#4b5563');
+        } else {
+            this.showToast('ℹ️ Không có thao tác nào để làm lại', '#3b82f6');
+        }
+    }
+
+    // ============================================================
+    // TOOL MODES & VIEWPORT PANNING
+    // ============================================================
+    setToolMode(mode) {
+        this.toolMode = mode;
+        const btnSelect = document.getElementById('btn-mode-select');
+        const btnPan = document.getElementById('btn-mode-pan');
+        if (btnSelect) btnSelect.classList.toggle('active', mode === 'select');
+        if (btnPan) btnPan.classList.toggle('active', mode === 'pan');
+        this.updateCursorMode();
+    }
+
+    updateCursorMode() {
+        if (this.toolMode === 'pan' || this.isSpacePressed) {
+            this.canvas.style.cursor = this.isPanning ? 'grabbing' : 'grab';
+            this.wrapper.style.cursor = this.isPanning ? 'grabbing' : 'grab';
+        } else {
+            this.canvas.style.cursor = 'crosshair';
+            this.wrapper.style.cursor = 'default';
+        }
+    }
+
+    updatePanTransform() {
+        this.wrapper.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+    }
+
+    resetPan() {
+        this.panX = 0;
+        this.panY = 0;
+        this.updatePanTransform();
+        this.showToast('🎯 Đã căn giữa lại góc nhìn canvas!');
     }
 
     async init() {
@@ -197,11 +530,12 @@ class RigWorkshopApp {
             const px = Math.round(part.x || 0);
             const py = Math.round(part.y || 0);
             const pw = img.naturalWidth;
+            const ph = img.naturalHeight;
 
-            if (part.flip_x) {
+            if (part.flip_x || part.flip_y) {
                 this.ctx.save();
-                this.ctx.translate(px + pw, py);
-                this.ctx.scale(-1, 1);
+                this.ctx.translate(px + (part.flip_x ? pw : 0), py + (part.flip_y ? ph : 0));
+                this.ctx.scale(part.flip_x ? -1 : 1, part.flip_y ? -1 : 1);
                 this.ctx.drawImage(img, 0, 0);
                 this.ctx.restore();
             } else {
@@ -213,31 +547,90 @@ class RigWorkshopApp {
     }
 
     updateSelectionBox() {
-        if (!this.showBbox || !this.selectedPartKey) {
+        if (this.selectionBoxesContainer) {
+            this.selectionBoxesContainer.innerHTML = '';
+        }
+
+        const coordInd = document.getElementById('coord-indicator');
+        const badgePart = document.getElementById('badge-selected-part');
+        const arrangeHint = document.getElementById('arrange-count-hint');
+
+        if (!this.showBbox || this.selectedPartKeys.size === 0) {
             this.selectionBox.style.display = 'none';
+            if (badgePart) badgePart.innerText = 'Chưa chọn bộ phận';
+            if (coordInd) coordInd.innerText = 'Chưa chọn bộ phận nào (Click chuột hoặc quét chọn)';
+            if (arrangeHint) arrangeHint.innerText = 'Chưa chọn';
             return;
         }
 
         const dirData = this.getCurrentDirData();
-        const part = dirData ? dirData[this.selectedPartKey] : null;
-        if (!part || !part.visible) {
-            this.selectionBox.style.display = 'none';
-            return;
-        }
+        if (!dirData) return;
 
-        const img = this.getImage(part.file);
-        const pw = img && img.complete ? img.naturalWidth : 16;
-        const ph = img && img.complete ? img.naturalHeight : 16;
+        if (this.selectedPartKeys.size === 1) {
+            const key = this.selectedPartKey;
+            const part = dirData[key];
+            if (!part || !part.visible) {
+                this.selectionBox.style.display = 'none';
+                return;
+            }
 
-        this.selectionBox.style.display = 'block';
-        this.selectionBox.style.left = `${part.x * this.zoom}px`;
-        this.selectionBox.style.top = `${part.y * this.zoom}px`;
-        this.selectionBox.style.width = `${pw * this.zoom}px`;
-        this.selectionBox.style.height = `${ph * this.zoom}px`;
+            const img = this.getImage(part.file);
+            const pw = img && img.complete ? img.naturalWidth : 16;
+            const ph = img && img.complete ? img.naturalHeight : 16;
 
-        const coordInd = document.getElementById('coord-indicator');
-        if (coordInd) {
-            coordInd.innerText = `Toạ độ: X: ${part.x}, Y: ${part.y} | Z-Order: ${part.z} | Kích thước: ${pw}x${ph}`;
+            this.selectionBox.style.display = 'block';
+            this.selectionBox.style.left = `${part.x * this.zoom}px`;
+            this.selectionBox.style.top = `${part.y * this.zoom}px`;
+            this.selectionBox.style.width = `${pw * this.zoom}px`;
+            this.selectionBox.style.height = `${ph * this.zoom}px`;
+
+            if (coordInd) coordInd.innerText = `Toạ độ: X: ${part.x}, Y: ${part.y} | Z-Order: ${part.z} | Kích thước: ${pw}x${ph}`;
+            if (badgePart) badgePart.innerText = PART_NAMES_VI[key] || key;
+            if (arrangeHint) arrangeHint.innerText = 'Đang chọn: 1 mảnh';
+        } else {
+            // Multiple parts selected
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+
+            for (const key of this.selectedPartKeys) {
+                const part = dirData[key];
+                if (!part || !part.visible) continue;
+                const img = this.getImage(part.file);
+                const pw = img && img.complete ? img.naturalWidth : 16;
+                const ph = img && img.complete ? img.naturalHeight : 16;
+
+                minX = Math.min(minX, part.x);
+                maxX = Math.max(maxX, part.x + pw);
+                minY = Math.min(minY, part.y);
+                maxY = Math.max(maxY, part.y + ph);
+
+                // Add individual item box
+                if (this.selectionBoxesContainer) {
+                    const itemBox = document.createElement('div');
+                    itemBox.className = 'multi-selection-item';
+                    itemBox.style.left = `${part.x * this.zoom}px`;
+                    itemBox.style.top = `${part.y * this.zoom}px`;
+                    itemBox.style.width = `${pw * this.zoom}px`;
+                    itemBox.style.height = `${ph * this.zoom}px`;
+                    this.selectionBoxesContainer.appendChild(itemBox);
+                }
+            }
+
+            if (minX !== Infinity) {
+                this.selectionBox.style.display = 'block';
+                this.selectionBox.style.left = `${minX * this.zoom}px`;
+                this.selectionBox.style.top = `${minY * this.zoom}px`;
+                this.selectionBox.style.width = `${(maxX - minX) * this.zoom}px`;
+                this.selectionBox.style.height = `${(maxY - minY) * this.zoom}px`;
+
+                if (coordInd) {
+                    coordInd.innerText = `Đang chọn ${this.selectedPartKeys.size} bộ phận | Khung nhóm: X: ${minX}, Y: ${minY} (${maxX - minX}x${maxY - minY} px)`;
+                }
+                if (badgePart) badgePart.innerText = `Nhóm ${this.selectedPartKeys.size} bộ phận`;
+                if (arrangeHint) arrangeHint.innerText = `Đang chọn: ${this.selectedPartKeys.size} mảnh`;
+            } else {
+                this.selectionBox.style.display = 'none';
+            }
         }
     }
 
@@ -272,10 +665,11 @@ class RigWorkshopApp {
                 const px = Math.round(part.x || 0);
                 const py = Math.round(part.y || 0);
                 const pw = img.naturalWidth;
-                if (part.flip_x) {
+                const ph = img.naturalHeight;
+                if (part.flip_x || part.flip_y) {
                     ctx.save();
-                    ctx.translate(px + pw, py);
-                    ctx.scale(-1, 1);
+                    ctx.translate(px + (part.flip_x ? pw : 0), py + (part.flip_y ? ph : 0));
+                    ctx.scale(part.flip_x ? -1 : 1, part.flip_y ? -1 : 1);
                     ctx.drawImage(img, 0, 0);
                     ctx.restore();
                 } else {
@@ -312,7 +706,7 @@ class RigWorkshopApp {
 
         parts.forEach((part) => {
             const item = document.createElement('div');
-            item.className = `layer-item ${part.key === this.selectedPartKey ? 'active' : ''}`;
+            item.className = `layer-item ${this.selectedPartKeys.has(part.key) ? 'active' : ''}`;
 
             const thumbWrap = document.createElement('div');
             thumbWrap.className = 'layer-thumb-wrap';
@@ -353,6 +747,7 @@ class RigWorkshopApp {
             btnUp.innerText = '▲';
             btnUp.addEventListener('click', (e) => {
                 e.stopPropagation();
+                this.pushAssemblerHistory();
                 part.z = (part.z || 10) + 1;
                 dirData[part.key].z = part.z;
                 this.renderAll();
@@ -365,6 +760,7 @@ class RigWorkshopApp {
             btnDown.innerText = '▼';
             btnDown.addEventListener('click', (e) => {
                 e.stopPropagation();
+                this.pushAssemblerHistory();
                 part.z = Math.max(0, (part.z || 10) - 1);
                 dirData[part.key].z = part.z;
                 this.renderAll();
@@ -377,6 +773,7 @@ class RigWorkshopApp {
             btnVis.innerText = part.visible ? '👁️' : '🚫';
             btnVis.addEventListener('click', (e) => {
                 e.stopPropagation();
+                this.pushAssemblerHistory();
                 part.visible = !part.visible;
                 dirData[part.key].visible = part.visible;
                 this.renderAll();
@@ -387,10 +784,24 @@ class RigWorkshopApp {
             item.appendChild(info);
             item.appendChild(controls);
 
-            item.addEventListener('click', () => this.selectPart(part.key));
+            item.addEventListener('click', (e) => {
+                if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                    if (this.selectedPartKeys.has(part.key)) {
+                        this.selectedPartKeys.delete(part.key);
+                    } else {
+                        this.selectedPartKeys.add(part.key);
+                    }
+                    this.renderAll();
+                } else {
+                    this.selectPart(part.key);
+                }
+            });
+
             item.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                this.selectPart(part.key);
+                if (!this.selectedPartKeys.has(part.key)) {
+                    this.selectPart(part.key);
+                }
                 this.showContextMenu(e.clientX, e.clientY);
             });
 
@@ -403,8 +814,89 @@ class RigWorkshopApp {
         if (!body) return;
 
         const dirData = this.getCurrentDirData();
-        const part = dirData && this.selectedPartKey ? dirData[this.selectedPartKey] : null;
+        if (!dirData || this.selectedPartKeys.size === 0) {
+            body.innerHTML = `<p class="empty-hint">Chưa chọn bộ phận nào (Click chuột hoặc quét vùng để chọn)</p>`;
+            return;
+        }
 
+        // Multi-selection Inspector Card
+        if (this.selectedPartKeys.size > 1) {
+            body.innerHTML = `
+                <div class="batch-inspector-card">
+                    <div class="batch-title">📦 Đang chọn nhóm (${this.selectedPartKeys.size} bộ phận)</div>
+                    <div class="batch-part-chips">
+                        ${Array.from(this.selectedPartKeys).map(k => `<span class="part-chip">${PART_NAMES_VI[k] || k}</span>`).join('')}
+                    </div>
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
+                        <button class="btn btn-secondary" id="btn-batch-flip-x" style="flex:1; justify-content:center;">↔️ Lật ngang nhóm</button>
+                        <button class="btn btn-secondary" id="btn-batch-flip-y" style="flex:1; justify-content:center;">↕️ Lật dọc nhóm</button>
+                    </div>
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
+                        <button class="btn btn-secondary" id="btn-batch-vis" style="flex:1; justify-content:center;">👁️ Ẩn/Hiện nhóm</button>
+                        <button class="btn btn-secondary" id="btn-batch-deselect" style="flex:1; justify-content:center;">❌ Bỏ chọn</button>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-secondary" id="btn-batch-z-up" style="flex:1; justify-content:center;">▲ Tăng Z (+1)</button>
+                        <button class="btn btn-secondary" id="btn-batch-z-down" style="flex:1; justify-content:center;">▼ Giảm Z (-1)</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('btn-batch-flip-x').addEventListener('click', () => {
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].flip_x = !dirData[k].flip_x;
+                }
+                this.renderAll();
+                this.showToast(`↔️ Đã lật ngang ${this.selectedPartKeys.size} bộ phận!`);
+            });
+
+            document.getElementById('btn-batch-flip-y').addEventListener('click', () => {
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].flip_y = !dirData[k].flip_y;
+                }
+                this.renderAll();
+                this.showToast(`↕️ Đã lật dọc ${this.selectedPartKeys.size} bộ phận!`);
+            });
+
+            document.getElementById('btn-batch-vis').addEventListener('click', () => {
+                this.pushAssemblerHistory();
+                const firstKey = this.selectedPartKey;
+                const newVis = !dirData[firstKey].visible;
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].visible = newVis;
+                }
+                this.renderAll();
+                this.showToast(`👁️ Đã ${newVis ? 'hiện' : 'ẩn'} nhóm ${this.selectedPartKeys.size} bộ phận!`);
+            });
+
+            document.getElementById('btn-batch-deselect').addEventListener('click', () => {
+                this.selectedPartKeys.clear();
+                this.renderAll();
+            });
+
+            document.getElementById('btn-batch-z-up').addEventListener('click', () => {
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].z = (dirData[k].z || 10) + 1;
+                }
+                this.renderAll();
+                this.showToast('▲ Đã tăng +1 Z cho cả nhóm!');
+            });
+
+            document.getElementById('btn-batch-z-down').addEventListener('click', () => {
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].z = Math.max(0, (dirData[k].z || 10) - 1);
+                }
+                this.renderAll();
+                this.showToast('▼ Đã giảm -1 Z cho cả nhóm!');
+            });
+            return;
+        }
+
+        const part = dirData[this.selectedPartKey];
         if (!part) {
             body.innerHTML = `<p class="empty-hint">Chọn 1 bộ phận để chỉnh sửa thông số chi tiết</p>`;
             return;
@@ -446,8 +938,14 @@ class RigWorkshopApp {
                 </div>
                 <div class="prop-field">
                     <label>Lật ngang (Flip X)</label>
-                    <button class="btn btn-secondary" id="btn-flip-x" style="width:100%; justify-content:center;">
-                        ${part.flip_x ? '↔️ Đang lật' : '➡️ Bình thường'}
+                    <button class="btn ${part.flip_x ? 'btn-primary' : 'btn-secondary'}" id="btn-flip-x" style="width:100%; justify-content:center;">
+                        ${part.flip_x ? '↔️ Đang lật ngang' : '↔️ Bình thường'}
+                    </button>
+                </div>
+                <div class="prop-field">
+                    <label>Lật dọc (Flip Y)</label>
+                    <button class="btn ${part.flip_y ? 'btn-primary' : 'btn-secondary'}" id="btn-flip-y" style="width:100%; justify-content:center;">
+                        ${part.flip_y ? '↕️ Đang lật dọc' : '↕️ Bình thường'}
                     </button>
                 </div>
             </div>
@@ -472,23 +970,34 @@ class RigWorkshopApp {
         const inY = document.getElementById('input-part-y');
         const inZ = document.getElementById('input-part-z');
 
-        inX.addEventListener('change', () => { part.x = parseInt(inX.value) || 0; this.renderAll(); });
-        inY.addEventListener('change', () => { part.y = parseInt(inY.value) || 0; this.renderAll(); });
-        inZ.addEventListener('change', () => { part.z = parseInt(inZ.value) || 0; this.renderAll(); });
+        inX.addEventListener('change', () => { this.pushAssemblerHistory(); part.x = parseInt(inX.value) || 0; this.renderAll(); });
+        inY.addEventListener('change', () => { this.pushAssemblerHistory(); part.y = parseInt(inY.value) || 0; this.renderAll(); });
+        inZ.addEventListener('change', () => { this.pushAssemblerHistory(); part.z = parseInt(inZ.value) || 0; this.renderAll(); });
 
-        document.getElementById('btn-x-minus').addEventListener('click', () => { part.x--; inX.value = part.x; this.renderAll(); });
-        document.getElementById('btn-x-plus').addEventListener('click', () => { part.x++; inX.value = part.x; this.renderAll(); });
-        document.getElementById('btn-y-minus').addEventListener('click', () => { part.y--; inY.value = part.y; this.renderAll(); });
-        document.getElementById('btn-y-plus').addEventListener('click', () => { part.y++; inY.value = part.y; this.renderAll(); });
-        document.getElementById('btn-z-minus').addEventListener('click', () => { part.z--; inZ.value = part.z; this.renderAll(); });
-        document.getElementById('btn-z-plus').addEventListener('click', () => { part.z++; inZ.value = part.z; this.renderAll(); });
+        document.getElementById('btn-x-minus').addEventListener('click', () => { this.pushAssemblerHistory(); part.x--; inX.value = part.x; this.renderAll(); });
+        document.getElementById('btn-x-plus').addEventListener('click', () => { this.pushAssemblerHistory(); part.x++; inX.value = part.x; this.renderAll(); });
+        document.getElementById('btn-y-minus').addEventListener('click', () => { this.pushAssemblerHistory(); part.y--; inY.value = part.y; this.renderAll(); });
+        document.getElementById('btn-y-plus').addEventListener('click', () => { this.pushAssemblerHistory(); part.y++; inY.value = part.y; this.renderAll(); });
+        document.getElementById('btn-z-minus').addEventListener('click', () => { this.pushAssemblerHistory(); part.z--; inZ.value = part.z; this.renderAll(); });
+        document.getElementById('btn-z-plus').addEventListener('click', () => { this.pushAssemblerHistory(); part.z++; inZ.value = part.z; this.renderAll(); });
 
         document.getElementById('btn-flip-x').addEventListener('click', () => {
+            this.pushAssemblerHistory();
             part.flip_x = !part.flip_x;
             this.renderAll();
+            this.showToast(`↔️ Đã ${part.flip_x ? 'lật ngang' : 'hủy lật ngang'} ${partTitle}!`);
+        });
+
+        const btnFlipY = document.getElementById('btn-flip-y');
+        if (btnFlipY) btnFlipY.addEventListener('click', () => {
+            this.pushAssemblerHistory();
+            part.flip_y = !part.flip_y;
+            this.renderAll();
+            this.showToast(`↕️ Đã ${part.flip_y ? 'lật dọc' : 'hủy lật dọc'} ${partTitle}!`);
         });
 
         document.getElementById('select-part-file').addEventListener('change', (e) => {
+            this.pushAssemblerHistory();
             part.file = e.target.value;
             this.renderAll();
         });
@@ -501,6 +1010,29 @@ class RigWorkshopApp {
             badge.innerText = key ? (PART_NAMES_VI[key] || key) : 'Chưa chọn';
         }
         this.renderAll();
+    }
+
+    selectAllParts() {
+        const dirData = this.getCurrentDirData();
+        if (!dirData) return;
+        this._selectedPartKeys.clear();
+        for (const key of PART_KEYS) {
+            if (dirData[key] && dirData[key].visible !== false) {
+                this._selectedPartKeys.add(key);
+            }
+        }
+        this.renderLayersPanel();
+        this.renderInspector();
+        this.updateSelectionBox();
+        this.showToast(`✨ Đã chọn tất cả ${this._selectedPartKeys.size} bộ phận! [Ctrl+A]`);
+    }
+
+    deselectAllParts() {
+        this._selectedPartKeys.clear();
+        this.renderLayersPanel();
+        this.renderInspector();
+        this.updateSelectionBox();
+        this.showToast('⚪ Đã hủy chọn tất cả!');
     }
 
     setGender(g) {
@@ -530,6 +1062,10 @@ class RigWorkshopApp {
         const size = 64 * this.zoom;
         this.canvas.style.width = `${size}px`;
         this.canvas.style.height = `${size}px`;
+        if (this.guideCanvas) {
+            this.guideCanvas.style.width = `${size}px`;
+            this.guideCanvas.style.height = `${size}px`;
+        }
         this.wrapper.style.width = `${size}px`;
         this.wrapper.style.height = `${size}px`;
         this.updateSelectionBox();
@@ -607,6 +1143,11 @@ class RigWorkshopApp {
         document.getElementById('tool-undo').addEventListener('click', () => this.peUndo());
         document.getElementById('tool-redo').addEventListener('click', () => this.peRedo());
         document.getElementById('tool-clear').addEventListener('click', () => this.peClear());
+
+        const toolFlipX = document.getElementById('tool-flip-x');
+        if (toolFlipX) toolFlipX.addEventListener('click', () => this.peFlipCanvasX());
+        const toolFlipY = document.getElementById('tool-flip-y');
+        if (toolFlipY) toolFlipY.addEventListener('click', () => this.peFlipCanvasY());
 
         // Mouse events on Pixel Canvas
         this.peCanvas.addEventListener('mousedown', (e) => this.onPeMouseDown(e));
@@ -873,9 +1414,10 @@ class RigWorkshopApp {
             });
             const data = await res.json();
             if (data.success) {
-                this.invalidatePartCache(this.peCurrentPartName);
+                this.imageCache.clear();
                 this.showToast(`✅ ${data.message}`);
                 this.switchTab('assembler');
+                this.renderAll();
             } else {
                 this.showToast(`❌ Lỗi: ${data.error}`, '#dc2626');
             }
@@ -913,6 +1455,38 @@ class RigWorkshopApp {
         a.download = `${this.peCurrentPartName}.png`;
         a.click();
         this.showToast(`📥 Đã tải ${this.peCurrentPartName}.png về máy!`);
+    }
+
+    peFlipCanvasX() {
+        this.pushPeHistory();
+        const w = this.peCanvas.width, h = this.peCanvas.height;
+        const temp = document.createElement('canvas');
+        temp.width = w; temp.height = h;
+        const tCtx = temp.getContext('2d');
+        tCtx.drawImage(this.peCanvas, 0, 0);
+        this.peCtx.clearRect(0, 0, w, h);
+        this.peCtx.save();
+        this.peCtx.translate(w, 0);
+        this.peCtx.scale(-1, 1);
+        this.peCtx.drawImage(temp, 0, 0);
+        this.peCtx.restore();
+        this.showToast('↔️ Đã lật ngang toàn bộ ảnh!');
+    }
+
+    peFlipCanvasY() {
+        this.pushPeHistory();
+        const w = this.peCanvas.width, h = this.peCanvas.height;
+        const temp = document.createElement('canvas');
+        temp.width = w; temp.height = h;
+        const tCtx = temp.getContext('2d');
+        tCtx.drawImage(this.peCanvas, 0, 0);
+        this.peCtx.clearRect(0, 0, w, h);
+        this.peCtx.save();
+        this.peCtx.translate(0, h);
+        this.peCtx.scale(1, -1);
+        this.peCtx.drawImage(temp, 0, 0);
+        this.peCtx.restore();
+        this.showToast('↕️ Đã lật dọc toàn bộ ảnh!');
     }
 
     // ============================================================
@@ -995,6 +1569,7 @@ class RigWorkshopApp {
             this.hideContextMenu();
             const dirData = this.getCurrentDirData();
             if (dirData && this.selectedPartKey) {
+                this.pushAssemblerHistory();
                 dirData[this.selectedPartKey].z = (dirData[this.selectedPartKey].z || 10) + 1;
                 this.renderAll();
             }
@@ -1004,6 +1579,7 @@ class RigWorkshopApp {
             this.hideContextMenu();
             const dirData = this.getCurrentDirData();
             if (dirData && this.selectedPartKey) {
+                this.pushAssemblerHistory();
                 dirData[this.selectedPartKey].z = Math.max(0, (dirData[this.selectedPartKey].z || 10) - 1);
                 this.renderAll();
             }
@@ -1013,6 +1589,7 @@ class RigWorkshopApp {
             this.hideContextMenu();
             const dirData = this.getCurrentDirData();
             if (dirData && this.selectedPartKey) {
+                this.pushAssemblerHistory();
                 dirData[this.selectedPartKey].visible = !dirData[this.selectedPartKey].visible;
                 this.renderAll();
             }
@@ -1022,18 +1599,98 @@ class RigWorkshopApp {
             this.hideContextMenu();
             const dirData = this.getCurrentDirData();
             if (dirData && this.selectedPartKey) {
+                this.pushAssemblerHistory();
                 dirData[this.selectedPartKey].flip_x = !dirData[this.selectedPartKey].flip_x;
                 this.renderAll();
+                this.showToast(`↔️ Đã ${dirData[this.selectedPartKey].flip_x ? 'lật ngang' : 'hủy lật ngang'} bộ phận!`);
             }
         });
 
+        const ctxFlipY = document.getElementById('ctx-flip-y');
+        if (ctxFlipY) {
+            ctxFlipY.addEventListener('click', () => {
+                this.hideContextMenu();
+                const dirData = this.getCurrentDirData();
+                if (dirData && this.selectedPartKey) {
+                    this.pushAssemblerHistory();
+                    dirData[this.selectedPartKey].flip_y = !dirData[this.selectedPartKey].flip_y;
+                    this.renderAll();
+                    this.showToast(`↕️ Đã ${dirData[this.selectedPartKey].flip_y ? 'lật dọc' : 'hủy lật dọc'} bộ phận!`);
+                }
+            });
+        }
+
         document.getElementById('ctx-reset-pos').addEventListener('click', () => {
             this.hideContextMenu();
+            this.pushAssemblerHistory();
             this.resetCurrentDir();
         });
 
-        // Keyboard Nudging
+        // Tool Mode selection [V] Select, [H] Pan
+        const btnModeSelect = document.getElementById('btn-mode-select');
+        const btnModePan = document.getElementById('btn-mode-pan');
+        if (btnModeSelect) btnModeSelect.addEventListener('click', () => this.setToolMode('select'));
+        if (btnModePan) {
+            btnModePan.addEventListener('click', () => this.setToolMode('pan'));
+            btnModePan.addEventListener('dblclick', () => this.resetPan());
+        }
+
+        // Undo & Redo buttons
+        const btnUndo = document.getElementById('btn-undo');
+        const btnRedo = document.getElementById('btn-redo');
+        const btnUndoMini = document.getElementById('btn-undo-mini');
+        const btnRedoMini = document.getElementById('btn-redo-mini');
+        if (btnUndo) btnUndo.addEventListener('click', () => this.undoAssembler());
+        if (btnRedo) btnRedo.addEventListener('click', () => this.redoAssembler());
+        if (btnUndoMini) btnUndoMini.addEventListener('click', () => this.undoAssembler());
+        if (btnRedoMini) btnRedoMini.addEventListener('click', () => this.redoAssembler());
+
+        // Alt + Mouse Wheel Zoom on Viewports
+        const vpContainer = document.querySelector('.viewport-container');
+        if (vpContainer) {
+            vpContainer.addEventListener('wheel', (e) => {
+                if (e.altKey) {
+                    e.preventDefault();
+                    const delta = e.deltaY < 0 ? 1 : -1;
+                    this.zoom = Math.max(2, Math.min(24, this.zoom + delta));
+                    const selZoom = document.getElementById('select-zoom');
+                    if (selZoom) selZoom.value = this.zoom;
+                    this.updateZoom();
+                }
+            }, { passive: false });
+
+            // Allow panning by dragging on background of viewport-container
+            vpContainer.addEventListener('mousedown', (e) => {
+                if (e.button === 1 || this.isSpacePressed || this.toolMode === 'pan') {
+                    if (e.target !== this.canvas) {
+                        this.onMouseDown(e);
+                    }
+                }
+            });
+        }
+
+        const peViewport = document.querySelector('.pe-viewport');
+        if (peViewport) {
+            peViewport.addEventListener('wheel', (e) => {
+                if (e.altKey) {
+                    e.preventDefault();
+                    const delta = e.deltaY < 0 ? 2 : -2;
+                    this.peZoom = Math.max(4, Math.min(48, this.peZoom + delta));
+                    const selPeZoom = document.getElementById('select-pe-zoom');
+                    if (selPeZoom) selPeZoom.value = this.peZoom;
+                    this.refreshPixelEditorCanvas();
+                }
+            }, { passive: false });
+        }
+
+        // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => this.onKeyDown(e));
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                this.isSpacePressed = false;
+                this.updateCursorMode();
+            }
+        });
 
         // Save Button (Unity Export)
         document.getElementById('btn-save-unity').addEventListener('click', () => this.saveAndExport());
@@ -1043,16 +1700,54 @@ class RigWorkshopApp {
         document.getElementById('btn-reset-current-dir').addEventListener('click', () => this.resetCurrentDir());
 
         // Symmetry & Alignment Tools
-        const symCenter = document.getElementById('btn-sym-center-x');
-        if (symCenter) symCenter.addEventListener('click', () => this.symmetryCenterX());
-        const symMirror = document.getElementById('btn-sym-mirror-x');
-        if (symMirror) symMirror.addEventListener('click', () => this.symmetryMirrorX());
+        const symCenterX = document.getElementById('btn-sym-center-x');
+        if (symCenterX) symCenterX.addEventListener('click', () => this.symmetryCenterX());
+        const symCenterY = document.getElementById('btn-sym-center-y');
+        if (symCenterY) symCenterY.addEventListener('click', () => this.symmetryCenterY());
+        const symMirrorX = document.getElementById('btn-sym-mirror-x');
+        if (symMirrorX) symMirrorX.addEventListener('click', () => this.symmetryMirrorX());
+        const symMirrorY = document.getElementById('btn-sym-mirror-y');
+        if (symMirrorY) symMirrorY.addEventListener('click', () => this.symmetryMirrorY());
         const symArms = document.getElementById('btn-sym-arms');
         if (symArms) symArms.addEventListener('click', () => this.symmetryArms());
         const symLegs = document.getElementById('btn-sym-legs');
         if (symLegs) symLegs.addEventListener('click', () => this.symmetryLegs());
         const symOpposite = document.getElementById('btn-sym-copy-opposite');
         if (symOpposite) symOpposite.addEventListener('click', () => this.symmetryCopyOpposite());
+
+        // Arrange & Alignment Buttons
+        const bindBtn = (id, fn) => {
+            const b = document.getElementById(id);
+            if (b) b.addEventListener('click', fn);
+        };
+        bindBtn('btn-align-left', () => this.alignSelected('left'));
+        bindBtn('btn-align-center-x', () => this.alignSelected('center_x'));
+        bindBtn('btn-align-right', () => this.alignSelected('right'));
+        bindBtn('btn-align-top', () => this.alignSelected('top'));
+        bindBtn('btn-align-center-y', () => this.alignSelected('center_y'));
+        bindBtn('btn-align-bottom', () => this.alignSelected('bottom'));
+        bindBtn('btn-distribute-x', () => this.distributeSelected('horizontal'));
+        bindBtn('btn-distribute-y', () => this.distributeSelected('vertical'));
+        bindBtn('btn-bring-front', () => this.bringSelectedToFront());
+        bindBtn('btn-send-back', () => this.sendSelectedToBack());
+
+        // Smart Snap Checkbox
+        const chkSnap = document.getElementById('check-snap');
+        if (chkSnap) {
+            chkSnap.addEventListener('change', (e) => {
+                this.snapEnabled = e.target.checked;
+                this.showToast(this.snapEnabled ? '🧲 Đã BẬT gợi ý căn chỉnh giữa thông minh!' : '⚪ Đã TẮT gợi ý căn chỉnh!');
+            });
+        }
+
+        // Select All & Deselect All Buttons
+        bindBtn('btn-select-all', () => this.selectAllParts());
+        bindBtn('btn-deselect-all', () => this.deselectAllParts());
+        const ctxSelectAll = document.getElementById('ctx-select-all');
+        if (ctxSelectAll) ctxSelectAll.addEventListener('click', () => {
+            this.hideContextMenu();
+            this.selectAllParts();
+        });
     }
 
     // ============================================================
@@ -1061,6 +1756,7 @@ class RigWorkshopApp {
     symmetryCenterX() {
         const dirData = this.getCurrentDirData();
         if (!dirData || !this.selectedPartKey) return;
+        this.pushAssemblerHistory();
         const part = dirData[this.selectedPartKey];
         const img = this.getImage(part.file);
         const w = img && img.complete ? img.naturalWidth : 16;
@@ -1069,21 +1765,48 @@ class RigWorkshopApp {
         this.showToast(`🎯 Đã căn giữa ${PART_NAMES_VI[this.selectedPartKey] || this.selectedPartKey} theo trục X = 32!`);
     }
 
+    symmetryCenterY() {
+        const dirData = this.getCurrentDirData();
+        if (!dirData || !this.selectedPartKey) return;
+        this.pushAssemblerHistory();
+        const part = dirData[this.selectedPartKey];
+        const img = this.getImage(part.file);
+        const h = img && img.complete ? img.naturalHeight : 16;
+        part.y = Math.round(32 - h / 2);
+        this.renderAll();
+        this.showToast(`🎯 Đã căn giữa ${PART_NAMES_VI[this.selectedPartKey] || this.selectedPartKey} theo trục Y = 32!`);
+    }
+
     symmetryMirrorX() {
         const dirData = this.getCurrentDirData();
         if (!dirData || !this.selectedPartKey) return;
+        this.pushAssemblerHistory();
         const part = dirData[this.selectedPartKey];
         const img = this.getImage(part.file);
         const w = img && img.complete ? img.naturalWidth : 16;
         part.x = 64 - part.x - w;
         part.flip_x = !part.flip_x;
         this.renderAll();
-        this.showToast(`🪞 Đã lật đối xứng ${PART_NAMES_VI[this.selectedPartKey] || this.selectedPartKey} qua tâm!`);
+        this.showToast(`↔️ Đã lật đối xứng ${PART_NAMES_VI[this.selectedPartKey] || this.selectedPartKey} qua tâm X!`);
+    }
+
+    symmetryMirrorY() {
+        const dirData = this.getCurrentDirData();
+        if (!dirData || !this.selectedPartKey) return;
+        this.pushAssemblerHistory();
+        const part = dirData[this.selectedPartKey];
+        const img = this.getImage(part.file);
+        const h = img && img.complete ? img.naturalHeight : 16;
+        part.y = 64 - part.y - h;
+        part.flip_y = !part.flip_y;
+        this.renderAll();
+        this.showToast(`↕️ Đã lật đối xứng ${PART_NAMES_VI[this.selectedPartKey] || this.selectedPartKey} qua tâm Y!`);
     }
 
     symmetryArms() {
         const dirData = this.getCurrentDirData();
         if (!dirData || !dirData['idle_arm_left'] || !dirData['idle_arm_right']) return;
+        this.pushAssemblerHistory();
         const al = dirData['idle_arm_left'];
         const ar = dirData['idle_arm_right'];
         const imgL = this.getImage(al.file);
@@ -1099,6 +1822,7 @@ class RigWorkshopApp {
     symmetryLegs() {
         const dirData = this.getCurrentDirData();
         if (!dirData || !dirData['idle_leg_left'] || !dirData['idle_leg_right']) return;
+        this.pushAssemblerHistory();
         const ll = dirData['idle_leg_left'];
         const lr = dirData['idle_leg_right'];
         const imgL = this.getImage(ll.file);
@@ -1129,6 +1853,7 @@ class RigWorkshopApp {
             return;
         }
 
+        this.pushAssemblerHistory();
         const mirrored = {};
         for (const [key, part] of Object.entries(currentData)) {
             let outKey = key;
@@ -1151,9 +1876,26 @@ class RigWorkshopApp {
         this.showToast(`🌐 Đã sao chép đối xứng từ ${DIR_LABELS_VI[this.currentDir]} sang ${DIR_LABELS_VI[targetDir]}!`);
     }
 
+    // ============================================================
+    // MOUSE DRAGGING & VIEWPORT PANNING
+    // ============================================================
     onMouseDown(e) {
-        if (e.button !== 0) return; // Only left click for dragging
         this.hideContextMenu();
+
+        // 1. Pan Viewport (Middle Click, or Space key held, or Pan Tool mode)
+        if (e.button === 1 || this.isSpacePressed || this.toolMode === 'pan') {
+            e.preventDefault();
+            this.isPanning = true;
+            this.panStartX = e.clientX;
+            this.panStartY = e.clientY;
+            this.panStartOffsetX = this.panX;
+            this.panStartOffsetY = this.panY;
+            this.updateCursorMode();
+            return;
+        }
+
+        // 2. Left click part dragging or marquee selection
+        if (e.button !== 0) return;
 
         const rect = this.canvas.getBoundingClientRect();
         const clientX = e.clientX - rect.left;
@@ -1186,13 +1928,67 @@ class RigWorkshopApp {
             }
         }
 
+        const isCtrl = e.ctrlKey || e.metaKey || e.shiftKey;
+
         if (hitKey) {
-            this.selectPart(hitKey);
-            this.isDragging = true;
-            this.dragStartX = pixelX;
-            this.dragStartY = pixelY;
-            this.dragStartPartX = dirData[hitKey].x;
-            this.dragStartPartY = dirData[hitKey].y;
+            if (isCtrl) {
+                // Toggle clicked part in selection
+                if (this._selectedPartKeys.has(hitKey)) {
+                    this._selectedPartKeys.delete(hitKey);
+                } else {
+                    this._selectedPartKeys.add(hitKey);
+                }
+            } else {
+                // If clicked part is NOT already selected, select ONLY it
+                if (!this._selectedPartKeys.has(hitKey)) {
+                    this._selectedPartKeys.clear();
+                    this._selectedPartKeys.add(hitKey);
+                }
+                // If it IS already in multi-selection, keep the group intact so user can drag the entire group!
+            }
+
+            if (this._selectedPartKeys.size > 0) {
+                this.pushAssemblerHistory();
+                this.isDragging = true;
+                this.dragStartX = pixelX;
+                this.dragStartY = pixelY;
+
+                // Cache start positions for ALL selected parts
+                this.dragStartPositions.clear();
+                for (const k of this._selectedPartKeys) {
+                    const p = dirData[k];
+                    if (p) {
+                        this.dragStartPositions.set(k, { x: p.x, y: p.y });
+                    }
+                }
+            }
+
+            this.renderLayersPanel();
+            this.renderInspector();
+            this.updateSelectionBox();
+        } else {
+            // Clicked on EMPTY canvas space
+            if (!isCtrl) {
+                // Deselect all when clicking on empty canvas without Ctrl
+                this._selectedPartKeys.clear();
+                this.renderLayersPanel();
+                this.renderInspector();
+                this.updateSelectionBox();
+            }
+
+            // Start Marquee Selection box
+            this.isMarqueeSelecting = true;
+            this.marqueeStartX = clientX;
+            this.marqueeStartY = clientY;
+            this.marqueeInitialSelection = new Set(this._selectedPartKeys);
+
+            if (this.marqueeBox) {
+                this.marqueeBox.style.display = 'block';
+                this.marqueeBox.style.left = `${clientX}px`;
+                this.marqueeBox.style.top = `${clientY}px`;
+                this.marqueeBox.style.width = '0px';
+                this.marqueeBox.style.height = '0px';
+            }
         }
     }
 
@@ -1231,62 +2027,284 @@ class RigWorkshopApp {
     }
 
     onMouseMove(e) {
+        if (this.isPanning) {
+            const dx = e.clientX - this.panStartX;
+            const dy = e.clientY - this.panStartY;
+            this.panX = this.panStartOffsetX + dx;
+            this.panY = this.panStartOffsetY + dy;
+            this.updatePanTransform();
+            return;
+        }
+
         if (this.currentTab !== 'assembler') return;
 
         const rect = this.canvas.getBoundingClientRect();
         const clientX = e.clientX - rect.left;
         const clientY = e.clientY - rect.top;
 
+        // 1. Marquee Selection update
+        if (this.isMarqueeSelecting) {
+            const curX = Math.max(0, Math.min(rect.width, clientX));
+            const curY = Math.max(0, Math.min(rect.height, clientY));
+
+            const left = Math.min(this.marqueeStartX, curX);
+            const top = Math.min(this.marqueeStartY, curY);
+            const width = Math.abs(curX - this.marqueeStartX);
+            const height = Math.abs(curY - this.marqueeStartY);
+
+            if (this.marqueeBox) {
+                this.marqueeBox.style.left = `${left}px`;
+                this.marqueeBox.style.top = `${top}px`;
+                this.marqueeBox.style.width = `${width}px`;
+                this.marqueeBox.style.height = `${height}px`;
+            }
+
+            // Determine intersecting parts in pixel coordinates
+            const boxMinPxX = left / this.zoom;
+            const boxMaxPxX = (left + width) / this.zoom;
+            const boxMinPxY = top / this.zoom;
+            const boxMaxPxY = (top + height) / this.zoom;
+
+            const dirData = this.getCurrentDirData();
+            if (dirData) {
+                const newSelection = new Set(this.marqueeInitialSelection);
+                for (const key of PART_KEYS) {
+                    const p = dirData[key];
+                    if (!p || p.visible === false) continue;
+                    const img = this.getImage(p.file);
+                    const pw = img && img.complete ? img.naturalWidth : 16;
+                    const ph = img && img.complete ? img.naturalHeight : 16;
+
+                    // AABB intersection check
+                    const pMaxX = p.x + pw;
+                    const pMaxY = p.y + ph;
+                    if (boxMinPxX < pMaxX && boxMaxPxX > p.x &&
+                        boxMinPxY < pMaxY && boxMaxPxY > p.y) {
+                        newSelection.add(key);
+                    }
+                }
+                this._selectedPartKeys = newSelection;
+                this.updateSelectionBox();
+                this.renderLayersPanel();
+                this.renderInspector();
+            }
+            return;
+        }
+
+        // 2. Dragging Selected Parts with Smart Snap & Guidelines
         const pixelX = Math.floor(clientX / this.zoom);
         const pixelY = Math.floor(clientY / this.zoom);
 
-        if (this.isDragging && this.selectedPartKey) {
+        if (this.isDragging && this._selectedPartKeys.size > 0) {
             const dirData = this.getCurrentDirData();
-            const part = dirData[this.selectedPartKey];
-            if (part) {
-                const dx = pixelX - this.dragStartX;
-                const dy = pixelY - this.dragStartY;
-                part.x = this.dragStartPartX + dx;
-                part.y = this.dragStartPartY + dy;
-                this.renderAll();
+            if (!dirData) return;
+
+            let dx = pixelX - this.dragStartX;
+            let dy = pixelY - this.dragStartY;
+
+            // SMART SNAP & NEON CENTER GUIDES (Trục X=32, Trục Y=32)
+            this.activeGuides = [];
+            if (this.snapEnabled) {
+                let minX = Infinity, maxX = -Infinity;
+                let minY = Infinity, maxY = -Infinity;
+
+                for (const [key, startPos] of this.dragStartPositions.entries()) {
+                    const p = dirData[key];
+                    if (!p) continue;
+                    const img = this.getImage(p.file);
+                    const pw = img && img.complete ? img.naturalWidth : 16;
+                    const ph = img && img.complete ? img.naturalHeight : 16;
+
+                    const curTrialX = startPos.x + dx;
+                    const curTrialY = startPos.y + dy;
+                    minX = Math.min(minX, curTrialX);
+                    maxX = Math.max(maxX, curTrialX + pw);
+                    minY = Math.min(minY, curTrialY);
+                    maxY = Math.max(maxY, curTrialY + ph);
+                }
+
+                if (minX !== Infinity) {
+                    const groupCenterX = (minX + maxX) / 2;
+                    const groupCenterY = (minY + maxY) / 2;
+
+                    // Snap Group Center X to 32 (Tolerance: 1.5 pixels)
+                    if (Math.abs(groupCenterX - 32) <= 1.5) {
+                        const snapAdjustmentX = Math.round(32 - groupCenterX);
+                        dx += snapAdjustmentX;
+                        this.activeGuides.push({ type: 'vert', pos: 32 });
+                    }
+
+                    // Snap Group Center Y to 32 (Tolerance: 1.5 pixels)
+                    if (Math.abs(groupCenterY - 32) <= 1.5) {
+                        const snapAdjustmentY = Math.round(32 - groupCenterY);
+                        dy += snapAdjustmentY;
+                        this.activeGuides.push({ type: 'horiz', pos: 32 });
+                    }
+                }
             }
+
+            // Draw visual neon center guides
+            this.drawSnapGuides();
+
+            // Apply dx, dy to all selected parts
+            for (const [key, startPos] of this.dragStartPositions.entries()) {
+                const part = dirData[key];
+                if (part) {
+                    part.x = startPos.x + dx;
+                    part.y = startPos.y + dy;
+                }
+            }
+
+            this.renderMainCanvas();
+            this.renderSmallPreviews();
+            this.updateSelectionBox();
         }
     }
 
     onMouseUp() {
-        this.isDragging = false;
+        if (this.isPanning) {
+            this.isPanning = false;
+            this.updateCursorMode();
+        }
+        if (this.isMarqueeSelecting) {
+            this.isMarqueeSelecting = false;
+            if (this.marqueeBox) this.marqueeBox.style.display = 'none';
+            this.renderAll();
+        }
+        if (this.isDragging) {
+            this.isDragging = false;
+            this.clearSnapGuides();
+            this.renderAll();
+        }
     }
 
+    // ============================================================
+    // KEYBOARD ENGINE (CTRL+S, CTRL+Z, CTRL+Y, FLIPS & NUDGE)
+    // ============================================================
     onKeyDown(e) {
+        // Space key activation for pan tool
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+            e.preventDefault();
+            this.isSpacePressed = true;
+            this.updateCursorMode();
+        }
+
+        // Global shortcuts with Ctrl / Cmd
+        if (e.ctrlKey || e.metaKey) {
+            const k = e.key.toLowerCase();
+            if (k === 's') {
+                e.preventDefault();
+                if (this.currentTab === 'assembler') {
+                    this.saveAndExport();
+                } else if (this.currentTab === 'pixel') {
+                    this.savePixelPartAndReturn();
+                }
+                return;
+            } else if (k === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    if (this.currentTab === 'assembler') this.redoAssembler();
+                    else this.peRedo();
+                } else {
+                    if (this.currentTab === 'assembler') this.undoAssembler();
+                    else this.peUndo();
+                }
+                return;
+            } else if (k === 'y') {
+                e.preventDefault();
+                if (this.currentTab === 'assembler') this.redoAssembler();
+                else this.peRedo();
+                return;
+            } else if (k === 'a') {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                    e.preventDefault();
+                    if (this.currentTab === 'assembler') {
+                        this.selectAllParts();
+                    }
+                    return;
+                }
+            }
+        }
+
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
         if (this.currentTab === 'assembler') {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                this.saveAndExport();
+            const dirData = this.getCurrentDirData();
+
+            // Tool modes [V] Select, [H] Pan, [R] Reset Pan
+            if (e.key.toLowerCase() === 'v') {
+                this.setToolMode('select');
+                return;
+            } else if (e.key.toLowerCase() === 'h') {
+                this.setToolMode('pan');
+                return;
+            } else if (e.key.toLowerCase() === 'r') {
+                this.resetPan();
                 return;
             }
 
-            const dirData = this.getCurrentDirData();
-            if (!dirData || !this.selectedPartKey) return;
-            const part = dirData[this.selectedPartKey];
-            if (!part) return;
+            // Flip shortcuts [X] Horizontal Flip, [Y] Vertical Flip for ALL selected parts
+            if (this.selectedPartKeys.size > 0 && e.key.toLowerCase() === 'x') {
+                e.preventDefault();
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData && dirData[k]) dirData[k].flip_x = !dirData[k].flip_x;
+                }
+                this.renderAll();
+                this.showToast(`↔️ Đã lật ngang ${this.selectedPartKeys.size} bộ phận!`);
+                return;
+            } else if (this.selectedPartKeys.size > 0 && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData && dirData[k]) dirData[k].flip_y = !dirData[k].flip_y;
+                }
+                this.renderAll();
+                this.showToast(`↕️ Đã lật dọc ${this.selectedPartKeys.size} bộ phận!`);
+                return;
+            }
+
+            if (this.selectedPartKeys.size === 0 || !dirData) return;
 
             const step = e.shiftKey ? 5 : 1;
             let handled = false;
 
             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-                part.x -= step; handled = true;
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].x -= step;
+                }
+                handled = true;
             } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-                part.x += step; handled = true;
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].x += step;
+                }
+                handled = true;
             } else if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') {
-                part.y -= step; handled = true;
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].y -= step;
+                }
+                handled = true;
             } else if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') {
-                part.y += step; handled = true;
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].y += step;
+                }
+                handled = true;
             } else if (e.key === 'PageUp') {
-                part.z = (part.z || 10) + 1; handled = true;
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].z = (dirData[k].z || 10) + 1;
+                }
+                handled = true;
             } else if (e.key === 'PageDown') {
-                part.z = Math.max(0, (part.z || 10) - 1); handled = true;
+                this.pushAssemblerHistory();
+                for (const k of this.selectedPartKeys) {
+                    if (dirData[k]) dirData[k].z = Math.max(0, (dirData[k].z || 10) - 1);
+                }
+                handled = true;
             }
 
             if (handled) {
@@ -1294,13 +2312,7 @@ class RigWorkshopApp {
                 this.renderAll();
             }
         } else if (this.currentTab === 'pixel') {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                e.preventDefault();
-                this.peUndo();
-            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-                e.preventDefault();
-                this.peRedo();
-            } else if (e.key.toLowerCase() === 'b') {
+            if (e.key.toLowerCase() === 'b') {
                 document.getElementById('tool-pencil').click();
             } else if (e.key.toLowerCase() === 'e') {
                 document.getElementById('tool-eraser').click();
@@ -1308,6 +2320,10 @@ class RigWorkshopApp {
                 document.getElementById('tool-bucket').click();
             } else if (e.key.toLowerCase() === 'i') {
                 document.getElementById('tool-eyedropper').click();
+            } else if (e.key.toLowerCase() === 'x') {
+                this.peFlipCanvasX();
+            } else if (e.key.toLowerCase() === 'y' && !e.ctrlKey) {
+                this.peFlipCanvasY();
             }
         }
     }

@@ -109,12 +109,12 @@ namespace GodlessFantasy.UI
 
             float itemY = y + 96;
 
-            DrawShopRow(x + 24, itemY, w - 48, "🧪 Bình Máu HP (Nhỏ)", "Hồi phục 60 HP tức thì", 10, currentGold, () => {
-                BuyItem("item_potion_hp", "Bình Máu HP (Nhỏ)", 10, ItemType.Consumable, "item_potion_hp");
+            DrawShopRow(x + 24, itemY, w - 48, "🧪 Bình Máu HP (Nhỏ)", "Hồi phục 60 HP tức thì (Chiếm 1 ô, dồn tối đa 100)", 10, currentGold, () => {
+                BuyItem("item_hp_pot", "Bình Máu HP (+35)", 10, ItemType.Consumable, "item_potion_hp");
             });
 
-            DrawShopRow(x + 24, itemY + 48, w - 48, "💧 Bình Mana MP (Nhỏ)", "Hồi phục 40 MP tức thì", 10, currentGold, () => {
-                BuyItem("item_potion_mp", "Bình Mana MP (Nhỏ)", 10, ItemType.Consumable, "item_potion_mp");
+            DrawShopRow(x + 24, itemY + 48, w - 48, "💧 Bình Mana MP (Nhỏ)", "Hồi phục 40 MP tức thì (Chiếm 1 ô, dồn tối đa 100)", 10, currentGold, () => {
+                BuyItem("item_mp_pot", "Bình Mana (+30)", 10, ItemType.Consumable, "item_potion_mp");
             });
 
             DrawShopRow(x + 24, itemY + 96, w - 48, "📜 Cuộn Chiêu: Hỏa Cầu", "Kỹ năng nguyên tố Hỏa sơ cấp", 50, currentGold, () => {
@@ -225,16 +225,21 @@ namespace GodlessFantasy.UI
                 BuyRPItem("mage_s_draconic_breath", "Bí Kíp S: Hỏa Long Bộc Phá", 5);
             });
 
-            DrawRPShopRow(x + 24, itemY + 48, w - 48, "👑 Bí Kíp X: Phượng Hoàng Niết Bàn", "Chiêu thức Thần Thoại lửa hồi sinh", 8, currentRP, () => {
+            DrawRPShopRow(x + 24, itemY + 46, w - 48, "👑 Bí Kíp X: Phượng Hoàng Niết Bàn", "Chiêu thức Thần Thoại lửa hồi sinh", 8, currentRP, () => {
                 BuyRPItem("mage_x_phoenix_rebirth", "Bí Kíp X: Phượng Hoàng Niết Bàn", 8);
             });
 
-            DrawRPShopRow(x + 24, itemY + 96, w - 48, "🛡️ Perk Bẩm Sinh: [Bất Tử Tâm Can]", "Giảm 15% sát thương khi HP < 30%", 3, currentRP, () => {
-                BuyRPPerk("Bất Tử Tâm Can", 3);
+            DrawRPShopRow(x + 24, itemY + 92, w - 48, "🎲 Vòng Quay Đặc Tính (Random Perk Thường)", "Tiêu 1 RP quay ngẫu nhiên 1 Đặc Tính / Perk chiến đấu thường", 1, currentRP, () => {
+                RollRPPerk(1);
+            }, "Quay (1 RP)");
+
+            DrawRPShopRow(x + 24, itemY + 138, w - 48, "🛡️ Bùa Cường Hóa Ô Đồ (Bảo Toàn Vĩnh Viễn)", "Kích hoạt cường hóa +1 ô đồ (Đồ bên trong rơi không mất khi chết)", 2, currentRP, () => {
+                BuyRPConsumableItem("item_slot_protect_rune", "Bùa Cường Hóa Ô Đồ", 2, "item_scroll_wood",
+                    "✨ Bùa Cường Hóa: Kích hoạt cường hóa vĩnh viễn thêm +1 ô hành trang! Đồ đặt trong ô đã cường hóa sẽ KHÔNG BAO GIỜ BỊ RƠI MẤT KHI CHẾT!");
             });
 
             // Nút mở Rương Chuyển Sinh
-            Rect vaultBtnRect = new Rect(x + 24, y + 270, w - 48, 36);
+            Rect vaultBtnRect = new Rect(x + 24, y + 284, w - 48, 34);
             GUI.color = new Color(0.2f, 0.85f, 1f, 1f);
             if (GUI.Button(vaultBtnRect, "🏛️ MỞ RƯƠNG CHUYỂN SINH (REBIRTH VAULT - LƯU 2 MÓN)"))
             {
@@ -267,7 +272,7 @@ namespace GodlessFantasy.UI
             GUI.color = Color.white;
         }
 
-        private void DrawRPShopRow(float rx, float ry, float rw, string title, string sub, int rpCost, int playerRP, System.Action onBuy)
+        private void DrawRPShopRow(float rx, float ry, float rw, string title, string sub, int rpCost, int playerRP, System.Action onBuy, string btnText = null)
         {
             Rect r = new Rect(rx, ry, rw, 42);
             GUI.color = new Color(0.08f, 0.11f, 0.16f, 0.85f);
@@ -280,7 +285,8 @@ namespace GodlessFantasy.UI
 
             bool canBuy = playerRP >= rpCost;
             GUI.color = canBuy ? new Color(0f, 0.9f, 1f) : Color.gray;
-            if (GUI.Button(new Rect(rx + rw - 110, ry + 8, 100, 26), $"Đổi ({rpCost} RP)") && canBuy)
+            string displayBtn = !string.IsNullOrEmpty(btnText) ? btnText : $"Đổi ({rpCost} RP)";
+            if (GUI.Button(new Rect(rx + rw - 110, ry + 8, 100, 26), displayBtn) && canBuy)
             {
                 onBuy?.Invoke();
             }
@@ -317,14 +323,39 @@ namespace GodlessFantasy.UI
             }
         }
 
-        private void BuyRPPerk(string perkName, int rpCost)
+        private void BuyRPConsumableItem(string id, string name, int rpCost, string icon, string desc)
         {
-            if (playerStats == null) return;
+            if (playerStats == null || inventory == null) return;
             if (playerStats.RebirthPoints < rpCost) return;
 
-            playerStats.RebirthPoints -= rpCost;
-            AudioManager.PlayLevelUp();
-            FloatingDamageManager.ShowFloatingText(playerStats.transform.position + Vector3.up, $"Đã học Perk [{perkName}]!", Color.cyan);
+            var it = new InventoryItem(id, name, ItemType.Consumable, EquipSlot.None, "Phẩm S", new Color(0.3f, 0.9f, 1f), icon, desc, desc, 1);
+            if (inventory.CanAddItem(it))
+            {
+                playerStats.RebirthPoints -= rpCost;
+                inventory.AddItem(it);
+                AudioManager.PlayLevelUp();
+                FloatingDamageManager.ShowFloatingText(playerStats.transform.position + Vector3.up, $"Đã đổi {name}!", Color.cyan);
+            }
+        }
+
+        private void RollRPPerk(int rpCost)
+        {
+            if (playerStats == null) return;
+            if (playerStats.RebirthPoints < rpCost)
+            {
+                FloatingDamageManager.ShowFloatingText(playerStats.transform.position + Vector3.up, "❌ Không đủ điểm RP!", Color.red);
+                return;
+            }
+
+            if (!playerStats.ConsumeRebirthPoints(rpCost)) return;
+
+            var rolled = playerStats.RollRandomRegularPerk();
+            if (rolled != null)
+            {
+                FloatingDamageManager.ShowFloatingText(playerStats.transform.position + Vector3.up * 1.3f, $"🎲 QUAY TRÚNG: {rolled.emoji} [{rolled.name}]!", new Color(1f, 0.85f, 0.25f));
+                Debug.Log($"<color=yellow>[VÒNG QUAY PERK]</color> Chúc mừng! Đã mở khóa Perk '{rolled.name}': {rolled.desc}");
+                AudioManager.PlayLevelUp();
+            }
         }
 
         private void SellTrashLoot()

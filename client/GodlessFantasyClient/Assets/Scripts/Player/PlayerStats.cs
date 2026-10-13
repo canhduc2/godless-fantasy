@@ -23,33 +23,63 @@ namespace GodlessFantasy.Player
         [SerializeField] private int maxExp = 100;
         [SerializeField] private string element = "Hỏa";
 
-        public int CurrentExp => currentExp;
+        public const int MAX_LEVEL = 100; // Giới hạn cấp độ tối đa (Maxping 100, không thể vượt quá)
+
+        public static PlayerStats Instance { get; private set; }
+
+        public int CurrentExp => (level >= MAX_LEVEL) ? maxExp : currentExp;
         public int MaxExp => maxExp;
-        public float ExpPercentage => maxExp > 0 ? Mathf.Clamp01((float)currentExp / maxExp) : 0f;
+        public float ExpPercentage => (level >= MAX_LEVEL) ? 1.0f : (maxExp > 0 ? Mathf.Clamp01((float)currentExp / maxExp) : 0f);
         public event Action<int, int> OnExpChanged;
         public event Action<int> OnLevelUp;
 
         public void GainExp(int amount)
         {
             if (amount <= 0) return;
+            if (level >= MAX_LEVEL)
+            {
+                level = MAX_LEVEL;
+                currentExp = maxExp;
+                OnExpChanged?.Invoke(currentExp, maxExp);
+                return;
+            }
+
             currentExp += amount;
 
             while (currentExp >= maxExp)
             {
+                if (level >= MAX_LEVEL)
+                {
+                    level = MAX_LEVEL;
+                    currentExp = maxExp;
+                    break;
+                }
+
                 currentExp -= maxExp;
                 level++;
                 maxExp = Mathf.RoundToInt(100f * Mathf.Pow(level, 1.45f));
                 availableStatPoints += 5;
 
-                // Hồi đầy máu và mana khi lên cấp
+                // Hồi đầy máu, mana và thể lực khi lên cấp
                 if (health != null) health.Revive();
                 currentMana = maxMana;
+                currentStamina = MaxStamina;
                 OnManaChanged?.Invoke(currentMana, maxMana);
+                OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
 
-                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🎉 LÊN CẤP {level}! (+5 TIỀM NĂNG)", new Color(1f, 0.90f, 0.25f));
-                Debug.Log($"<color=yellow>[LEVEL UP]</color> Nhân vật {characterName} đã đạt Cấp {level}!");
+                string maxNotice = (level >= MAX_LEVEL) ? " 🌟 ĐÃ ĐẠT CẤP TỐI ĐA 100 (HÃY CHUYỂN SINH)!" : "";
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, 
+                    $"🎉 LÊN CẤP {level}! (+5 TIỀM NĂNG - Khả Dụng: {availableStatPoints}){maxNotice}", new Color(1f, 0.90f, 0.25f));
+                Debug.Log($"<color=yellow>[LEVEL UP]</color> Nhân vật {characterName} đã đạt Cấp {level}! (+5 Điểm Tiềm Năng, Tổng khả dụng: {availableStatPoints})");
                 AudioManager.PlayLevelUp();
                 OnLevelUp?.Invoke(level);
+
+                if (level >= MAX_LEVEL)
+                {
+                    level = MAX_LEVEL;
+                    currentExp = maxExp;
+                    break;
+                }
             }
 
             OnExpChanged?.Invoke(currentExp, maxExp);
@@ -64,6 +94,10 @@ namespace GodlessFantasy.Player
         [Header("Mana Pool")]
         [SerializeField] private int maxMana = 100;
         [SerializeField] private int currentMana = 80;
+
+        [Header("Stamina Pool (Thể Lực)")]
+        [SerializeField] private float maxStamina = 100f;
+        [SerializeField] private float currentStamina = 100f;
 
         [Header("Potion Bag (Bình Dược Liệu)")]
         [SerializeField] private int hpPotionCount = 5;
@@ -130,6 +164,11 @@ namespace GodlessFantasy.Player
         public int RebirthCount => rebirthCount;
         public bool CanRebirth => level >= 100;
 
+        public const int BASE_STRENGTH = 8;
+        public const int BASE_INTELLIGENCE = 12;
+        public const int BASE_VITALITY = 10;
+        public const int BASE_AGILITY = 9;
+
         public bool PerformRebirth()
         {
             if (level < 100) return false;
@@ -139,7 +178,50 @@ namespace GodlessFantasy.Player
             level = 1;
             currentExp = 0;
             maxExp = 100;
-            availableStatPoints += 10; // Thưởng 10 điểm tiềm năng sau mỗi lần Trùng Sinh / Rebirth
+
+            // Xóa sạch toàn bộ điểm tiềm năng đã cộng vào 4 chỉ số và đưa về mốc cơ bản Level 1
+            strength = BASE_STRENGTH;
+            intelligence = BASE_INTELLIGENCE;
+            vitality = BASE_VITALITY;
+            agility = BASE_AGILITY;
+
+            // Khôi phục Máu, Mana và Thể Lực tối đa về mốc cơ bản cấp 1
+            maxMana = 100 + InherentBonusMaxMana;
+            currentMana = maxMana;
+            currentStamina = MaxStamina;
+            if (health != null)
+            {
+                health.SetMaxHealth(100 + InherentBonusMaxHp);
+                health.Revive();
+            }
+            OnManaChanged?.Invoke(currentMana, maxMana);
+            OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
+
+            // Toàn bộ điểm tiềm năng tích lũy từ cấp 100 bay sạch sẽ, chỉ nhận đúng 10 điểm thưởng Chuyển Sinh khởi đầu mới
+            availableStatPoints = 10;
+
+            // 1. Quét sạch toàn bộ đồ đạc ngoài các ô bảo vệ vĩnh viễn (0..TotalProtectedSlots - 1) hoặc Rương Rebirth
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>() ?? UnityEngine.Object.FindAnyObjectByType<InventoryManager>();
+            int wipedCount = 0;
+            if (inventoryManager != null)
+            {
+                wipedCount = inventoryManager.ClearUnprotectedItemsOnRebirth();
+            }
+
+            // 2. HIỆU ỨNG RUNG MÀN HÌNH VÀ ÂM THANH TRÙNG SINH HOÀNH TRÁNG
+            CameraController.Instance?.Shake(0.85f, 0.40f);
+            AudioManager.PlayBossSlam();
+            AudioManager.PlayLevelUp();
+            AudioManager.PlayTeleport();
+
+            string wipeNotice = wipedCount > 0 
+                ? $"\n(Đã quét sạch {wipedCount} món ngoài ô bảo vệ & Đặt lại toàn bộ Tiềm Năng)" 
+                : "\n(Toàn bộ điểm Tiềm Năng đã được làm mới sạch sẽ)";
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f,
+                $"✨ TRÙNG SINH THÀNH CÔNG! (+1 RP, +10 STAT MỚI){wipeNotice}", new Color(1f, 0.4f, 0.9f));
+
+            OnLevelUp?.Invoke(level);
+            OnExpChanged?.Invoke(currentExp, maxExp);
             return true;
         }
 
@@ -225,13 +307,24 @@ namespace GodlessFantasy.Player
         }
 
         /// <summary>
-        /// Cheat tăng cấp trực tiếp và tự động cộng toàn bộ điểm tiềm năng để phục vụ test tính năng
+        /// Tăng cấp trực tiếp và trao điểm tiềm năng (+5 điểm/cấp) vào kho điểm khả dụng để người chơi tự phân bổ hoặc test tính năng
         /// </summary>
-        public void LevelUpCheat(int levelsToAdd = 1, bool autoAllocateStats = true)
+        public void LevelUpCheat(int levelsToAdd = 1, bool autoAllocateStats = false)
         {
+            if (level >= MAX_LEVEL)
+            {
+                level = MAX_LEVEL;
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f,
+                    $"⭐ ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (CẤP {MAX_LEVEL})! ĐỦ ĐIỀU KIỆN CHUYỂN SINH (REBIRTH)", new Color(1f, 0.85f, 0.25f));
+                return;
+            }
+
+            int actualLevelsAdded = 0;
             for (int i = 0; i < levelsToAdd; i++)
             {
+                if (level >= MAX_LEVEL) break;
                 level++;
+                actualLevelsAdded++;
                 maxExp = Mathf.RoundToInt(100f * Mathf.Pow(level, 1.45f));
                 availableStatPoints += 5;
 
@@ -245,9 +338,16 @@ namespace GodlessFantasy.Player
                 OnManaChanged?.Invoke(currentMana, maxMana);
             }
 
+            if (actualLevelsAdded == 0) return;
+
+            int addedPts = actualLevelsAdded * 5;
+            string statMsg = autoAllocateStats 
+                ? $"(Đã tự cộng +{addedPts} Điểm Tiềm Năng)" 
+                : $"(Nhận +{addedPts} Điểm Tiềm Năng! Tổng khả dụng: {availableStatPoints})";
+            string maxNotice = (level >= MAX_LEVEL) ? " 🌟 ĐÃ ĐẠT CẤP TỐI ĐA 100 (HÃY CHUYỂN SINH)!" : "";
             FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f,
-                $"⚡ LÊN CẤP {level}! (Đã tự cộng +{levelsToAdd * 5} Điểm Tiềm Năng)", new Color(1f, 0.90f, 0.25f));
-            Debug.Log($"<color=yellow>[LEVEL UP TEST]</color> Nhân vật {characterName} đã đạt Cấp {level}! (Tự cộng điểm hoàn tất)");
+                $"🎉 LÊN CẤP {level}! {statMsg}{maxNotice}", new Color(1f, 0.90f, 0.25f));
+            Debug.Log($"<color=yellow>[LEVEL UP TEST]</color> Nhân vật {characterName} đã đạt Cấp {level}! (+{addedPts} Tiềm Năng, Tổng khả dụng: {availableStatPoints})");
             AudioManager.PlayLevelUp();
             OnLevelUp?.Invoke(level);
             OnExpChanged?.Invoke(currentExp, maxExp);
@@ -257,6 +357,12 @@ namespace GodlessFantasy.Player
         public bool ConsumeGold(int amount)
         {
             if (gold >= amount) { gold -= amount; return true; }
+            return false;
+        }
+
+        public bool ConsumeRebirthPoints(int amount)
+        {
+            if (rebirthPoints >= amount) { rebirthPoints -= amount; return true; }
             return false;
         }
 
@@ -271,13 +377,44 @@ namespace GodlessFantasy.Player
             }
         }
         public int MaxMana => maxMana;
+        public float MaxStamina => maxStamina + (vitality * 5f);
+        public float CurrentStamina
+        {
+            get => currentStamina;
+            set
+            {
+                currentStamina = Mathf.Clamp(value, 0f, MaxStamina);
+                OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
+            }
+        }
         public int HpPotionCount => hpPotionCount;
         public int ManaPotionCount => manaPotionCount;
 
         public event Action<int, int> OnManaChanged;
+        public event Action<float, float> OnStaminaChanged;
+
+        public bool ConsumeStamina(float amount)
+        {
+            if (currentStamina >= amount)
+            {
+                currentStamina -= amount;
+                OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
+                return true;
+            }
+            currentStamina = 0f;
+            OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
+            return false;
+        }
+
+        public void RestoreStamina(float amount)
+        {
+            currentStamina = Mathf.Min(MaxStamina, currentStamina + amount);
+            OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
+        }
 
         private void Awake()
         {
+            Instance = this;
             if (!string.IsNullOrEmpty(characterName) && characterName.Length > MaxNameLength)
             {
                 characterName = characterName.Substring(0, MaxNameLength);
@@ -358,6 +495,60 @@ namespace GodlessFantasy.Player
             {
                 health.IncreaseMaxHealth(InherentBonusMaxHp);
             }
+        }
+
+        // ================= HỆ THỐNG PERK THƯỜNG & VÒNG QUAY ĐẶC TÍNH (1 RP) =================
+        [Serializable]
+        public class RegularPerkDef
+        {
+            public string emoji;
+            public string name;
+            public string desc;
+
+            public RegularPerkDef(string emoji, string name, string desc)
+            {
+                this.emoji = emoji;
+                this.name = name;
+                this.desc = desc;
+            }
+        }
+
+        [SerializeField]
+        private List<RegularPerkDef> acquiredPerks = new List<RegularPerkDef>()
+        {
+            new RegularPerkDef("🔥", "Hỏa Thần Quyết", "Tăng 10% sát thương cho toàn bộ chiêu thức ma pháp thuộc tính Hỏa."),
+            new RegularPerkDef("⚡", "Tốc Biến Tân Thủ", "Tăng 0.5m/s tốc độ chạy cơ bản khi ở trạng thái ngoài giao tranh."),
+            new RegularPerkDef("🛡️", "Hộ Thể Kim Cang", "Giảm 5% sát thương nhận vào khi chiến đấu trong phạm vi làng.")
+        };
+
+        public List<RegularPerkDef> AcquiredPerks => acquiredPerks;
+
+        public static readonly List<RegularPerkDef> AvailableRegularPerkPool = new List<RegularPerkDef>()
+        {
+            new RegularPerkDef("🗡️", "Cuồng Bạo Chí Mạng", "Tăng +10% Tỉ lệ bạo kích và +25% Sát thương bạo kích."),
+            new RegularPerkDef("🏹", "Ưng Nhãn Thiện Xạ", "Tăng +15% Tầm đánh cơ bản và +10 Tốc độ tấn công."),
+            new RegularPerkDef("❤️", "Trường Sinh Khí", "Tăng +100 Máu tối đa và hồi phục +2 HP mỗi giây."),
+            new RegularPerkDef("💧", "Thiền Định Huyền Môn", "Tăng +80 Mana tối đa và hồi phục +3 MP mỗi giây."),
+            new RegularPerkDef("🌪️", "Hấp Huyết Ma Pháp", "Chuyển hóa 5% sát thương gây ra thành Máu hồi phục."),
+            new RegularPerkDef("💎", "Tài Thần Ban Phước", "Tăng +20% lượng Vàng và EXP nhận được khi diệt quái."),
+            new RegularPerkDef("⚔️", "Thần Lực Bất Bại", "Tăng +15 Công vật lý và +15 Sát thương phép."),
+            new RegularPerkDef("🛡️", "Bất Tử Tâm Can", "Giảm 15% toàn bộ sát thương nhận vào khi HP < 30%."),
+            new RegularPerkDef("⚡", "Tốc Biến Thần Hành", "Tăng vĩnh viễn +1.0m/s Tốc độ chạy ngoài giao tranh.")
+        };
+
+        public RegularPerkDef RollRandomRegularPerk()
+        {
+            if (AvailableRegularPerkPool == null || AvailableRegularPerkPool.Count == 0) return null;
+            // Ưu tiên quay trúng perk mà nhân vật chưa có
+            var unlearned = AvailableRegularPerkPool.FindAll(p => !acquiredPerks.Exists(a => a.name == p.name));
+            var pool = (unlearned.Count > 0) ? unlearned : AvailableRegularPerkPool;
+            var chosen = pool[UnityEngine.Random.Range(0, pool.Count)];
+
+            if (!acquiredPerks.Exists(a => a.name == chosen.name))
+            {
+                acquiredPerks.Add(chosen);
+            }
+            return chosen;
         }
 
         // ================= HỆ THỐNG ACTIVE BUFF (ARCHETYPE SỐ 5) =================

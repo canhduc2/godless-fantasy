@@ -46,10 +46,43 @@ namespace GodlessFantasy.Player
         [SerializeField] private SpriteRenderer slashRenderer;
         [SerializeField] private SpriteRenderer costumeRenderer;
 
+        [Header("Hệ Thống Rig 2D Chibi Thuần Code")]
+        public bool useProceduralRig = true;
+        private ProceduralCharacterRig2D rig2D;
+
         [Header("Trạng Thái Ngoại Hình")]
-        public bool IsFemale = false;
-        public SkinType CurrentSkin = SkinType.None;
-        public Direction8 CurrentDirection = Direction8.South;
+        private bool isFemaleBacking = false;
+        public bool IsFemale
+        {
+            get => (useProceduralRig && rig2D != null) ? rig2D.IsFemale : isFemaleBacking;
+            set
+            {
+                isFemaleBacking = value;
+                if (rig2D != null) rig2D.IsFemale = value;
+            }
+        }
+
+        private SkinType skinBacking = SkinType.None;
+        public SkinType CurrentSkin
+        {
+            get => (useProceduralRig && rig2D != null) ? rig2D.CurrentSkin : skinBacking;
+            set
+            {
+                skinBacking = value;
+                if (rig2D != null) rig2D.CurrentSkin = value;
+            }
+        }
+
+        private Direction8 dirBacking = Direction8.South;
+        public Direction8 CurrentDirection
+        {
+            get => (useProceduralRig && rig2D != null) ? rig2D.FacingDir : dirBacking;
+            set
+            {
+                dirBacking = value;
+                if (rig2D != null) rig2D.FacingDir = value;
+            }
+        }
 
         private Camera mainCamera;
         private Rigidbody2D rb;
@@ -74,6 +107,13 @@ namespace GodlessFantasy.Player
             playerMovement = GetComponent<PlayerMovement>();
             inventoryManager = GetComponent<InventoryManager>();
             mainCamera = Camera.main;
+
+            if (useProceduralRig)
+            {
+                rig2D = GetComponent<ProceduralCharacterRig2D>();
+                if (rig2D == null)
+                    rig2D = gameObject.AddComponent<ProceduralCharacterRig2D>();
+            }
 
             // Khử triệt để hiện tượng giật lag / jitter khi di chuyển bằng nội suy vật lý
             if (rb != null)
@@ -100,6 +140,13 @@ namespace GodlessFantasy.Player
             }
             visualRoot.localPosition = new Vector3(0f, -0.48f, 0f);
             initialVisualPos = visualRoot.localPosition;
+
+            // Nếu đang dùng Rig 2D, tắt VisualRoot cũ để tránh trùng lặp hiển thị
+            if (useProceduralRig && rig2D != null)
+            {
+                visualRoot.gameObject.SetActive(false);
+                return;
+            }
 
             // Tắt SpriteRenderer ở GameObject gốc (nếu có) để tránh xung đột
             var rootSr = GetComponent<SpriteRenderer>();
@@ -213,6 +260,12 @@ namespace GodlessFantasy.Player
 
         private void Update()
         {
+            if (useProceduralRig && rig2D != null)
+            {
+                // Toàn bộ hoạt ảnh 60fps & phím tắt đã do ProceduralCharacterRig2D xử lý mượt mà
+                return;
+            }
+
             HandleHotkeys();
             UpdateDirectionFromAim();
             UpdateAnimations();
@@ -250,6 +303,12 @@ namespace GodlessFantasy.Player
         /// </summary>
         public void SetStealth(bool inStealth)
         {
+            if (useProceduralRig && rig2D != null)
+            {
+                rig2D.SetStealth(inStealth);
+                return;
+            }
+
             float targetAlpha = inStealth ? 0.35f : 1.0f;
             SetLayerAlpha(bodyRenderer, targetAlpha);
             SetLayerAlpha(pantsRenderer, targetAlpha);
@@ -314,19 +373,34 @@ namespace GodlessFantasy.Player
                 return;
             }
 
-            // ================= TRẠNG THÁI DI CHUYỂN (WALK) =================
+            // ================= TRẠNG THÁI DI CHUYỂN (WALK / RUN) =================
             if (isMoving)
             {
-                walkCycleTimer += Time.deltaTime * 9.5f;
-                float bob = Mathf.Abs(Mathf.Sin(walkCycleTimer)) * 0.05f;
-                float tilt = Mathf.Sin(walkCycleTimer) * 2.8f;
+                bool isRunning = playerMovement != null && playerMovement.IsRunning;
+                float animCadence = isRunning ? 13.5f : 8.5f;
+                walkCycleTimer += Time.deltaTime * animCadence;
+
+                // Độ nhấp nhô nhẹ nhàng tự nhiên (Grounded & silky bob)
+                float bob = Mathf.Abs(Mathf.Sin(walkCycleTimer * Mathf.PI)) * (isRunning ? 0.035f : 0.02f);
+                float tilt = Mathf.Sin(walkCycleTimer * Mathf.PI) * (isRunning ? 1.8f : 1.0f);
 
                 visualRoot.localScale = Vector3.one;
                 visualRoot.localPosition = initialVisualPos + new Vector3(0, bob, 0);
                 visualRoot.localRotation = Quaternion.Euler(0, 0, tilt);
 
+                // Hiệu ứng bóng mờ lướt gió khi chạy nhanh (Sprint Ghost Trails)
+                if (isRunning)
+                {
+                    ghostSpawnTimer += Time.deltaTime;
+                    if (ghostSpawnTimer > 0.11f)
+                    {
+                        ghostSpawnTimer = 0f;
+                        SpawnGhostAfterimage();
+                    }
+                }
+
                 UpdateWeaponVisuals(isMoving: true, bob: bob, breath: 0f);
-                UpdateFrameSprites(isMoving: true, isDash: false);
+                UpdateFrameSprites(isMoving: true, isDash: false, isRunning: isRunning);
             }
             // ================= TRẠNG THÁI NGHỈ (IDLE) =================
             else
@@ -335,15 +409,15 @@ namespace GodlessFantasy.Player
                 visualRoot.localRotation = Quaternion.identity;
 
                 // Nhịp thở nhấp nhô nhẹ nhàng
-                float breath = Mathf.Sin(Time.time * 2.8f);
-                float squash = breath * 0.015f;
-                float stretch = breath * 0.025f;
+                float breath = Mathf.Sin(Time.time * 2.6f);
+                float squash = breath * 0.012f;
+                float stretch = breath * 0.020f;
 
                 visualRoot.localScale = new Vector3(1f - squash, 1f + stretch, 1f);
                 visualRoot.localPosition = initialVisualPos;
 
                 UpdateWeaponVisuals(isMoving: false, bob: 0f, breath: breath);
-                UpdateFrameSprites(isMoving: false, isDash: false);
+                UpdateFrameSprites(isMoving: false, isDash: false, isRunning: false);
             }
         }
 
@@ -452,9 +526,9 @@ namespace GodlessFantasy.Player
             weaponRenderer.sortingOrder = sortingOrder;
         }
 
-        private void UpdateFrameSprites(bool isMoving, bool isDash)
+        private void UpdateFrameSprites(bool isMoving, bool isDash, bool isRunning = false)
         {
-            // Xác định frame bước đi: 0=Idle/Tiếp đất, 1=Bước trái, 2=Thu chân, 3=Bước phải
+            // Xác định frame bước đi: chu kỳ 4 frame mượt mà
             int frameIdx = isMoving ? (((int)walkCycleTimer) % 4) : 0;
             string dirName = GetDirectionSpriteName(CurrentDirection);
 
@@ -483,11 +557,39 @@ namespace GodlessFantasy.Player
 
             string genderStr = IsFemale ? "female" : "male";
 
-            // Tầng Thân Gốc (Body) - Luôn hiển thị cậu bé / cô bé anime theo đúng 8 hướng và frame bước đi
+            // Tầng Thân Gốc (Body) - Hiển thị hoạt ảnh theo đúng trạng thái (Idle, Walk, Run, Dash)
             if (bodyRenderer != null)
             {
                 bodyRenderer.enabled = true;
-                bodyRenderer.sprite = LoadSprite($"Characters/player_base_{genderStr}_{dirName}_{frameIdx}");
+                Sprite bodySprite = null;
+
+                // A. Chế độ Chạy nhanh (Run / Dash)
+                if (isDash || isRunning)
+                {
+                    int runF = (((int)walkCycleTimer) % 4);
+                    bodySprite = LoadSprite($"Characters/player_base_{genderStr}_{dirName}_run_{runF}")
+                              ?? LoadSprite($"Characters/player_base_{genderStr}_{dirName}_{runF}");
+                }
+                // B. Chế độ Đi bộ (Walk)
+                else if (isMoving)
+                {
+                    int walkF = (((int)walkCycleTimer) % 4);
+                    bodySprite = LoadSprite($"Characters/player_base_{genderStr}_{dirName}_walk_{walkF}")
+                              ?? LoadSprite($"Characters/player_base_{genderStr}_{dirName}_{walkF}");
+                }
+                // C. Chế độ Đứng yên (Idle)
+                else
+                {
+                    int idleF = (((int)(Time.time * 2.5f)) % 4);
+                    bodySprite = LoadSprite($"Characters/player_base_{genderStr}_{dirName}_idle_{idleF}")
+                              ?? LoadSprite($"Characters/player_base_{genderStr}_{dirName}_idle_0")
+                              ?? LoadSprite($"Characters/player_base_{genderStr}_{dirName}_0");
+                }
+
+                if (bodySprite != null)
+                {
+                    bodyRenderer.sprite = bodySprite;
+                }
             }
         }
 
@@ -521,6 +623,9 @@ namespace GodlessFantasy.Player
         /// </summary>
         public Texture2D GetPortraitTexture()
         {
+            if (useProceduralRig && rig2D != null)
+                return rig2D.GetPortraitTexture();
+
             if (CurrentSkin == SkinType.SoulKnight)
                 return Resources.Load<Texture2D>("Characters/avatar_soul_knight");
             if (CurrentSkin == SkinType.VoidReaper)
@@ -533,10 +638,13 @@ namespace GodlessFantasy.Player
         /// </summary>
         public Texture2D GetFullBodyTexture()
         {
+            if (useProceduralRig && rig2D != null)
+                return rig2D.GetFullBodyTexture();
+
             string genderStr = IsFemale ? "female" : "male";
             string dirName = GetDirectionSpriteName(CurrentDirection);
-            return Resources.Load<Texture2D>($"Characters/player_base_{genderStr}_{dirName}_0")
-                ?? Resources.Load<Texture2D>($"Characters/player_base_{genderStr}_south_0")
+            return Resources.Load<Texture2D>($"Characters/fullbody_{genderStr}")
+                ?? Resources.Load<Texture2D>($"Characters/Rig/{genderStr}/{dirName}/body")
                 ?? GetPortraitTexture();
         }
 
@@ -563,6 +671,11 @@ namespace GodlessFantasy.Player
         public void TriggerAttack(string element = "Hỏa", bool isCast = false)
         {
             if (!gameObject.activeInHierarchy) return;
+            if (useProceduralRig && rig2D != null)
+            {
+                rig2D.TriggerAttack(element, isCast);
+                return;
+            }
             StartCoroutine(AttackSwingRoutine(element, isCast));
         }
 

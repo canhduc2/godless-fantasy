@@ -121,14 +121,14 @@ namespace GodlessFantasy.Player
 
             GUI.depth = -180;
 
-            float boxW = 460f;
-            float boxH = 340f;
+            float boxW = 500f;
+            float boxH = 300f;
             float boxX = (Screen.width - boxW) / 2f;
             float boxY = (Screen.height - boxH) / 2f;
             Rect boxRect = new Rect(boxX, boxY, boxW, boxH);
 
-            // Nền hộp rương
-            GUI.color = new Color(0.05f, 0.07f, 0.12f, 0.96f);
+            // Nền hộp rương (Đậm đặc 98% chống lộ chữ nền game)
+            GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.98f);
             GUI.DrawTexture(boxRect, Texture2D.whiteTexture);
             GUI.color = Color.white;
             DrawDoubleGoldFrame(boxRect);
@@ -139,6 +139,7 @@ namespace GodlessFantasy.Player
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 18,
                 fontStyle = FontStyle.Bold,
+                wordWrap = false,
                 normal = { textColor = new Color(1f, 0.85f, 0.25f, 1f) }
             };
             GUI.Label(new Rect(boxX, boxY + 16, boxW, 28), "🏛️ RƯƠNG CHUYỂN SINH (REBIRTH VAULT)", titleStyle);
@@ -146,24 +147,25 @@ namespace GodlessFantasy.Player
             var descStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 12,
+                fontSize = 11,
                 wordWrap = true,
-                normal = { textColor = new Color(0.85f, 0.88f, 0.95f, 0.85f) }
+                normal = { textColor = new Color(0.85f, 0.88f, 0.95f, 0.9f) }
             };
             string desc = "Bảo lưu đúng 2 bảo vật bất kỳ trên Server. Khi bạn Chuyển Sinh về Cấp 1, 2 món đồ này vẫn nguyên vẹn trong rương tại Đền!";
-            GUI.Label(new Rect(boxX + 20, boxY + 48, boxW - 40, 38), desc, descStyle);
+            GUI.Label(new Rect(boxX + 20, boxY + 46, boxW - 40, 38), desc, descStyle);
 
             var inv = FindAnyObjectByType<InventoryManager>();
 
-            // Hiển thị 2 ô bảo vật trong rương
-            float slotSize = 72f;
-            float startSlotX = boxX + (boxW - (slotSize * 2 + 30f)) / 2f;
-            float slotY = boxY + 100f;
+            // Hiển thị 2 ô bảo vật trong rương (Kích thước rộng rãi 110x84)
+            float slotW = 110f;
+            float slotH = 84f;
+            float startSlotX = boxX + (boxW - (slotW * 2 + 24f)) / 2f;
+            float slotY = boxY + 90f;
 
             for (int i = 0; i < MAX_VAULT_SLOTS; i++)
             {
-                Rect slotRect = new Rect(startSlotX + i * (slotSize + 30f), slotY, slotSize, slotSize);
-                GUI.color = new Color(0.08f, 0.12f, 0.18f, 0.9f);
+                Rect slotRect = new Rect(startSlotX + i * (slotW + 24f), slotY, slotW, slotH);
+                GUI.color = new Color(0.08f, 0.12f, 0.18f, 0.95f);
                 GUI.DrawTexture(slotRect, Texture2D.whiteTexture);
                 GUI.color = Color.white;
                 DrawDoubleGoldFrame(slotRect);
@@ -171,9 +173,9 @@ namespace GodlessFantasy.Player
                 if (i < vaultItems.Count)
                 {
                     var it = vaultItems[i];
-                    GUI.Label(new Rect(slotRect.x + 4, slotRect.y + 6, slotRect.width - 8, 36), it.itemName, descStyle);
+                    GUI.Label(new Rect(slotRect.x + 4, slotRect.y + 6, slotRect.width - 8, 44), it.itemName, descStyle);
 
-                    if (GUI.Button(new Rect(slotRect.x + 6, slotRect.y + slotRect.height - 24, slotRect.width - 12, 20), "Rút Đồ"))
+                    if (GUI.Button(new Rect(slotRect.x + 10, slotRect.y + slotRect.height - 26, slotRect.width - 20, 22), "Rút Đồ"))
                     {
                         WithdrawItem(it, inv);
                     }
@@ -190,18 +192,19 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            // Gợi ý cất đồ từ túi
+            // Gợi ý cất đồ từ túi (Đủ chiều cao 36px, không bị cắt dòng)
             var guideStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 12,
+                fontSize = 11,
                 fontStyle = FontStyle.Italic,
-                normal = { textColor = new Color(0.4f, 0.9f, 1f, 0.9f) }
+                wordWrap = true,
+                normal = { textColor = new Color(0.4f, 0.9f, 1f, 0.95f) }
             };
-            GUI.Label(new Rect(boxX + 20, boxY + 195, boxW - 40, 24), "💡 Để cất đồ: Mở Túi đồ (Phím B) -> Click chuột phải vào món đồ -> Chọn 'Cất vào Rương'.", guideStyle);
+            GUI.Label(new Rect(boxX + 16, boxY + 188, boxW - 32, 36), "💡 Để cất đồ: Mở Túi đồ (Phím B) -> Click chuột phải vào món đồ -> Chọn 'Cất vào Rương'", guideStyle);
 
             // Nút Đóng
-            if (GUI.Button(new Rect(boxX + (boxW - 140f) / 2f, boxY + boxH - 45, 140f, 32), "Đóng Rương"))
+            if (GUI.Button(new Rect(boxX + (boxW - 140f) / 2f, boxY + boxH - 46, 140f, 32), "Đóng Rương"))
             {
                 IsVaultOpen = false;
             }

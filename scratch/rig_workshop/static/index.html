@@ -40,6 +40,12 @@
 
             <!-- HEADER ACTIONS -->
             <div class="header-actions">
+                <button class="btn btn-secondary" id="btn-undo" title="Hoàn tác thao tác (Ctrl+Z)">
+                    ↩️ Hoàn Tác
+                </button>
+                <button class="btn btn-secondary" id="btn-redo" title="Làm lại thao tác (Ctrl+Y)">
+                    ↪️ Làm Lại
+                </button>
                 <button class="btn btn-secondary" id="btn-reset-default" title="Khôi phục toàn bộ cài đặt mặc định">
                     🔄 Mặc Định
                 </button>
@@ -50,7 +56,7 @@
                     📤 Nhập JSON
                     <input type="file" id="file-import-json" accept=".json" style="display:none">
                 </label>
-                <button class="btn btn-primary" id="btn-save-unity" title="Lưu cấu hình và tự động xuất ra Unity Resources">
+                <button class="btn btn-primary" id="btn-save-unity" title="Lưu cấu hình và tự động xuất ra Unity Resources (Ctrl+S)">
                     💾 LƯU CẤU HÌNH & XUẤT RA UNITY
                 </button>
             </div>
@@ -106,18 +112,31 @@
                         <div class="checkbox-row">
                             <label><input type="checkbox" id="check-bbox" checked> Khung viền bộ phận đang chọn</label>
                         </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="check-snap" checked> 🧲 Hít vào tâm & Gợi ý gióng hàng (Snap Guides)</label>
+                        </div>
                     </div>
 
                     <div class="panel-section">
                         <h2 class="section-title">⌨️ PHÍM TẮT & THAO TÁC</h2>
                         <ul class="hotkey-list">
-                            <li><kbd>Click chuột</kbd> Chọn bộ phận</li>
-                            <li><kbd>Chuột phải</kbd> Menu menu & Vẽ pixel</li>
-                            <li><kbd>Kéo thả chuột</kbd> Di chuyển bộ phận</li>
+                            <li><kbd>Bôi đen chuột</kbd> Quét chọn nhiều mảnh</li>
+                            <li><kbd>Ctrl + A</kbd> Chọn tất cả bộ phận</li>
+                            <li><kbd>Ctrl + Click</kbd> Thêm / Bớt mảnh chọn</li>
+                            <li><kbd>Click chỗ trống</kbd> Hủy chọn tất cả</li>
+                            <li><kbd>Kéo thả chuột</kbd> Di chuyển nhóm mảnh</li>
+                            <li><kbd>Chuột phải</kbd> Menu lật & vẽ pixel</li>
+                            <li><kbd>Alt + Lăn chuột</kbd> Phóng to / Thu nhỏ mượt</li>
+                            <li><kbd>Space / H + Kéo</kbd> Di chuyển góc nhìn (Pan)</li>
+                            <li><kbd>V</kbd> Chế độ Chọn & Di chuyển</li>
+                            <li><kbd>X</kbd> Lật ngang bộ phận (Flip X)</li>
+                            <li><kbd>Y</kbd> Lật dọc bộ phận (Flip Y)</li>
+                            <li><kbd>Ctrl + Z</kbd> Hoàn tác (Undo)</li>
+                            <li><kbd>Ctrl + Y</kbd> Làm lại (Redo)</li>
                             <li><kbd>Mũi tên / WASD</kbd> Dịch 1 pixel</li>
                             <li><kbd>Shift + Mũi tên</kbd> Dịch 5 pixel</li>
                             <li><kbd>PageUp / PageDn</kbd> Tăng/Giảm Z-Index</li>
-                            <li><kbd>Ctrl + S</kbd> Lưu & Xuất Unity</li>
+                            <li><kbd>Ctrl + S</kbd> Lưu & Xuất ngay</li>
                         </ul>
                     </div>
                 </aside>
@@ -131,6 +150,22 @@
                             <span class="info-badge" id="badge-selected-part">Chưa chọn bộ phận</span>
                         </div>
                         <div class="viewport-actions">
+                            <div class="tool-mode-group">
+                                <button class="mini-btn active" id="btn-mode-select" title="Công cụ Chọn & Di chuyển mảnh [V]">
+                                    ↖️ Chọn & Di Chuyển
+                                </button>
+                                <button class="mini-btn" id="btn-mode-pan" title="Công cụ Di chuyển góc nhìn [H / Space] (Click đúp để căn giữa)">
+                                    ✋ Góc Nhìn (Pan)
+                                </button>
+                            </div>
+                            <div class="tool-mode-group">
+                                <button class="mini-btn" id="btn-undo-mini" title="Hoàn tác thao tác [Ctrl+Z]">
+                                    ↩️
+                                </button>
+                                <button class="mini-btn" id="btn-redo-mini" title="Làm lại thao tác [Ctrl+Y]">
+                                    ↪️
+                                </button>
+                            </div>
                             <button class="btn btn-edit-part" id="btn-open-pixel-editor" title="Chuyển sang tab vẽ pixel để sửa mảnh này">
                                 🎨 Sửa Mảnh Này
                             </button>
@@ -140,21 +175,27 @@
 
                     <div class="canvas-wrapper checker-bg" id="canvas-wrapper">
                         <canvas id="main-canvas" width="64" height="64"></canvas>
+                        <canvas id="guide-canvas" width="64" height="64" class="guide-canvas"></canvas>
                         <div id="selection-box" class="selection-box"></div>
+                        <div id="selection-boxes-container"></div>
+                        <div id="marquee-box" class="marquee-box"></div>
                     </div>
 
                     <div class="viewport-footer">
                         <div class="coord-indicator" id="coord-indicator">Toạ độ: X: 0, Y: 0 | Kích thước: 0x0</div>
-                        <div class="hint-text">💡 Chuột phải vào bất kỳ mảnh nào trên người để mở menu vẽ & chỉnh sửa!</div>
+                        <div class="hint-text">💡 Kéo bôi đen để chọn nhiều mảnh | Giữ Ctrl để thêm/bớt chọn | Chuột phải để mở menu!</div>
                     </div>
                 </section>
 
-                <!-- RIGHT PANEL: LAYERS & INSPECTOR -->
+                <!-- RIGHT PANEL: LAYERS, INSPECTOR & ARRANGE -->
                 <aside class="panel right-panel">
                     <div class="panel-section">
                         <div class="section-header-flex">
                             <h2 class="section-title">📚 QUẢN LÝ LỚP (LAYERS)</h2>
-                            <span class="sub-hint">Lớp trên cùng nằm ở đỉnh</span>
+                            <div style="display:flex; gap:4px;">
+                                <button class="mini-btn" id="btn-select-all" title="Chọn tất cả các bộ phận [Ctrl+A]" style="font-size:10px; padding:2px 6px;">✨ Chọn hết</button>
+                                <button class="mini-btn" id="btn-deselect-all" title="Hủy chọn toàn bộ" style="font-size:10px; padding:2px 6px;">❌ Bỏ chọn</button>
+                            </div>
                         </div>
                         <div class="layers-list" id="layers-list">
                             <!-- Rendered dynamically -->
@@ -164,7 +205,47 @@
                     <div class="panel-section inspector-section" id="inspector-section">
                         <h2 class="section-title">🎛️ CHI TIẾT BỘ PHẬN ĐANG CHỌN</h2>
                         <div id="inspector-body" class="inspector-body">
-                            <p class="empty-hint">Chọn 1 bộ phận để chỉnh sửa thông số chi tiết</p>
+                            <p class="empty-hint">Chọn 1 hoặc nhiều bộ phận để chỉnh sửa</p>
+                        </div>
+                    </div>
+
+                    <!-- ARRANGE & ALIGNMENT TOOLS -->
+                    <div class="panel-section" id="arrange-section">
+                        <div class="section-header-flex">
+                            <h2 class="section-title">📐 CĂN CHỈNH & SẮP XẾP (ARRANGE)</h2>
+                            <span class="sub-hint" id="arrange-count-hint">Đang chọn: 1</span>
+                        </div>
+                        <div class="arrange-grid">
+                            <button class="btn btn-secondary arrange-btn" id="btn-align-left" title="Căn mép Trái (Align Left)">
+                                ⇤ Trái
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-align-center-x" title="Căn Giữa X (Trục 32 hoặc trung tâm nhóm)">
+                                ⇋ Giữa X
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-align-right" title="Căn mép Phải (Align Right)">
+                                ⇥ Phải
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-align-top" title="Căn mép Trên (Align Top)">
+                                ⤒ Trên
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-align-center-y" title="Căn Giữa Y (Trục 32 hoặc trung tâm nhóm)">
+                                ⇅ Giữa Y
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-align-bottom" title="Căn mép Dưới (Align Bottom)">
+                                ⤓ Dưới
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-distribute-x" title="Dãn đều khoảng cách ngang (Distribute X)">
+                                ↔️ Dãn Ngang
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-distribute-y" title="Dãn đều khoảng cách dọc (Distribute Y)">
+                                ↕️ Dãn Dọc
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-bring-front" title="Đưa lên lớp trên cùng (Bring to Front)">
+                                ⏫ Lên Đỉnh
+                            </button>
+                            <button class="btn btn-secondary arrange-btn" id="btn-send-back" title="Đưa xuống lớp dưới cùng (Send to Back)">
+                                ⏬ Xuống Đáy
+                            </button>
                         </div>
                     </div>
 
@@ -175,8 +256,14 @@
                             <button class="btn btn-secondary" id="btn-sym-center-x" title="Căn giữa bộ phận theo trục X=32">
                                 🎯 Căn giữa X (Trục 32)
                             </button>
-                            <button class="btn btn-secondary" id="btn-sym-mirror-x" title="Lật vị trí bộ phận sang bên đối diện trục giữa">
-                                🪞 Đối xứng qua tâm
+                            <button class="btn btn-secondary" id="btn-sym-center-y" title="Căn giữa bộ phận theo trục Y=32">
+                                🎯 Căn giữa Y (Trục 32)
+                            </button>
+                            <button class="btn btn-secondary" id="btn-sym-mirror-x" title="Lật vị trí bộ phận sang bên đối diện trục giữa X">
+                                ↔️ Đối xứng qua tâm X
+                            </button>
+                            <button class="btn btn-secondary" id="btn-sym-mirror-y" title="Lật vị trí bộ phận sang bên đối diện trục giữa Y">
+                                ↕️ Đối xứng qua tâm Y
                             </button>
                             <button class="btn btn-secondary" id="btn-sym-arms" title="Tự động đồng bộ đối xứng Tay Trái & Tay Phải">
                                 👥 Đồng bộ 2 Tay
@@ -263,6 +350,15 @@
                     </div>
 
                     <div class="pe-tool-group">
+                        <button class="pe-tool-btn" id="tool-flip-x" title="Lật ngang toàn bộ ảnh (Flip X)">
+                            ↔️
+                        </button>
+                        <button class="pe-tool-btn" id="tool-flip-y" title="Lật dọc toàn bộ ảnh (Flip Y)">
+                            ↕️
+                        </button>
+                    </div>
+
+                    <div class="pe-tool-group">
                         <div class="tool-size-label">Size:</div>
                         <button class="pe-size-btn active" data-size="1">1</button>
                         <button class="pe-size-btn" data-size="2">2</button>
@@ -277,7 +373,7 @@
                     </div>
                     <div class="pe-status-bar">
                         <span id="pe-coord">Toạ độ: X: 0, Y: 0</span>
-                        <span>💡 Phím tắt: [B] Bút chì | [E] Tẩy | [G] Đổ màu | [I] Hút màu | [Ctrl+Z] Undo</span>
+                        <span>💡 Phím tắt: [B] Bút chì | [E] Tẩy | [G] Đổ màu | [I] Hút màu | [Ctrl+Z] Undo | [Ctrl+S] Lưu mảnh</span>
                     </div>
                 </div>
 
@@ -340,7 +436,13 @@
             <div class="context-item" id="ctx-flip-x">
                 <span class="icon">↔️</span> Lật ngang (Flip Horizontal)
             </div>
+            <div class="context-item" id="ctx-flip-y">
+                <span class="icon">↕️</span> Lật dọc (Flip Vertical)
+            </div>
             <div class="context-divider"></div>
+            <div class="context-item" id="ctx-select-all">
+                <span class="icon">✨</span> Chọn tất cả bộ phận (Ctrl + A)
+            </div>
             <div class="context-item" id="ctx-reset-pos">
                 <span class="icon">↺</span> Đặt lại vị trí mặc định
             </div>

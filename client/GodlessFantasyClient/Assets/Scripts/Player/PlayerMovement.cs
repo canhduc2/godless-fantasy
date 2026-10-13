@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using GodlessFantasy.Core;
 using GodlessFantasy.UI;
+using GodlessFantasy.Combat;
 
 namespace GodlessFantasy.Player
 {
@@ -54,6 +55,15 @@ namespace GodlessFantasy.Player
             }
         }
 
+        [Header("Run & Stamina Settings")]
+        [SerializeField] private float runSpeedMultiplier = 1.65f;
+        [SerializeField] private float staminaDrainPerSec = 18f;
+        [SerializeField] private float staminaRegenPerSec = 14f;
+        private bool isRunning = false;
+        public bool IsRunning => isRunning;
+
+        private float currentSprintFactor = 1.0f;
+
         public float CurrentMoveSpeed
         {
             get
@@ -64,7 +74,7 @@ namespace GodlessFantasy.Player
                 {
                     baseSpd += playerStats.DynamicMoveSpeedBonus;
                 }
-                return baseSpd;
+                return baseSpd * currentSprintFactor;
             }
         }
 
@@ -110,6 +120,10 @@ namespace GodlessFantasy.Player
             if (clickMarkerTimer > 0f) clickMarkerTimer -= Time.deltaTime;
             if (isDashing) return;
 
+            // Mượt mà hóa gia tốc chạy nước rút (Smooth Sprint Acceleration)
+            float targetSprint = (isRunning && isMovingToTarget) ? runSpeedMultiplier : 1.0f;
+            currentSprintFactor = Mathf.MoveTowards(currentSprintFactor, targetSprint, Time.deltaTime * 6f);
+
             // Độc lập hướng ngắm: Nhân vật luôn hướng mặt theo con trỏ chuột độc lập với hướng di chuyển
             if (spriteRenderer != null)
             {
@@ -121,8 +135,61 @@ namespace GodlessFantasy.Player
                 }
             }
 
+            HandleRunToggleInput();
+            UpdateStaminaLogic();
             HandleMouseMovement();
             HandleDashInput();
+        }
+
+        public void ToggleRunMode()
+        {
+            if (GodlessFantasy.UI.CombatHUD.IsAnyModalOpen()) return;
+
+            if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+            if (!isRunning && playerStats != null && playerStats.CurrentStamina <= 8f)
+            {
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.1f, "⚠️ THỂ LỰC QUÁ THẤP ĐỂ CHẠY!", new Color(1f, 0.4f, 0.3f));
+                return;
+            }
+
+            isRunning = !isRunning;
+            string msg = isRunning ? "⚡ CHẾ ĐỘ CHẠY: [BẬT]" : "🚶 CHẾ ĐỘ ĐI BỘ: [BẬT]";
+            Color col = isRunning ? new Color(0.2f, 0.95f, 0.45f) : new Color(0.85f, 0.85f, 0.85f);
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.1f, msg, col);
+            AudioManager.PlayDash();
+        }
+
+        private void HandleRunToggleInput()
+        {
+            if (GameInput.GetRunToggleKeyDown())
+            {
+                ToggleRunMode();
+            }
+        }
+
+        private void UpdateStaminaLogic()
+        {
+            if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+            if (playerStats == null) return;
+
+            // Khi đang bật chế độ chạy VÀ đang thực sự di chuyển
+            if (isRunning && isMovingToTarget && ActualVelocityMagnitude > 0.1f)
+            {
+                bool hasStamina = playerStats.ConsumeStamina(staminaDrainPerSec * Time.deltaTime);
+                if (!hasStamina || playerStats.CurrentStamina <= 0.05f)
+                {
+                    isRunning = false;
+                    FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.1f, "⚠️ ĐÃ HẾT THỂ LỰC (CHUYỂN ĐI BỘ)!", new Color(1f, 0.5f, 0.2f));
+                }
+            }
+            // Khi đi bộ hoặc đứng yên: tự động hồi thể lực dần dần
+            else if (!isRunning || !isMovingToTarget || ActualVelocityMagnitude <= 0.1f)
+            {
+                if (playerStats.CurrentStamina < playerStats.MaxStamina)
+                {
+                    playerStats.RestoreStamina(staminaRegenPerSec * Time.deltaTime);
+                }
+            }
         }
 
         private void FixedUpdate()

@@ -20,6 +20,7 @@ namespace GodlessFantasy.Player
         public const int DEFAULT_CAPACITY = 24; // Ban đầu 24 ô (Lưới 4 cột x 6 hàng)
         public const int MAX_CAPACITY = 96;     // Giới hạn mở khóa tối đa 96 ô (24 hàng x 4 cột)
         public const int INVENTORY_CAPACITY = 24; // Giữ hằng số để tương thích ngược
+        public const int MAX_CONSUMABLE_STACK = 100; // Tất cả vật phẩm tiêu hao chỉ chiếm 1 ô hành trang, dồn tối đa 100 món theo yêu cầu
 
         [SerializeField] private int currentCapacity = DEFAULT_CAPACITY;
 
@@ -114,13 +115,49 @@ namespace GodlessFantasy.Player
             return true;
         }
 
+        public static string NormalizeItemId(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return "";
+            if (id == "item_potion_hp") return "item_hp_pot";
+            if (id == "item_potion_mp") return "item_mp_pot";
+            return id;
+        }
+
+        /// <summary>
+        /// Tự động gom toàn bộ các vật phẩm tiêu hao (Consumable) cùng loại vào 1 ô duy nhất, dồn tối đa 100 món
+        /// </summary>
+        public void ConsolidateConsumableStacks()
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                var it = items[i];
+                if (it == null || it.itemType != ItemType.Consumable) continue;
+
+                string normId = NormalizeItemId(it.id);
+                for (int j = items.Count - 1; j > i; j--)
+                {
+                    var other = items[j];
+                    if (other == null || other.itemType != ItemType.Consumable) continue;
+
+                    if (NormalizeItemId(other.id) == normId || string.Equals(other.itemName, it.itemName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        it.quantity = Mathf.Min(it.quantity + other.quantity, MAX_CONSUMABLE_STACK);
+                        items.RemoveAt(j);
+                        Debug.Log($"[HÀNH TRANG] Đã hợp nhất ô tiêu hao trùng lặp '{other.itemName}' vào 1 ô duy nhất (Tổng: {it.quantity}/{MAX_CONSUMABLE_STACK})");
+                    }
+                }
+            }
+        }
+
         public bool CanAddItem(InventoryItem item)
         {
             if (item == null) return false;
-            // Nếu là vật phẩm tiêu hao (Consumable) và đã có sẵn trong túi -> Cho phép cộng dồn số lượng
+            // Nếu là vật phẩm tiêu hao (Consumable) và đã có sẵn trong túi -> Chỉ chiếm 1 ô duy nhất (cộng dồn tới 100)
             if (item.itemType == ItemType.Consumable)
             {
-                var existing = items.Find(x => x.id == item.id && x.itemType == ItemType.Consumable);
+                string normId = NormalizeItemId(item.id);
+                var existing = items.Find(x => x != null && x.itemType == ItemType.Consumable && 
+                    (NormalizeItemId(x.id) == normId || string.Equals(x.itemName, item.itemName, StringComparison.OrdinalIgnoreCase)));
                 if (existing != null) return true;
             }
             return items.Count < currentCapacity;
@@ -129,17 +166,21 @@ namespace GodlessFantasy.Player
         public bool AddItem(InventoryItem item)
         {
             if (item == null) return false;
+            EnsureSlotIndices();
 
-            // 1. Kiểm tra cộng dồn đối với Dược phẩm / Tiêu hao
+            // 1. Kiểm tra cộng dồn đối với Dược phẩm / Tiêu hao (Tất cả chỉ chiếm 1 ô hành trang, dồn tối đa 100)
             if (item.itemType == ItemType.Consumable)
             {
-                var existing = items.Find(x => x.id == item.id && x.itemType == ItemType.Consumable);
+                string normId = NormalizeItemId(item.id);
+                var existing = items.Find(x => x != null && x.itemType == ItemType.Consumable && 
+                    (NormalizeItemId(x.id) == normId || string.Equals(x.itemName, item.itemName, StringComparison.OrdinalIgnoreCase)));
                 if (existing != null)
                 {
-                    existing.quantity += item.quantity;
-                    Debug.Log($"<color=green>[HÀNH TRANG]</color> Đã cộng dồn {item.quantity} '{item.itemName}' (Hiện có: {existing.quantity})!");
+                    existing.quantity = Mathf.Min(existing.quantity + item.quantity, MAX_CONSUMABLE_STACK);
+                    Debug.Log($"<color=green>[HÀNH TRANG]</color> Đã cộng dồn {item.quantity} '{item.itemName}' vào 1 ô duy nhất (Hiện có: {existing.quantity}/{MAX_CONSUMABLE_STACK})!");
                     return true;
                 }
+                item.quantity = Mathf.Min(item.quantity, MAX_CONSUMABLE_STACK);
             }
 
             // 2. Chặn tuyệt đối nếu đã đạt giới hạn ô hiện tại
@@ -149,7 +190,20 @@ namespace GodlessFantasy.Player
                 return false;
             }
 
+            var used = new HashSet<int>();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null && items[i].slotIndex >= 0) used.Add(items[i].slotIndex);
+            }
+            int assignedSlot = 0;
+            while (used.Contains(assignedSlot) && assignedSlot < currentCapacity)
+            {
+                assignedSlot++;
+            }
+            item.slotIndex = (assignedSlot < currentCapacity) ? assignedSlot : items.Count;
+
             items.Add(item);
+            ConsolidateConsumableStacks();
             return true;
         }
 
@@ -157,11 +211,15 @@ namespace GodlessFantasy.Player
         {
             EnsureReferences();
             InitializeStarterInventory();
+            ConsolidateConsumableStacks();
+            EnsureSlotIndices();
         }
 
         private void Start()
         {
             EnsureReferences();
+            ConsolidateConsumableStacks();
+            EnsureSlotIndices();
             SyncEquippedScrollsToCombat();
         }
 
@@ -178,6 +236,20 @@ namespace GodlessFantasy.Player
             if (skillAimingController == null) return;
             for (int i = 0; i < 4; i++)
             {
+                if (!IsSlotUnlocked(i))
+                {
+                    foreach (var it in items)
+                    {
+                        if (it.itemType == ItemType.SkillScroll && it.isEquipped && it.equippedHotbarSlot == i)
+                        {
+                            it.isEquipped = false;
+                            it.equippedHotbarSlot = -1;
+                        }
+                    }
+                    skillAimingController.UnequipScroll(i);
+                    continue;
+                }
+
                 InventoryItem equippedScroll = null;
                 foreach (var it in items)
                 {
@@ -277,11 +349,8 @@ namespace GodlessFantasy.Player
             items.Add(s8);
             items.Add(s9);
 
-            // Gắn sẵn vào 4 ô skill hotbar (đều thuộc Hệ Kị Sĩ, Thuộc Tính Hỏa)
+            // Gắn sẵn vào ô 1 (Mở sẵn từ Lv 1). Các ô 2, 3, 4 lần lượt mở khóa ở Lv 25, Lv 50, Lv 75
             EquipSkillScrollToHotbar(s1, 0, true);
-            EquipSkillScrollToHotbar(s2, 1, true);
-            EquipSkillScrollToHotbar(s3, 2, true);
-            EquipSkillScrollToHotbar(s4, 3, true);
 
             // 3. Vật Phẩm Hồi Phục: Thức Ăn (Phím Q) & Nước Uống (Phím E)
             items.Add(new InventoryItem("item_hp_pot", "Bình Máu HP (+35)", ItemType.Consumable, EquipSlot.None, "Phẩm E", Color.white, "item_potion_hp", "❤️ Thuốc: Hồi +35 Máu tức thì (Phím Q)", "Bình dược liệu màu đỏ hồi phục sinh lực nhanh chóng.", 5));
@@ -321,6 +390,11 @@ namespace GodlessFantasy.Player
 
             // - Món 7: Nhẫn Liệt Hỏa (Toàn Hệ · Hỏa) -> Toàn Hệ và cùng nguyên tố Hỏa -> Người chơi MẶC ĐƯỢC!
             items.Add(new InventoryItem("gear_all_flame_ring", "Nhẫn Liệt Hỏa", ItemType.Equipment, EquipSlot.Ring, "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_ring", "+25 Công · +15 INT · +15 STR", "Nhẫn rực lửa tăng mạnh lực chiến, tương thích cho bất kỳ ai mang nguyên tố Hỏa.", 1, null, "Toàn Hệ", "Hỏa"));
+
+            // 7. Bùa Cường Hóa Ô Đồ (Sẵn 3 bùa để thử nghiệm chọn ô cường hóa & phân phối kéo thả)
+            items.Add(new InventoryItem("item_slot_protect_rune", "Bùa Cường Hóa Ô Đồ", ItemType.Consumable, EquipSlot.None, "Phẩm S", new Color(0.2f, 0.95f, 0.6f), "item_scroll_wood", "🛡️ Cường Hóa: +1 Ô Bảo Vệ Vĩnh Viễn (Chọn Ô)", "Sử dụng để kích hoạt chế độ chọn 1 ô hành trang bất kỳ để cường hóa bảo vệ vĩnh viễn (tối đa 5 ô). Vật phẩm trong ô này không bao giờ bị rơi khi chết và không bị mất khi chuyển sinh!", 3));
+
+            EnsureSlotIndices();
         }
 
         // ================= XỬ LÝ TRANG BỊ TAB 1 =================
@@ -381,38 +455,240 @@ namespace GodlessFantasy.Player
         // ================= XỬ LÝ SÁCH KỸ NĂNG & ĐIỀU KIỆN MỞ KHÓA Ô =================
         private readonly System.Collections.Generic.HashSet<int> manuallyUnlockedSkillSlots = new System.Collections.Generic.HashSet<int>();
 
+        [SerializeField] private List<int> protectedSlotIndices = new List<int>();
+        public const int MAX_PROTECTED_SLOTS = 5;
+
+        public List<int> ProtectedSlotIndices => protectedSlotIndices;
+        public int TotalProtectedSlots => Mathf.Clamp(protectedSlotIndices != null ? protectedSlotIndices.Count : 0, 0, MAX_PROTECTED_SLOTS);
+
+        public bool IsInventorySlotProtected(int slotIndex)
+        {
+            return slotIndex >= 0 && protectedSlotIndices != null && protectedSlotIndices.Contains(slotIndex);
+        }
+
+        private bool isTargetingSlotToEnhance = false;
+        private InventoryItem currentTargetingRune = null;
+
+        public bool IsTargetingSlotToEnhance => isTargetingSlotToEnhance;
+        public InventoryItem CurrentTargetingRune => currentTargetingRune;
+
+        /// <summary>
+        /// Bắt đầu chế độ chọn ô cụ thể trong hành trang để cường hóa thành Ô Bảo Vệ Vĩnh Viễn
+        /// </summary>
+        public void StartTargetingSlotEnhancement(InventoryItem runeItem)
+        {
+            if (TotalProtectedSlots >= MAX_PROTECTED_SLOTS)
+            {
+                Vector3 warnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                FloatingDamageManager.ShowFloatingText(warnPos, $"⚠️ Đã đạt tối đa ({MAX_PROTECTED_SLOTS}/{MAX_PROTECTED_SLOTS}) ô bảo vệ vĩnh viễn!", new Color(1f, 0.85f, 0.35f));
+                return;
+            }
+            isTargetingSlotToEnhance = true;
+            currentTargetingRune = runeItem;
+            Debug.Log("[CƯỜNG HÓA Ô ĐỒ] Đã kích hoạt chế độ chọn ô cường hóa! Hãy click vào 1 ô trong túi đồ để cường hóa.");
+        }
+
+        public void CancelTargetingSlotEnhancement()
+        {
+            isTargetingSlotToEnhance = false;
+            currentTargetingRune = null;
+        }
+
+        /// <summary>
+        /// Cường hóa chính xác ô được người chơi click chọn thành Ô Bảo Vệ Vĩnh Viễn
+        /// </summary>
+        public bool EnhanceSpecificSlot(int slotIndex)
+        {
+            if (TotalProtectedSlots >= MAX_PROTECTED_SLOTS)
+            {
+                CancelTargetingSlotEnhancement();
+                Vector3 warnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                FloatingDamageManager.ShowFloatingText(warnPos, $"⚠️ Đã đạt tối đa ({MAX_PROTECTED_SLOTS}/{MAX_PROTECTED_SLOTS}) ô bảo vệ!", new Color(1f, 0.85f, 0.35f));
+                return false;
+            }
+
+            if (slotIndex < 0 || slotIndex >= currentCapacity)
+            {
+                return false;
+            }
+
+            if (protectedSlotIndices.Contains(slotIndex))
+            {
+                Vector3 warnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                FloatingDamageManager.ShowFloatingText(warnPos, $"⚠️ Ô #{slotIndex + 1} đã được cường hóa trước đó rồi!", new Color(1f, 0.85f, 0.35f));
+                return false;
+            }
+
+            protectedSlotIndices.Add(slotIndex);
+
+            // Tiêu hao 1 Bùa Cường Hóa Ô Đồ
+            if (currentTargetingRune != null)
+            {
+                currentTargetingRune.quantity--;
+                if (currentTargetingRune.quantity <= 0) items.Remove(currentTargetingRune);
+            }
+            else
+            {
+                var rune = items.Find(x => x != null && x.id == "item_slot_protect_rune");
+                if (rune != null)
+                {
+                    rune.quantity--;
+                    if (rune.quantity <= 0) items.Remove(rune);
+                }
+            }
+
+            CancelTargetingSlotEnhancement();
+            AudioManager.PlayLevelUp();
+            Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+            FloatingDamageManager.ShowFloatingText(spawnPos, $"✨ ĐÃ CƯỜNG HÓA Ô #{slotIndex + 1}! ({TotalProtectedSlots}/{MAX_PROTECTED_SLOTS})", new Color(0.3f, 1f, 0.6f));
+            Debug.Log($"<color=green>[CƯỜNG HÓA Ô ĐỒ]</color> Đã cường hóa thành công ô #{slotIndex + 1}! ({TotalProtectedSlots}/{MAX_PROTECTED_SLOTS} ô bảo vệ vĩnh viễn)");
+            return true;
+        }
+
+        public bool EnhanceNextSlot()
+        {
+            if (TotalProtectedSlots >= MAX_PROTECTED_SLOTS)
+            {
+                Vector3 warnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                FloatingDamageManager.ShowFloatingText(warnPos, $"⚠️ Đã đạt tối đa ({MAX_PROTECTED_SLOTS}/{MAX_PROTECTED_SLOTS}) ô bảo vệ vĩnh viễn!", new Color(1f, 0.85f, 0.35f));
+                return false;
+            }
+
+            for (int i = 0; i < currentCapacity; i++)
+            {
+                if (!protectedSlotIndices.Contains(i))
+                {
+                    return EnhanceSpecificSlot(i);
+                }
+            }
+            return false;
+        }
+
+        public bool UseSlotProtectionRune(InventoryItem item)
+        {
+            if (item == null) return false;
+            if (TotalProtectedSlots >= MAX_PROTECTED_SLOTS)
+            {
+                Vector3 warnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                FloatingDamageManager.ShowFloatingText(warnPos, $"⚠️ Đã đạt tối đa ({MAX_PROTECTED_SLOTS}/{MAX_PROTECTED_SLOTS}) ô bảo vệ vĩnh viễn!", new Color(1f, 0.85f, 0.35f));
+                return false;
+            }
+            StartTargetingSlotEnhancement(item);
+            return true;
+        }
+
+        // ================= HỆ THỐNG VỊ TRÍ Ô & HOÁN ĐỔI / KÉO THẢ (SLOT POSITIONING & DRAG & DROP) =================
+        public void EnsureSlotIndices()
+        {
+            var used = new HashSet<int>();
+            for (int i = 0; i < items.Count; i++)
+            {
+                var it = items[i];
+                if (it == null) continue;
+                if (it.slotIndex >= 0 && it.slotIndex < currentCapacity && !used.Contains(it.slotIndex))
+                {
+                    used.Add(it.slotIndex);
+                }
+                else
+                {
+                    it.slotIndex = -1;
+                }
+            }
+
+            int nextSlot = 0;
+            for (int i = 0; i < items.Count; i++)
+            {
+                var it = items[i];
+                if (it == null) continue;
+                if (it.slotIndex < 0)
+                {
+                    while (used.Contains(nextSlot) && nextSlot < currentCapacity)
+                    {
+                        nextSlot++;
+                    }
+                    if (nextSlot < currentCapacity)
+                    {
+                        it.slotIndex = nextSlot;
+                        used.Add(nextSlot);
+                    }
+                }
+            }
+        }
+
+        public InventoryItem GetItemAtSlot(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= currentCapacity) return null;
+            EnsureSlotIndices();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null && items[i].slotIndex == slotIndex)
+                {
+                    return items[i];
+                }
+            }
+            return null;
+        }
+
+        public bool SwapSlots(int fromSlot, int toSlot)
+        {
+            if (fromSlot == toSlot) return false;
+            if (fromSlot < 0 || fromSlot >= currentCapacity) return false;
+            if (toSlot < 0 || toSlot >= currentCapacity) return false;
+
+            EnsureSlotIndices();
+            InventoryItem itemFrom = GetItemAtSlot(fromSlot);
+            InventoryItem itemTo = GetItemAtSlot(toSlot);
+
+            if (itemFrom == null && itemTo == null) return false;
+
+            // Nếu cả 2 đều là vật phẩm tiêu hao cùng loại -> Hợp nhất stack
+            if (itemFrom != null && itemTo != null && itemFrom.itemType == ItemType.Consumable && itemTo.itemType == ItemType.Consumable)
+            {
+                string idFrom = NormalizeItemId(itemFrom.id);
+                string idTo = NormalizeItemId(itemTo.id);
+                if (idFrom == idTo || string.Equals(itemFrom.itemName, itemTo.itemName, StringComparison.OrdinalIgnoreCase))
+                {
+                    int space = MAX_CONSUMABLE_STACK - itemTo.quantity;
+                    if (space > 0)
+                    {
+                        int moveQty = Mathf.Min(space, itemFrom.quantity);
+                        itemTo.quantity += moveQty;
+                        itemFrom.quantity -= moveQty;
+                        if (itemFrom.quantity <= 0)
+                        {
+                            items.Remove(itemFrom);
+                        }
+                        AudioManager.PlayPickup();
+                        Debug.Log($"[HÀNH TRANG] Đã gộp {moveQty} '{itemTo.itemName}' từ ô #{fromSlot + 1} vào ô #{toSlot + 1}!");
+                        return true;
+                    }
+                }
+            }
+
+            // Hoán đổi vị trí bình thường
+            if (itemFrom != null) itemFrom.slotIndex = toSlot;
+            if (itemTo != null) itemTo.slotIndex = fromSlot;
+
+            AudioManager.PlayPickup();
+            Debug.Log($"[HÀNH TRANG] Đã di chuyển/hoán đổi vật phẩm giữa ô #{fromSlot + 1} ⇄ ô #{toSlot + 1}!");
+            return true;
+        }
+
         public int GetRequiredLevelForSlot(int slotIndex)
         {
             switch (slotIndex)
             {
                 case 0: return 1;   // Ô 1: Lv 1 (Mở sẵn)
-                case 1: return 3;   // Ô 2: Lv 3 (Dễ tiếp cận để test)
-                case 2: return 5;   // Ô 3: Lv 5
-                case 3: return 7;   // Ô 4: Lv 7
+                case 1: return 25;  // Ô 2: Lv 25 (Theo yêu cầu)
+                case 2: return 50;  // Ô 3: Lv 50 (Theo yêu cầu)
+                case 3: return 75;  // Ô 4: Lv 75 (Theo yêu cầu)
                 default: return 1;
-            }
-        }
-
-        public void ForceUnlockSlot(int slotIndex)
-        {
-            if (slotIndex >= 0 && slotIndex < 4)
-            {
-                manuallyUnlockedSkillSlots.Add(slotIndex);
-            }
-        }
-
-        public void UnlockAllSkillSlots()
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                manuallyUnlockedSkillSlots.Add(i);
             }
         }
 
         public bool IsSlotUnlocked(int slotIndex)
         {
             if (slotIndex == 0) return true;
-            if (manuallyUnlockedSkillSlots.Contains(slotIndex)) return true;
             int pLv = playerStats != null ? playerStats.Level : 1;
             return pLv >= GetRequiredLevelForSlot(slotIndex);
         }
@@ -427,7 +703,10 @@ namespace GodlessFantasy.Player
             if (!bypassLevelCheck && !IsSlotUnlocked(slotIndex))
             {
                 int reqLv = GetRequiredLevelForSlot(slotIndex);
-                Debug.LogWarning($"[KHÓA KỸ NĂNG] Ô [{slotIndex + 1}] yêu cầu Cấp {reqLv} mới mở khóa!");
+                string warn = $"⛔ Ô kỹ năng [{slotIndex + 1}] đang khóa! Cần đạt Cấp độ {reqLv}!";
+                Debug.LogWarning($"[KHÓA KỸ NĂNG] {warn}");
+                Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
+                FloatingDamageManager.Instance?.SpawnFloatingText(spawnPos, warn, new Color(1f, 0.35f, 0.35f));
                 return false;
             }
 
@@ -577,30 +856,37 @@ namespace GodlessFantasy.Player
             Debug.Log(petItem.isEquipped ? "[PET] Đã gọi Thú Cưng xuất chiến!" : "[PET] Đã thu hồi Thú Cưng vào lồng!");
         }
 
-        // ================= RỦI RO RƠI ĐỒ 50% KHI CHẾT NGOÀI SAFE ZONE =================
+        // ================= RỦI RO RƠI ĐỒ 5% KHI CHẾT NGOÀI SAFE ZONE =================
         /// <summary>
-        /// Khi tử trận: 5 ô đầu tiên được bảo vệ vĩnh viễn (Permanent Protected Slots).
-        /// Các món từ ô thứ 6 trở đi có 50% tỉ lệ rơi tự do ra sàn đất theo đúng luật Hardcore MMORPG.
+        /// Khi tử trận: Các ô bảo vệ vĩnh viễn (các ô cụ thể đã được người chơi chọn cường hóa) được niêm phong an toàn 100%.
+        /// Các món ngoài vùng bảo vệ chỉ có 5% tỉ lệ rơi tự do ra sàn đất theo đúng yêu cầu user.
+        /// Đồ trong Rương Rebirth và đồ đang mặc trên người không bao giờ bị rơi.
         /// </summary>
         public List<string> DropUnprotectedLootOnDeath()
         {
+            EnsureSlotIndices();
             List<string> droppedNames = new List<string>();
             List<InventoryItem> toRemove = new List<InventoryItem>();
+            Vector3 deathCenter = transform.position;
 
-            for (int i = 5; i < items.Count; i++)
+            for (int i = 0; i < items.Count; i++)
             {
                 var it = items[i];
                 if (it == null) continue;
 
                 if (equippedGear != null && equippedGear.ContainsValue(it)) continue;
 
-                if (UnityEngine.Random.value < 0.50f)
+                // NẾU Ô CỦA MÓN ĐỒ NÀY ĐÃ ĐƯỢC CƯỜNG HÓA BẢO VỆ VĨNH VIỄN -> MIỄN NHIỄM RƠI ĐỒ 100%!
+                if (IsInventorySlotProtected(it.slotIndex)) continue;
+
+                // 5% tỉ lệ rơi đồ cho mỗi món không nằm trong ô bảo vệ
+                if (UnityEngine.Random.value < 0.05f)
                 {
                     toRemove.Add(it);
                     droppedNames.Add(it.itemName);
 
-                    Vector3 dropPos = transform.position + (Vector3)(UnityEngine.Random.insideUnitCircle * 0.85f);
-                    GroundLootItem.SpawnLoot(dropPos, it.itemName, it.tierRank, it.tierColor, it.iconName, it.quantity);
+                    // Bật tung tóe ra sàn map ngay tại vị trí tử trận (vòng cung arc scatter bán kính 1.2m - 2.5m)
+                    GroundLootItem.SpawnLoot(deathCenter, it, burstOut: true, burstRadius: 2.5f);
                 }
             }
 
@@ -610,6 +896,47 @@ namespace GodlessFantasy.Player
             }
 
             return droppedNames;
+        }
+
+        /// <summary>
+        /// Khi Chuyển Sinh (Rebirth): Bay sạch toàn bộ đồ đạc không nằm trong ô bảo vệ vĩnh viễn hoặc Rương Rebirth!
+        /// Chỉ bảo lưu an toàn đúng các món nằm trong các ô đã được người chơi chọn cường hóa bảo vệ vĩnh viễn.
+        /// </summary>
+        public int ClearUnprotectedItemsOnRebirth()
+        {
+            EnsureSlotIndices();
+            int clearedCount = 0;
+
+            for (int i = items.Count - 1; i >= 0; i--)
+            {
+                var it = items[i];
+                if (it == null) continue;
+
+                // NẾU MÓN ĐỒ NẰM TRONG Ô CƯỜNG HÓA BẢO VỆ VĨNH VIỄN -> BẢO TOÀN AN TOÀN!
+                if (IsInventorySlotProtected(it.slotIndex)) continue;
+
+                // Tháo trang bị hoặc gỡ cuộn bí kíp nếu món này đang được gắn
+                if (it.isEquipped && it.equipSlot != EquipSlot.None)
+                {
+                    UnequipGearItem(it.equipSlot);
+                }
+                if (it.itemType == ItemType.SkillScroll && it.equippedHotbarSlot >= 0)
+                {
+                    UnequipSkillScrollFromHotbar(it.equippedHotbarSlot);
+                }
+                if (it.itemType == ItemType.Pet && it.isEquipped)
+                {
+                    TogglePetSummon(it);
+                }
+                clearedCount++;
+                items.RemoveAt(i);
+            }
+
+            // Đồng bộ lại Hotbar vì cấp độ về 1 (các ô 2, 3, 4 bị khóa)
+            SyncEquippedScrollsToCombat();
+
+            Debug.Log($"<color=yellow>[CHUYỂN SINH - REBIRTH]</color> Đã xóa sạch {clearedCount} món đồ không được bảo vệ! Bảo lưu an toàn {items.Count} món trong các ô cường hóa bảo vệ vĩnh viễn.");
+            return clearedCount;
         }
     }
 }

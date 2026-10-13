@@ -74,37 +74,13 @@ namespace GodlessFantasy.Combat
             if (isDefaultScrollsInitialized) return;
             isDefaultScrollsInitialized = true;
 
-            // Khởi tạo 4 Bí Kíp mặc định gắn vào 4 ô
+            // Khởi tạo Bí Kíp mặc định cho Ô 1 (Mở sẵn từ Cấp 1). Các ô 2, 3, 4 mở khóa ở Cấp 25, 50, 75
             if (equippedSlots[0] == null)
             {
                 equippedSlots[0] = new SkillScrollData(
                     "scroll_fire_slash", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "Hỏa",
                     15, 1.0f, 25, 1.0f, 1, "icon_skill_flame_cone", "item_scroll_fire",
                     "Phóng kiếm khí hỏa diễm theo đường thẳng. Tiêu hao ít mana, hồi nhanh.", 8.0f, "Kị Sĩ");
-            }
-
-            if (equippedSlots[1] == null)
-            {
-                equippedSlots[1] = new SkillScrollData(
-                    "scroll_fire_ground", "Bí Kíp [Hệ Kị Sĩ]: Liệt Hỏa Oanh Kích", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "Hỏa",
-                    25, 3.0f, 40, 1.2f, 2, "icon_skill_meteor", "item_scroll_fire",
-                    "Giáng luồng bão lửa thiêu rụi vùng đất chỉ định gây nổ diện rộng.", 7.0f, "Kị Sĩ");
-            }
-
-            if (equippedSlots[2] == null)
-            {
-                equippedSlots[2] = new SkillScrollData(
-                    "scroll_fire_sweep", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Toàn Phong", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "Hỏa",
-                    20, 2.5f, 30, 0.8f, 3, "icon_skill_flame_cone", "item_scroll_fire",
-                    "Quét bão lửa hình quạt 60 độ về phía trước thiêu rụi nhiều mục tiêu.", 4.5f, "Kị Sĩ");
-            }
-
-            if (equippedSlots[3] == null)
-            {
-                equippedSlots[3] = new SkillScrollData(
-                    "scroll_fire_buff", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Long Kim Cang", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "Hỏa",
-                    30, 5.0f, 50, 1.5f, 5, "icon_skill_divine_nova", "item_scroll_fire",
-                    "Kích hoạt hào quang rồng lửa hộ thể tăng giáp và công phép.", 0.0f, "Kị Sĩ", "", 3);
             }
 
             // Kho bí kíp trong Túi Đồ để người chơi trải nghiệm Kéo Thả (Drag & Drop)
@@ -182,6 +158,17 @@ namespace GodlessFantasy.Combat
         private void HandleSkillPress(int slot)
         {
             int slotIdx = slot - 1;
+
+            var inv = GetComponent<GodlessFantasy.Player.InventoryManager>() ?? FindAnyObjectByType<GodlessFantasy.Player.InventoryManager>();
+            if (inv != null && !inv.IsSlotUnlocked(slotIdx))
+            {
+                int reqLv = inv.GetRequiredLevelForSlot(slotIdx);
+                Debug.LogWarning($"[KHÓA KỸ NĂNG] Ô [{slot}] yêu cầu đạt Cấp độ {reqLv} mới mở khóa!");
+                Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : transform.position + Vector3.up * 1.5f;
+                GodlessFantasy.Combat.FloatingDamageManager.ShowFloatingText(spawnPos, $"🔒 Ô {slot} mở khóa ở Cấp {reqLv}!", new Color(1f, 0.85f, 0.25f));
+                return;
+            }
+
             SkillScrollData scroll = equippedSlots[slotIdx];
 
             if (scroll == null)
