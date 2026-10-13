@@ -467,6 +467,22 @@
 
                         <div class="pe-slider-control">
                             <div class="slider-label-row">
+                                <span>Nhiệt Độ Màu (Ấm / Lạnh):</span>
+                                <span id="val-pe-temp">0 (Chuẩn)</span>
+                            </div>
+                            <input type="range" id="slider-pe-temp" class="slider-temperature" min="-50" max="50" value="0" step="1" title="Kéo sang phải để tăng nhiệt độ (ấm/vàng cam), kéo sang trái để giảm nhiệt độ (lạnh/xanh lam)">
+                            <div class="temp-quick-row">
+                                <button class="btn btn-step btn-cool" id="btn-pe-temp-cool" data-temp="-0.10" title="Giảm nhiệt độ màu - Tông lạnh (-10%)">
+                                    ❄️ Lạnh (-10%)
+                                </button>
+                                <button class="btn btn-step btn-warm" id="btn-pe-temp-warm" data-temp="0.10" title="Tăng nhiệt độ màu - Tông ấm (+10%)">
+                                    🔥 Ấm (+10%)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pe-slider-control">
+                            <div class="slider-label-row">
                                 <span>Đổi Tông Màu (Hue):</span>
                                 <span id="val-pe-hue">0°</span>
                             </div>

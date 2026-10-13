@@ -1665,3 +1665,50 @@ kbd {
     font-size: 12px;
 }
 
+/* Color Temperature slider & quick buttons */
+input[type="range"].slider-temperature {
+    background: linear-gradient(to right, #0284c7 0%, #38bdf8 30%, #475569 50%, #f97316 70%, #ef4444 100%) !important;
+    accent-color: #f97316;
+}
+
+.temp-quick-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.temp-quick-row .btn-step {
+    flex: 1;
+    padding: 5px 4px;
+    font-size: 10px;
+}
+
+.btn-warm {
+    background: rgba(249, 115, 22, 0.15);
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    color: #fb923c;
+}
+
+.btn-warm:hover {
+    background: rgba(249, 115, 22, 0.3);
+    border-color: #f97316;
+    color: #fed7aa;
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-cool {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+}
+
+.btn-cool:hover {
+    background: rgba(56, 189, 248, 0.3);
+    border-color: #0284c7;
+    color: #bae6fd;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+    transform: translateY(-1px);
+}
+
+

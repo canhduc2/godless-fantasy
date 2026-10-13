@@ -1422,12 +1422,29 @@ class RigWorkshopApp {
 
         // Color & Brightness Adjustment Sliders
         const sB = document.getElementById('slider-pe-brightness');
+        const sT = document.getElementById('slider-pe-temp');
         const sH = document.getElementById('slider-pe-hue');
         const sS = document.getElementById('slider-pe-sat');
         const sC = document.getElementById('slider-pe-contrast');
         if (sB) sB.addEventListener('input', (e) => {
             const v = e.target.value;
             document.getElementById('val-pe-brightness').innerText = (v > 0 ? `+${v}%` : `${v}%`);
+        });
+        if (sT) sT.addEventListener('input', (e) => {
+            const v = parseInt(e.target.value);
+            const valEl = document.getElementById('val-pe-temp');
+            if (valEl) {
+                if (v > 0) {
+                    valEl.innerText = `+${v} (Ấm 🔥)`;
+                    valEl.style.color = '#f97316';
+                } else if (v < 0) {
+                    valEl.innerText = `${v} (Lạnh ❄️)`;
+                    valEl.style.color = '#38bdf8';
+                } else {
+                    valEl.innerText = '0 (Chuẩn)';
+                    valEl.style.color = '#38bdf8';
+                }
+            }
         });
         if (sH) sH.addEventListener('input', (e) => {
             const v = e.target.value;
@@ -1440,6 +1457,19 @@ class RigWorkshopApp {
         if (sC) sC.addEventListener('input', (e) => {
             const v = e.target.value;
             document.getElementById('val-pe-contrast').innerText = (v > 0 ? `+${v}%` : `${v}%`);
+        });
+
+        // Quick Temperature step buttons
+        const btnTempCool = document.getElementById('btn-pe-temp-cool');
+        if (btnTempCool) btnTempCool.addEventListener('click', () => {
+            const step = parseFloat(btnTempCool.dataset.temp) || -0.10;
+            this.peApplyStepTemperature(step);
+        });
+
+        const btnTempWarm = document.getElementById('btn-pe-temp-warm');
+        if (btnTempWarm) btnTempWarm.addEventListener('click', () => {
+            const step = parseFloat(btnTempWarm.dataset.temp) || 0.10;
+            this.peApplyStepTemperature(step);
         });
 
         const btnApplySliders = document.getElementById('btn-pe-apply-sliders');
@@ -1872,17 +1902,59 @@ class RigWorkshopApp {
         this.showToast(`${delta > 0 ? '☀️' : '🌙'} Đã tăng/giảm ${percentText} (${count} px)`);
     }
 
+    peApplyStepTemperature(delta) {
+        const w = this.peCanvas.width;
+        const h = this.peCanvas.height;
+        if (w === 0 || h === 0) return;
+
+        this.pushPeHistory();
+        const imgData = this.peCtx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        let count = 0;
+
+        const hasSelection = this.peSelectedPixels && this.peSelectedPixels.size > 0;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (hasSelection && !this.peSelectedPixels.has(`${x},${y}`)) continue;
+                const idx = (y * w + x) * 4;
+                if (d[idx + 3] > 0) {
+                    let r = d[idx], g = d[idx + 1], b = d[idx + 2];
+                    if (delta > 0) {
+                        r = r + (255 - r) * delta * 0.45;
+                        g = g + (255 - g) * delta * 0.15;
+                        b = b * (1.0 - delta * 0.35);
+                    } else {
+                        const c = Math.abs(delta);
+                        b = b + (255 - b) * c * 0.45;
+                        g = g + (255 - g) * c * 0.08;
+                        r = r * (1.0 - c * 0.35);
+                    }
+                    d[idx] = Math.round(Math.max(0, Math.min(255, r)));
+                    d[idx + 1] = Math.round(Math.max(0, Math.min(255, g)));
+                    d[idx + 2] = Math.round(Math.max(0, Math.min(255, b)));
+                    count++;
+                }
+            }
+        }
+
+        this.peCtx.putImageData(imgData, 0, 0);
+        const label = delta > 0 ? `🔥 +${Math.round(delta * 100)}% Tông Ấm` : `❄️ ${Math.round(delta * 100)}% Tông Lạnh`;
+        this.showToast(`Nhiệt độ màu: ${label} (${count} px)`);
+    }
+
     peApplyAdjustSliders() {
         const w = this.peCanvas.width;
         const h = this.peCanvas.height;
         if (w === 0 || h === 0) return;
 
         const brightVal = parseInt(document.getElementById('slider-pe-brightness').value) || 0;
+        const tempVal = parseInt(document.getElementById('slider-pe-temp').value) || 0;
         const hueVal = parseInt(document.getElementById('slider-pe-hue').value) || 0;
         const satVal = parseInt(document.getElementById('slider-pe-sat').value) || 0;
         const contrastVal = parseInt(document.getElementById('slider-pe-contrast').value) || 0;
 
-        if (brightVal === 0 && hueVal === 0 && satVal === 0 && contrastVal === 0) {
+        if (brightVal === 0 && tempVal === 0 && hueVal === 0 && satVal === 0 && contrastVal === 0) {
             this.showToast('ℹ️ Các thanh trượt đang ở mức 0', '#6b7280');
             return;
         }
@@ -1905,15 +1977,37 @@ class RigWorkshopApp {
                 const idx = (y * w + x) * 4;
                 if (d[idx + 3] > 0) {
                     let r = d[idx], g = d[idx + 1], b = d[idx + 2];
+
+                    // 1. Color Temperature (Ấm / Lạnh)
+                    if (tempVal !== 0) {
+                        const tf = tempVal / 100;
+                        if (tf > 0) {
+                            r = r + (255 - r) * tf * 0.45;
+                            g = g + (255 - g) * tf * 0.15;
+                            b = b * (1.0 - tf * 0.35);
+                        } else {
+                            const c = Math.abs(tf);
+                            b = b + (255 - b) * c * 0.45;
+                            g = g + (255 - g) * c * 0.08;
+                            r = r * (1.0 - c * 0.35);
+                        }
+                        r = Math.max(0, Math.min(255, r));
+                        g = Math.max(0, Math.min(255, g));
+                        b = Math.max(0, Math.min(255, b));
+                    }
+
+                    // 2. Contrast
                     if (contrastVal !== 0) {
                         r = Math.max(0, Math.min(255, ((r / 255 - 0.5) * cFactor + 0.5) * 255));
                         g = Math.max(0, Math.min(255, ((g / 255 - 0.5) * cFactor + 0.5) * 255));
                         b = Math.max(0, Math.min(255, ((b / 255 - 0.5) * cFactor + 0.5) * 255));
                     }
+
+                    // 3. Hue, Saturation, Lightness
                     let [ph, ps, pl] = this.rgbToHsl(r, g, b);
-                    ph = (ph + hDelta + 1) % 1;
-                    ps = Math.max(0, Math.min(1, ps + sDelta));
-                    pl = Math.max(0, Math.min(1, pl + bDelta));
+                    if (hDelta !== 0) ph = (ph + hDelta + 1) % 1;
+                    if (sDelta !== 0) ps = Math.max(0, Math.min(1, ps + sDelta));
+                    if (bDelta !== 0) pl = Math.max(0, Math.min(1, pl + bDelta));
                     const [nr, ng, nb] = this.hslToRgb(ph, ps, pl);
                     d[idx] = nr;
                     d[idx + 1] = ng;
@@ -1930,22 +2024,30 @@ class RigWorkshopApp {
 
     peResetAdjustSliders() {
         const sB = document.getElementById('slider-pe-brightness');
+        const sT = document.getElementById('slider-pe-temp');
         const sH = document.getElementById('slider-pe-hue');
         const sS = document.getElementById('slider-pe-sat');
         const sC = document.getElementById('slider-pe-contrast');
         if (sB) sB.value = 0;
+        if (sT) sT.value = 0;
         if (sH) sH.value = 0;
         if (sS) sS.value = 0;
         if (sC) sC.value = 0;
         const vB = document.getElementById('val-pe-brightness');
+        const vT = document.getElementById('val-pe-temp');
         const vH = document.getElementById('val-pe-hue');
         const vS = document.getElementById('val-pe-sat');
         const vC = document.getElementById('val-pe-contrast');
         if (vB) vB.innerText = '0%';
+        if (vT) {
+            vT.innerText = '0 (Chuẩn)';
+            vT.style.color = '#38bdf8';
+        }
         if (vH) vH.innerText = '0°';
         if (vS) vS.innerText = '0%';
         if (vC) vC.innerText = '0%';
     }
+
 
     peApplyColorTint() {
         const w = this.peCanvas.width;
