@@ -201,6 +201,11 @@ namespace GodlessFantasy.UI
         /// <summary>
         /// Vẽ nút bấm Fantasy hình chữ nhật có viền vàng, 4 chốt góc, hiệu ứng hover/click và chữ đổ bóng chống răng cưa.
         /// </summary>
+        public static bool DrawFantasyButton(Rect r, string text, int fontSize = 12, bool isHighlighted = false, Color? textColorOverride = null)
+        {
+            return DrawButton(r, text, fontSize, isHighlighted, textColorOverride);
+        }
+
         public static bool DrawButton(Rect r, string text, int fontSize = 12, bool isHighlighted = false, Color? textColorOverride = null)
         {
             EnsureStyles();

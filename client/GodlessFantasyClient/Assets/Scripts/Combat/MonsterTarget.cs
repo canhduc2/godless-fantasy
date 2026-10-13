@@ -88,17 +88,26 @@ namespace GodlessFantasy.Combat
             // 2. Rơi vật phẩm tự do tại vị trí quái chết để người chơi tự do nhặt và tranh nhau đồ
             if (isBoss)
             {
-                // Boss rơi bảo vật phẩm cao cấp
+                // Boss rơi bảo vật phẩm cao cấp & chắc chắn rơi Loa Thế Giới
                 GroundLootItem.SpawnLoot(transform.position, "Bảo Thạch Cổ Đại", "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "item_necklace", 1);
                 GroundLootItem.SpawnLoot(transform.position + new Vector3(0.5f, 0, 0), "Bình Đại Dược Thần", "Phẩm A", new Color(1.0f, 0.65f, 0.2f), "item_potion_hp", 2);
-            }
-            else if (Random.value > 0.4f)
-            {
-                GroundLootItem.SpawnLoot(transform.position, "Thịt Nướng Lửa Hồng", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_potion_hp", 1);
+                GroundLootItem.SpawnLoot(transform.position + new Vector3(-0.5f, 0, 0), "Loa Thế Giới", "Phẩm A", new Color(1.0f, 0.85f, 0.25f), "item_megaphone", 1, "item_world_megaphone");
             }
             else
             {
-                GroundLootItem.SpawnLoot(transform.position, "Bình Dược Liệu HP", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_potion_hp", 1);
+                if (Random.value < 0.25f) // 25% cơ hội quái thường rơi Loa Thế Giới
+                {
+                    GroundLootItem.SpawnLoot(transform.position + new Vector3(0.3f, 0, 0), "Loa Thế Giới", "Phẩm B", new Color(0.4f, 0.85f, 1.0f), "item_megaphone", 1, "item_world_megaphone");
+                }
+
+                if (Random.value > 0.5f)
+                {
+                    GroundLootItem.SpawnLoot(transform.position, "Thịt Nướng Lửa Hồng", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_potion_hp", 1);
+                }
+                else
+                {
+                    GroundLootItem.SpawnLoot(transform.position, "Bình Dược Liệu HP", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "item_potion_hp", 1);
+                }
             }
         }
 

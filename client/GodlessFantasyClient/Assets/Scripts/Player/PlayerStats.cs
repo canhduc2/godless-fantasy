@@ -186,6 +186,73 @@ namespace GodlessFantasy.Player
             }
         }
 
+        /// <summary>
+        /// Tự động phân bổ toàn bộ điểm tiềm năng theo định hướng hệ phái (Class)
+        /// </summary>
+        public void AutoAllocateStatPoints()
+        {
+            while (availableStatPoints > 0)
+            {
+                string cClass = CharacterClass;
+                if (cClass.Contains("Kị") || cClass.Contains("Chiến") || cClass.Contains("Knight"))
+                {
+                    // Kị Sĩ: Ưu tiên Sinh Lực (VIT) và Sức Mạnh (STR)
+                    if (vitality <= strength) AddVitality();
+                    else AddStrength();
+                }
+                else if (cClass.Contains("Pháp") || cClass.Contains("Mage"))
+                {
+                    // Pháp Sư: Ưu tiên Trí Tuệ (INT) và Sinh Lực (VIT)
+                    if (intelligence <= vitality * 2) AddIntelligence();
+                    else AddVitality();
+                }
+                else if (cClass.Contains("Sát") || cClass.Contains("Cung") || cClass.Contains("Assassin"))
+                {
+                    // Sát Thủ / Xạ Thủ: Ưu tiên Nhanh Nhẹn (AGI) và Sức Mạnh (STR)
+                    if (agility <= strength) AddAgility();
+                    else AddStrength();
+                }
+                else
+                {
+                    // Mặc định: Phân bổ cân bằng theo chu kỳ chỉ số thấp nhất
+                    int minVal = Mathf.Min(strength, Mathf.Min(intelligence, Mathf.Min(vitality, agility)));
+                    if (strength == minVal) AddStrength();
+                    else if (vitality == minVal) AddVitality();
+                    else if (intelligence == minVal) AddIntelligence();
+                    else AddAgility();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cheat tăng cấp trực tiếp và tự động cộng toàn bộ điểm tiềm năng để phục vụ test tính năng
+        /// </summary>
+        public void LevelUpCheat(int levelsToAdd = 1, bool autoAllocateStats = true)
+        {
+            for (int i = 0; i < levelsToAdd; i++)
+            {
+                level++;
+                maxExp = Mathf.RoundToInt(100f * Mathf.Pow(level, 1.45f));
+                availableStatPoints += 5;
+
+                if (autoAllocateStats)
+                {
+                    AutoAllocateStatPoints();
+                }
+
+                if (health != null) health.Revive();
+                currentMana = maxMana;
+                OnManaChanged?.Invoke(currentMana, maxMana);
+            }
+
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.5f,
+                $"⚡ LÊN CẤP {level}! (Đã tự cộng +{levelsToAdd * 5} Điểm Tiềm Năng)", new Color(1f, 0.90f, 0.25f));
+            Debug.Log($"<color=yellow>[LEVEL UP TEST]</color> Nhân vật {characterName} đã đạt Cấp {level}! (Tự cộng điểm hoàn tất)");
+            AudioManager.PlayLevelUp();
+            OnLevelUp?.Invoke(level);
+            OnExpChanged?.Invoke(currentExp, maxExp);
+        }
+
         public void AddGold(int amount) => gold += amount;
         public bool ConsumeGold(int amount)
         {

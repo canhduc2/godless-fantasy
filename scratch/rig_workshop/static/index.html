@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chibi Rig Workshop & Pixel Studio • Xưởng Sản Xuất Xương 2D</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- TOP HEADER -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-badge">2D RIG</div>
+                <h1>XƯỞNG SẢN XUẤT RIG <span>STUDIO</span></h1>
+            </div>
+
+            <!-- MAIN WORKSPACE TABS -->
+            <div class="workspace-tabs">
+                <button class="ws-tab-btn active" id="tab-btn-assembler" data-tab="assembler">
+                    <span class="icon">⚙️</span> Lắp Ghép Xương
+                </button>
+                <button class="ws-tab-btn" id="tab-btn-pixel" data-tab="pixel">
+                    <span class="icon">🎨</span> Xưởng Vẽ Pixel
+                </button>
+            </div>
+
+            <!-- GENDER PICKER (Active in Assembler) -->
+            <div class="gender-selector" id="header-gender-selector">
+                <button class="gender-btn active" data-gender="female" id="btn-gender-female">
+                    <span class="icon">👩</span> Nữ
+                </button>
+                <button class="gender-btn" data-gender="male" id="btn-gender-male">
+                    <span class="icon">👨</span> Nam
+                </button>
+            </div>
+
+            <!-- HEADER ACTIONS -->
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="btn-reset-default" title="Khôi phục toàn bộ cài đặt mặc định">
+                    🔄 Mặc Định
+                </button>
+                <button class="btn btn-secondary" id="btn-export-json" title="Tải file cấu hình JSON về máy">
+                    📥 Tải JSON
+                </button>
+                <label class="btn btn-secondary" title="Nạp file cấu hình JSON">
+                    📤 Nhập JSON
+                    <input type="file" id="file-import-json" accept=".json" style="display:none">
+                </label>
+                <button class="btn btn-primary" id="btn-save-unity" title="Lưu cấu hình và tự động xuất ra Unity Resources">
+                    💾 LƯU CẤU HÌNH & XUẤT RA UNITY
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================================================
+             VIEW 1: RIG ASSEMBLER (LẮP GHÉP XƯƠNG)
+             ============================================================ -->
+        <div id="view-assembler" class="tab-view active">
+            <main class="app-main">
+                <!-- LEFT PANEL: DIRECTION SELECTOR & VIEWPORT SETTINGS -->
+                <aside class="panel left-panel">
+                    <div class="panel-section">
+                        <h2 class="section-title">🧭 CHỌN HƯỚNG (8 HƯỚNG)</h2>
+                        <div class="compass-grid">
+                            <button class="dir-btn" data-dir="north_west" title="North-West (Chếch Sau Trái)">↖ NW</button>
+                            <button class="dir-btn" data-dir="north" title="North (Sau - Back)">⬆ N</button>
+                            <button class="dir-btn" data-dir="north_east" title="North-East (Chếch Sau Phải)">↗ NE</button>
+                            <button class="dir-btn" data-dir="west" title="West (Trái - Left)">⬅ W</button>
+                            <div class="compass-center">64x64</div>
+                            <button class="dir-btn" data-dir="east" title="East (Phải - Right)">➡ E</button>
+                            <button class="dir-btn" data-dir="south_west" title="South-West (Chếch Trước Trái)">↙ SW</button>
+                            <button class="dir-btn active" data-dir="south" title="South (Trước - Front)">⬇ S</button>
+                            <button class="dir-btn" data-dir="south_east" title="South-East (Chếch Trước Phải)">↘ SE</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h2 class="section-title">🔍 HIỂN THỊ CANVAS</h2>
+                        <div class="setting-row">
+                            <label>Phóng to:</label>
+                            <select id="select-zoom">
+                                <option value="4">4x (256px)</option>
+                                <option value="6">6x (384px)</option>
+                                <option value="8" selected>8x (512px)</option>
+                                <option value="10">10x (640px)</option>
+                                <option value="12">12x (768px)</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>Nền Viewport:</label>
+                            <select id="select-bg">
+                                <option value="checker">Bàn cờ trong suốt</option>
+                                <option value="dark">Tối (#18181b)</option>
+                                <option value="light">Sáng (#e4e4e7)</option>
+                                <option value="green">Phông xanh (#00ff00)</option>
+                                <option value="grass">Cỏ thảo nguyên (#527a4d)</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="check-grid" checked> Lưới 1px Pixel Grid</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="check-bbox" checked> Khung viền bộ phận đang chọn</label>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h2 class="section-title">⌨️ PHÍM TẮT & THAO TÁC</h2>
+                        <ul class="hotkey-list">
+                            <li><kbd>Click chuột</kbd> Chọn bộ phận</li>
+                            <li><kbd>Chuột phải</kbd> Menu menu & Vẽ pixel</li>
+                            <li><kbd>Kéo thả chuột</kbd> Di chuyển bộ phận</li>
+                            <li><kbd>Mũi tên / WASD</kbd> Dịch 1 pixel</li>
+                            <li><kbd>Shift + Mũi tên</kbd> Dịch 5 pixel</li>
+                            <li><kbd>PageUp / PageDn</kbd> Tăng/Giảm Z-Index</li>
+                            <li><kbd>Ctrl + S</kbd> Lưu & Xuất Unity</li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- CENTER WORKSPACE: PIXEL VIEWPORT -->
+                <section class="viewport-container">
+                    <div class="viewport-header">
+                        <div class="current-info">
+                            <span class="info-badge" id="badge-character">Nữ (Female)</span>
+                            <span class="info-badge info-accent" id="badge-direction">South (Trước)</span>
+                            <span class="info-badge" id="badge-selected-part">Chưa chọn bộ phận</span>
+                        </div>
+                        <div class="viewport-actions">
+                            <button class="btn btn-edit-part" id="btn-open-pixel-editor" title="Chuyển sang tab vẽ pixel để sửa mảnh này">
+                                🎨 Sửa Mảnh Này
+                            </button>
+                            <button class="mini-btn" id="btn-reset-current-dir" title="Khôi phục hướng hiện tại">↺ Đặt lại hướng</button>
+                        </div>
+                    </div>
+
+                    <div class="canvas-wrapper checker-bg" id="canvas-wrapper">
+                        <canvas id="main-canvas" width="64" height="64"></canvas>
+                        <div id="selection-box" class="selection-box"></div>
+                    </div>
+
+                    <div class="viewport-footer">
+                        <div class="coord-indicator" id="coord-indicator">Toạ độ: X: 0, Y: 0 | Kích thước: 0x0</div>
+                        <div class="hint-text">💡 Chuột phải vào bất kỳ mảnh nào trên người để mở menu vẽ & chỉnh sửa!</div>
+                    </div>
+                </section>
+
+                <!-- RIGHT PANEL: LAYERS & INSPECTOR -->
+                <aside class="panel right-panel">
+                    <div class="panel-section">
+                        <div class="section-header-flex">
+                            <h2 class="section-title">📚 QUẢN LÝ LỚP (LAYERS)</h2>
+                            <span class="sub-hint">Lớp trên cùng nằm ở đỉnh</span>
+                        </div>
+                        <div class="layers-list" id="layers-list">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="panel-section inspector-section" id="inspector-section">
+                        <h2 class="section-title">🎛️ CHI TIẾT BỘ PHẬN ĐANG CHỌN</h2>
+                        <div id="inspector-body" class="inspector-body">
+                            <p class="empty-hint">Chọn 1 bộ phận để chỉnh sửa thông số chi tiết</p>
+                        </div>
+                    </div>
+
+                    <!-- SYMMETRY & MIRROR TOOLS -->
+                    <div class="panel-section">
+                        <h2 class="section-title">🪞 CÔNG CỤ ĐỐI XỨNG & ĐỒNG BỘ</h2>
+                        <div class="symmetry-actions-grid">
+                            <button class="btn btn-secondary" id="btn-sym-center-x" title="Căn giữa bộ phận theo trục X=32">
+                                🎯 Căn giữa X (Trục 32)
+                            </button>
+                            <button class="btn btn-secondary" id="btn-sym-mirror-x" title="Lật vị trí bộ phận sang bên đối diện trục giữa">
+                                🪞 Đối xứng qua tâm
+                            </button>
+                            <button class="btn btn-secondary" id="btn-sym-arms" title="Tự động đồng bộ đối xứng Tay Trái & Tay Phải">
+                                👥 Đồng bộ 2 Tay
+                            </button>
+                            <button class="btn btn-secondary" id="btn-sym-legs" title="Tự động đồng bộ đối xứng Chân Trái & Chân Phải">
+                                👥 Đồng bộ 2 Chân
+                            </button>
+                            <button class="btn btn-secondary btn-full" id="btn-sym-copy-opposite" title="Sao chép toàn bộ tư thế sang hướng đối xứng (E ➔ W, SE ➔ SW)">
+                                🌐 Sao chép sang hướng đối diện
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </main>
+
+            <!-- BOTTOM GALLERY STRIP: ALL 8 DIRECTIONS LIVE -->
+            <footer class="app-footer">
+                <div class="gallery-title">
+                    <span>🎞️ TOÀN BỘ 8 HƯỚNG (THỜI GIAN THỰC)</span>
+                    <span class="gallery-sub">Nhấn vào hướng bất kỳ để chuyển nhanh</span>
+                </div>
+                <div class="gallery-strip" id="gallery-strip">
+                    <!-- 8 Direction Thumbnails Rendered dynamically -->
+                </div>
+            </footer>
+        </div>
+
+        <!-- ============================================================
+             VIEW 2: PIXEL ART STUDIO (XƯỞNG VẼ PIXEL)
+             ============================================================ -->
+        <div id="view-pixel-editor" class="tab-view">
+            <div class="pixel-editor-header">
+                <div class="pe-header-left">
+                    <button class="btn btn-secondary" id="btn-pe-back">
+                        ⬅️ Quay lại Ghép Xương
+                    </button>
+                    <div class="pe-title-info">
+                        <span class="pe-title" id="pe-current-part-name">Đang vẽ: male_torso_front</span>
+                        <span class="pe-dimensions" id="pe-dimensions">16 x 19 px</span>
+                    </div>
+                </div>
+
+                <div class="pe-header-actions">
+                    <button class="btn btn-secondary" id="btn-pe-revert" title="Khôi phục lại ảnh gốc ban đầu">
+                        ↺ Khôi Phục Gốc
+                    </button>
+                    <button class="btn btn-secondary" id="btn-pe-download" title="Tải ảnh PNG của mảnh này">
+                        📥 Tải PNG
+                    </button>
+                    <button class="btn btn-primary" id="btn-pe-save" title="Lưu mảnh và quay lại ghép xương">
+                        💾 LƯU MẢNH & QUAY LẠI GHÉP XƯƠNG
+                    </button>
+                </div>
+            </div>
+
+            <div class="pixel-editor-main">
+                <!-- TOOLBAR (LEFT) -->
+                <aside class="pe-toolbar">
+                    <div class="pe-tool-group">
+                        <button class="pe-tool-btn active" id="tool-pencil" data-tool="pencil" title="Bút chì (Pencil) [B]">
+                            ✏️
+                        </button>
+                        <button class="pe-tool-btn" id="tool-eraser" data-tool="eraser" title="Tẩy (Eraser) [E]">
+                            🧽
+                        </button>
+                        <button class="pe-tool-btn" id="tool-bucket" data-tool="bucket" title="Đổ màu (Paint Bucket) [G]">
+                            🪣
+                        </button>
+                        <button class="pe-tool-btn" id="tool-eyedropper" data-tool="eyedropper" title="Hút màu (Eyedropper) [I]">
+                            👁️‍🗨️
+                        </button>
+                    </div>
+
+                    <div class="pe-tool-group">
+                        <button class="pe-tool-btn" id="tool-undo" title="Hoàn tác (Undo) [Ctrl+Z]">
+                            ↩️
+                        </button>
+                        <button class="pe-tool-btn" id="tool-redo" title="Làm lại (Redo) [Ctrl+Y]">
+                            ↪️
+                        </button>
+                        <button class="pe-tool-btn" id="tool-clear" title="Xóa toàn bộ">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <div class="pe-tool-group">
+                        <div class="tool-size-label">Size:</div>
+                        <button class="pe-size-btn active" data-size="1">1</button>
+                        <button class="pe-size-btn" data-size="2">2</button>
+                    </div>
+                </aside>
+
+                <!-- CANVAS VIEWPORT (CENTER) -->
+                <div class="pe-viewport">
+                    <div class="pe-canvas-wrapper checker-bg" id="pe-canvas-wrapper">
+                        <canvas id="pe-canvas"></canvas>
+                        <canvas id="pe-cursor-canvas"></canvas>
+                    </div>
+                    <div class="pe-status-bar">
+                        <span id="pe-coord">Toạ độ: X: 0, Y: 0</span>
+                        <span>💡 Phím tắt: [B] Bút chì | [E] Tẩy | [G] Đổ màu | [I] Hút màu | [Ctrl+Z] Undo</span>
+                    </div>
+                </div>
+
+                <!-- PALETTE & PROPERTIES (RIGHT) -->
+                <aside class="pe-sidebar">
+                    <div class="panel-section">
+                        <h2 class="section-title">🎨 BẢNG MÀU HIỆN TẠI</h2>
+                        <div class="color-picker-box">
+                            <div class="current-color-preview" id="current-color-preview"></div>
+                            <div class="color-inputs">
+                                <input type="color" id="input-color-picker" value="#f27b50">
+                                <input type="text" id="input-hex-code" value="#F27B50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h2 class="section-title">🌈 BẢNG MÀU CHIBI CHUẨN</h2>
+                        <div class="palette-swatches" id="palette-swatches">
+                            <!-- Swatches rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h2 class="section-title">🔍 PHÓNG TO CANVAS</h2>
+                        <div class="setting-row">
+                            <label>Mức phóng to:</label>
+                            <select id="select-pe-zoom">
+                                <option value="12">12x</option>
+                                <option value="16">16x</option>
+                                <option value="20" selected>20x</option>
+                                <option value="24">24x</option>
+                                <option value="32">32x</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="check-pe-grid" checked> Hiển thị lưới Pixel</label>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- CONTEXT MENU (RIGHT CLICK ON PART) -->
+        <div id="context-menu" class="context-menu">
+            <div class="context-menu-header" id="ctx-part-title">Mảnh: idle_body</div>
+            <div class="context-item context-highlight" id="ctx-edit-pixel">
+                <span class="icon">🎨</span> Chỉnh sửa chi tiết trong Xưởng Vẽ
+            </div>
+            <div class="context-divider"></div>
+            <div class="context-item" id="ctx-move-up">
+                <span class="icon">▲</span> Đưa lên trên 1 lớp (+1 Z)
+            </div>
+            <div class="context-item" id="ctx-move-down">
+                <span class="icon">▼</span> Đưa xuống dưới 1 lớp (-1 Z)
+            </div>
+            <div class="context-item" id="ctx-toggle-vis">
+                <span class="icon">👁️</span> Ẩn / Hiện mảnh này
+            </div>
+            <div class="context-item" id="ctx-flip-x">
+                <span class="icon">↔️</span> Lật ngang (Flip Horizontal)
+            </div>
+            <div class="context-divider"></div>
+            <div class="context-item" id="ctx-reset-pos">
+                <span class="icon">↺</span> Đặt lại vị trí mặc định
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICATION -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

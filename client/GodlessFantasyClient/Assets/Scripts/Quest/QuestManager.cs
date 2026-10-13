@@ -204,7 +204,13 @@ namespace GodlessFantasy.Quest
                 if (cur.rewardRP > 0) stats.RebirthPoints += cur.rewardRP;
 
                 FloatingDamageManager.ShowFloatingText(stats.transform.position + Vector3.up * 1.5f,
-                    $"🏆 Hoàn thành: {cur.title}! (+{cur.rewardGold} Vàng, +{cur.rewardExp} EXP)", Color.yellow);
+                    $"🏆 Hoàn thành: {cur.title}! (+{cur.rewardGold} Vàng, +{cur.rewardExp} EXP, +1 Loa Thế Giới)", Color.yellow);
+            }
+
+            var inv = FindAnyObjectByType<GodlessFantasy.Player.InventoryManager>();
+            if (inv != null)
+            {
+                inv.AddItem(new GodlessFantasy.Player.InventoryItem("item_world_megaphone", "Loa Thế Giới", GodlessFantasy.Player.ItemType.Consumable, GodlessFantasy.Player.EquipSlot.None, "Phẩm A", new Color(1.0f, 0.85f, 0.25f), "item_megaphone", "📢 Truyền âm thế giới: +1 Lượt Chat Kênh Thế Giới", "Vật phẩm thần bí truyền âm toàn cõi. Dùng để hồi lại 1 điểm tin kênh Thế Giới.", 1));
             }
 
             AudioManager.PlayLevelUp();

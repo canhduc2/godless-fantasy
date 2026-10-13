@@ -289,6 +289,7 @@ namespace GodlessFantasy.Player
             items.Add(new InventoryItem("item_roast_meat", "Thịt Nướng Lửa Hồng", ItemType.Consumable, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "item_potion_hp", "🍗 Thức Ăn: Hồi +30 HP & +20 MP (Phím Q)", "Miếng thịt nướng thơm lừng nóng hổi, phục hồi cả sinh lực và ma lực.", 5));
             items.Add(new InventoryItem("item_water", "Nước Suối Thanh Khiết", ItemType.Consumable, EquipSlot.None, "Phẩm D", new Color(0.35f, 0.65f, 1.0f), "item_potion_mana", "💧 Nước Uống: Hồi +35 Mana (Phím E)", "Nước nguồn tinh khiết trong lành giúp thanh lọc tâm trí và hồi phục năng lượng.", 5));
             items.Add(new InventoryItem("item_pet_food", "Hạt Dẻ Linh Hồn", ItemType.Consumable, EquipSlot.None, "Phẩm C", new Color(1.0f, 0.85f, 0.35f), "item_potion_hp", "🌰 Thức Ăn Pet: Tăng +60 EXP Thú Cưng", "Hạt dẻ chứa linh khí đất trời, món ăn ưa thích giúp Pet tăng cấp và tiến hóa to hơn.", 10));
+            items.Add(new InventoryItem("item_world_megaphone", "Loa Thế Giới", ItemType.Consumable, EquipSlot.None, "Phẩm A", new Color(1.0f, 0.85f, 0.25f), "item_megaphone", "📢 Truyền Âm: +1 Lượt Chat Thế Giới", "Vật phẩm thần bí truyền âm toàn cõi. Sử dụng để hồi lại +1 lượt chat Kênh Thế Giới trong ngày.", 2));
 
             // 4. Thú Cưng Sóc Chibi
             var pet = new InventoryItem("pet_squirrel_egg", "Sóc Chibi SquiRRels", ItemType.Pet, EquipSlot.None, "Phẩm A", new Color(1f, 0.85f, 0.35f), "pet_squirrel", "Thú Cưng Đồng Hành", "Thú cưng linh vật đáng yêu, có thể tiến hóa to hơn và mạnh hơn khi được cho ăn hạt dẻ.");
@@ -378,23 +379,41 @@ namespace GodlessFantasy.Player
         }
 
         // ================= XỬ LÝ SÁCH KỸ NĂNG & ĐIỀU KIỆN MỞ KHÓA Ô =================
+        private readonly System.Collections.Generic.HashSet<int> manuallyUnlockedSkillSlots = new System.Collections.Generic.HashSet<int>();
+
         public int GetRequiredLevelForSlot(int slotIndex)
         {
             switch (slotIndex)
             {
-                case 0: return 1;   // Ô 1: Lv 1
-                case 1: return 25;  // Ô 2: Lv 25
-                case 2: return 50;  // Ô 3: Lv 50
-                case 3: return 75;  // Ô 4: Lv 75
+                case 0: return 1;   // Ô 1: Lv 1 (Mở sẵn)
+                case 1: return 3;   // Ô 2: Lv 3 (Dễ tiếp cận để test)
+                case 2: return 5;   // Ô 3: Lv 5
+                case 3: return 7;   // Ô 4: Lv 7
                 default: return 1;
+            }
+        }
+
+        public void ForceUnlockSlot(int slotIndex)
+        {
+            if (slotIndex >= 0 && slotIndex < 4)
+            {
+                manuallyUnlockedSkillSlots.Add(slotIndex);
+            }
+        }
+
+        public void UnlockAllSkillSlots()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                manuallyUnlockedSkillSlots.Add(i);
             }
         }
 
         public bool IsSlotUnlocked(int slotIndex)
         {
+            if (slotIndex == 0) return true;
+            if (manuallyUnlockedSkillSlots.Contains(slotIndex)) return true;
             int pLv = playerStats != null ? playerStats.Level : 1;
-            // Cho phép ô 1 luôn mở, và các ô khác kiểm tra level
-            // Lưu ý: Đối với bản demo, nếu người chơi mở test ta có thể linh hoạt, nhưng tuân thủ đúng yêu cầu:
             return pLv >= GetRequiredLevelForSlot(slotIndex);
         }
 

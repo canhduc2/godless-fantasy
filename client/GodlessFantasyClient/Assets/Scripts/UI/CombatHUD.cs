@@ -68,6 +68,7 @@ namespace GodlessFantasy.UI
         private GUIStyle tabBtnStyle;
         private GUIStyle fantasyBtnLabelStyle;
         private GUIStyle keybindBadgeStyle;
+        private GUIStyle miniTextStyle;
         private bool isStyleInitialized = false;
 
         // Drawer Menu States
@@ -84,6 +85,11 @@ namespace GodlessFantasy.UI
         private EquipSlot? selectedEquipSlot = EquipSlot.Helmet;
 
         // Chat Modal State (3 Tab: Khu Vực, Thế Giới & Bang Hội)
+        public const int MAX_DAILY_WORLD_CHAT = 5;
+        public const float WORLD_CHAT_COOLDOWN = 60f;     // 1 phút giữa 2 tin Thế Giới
+        public const float LOCAL_CHAT_COOLDOWN = 5f;       // 5 giây giữa 2 tin Vị Trí Hiện Tại
+        public const float GUILD_CHAT_COOLDOWN = 5f;       // 5 giây giữa 2 tin Bang Hội
+
         private bool isChatOpen = false;
         private bool shouldFocusChatInput = false;
         private int currentChatTab = 0; // 0=Khu Vực (Local), 1=Thế Giới (World), 2=Bang Hội (Guild)
@@ -91,6 +97,20 @@ namespace GodlessFantasy.UI
         private string localChatHistory = "📢 [Khu Vực]: Chào mừng bạn đến với Làng Tân Thủ!\n💬 [Hệ Thống]: Đã vào Vùng An Toàn (Safe Zone).\n⚡ [Mẹo]: Bấm E khi lại gần NPC để nói chuyện! Phím Q/E tiêu hao bình dược.";
         private string worldChatHistory = "🌍 [Thế Giới] DarkMage: Coi chừng skill lửa của tao nhé ae!\n🌍 [Thế Giới] Knight01: Mày chưởng trúng tao là tao chém đấy :D\n🌍 [Thế Giới] ArcherX: Boss Bìa Rừng ra rồi anh em tập trung!";
         private string guildChatHistory = "🛡️ [Bang] [Chiến Thần Long]: Huynh đệ tập hợp săn Boss phó bản nào!\n🛡️ [Bang] [Băng Tâm Tiên Tử]: Đang qua bãi quái PvP đây!\n🛡️ [Bang] [Lôi Đình Quyền Vương]: Nhớ đứng gần buff số 6 để hưởng aura nhé!";
+
+        // Rate Limits & Daily Quota State
+        private int remainingWorldChatCount = 5;
+        private float nextWorldChatTime = 0f;
+        private float nextLocalChatTime = 0f;
+        private float nextGuildChatTime = 0f;
+        private string chatFeedbackMsg = "";
+        private float chatFeedbackTimer = 0f;
+        private Color chatFeedbackColor = Color.white;
+        private int lastChatDayOfYear = -1;
+
+        // Dấu thông báo đỏ đỏ (Red Badge) cho kênh vị trí hiện tại
+        private bool hasUnreadLocalChat = false;
+        private float nextSimulatedLocalChatTime = 25f;
 
         // Guild Modal State (Cửa sổ Bang Hội chính giữa màn hình)
         private bool isGuildModalOpen = false;
@@ -162,7 +182,7 @@ namespace GodlessFantasy.UI
             }
             if (Instance.isChatOpen)
             {
-                float cW = 430f, cH = 270f;
+                float cW = 480f, cH = 310f;
                 Rect cRect = new Rect((Screen.width - cW) / 2f, (Screen.height - cH) / 2f, cW, cH);
                 if (cRect.Contains(new Vector2(screenX, screenY))) return true;
             }
@@ -251,7 +271,7 @@ namespace GodlessFantasy.UI
             // 6. Cửa sổ Chat Modal
             if (Instance.isChatOpen)
             {
-                float cW = 430f, cH = 270f;
+                float cW = 480f, cH = 310f;
                 Rect cRect = new Rect((Screen.width - cW) / 2f, (Screen.height - cH) / 2f, cW, cH);
                 if (cRect.Contains(guiPos)) return true;
             }
@@ -472,6 +492,12 @@ namespace GodlessFantasy.UI
                 normal = { textColor = new Color(1f, 0.90f, 0.45f) }
             };
 
+            miniTextStyle = new GUIStyle(standardTextStyle)
+            {
+                fontSize = 10,
+                wordWrap = false
+            };
+
             isStyleInitialized = true;
         }
 
@@ -524,6 +550,12 @@ namespace GodlessFantasy.UI
                 }
             }
 
+            // Phím L: Phím tắt tăng cấp nhanh (+1 Level, tự cộng điểm tiềm năng) để test tính năng
+            if (Input.GetKeyDown(KeyCode.L) && !isChatOpen && (ItemCreatorModal.Instance == null || !ItemCreatorModal.Instance.IsOpen))
+            {
+                playerStats?.LevelUpCheat(1, true);
+            }
+
             // Phím Enter: Gửi tin nhắn nếu đang mở Chat, hoặc mở nhanh cửa sổ Chat nếu đang đóng
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
             {
@@ -535,32 +567,151 @@ namespace GodlessFantasy.UI
                 {
                     isChatOpen = true;
                     shouldFocusChatInput = true;
+                    if (currentChatTab == 0) hasUnreadLocalChat = false;
                 }
+            }
+
+            // Tự động tắt chấm đỏ khi đang mở xem Tab Khu Vực
+            if (isChatOpen && currentChatTab == 0)
+            {
+                hasUnreadLocalChat = false;
+            }
+
+            if (chatFeedbackTimer > 0f)
+            {
+                chatFeedbackTimer -= Time.deltaTime;
+            }
+
+            // Giả lập tin nhắn người chơi gần đó gửi vào Kênh Vị Trí Hiện Tại (để test tính năng chấm đỏ)
+            if (Time.time >= nextSimulatedLocalChatTime)
+            {
+                nextSimulatedLocalChatTime = Time.time + UnityEngine.Random.Range(30f, 50f);
+                string[] sampleSenders = { "Lữ Khách Rừng Sâu", "Kiếm Sĩ Tập Sự", "Thương Nhân Lữ Hành", "Mục Sư Tân Thủ" };
+                string[] sampleMsgs = {
+                    "Khu vực quanh giếng nước an toàn lắm ae!",
+                    "Có ai thừa Loa Thế Giới không? Vừa săn quái rớt nhiều đồ ngon quá!",
+                    "Tập trung ở Đài Phun Nước Làng chuẩn bị lập party săn Boss!",
+                    "Vừa bị đàn sói cắn suýt chết, may mà chạy kịp vào Safe Zone!"
+                };
+                int rIdx = UnityEngine.Random.Range(0, sampleSenders.Length);
+                ReceiveLocalChatMessage(sampleSenders[rIdx], sampleMsgs[rIdx]);
             }
 
             // Chặn click xuyên thế giới ngay lập tức trong Update
             PlayerMovement.BlockWorldClick = IsMouseOverAnyUI();
         }
 
+        public void AddWorldChatQuota(int amount)
+        {
+            remainingWorldChatCount += amount;
+            ShowChatFeedback($"📢 Đã nạp +{amount} Lượt Chat Thế Giới! (Hiện có: {remainingWorldChatCount}/{MAX_DAILY_WORLD_CHAT})", new Color(1f, 0.88f, 0.25f));
+            if (playerStats != null)
+            {
+                FloatingDamageManager.ShowFloatingText(playerStats.transform.position + Vector3.up * 1.5f,
+                    $"📢 +{amount} Lượt Chat Thế Giới! ({remainingWorldChatCount}/{MAX_DAILY_WORLD_CHAT})", new Color(1f, 0.88f, 0.25f));
+            }
+        }
+
+        public void ReceiveLocalChatMessage(string senderName, string content)
+        {
+            localChatHistory += $"\n💬 [Khu Vực] [{senderName}]: {content}";
+            // Nếu cửa sổ chat đang đóng hoặc không mở đúng tab Khu Vực -> Hiện dấu chấm thông báo đỏ
+            if (!isChatOpen || currentChatTab != 0)
+            {
+                hasUnreadLocalChat = true;
+            }
+        }
+
+        private void CheckDailyChatReset()
+        {
+            int currentDay = DateTime.Now.DayOfYear;
+            if (lastChatDayOfYear != currentDay)
+            {
+                lastChatDayOfYear = currentDay;
+                remainingWorldChatCount = MAX_DAILY_WORLD_CHAT;
+            }
+        }
+
+        private void ShowChatFeedback(string msg, Color col)
+        {
+            chatFeedbackMsg = msg;
+            chatFeedbackColor = col;
+            chatFeedbackTimer = 3.5f;
+        }
+
+        public void UseWorldMegaphone(GodlessFantasy.Player.InventoryItem item)
+        {
+            if (item == null || inventoryManager == null) return;
+            AddWorldChatQuota(1);
+            inventoryManager.RemoveItem(item.id, 1);
+            if (item.quantity <= 0)
+            {
+                selectedInventoryItem = null;
+            }
+            GodlessFantasy.Core.AudioManager.PlayPickup();
+        }
+
         private void SendCurrentChatMessage()
         {
+            CheckDailyChatReset();
+
             if (!string.IsNullOrEmpty(chatInputText) && !string.IsNullOrEmpty(chatInputText.Trim()))
             {
                 string pName = playerStats?.CharacterName ?? "Bạn";
-                if (currentChatTab == 0)
+                string msg = chatInputText.Trim();
+
+                if (currentChatTab == 0) // KÊNH VỊ TRÍ HIỆN TẠI (KHU VỰC) - RATE LIMIT 5s
                 {
-                    localChatHistory += $"\n💬 [Khu Vực] [{pName}]: {chatInputText.Trim()}";
+                    if (Time.time < nextLocalChatTime)
+                    {
+                        float remain = nextLocalChatTime - Time.time;
+                        ShowChatFeedback($"⏳ Chat quá nhanh! Vui lòng chờ {remain:F1}s để gửi tin Khu Vực.", new Color(1f, 0.4f, 0.4f));
+                        return;
+                    }
+
+                    nextLocalChatTime = Time.time + LOCAL_CHAT_COOLDOWN;
+                    localChatHistory += $"\n💬 [Khu Vực] [{pName}]: {msg}";
+                    chatInputText = "";
+                    shouldFocusChatInput = true;
+                    ShowChatFeedback("✓ Đã gửi tin nhắn Khu Vực.", new Color(0.4f, 1f, 0.4f));
                 }
-                else if (currentChatTab == 1)
+                else if (currentChatTab == 1) // KÊNH THẾ GIỚI - 5/5 TIN/NGÀY & RATE LIMIT 1 PHÚT
                 {
-                    worldChatHistory += $"\n🌍 [Thế Giới] [{pName}]: {chatInputText.Trim()}";
+                    if (remainingWorldChatCount <= 0)
+                    {
+                        ShowChatFeedback("⚠️ Hết 5/5 lượt Chat Thế Giới hôm nay! Dùng [Loa Thế Giới] từ quái/nhiệm vụ để hồi thêm.", new Color(1f, 0.35f, 0.35f));
+                        return;
+                    }
+
+                    if (Time.time < nextWorldChatTime)
+                    {
+                        float remain = nextWorldChatTime - Time.time;
+                        ShowChatFeedback($"⏳ Kênh Thế Giới hồi chiêu 1 phút/tin! Chờ {remain:F0}s nữa.", new Color(1f, 0.85f, 0.35f));
+                        return;
+                    }
+
+                    remainingWorldChatCount--;
+                    nextWorldChatTime = Time.time + WORLD_CHAT_COOLDOWN;
+                    worldChatHistory += $"\n🌍 [Thế Giới] [{pName}]: {msg}";
+                    chatInputText = "";
+                    shouldFocusChatInput = true;
+                    ShowChatFeedback($"✓ Đã gửi tin Thế Giới! (Còn lại {remainingWorldChatCount}/{MAX_DAILY_WORLD_CHAT} tin hôm nay)", new Color(1f, 0.88f, 0.25f));
                 }
-                else
+                else // KÊNH BANG HỘI - RATE LIMIT 5s
                 {
-                    guildChatHistory += $"\n🛡️ [Bang] [{pName}]: {chatInputText.Trim()}";
+                    if (Time.time < nextGuildChatTime)
+                    {
+                        float remain = nextGuildChatTime - Time.time;
+                        ShowChatFeedback($"⏳ Chat quá nhanh! Vui lòng chờ {remain:F1}s để gửi tin Bang Hội.", new Color(1f, 0.4f, 0.4f));
+                        return;
+                    }
+
+                    nextGuildChatTime = Time.time + GUILD_CHAT_COOLDOWN;
+                    guildChatHistory += $"\n🛡️ [Bang] [{pName}]: {msg}";
+                    chatInputText = "";
+                    shouldFocusChatInput = true;
+                    ShowChatFeedback("✓ Đã gửi tin nhắn Bang Hội.", new Color(0.4f, 1f, 0.4f));
                 }
-                chatInputText = "";
-                shouldFocusChatInput = true;
             }
         }
 
@@ -892,8 +1043,28 @@ namespace GodlessFantasy.UI
                 normal = { textColor = Color.white }
             };
 
-            // Chạy chữ tự động (Auto-Scroll Marquee) lặp vòng mượt mà theo yêu cầu
-            DrawAutoScrollText(new Rect(lvBadge.x + 1, lvBadge.y, lvBadge.width - 2, lvBadge.height), $"Lv.{lv}", lvStyle, speed: 20f, textColor: Color.white, gap: 14f, forceScroll: true);
+            // Nhãn hiển thị Level
+            Rect lvTextRect = new Rect(lvBadge.x + 1, lvBadge.y, lvBadge.width - 15, lvBadge.height);
+            GUI.Label(lvTextRect, $"Lv.{lv}", lvStyle);
+
+            // Nút [+] Tăng cấp trực tiếp (Tự cộng điểm tiềm năng)
+            Rect lvPlusRect = new Rect(lvBadge.x + lvBadge.width - 14, lvBadge.y + 1, 13, lvBadge.height - 2);
+            GUI.color = new Color(0.2f, 0.85f, 0.3f, 0.95f);
+            GUI.DrawTexture(lvPlusRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            DrawOutline(lvPlusRect, Color.yellow, 1);
+            var plusStyle = new GUIStyle(lvStyle) { fontSize = 9, fontStyle = FontStyle.Bold };
+            GUI.Label(lvPlusRect, "+", plusStyle);
+
+            if (lvPlusRect.Contains(Event.current.mousePosition))
+            {
+                SetTooltip("Tăng Cấp Nhanh (Phím L)", "• Bấm để +1 Cấp độ tức thì!\n• Tự động phân bổ toàn bộ điểm tiềm năng theo Hệ phái!\n• Hồi đầy 100% HP và Mana.", new Vector2(lvPlusRect.x + 20, lvPlusRect.y - 40));
+                if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+                {
+                    playerStats?.LevelUpCheat(1, true);
+                    Event.current.Use();
+                }
+            }
 
             float rightColX = panel.x + 53f;
             float rightColW = panel.width - 58f; // 215 - 58 = 157px
@@ -1165,7 +1336,28 @@ namespace GodlessFantasy.UI
             if (DrawFantasyButton(chatRect, "💬", 12, isChatOpen))
             {
                 isChatOpen = !isChatOpen;
-                if (isChatOpen) shouldFocusChatInput = true;
+                if (isChatOpen)
+                {
+                    shouldFocusChatInput = true;
+                    if (currentChatTab == 0) hasUnreadLocalChat = false;
+                }
+            }
+
+            // DẤU CHẤM ĐỎ THÔNG BÁO TIN NHẮN MỚI TẠI VỊ TRÍ HIỆN TẠI (RED BADGE)
+            if (hasUnreadLocalChat && !isChatOpen)
+            {
+                float badgeSize = 10f;
+                Rect dotRect = new Rect(chatRect.x + chatRect.width - 6f, chatRect.y - 3f, badgeSize, badgeSize);
+
+                // Viền trắng nổi bật
+                GUI.color = Color.white;
+                GUI.DrawTexture(new Rect(dotRect.x - 1, dotRect.y - 1, badgeSize + 2, badgeSize + 2), Texture2D.whiteTexture);
+
+                // Chấm đỏ phát sáng nhấp nháy
+                float alpha = 0.85f + 0.15f * Mathf.Sin(Time.time * 6f);
+                GUI.color = new Color(1f, 0.15f, 0.15f, alpha);
+                GUI.DrawTexture(dotRect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
             }
 
             // 2. Nút Cài Đặt Hệ Thống & Âm Thanh [⚙️]
@@ -1562,12 +1754,18 @@ namespace GodlessFantasy.UI
             string charClass = playerStats != null ? playerStats.CharacterClass : "Kị Sĩ";
             string elem = playerStats != null ? playerStats.Element : "Hỏa";
             int lv = playerStats != null ? playerStats.Level : 1;
-            boldWhiteStyle.fontSize = 13;
-            boldWhiteStyle.alignment = TextAnchor.MiddleCenter;
+            boldWhiteStyle.fontSize = 12;
+            boldWhiteStyle.alignment = TextAnchor.MiddleLeft;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.88f, 0.45f);
-            GUI.Label(new Rect(r.x, r.y, r.width, 20), $"HỆ [{charClass}] · THUỘC TÍNH [{elem}] · LEVEL [{lv}]", boldWhiteStyle);
+            GUI.Label(new Rect(r.x + 8f, r.y, r.width - 165f, 20), $"HỆ [{charClass}] · THUỘC TÍNH [{elem}] · LEVEL [{lv}]", boldWhiteStyle);
             boldWhiteStyle.alignment = TextAnchor.UpperLeft;
             boldWhiteStyle.normal.textColor = Color.white;
+
+            // Nút Tăng cấp nhanh (+1 Cấp & Tự cộng điểm tiềm năng)
+            if (DrawFantasyButton(new Rect(r.x + r.width - 155f, r.y - 1f, 147f, 21f), "⚡ +1 CẤP (TỰ CỘNG)", 10, true, new Color(1f, 0.85f, 0.3f)))
+            {
+                playerStats?.LevelUpCheat(1, true);
+            }
 
             // ================= THANH EXP HIỂN THỊ CHỈ SỐ RÕ RÀNG (EXP BAR) =================
             int curExp = playerStats != null ? playerStats.CurrentExp : 0;
@@ -1875,9 +2073,8 @@ namespace GodlessFantasy.UI
                 Color btnTextColor = canUnlock ? new Color(1f, 0.90f, 0.35f) : Color.gray;
                 statBadgeStyle.normal.textColor = btnTextColor;
 
-                // Hiệu ứng chữ chạy Marquee bên trong lòng nút
-                Rect btnInnerRect = new Rect(unlockBtnRect.x + 3f, unlockBtnRect.y + 1f, unlockBtnRect.width - 6f, unlockBtnRect.height - 2f);
-                DrawAutoScrollText(btnInnerRect, btnText, statBadgeStyle, speed: 25f, textColor: btnTextColor, gap: 18f, forceScroll: true);
+                // Chữ tĩnh rõ ràng sắc nét, không chạy chữ
+                GUI.Label(unlockBtnRect, btnText, statBadgeStyle);
 
                 if (canUnlock && GUI.Button(unlockBtnRect, GUIContent.none, GUIStyle.none))
                 {
@@ -2154,14 +2351,20 @@ namespace GodlessFantasy.UI
                     {
                         inventoryManager?.EquipGearItem(item);
                     }
+                    pY += btnH + 5f;
+
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
                     {
                         if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
                         {
-                            GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager);
+                            if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                            {
+                                selectedInventoryItem = null;
+                            }
                         }
                     }
-                    pY += btnH + 5;
+                    pY += btnH + 5f;
+
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "VỨT BỎ", 11, false, new Color(1f, 0.45f, 0.45f)))
                     {
                         inventoryManager?.RequestDropItem(item);
@@ -2172,6 +2375,18 @@ namespace GodlessFantasy.UI
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "THÁO RA TÚI ĐỒ", 11))
                     {
                         inventoryManager?.UnequipGearItem(item.equipSlot);
+                    }
+                    pY += btnH + 5f;
+
+                    if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                        {
+                            if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                            {
+                                selectedInventoryItem = null;
+                            }
+                        }
                     }
                 }
             }
@@ -2190,22 +2405,32 @@ namespace GodlessFantasy.UI
                     {
                         int targetSlot = slot;
                         bool unlocked = inventoryManager != null && inventoryManager.IsSlotUnlocked(slot);
-                        string slotLabel = unlocked ? $"[{slot + 1}]" : "🔒";
+                        int reqLv = inventoryManager?.GetRequiredLevelForSlot(targetSlot) ?? 1;
+                        string slotLabel = unlocked ? $"[{slot + 1}]" : $"🔒Lv{reqLv}";
+                        Color slotTint = unlocked ? Color.white : new Color(1f, 0.85f, 0.45f);
 
-                        if (DrawFantasyButton(new Rect(r.x + 8 + slot * (miniBtnW + 2), pY, miniBtnW, 24), slotLabel, 10, unlocked))
+                        if (DrawFantasyButton(new Rect(r.x + 8 + slot * (miniBtnW + 2), pY, miniBtnW, 24), slotLabel, 10, true, slotTint))
                         {
-                            if (unlocked)
+                            if (!unlocked)
                             {
-                                inventoryManager?.EquipSkillScrollToHotbar(item, targetSlot);
+                                inventoryManager?.ForceUnlockSlot(targetSlot);
                             }
-                            else
-                            {
-                                int reqLv = inventoryManager?.GetRequiredLevelForSlot(targetSlot) ?? 1;
-                                Debug.LogWarning($"[KHÓA KỸ NĂNG] Ô [{targetSlot + 1}] yêu cầu Cấp {reqLv} mới mở khóa!");
-                            }
+                            inventoryManager?.EquipSkillScrollToHotbar(item, targetSlot);
                         }
                     }
                     pY += 28f;
+
+                    if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                        {
+                            if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                            {
+                                selectedInventoryItem = null;
+                            }
+                        }
+                    }
+                    pY += btnH + 5f;
 
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "VỨT BỎ", 11, false, new Color(1f, 0.45f, 0.45f)))
                     {
@@ -2217,6 +2442,18 @@ namespace GodlessFantasy.UI
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), $"THÁO KHỎI Ô [{item.equippedHotbarSlot + 1}]", 11))
                     {
                         inventoryManager?.UnequipSkillScrollFromHotbar(item.equippedHotbarSlot);
+                    }
+                    pY += btnH + 5f;
+
+                    if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                        {
+                            if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                            {
+                                selectedInventoryItem = null;
+                            }
+                        }
                     }
                 }
             }
@@ -2267,7 +2504,20 @@ namespace GodlessFantasy.UI
                         if (item.quantity <= 0) selectedInventoryItem = null;
                     }
                 }
-                pY += btnH + 5;
+                pY += btnH + 5f;
+
+                if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                {
+                    if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                        {
+                            selectedInventoryItem = null;
+                        }
+                    }
+                }
+                pY += btnH + 5f;
+
                 if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "VỨT BỎ", 11, false, new Color(1f, 0.45f, 0.45f)))
                 {
                     inventoryManager?.RequestDropItem(item);
@@ -2289,11 +2539,44 @@ namespace GodlessFantasy.UI
                     {
                         inventoryManager?.TogglePetSummon(item);
                     }
-                    pY += btnH + 5;
+                    pY += btnH + 5f;
+
+                    if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                        {
+                            if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                            {
+                                selectedInventoryItem = null;
+                            }
+                        }
+                    }
+                    pY += btnH + 5f;
+
                     if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "THẢ THÚ", 11, false, new Color(1f, 0.45f, 0.45f)))
                     {
                         inventoryManager?.RequestDropItem(item);
                     }
+                }
+            }
+            // 5. Nếu là Nguyên Liệu / Khác
+            else
+            {
+                if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "🏛️ CẤT VÀO RƯƠNG REBIRTH", 10, true, new Color(0.9f, 0.75f, 0.3f)))
+                {
+                    if (GodlessFantasy.Player.RebirthVaultManager.Instance != null && inventoryManager != null)
+                    {
+                        if (GodlessFantasy.Player.RebirthVaultManager.Instance.DepositItem(item, inventoryManager))
+                        {
+                            selectedInventoryItem = null;
+                        }
+                    }
+                }
+                pY += btnH + 5f;
+
+                if (DrawFantasyButton(new Rect(r.x + 8, pY, btnW, btnH), "VỨT BỎ", 11, false, new Color(1f, 0.45f, 0.45f)))
+                {
+                    inventoryManager?.RequestDropItem(item);
                 }
             }
         }
@@ -2308,11 +2591,24 @@ namespace GodlessFantasy.UI
             float pY = 0f;
 
             // 1. PHẦN TRÊN: ĐIỂM TIỀM NĂNG & CỘNG ĐIỂM THUỘC TÍNH
-            boldWhiteStyle.fontSize = 13;
+            boldWhiteStyle.fontSize = 12;
             boldWhiteStyle.normal.textColor = new Color(1f, 0.85f, 0.35f);
-            GUI.Label(new Rect(0, pY, viewRect.width, 20), $"ĐIỂM TIỀM NĂNG KHẢ DỤNG: {playerStats?.AvailableStatPoints ?? 0} ĐIỂM", boldWhiteStyle);
+            int availPts = playerStats?.AvailableStatPoints ?? 0;
+            GUI.Label(new Rect(0, pY, viewRect.width - 245f, 22), $"ĐIỂM TIỀM NĂNG: {availPts} ĐIỂM", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
-            pY += 24f;
+
+            // Nút Tự Động Phân Bổ Tiềm Năng theo Hệ Phái
+            if (DrawFantasyButton(new Rect(viewRect.width - 240f, pY - 1f, 115f, 22f), "⚡ TỰ CỘNG ĐIỂM", 10, availPts > 0, new Color(0.4f, 1f, 0.5f)))
+            {
+                playerStats?.AutoAllocateStatPoints();
+            }
+
+            // Nút +1 Cấp (Test Level)
+            if (DrawFantasyButton(new Rect(viewRect.width - 120f, pY - 1f, 115f, 22f), "⚡ +1 CẤP (TEST)", 10, true, new Color(1f, 0.85f, 0.25f)))
+            {
+                playerStats?.LevelUpCheat(1, true);
+            }
+            pY += 26f;
 
             // Bảng 4 dòng thuộc tính Trí Tuệ, Sức Mạnh, Thể Lực, Nhanh Nhẹn
             Rect statBox = new Rect(0, pY, viewRect.width, 74f);
@@ -2866,8 +3162,8 @@ namespace GodlessFantasy.UI
         // ================= CỬA SỔ TRÒ CHUYỆN 3 TAB (KHU VỰC · THẾ GIỚI · BANG HỘI) =================
         private void DrawChatModal()
         {
-            float chatW = 430f;
-            float chatH = 270f;
+            float chatW = 480f;
+            float chatH = 310f;
             float chatX = (Screen.width - chatW) / 2f;
             float chatY = (Screen.height - chatH) / 2f;
             Rect chatRect = new Rect(chatX, chatY, chatW, chatH);
@@ -2878,24 +3174,43 @@ namespace GodlessFantasy.UI
             GUI.color = Color.white;
             DrawDoubleGoldFrame(chatRect);
 
-            // 3 TAB HEADER THEO ĐÚNG YÊU CẦU USER (KHU VỰC, THẾ GIỚI, BANG HỘI)
-            float tabBtnW = 124f;
+            // 3 TAB HEADER (VỊ TRÍ HIỆN TẠI · THẾ GIỚI · BANG HỘI)
             float tabBtnH = 24f;
 
+            // Tab 1: Vị Trí Hiện Tại (Khu Vực)
+            Rect tab0Rect = new Rect(chatRect.x + 8, chatRect.y + 6, 140, tabBtnH);
             bool isLocalTab = (currentChatTab == 0);
-            if (DrawFantasyButton(new Rect(chatRect.x + 8, chatRect.y + 6, tabBtnW, tabBtnH), "📍 KHU VỰC", 10, isLocalTab))
+            if (DrawFantasyButton(tab0Rect, "📍 VỊ TRÍ HIỆN TẠI", 10, isLocalTab))
             {
                 currentChatTab = 0;
+                hasUnreadLocalChat = false;
+            }
+            if (hasUnreadLocalChat)
+            {
+                // Chấm đỏ thông báo tin mới trên tab
+                float dotSize = 8f;
+                Rect dotR = new Rect(tab0Rect.x + tab0Rect.width - 10f, tab0Rect.y + 2f, dotSize, dotSize);
+                GUI.color = Color.white;
+                GUI.DrawTexture(new Rect(dotR.x - 1, dotR.y - 1, dotSize + 2, dotSize + 2), Texture2D.whiteTexture);
+                GUI.color = new Color(1f, 0.2f, 0.2f, 0.85f + 0.15f * Mathf.Sin(Time.time * 6f));
+                GUI.DrawTexture(dotR, Texture2D.whiteTexture);
+                GUI.color = Color.white;
             }
 
+            // Tab 2: Kênh Thế Giới (Hiển thị số lượt còn lại / 5)
+            Rect tab1Rect = new Rect(chatRect.x + 152, chatRect.y + 6, 155, tabBtnH);
             bool isWorldTab = (currentChatTab == 1);
-            if (DrawFantasyButton(new Rect(chatRect.x + 136, chatRect.y + 6, tabBtnW, tabBtnH), "🌍 THẾ GIỚI", 10, isWorldTab))
+            string worldTabTitle = $"🌍 THẾ GIỚI ({remainingWorldChatCount}/{MAX_DAILY_WORLD_CHAT})";
+            Color worldTabCol = (remainingWorldChatCount > 0) ? new Color(1f, 0.88f, 0.25f) : new Color(0.7f, 0.7f, 0.7f);
+            if (DrawFantasyButton(tab1Rect, worldTabTitle, 10, isWorldTab, worldTabCol))
             {
                 currentChatTab = 1;
             }
 
+            // Tab 3: Bang Hội
+            Rect tab2Rect = new Rect(chatRect.x + 311, chatRect.y + 6, 125, tabBtnH);
             bool isGuildTab = (currentChatTab == 2);
-            if (DrawFantasyButton(new Rect(chatRect.x + 264, chatRect.y + 6, tabBtnW, tabBtnH), "🛡️ BANG HỘI", 10, isGuildTab, new Color(1f, 0.88f, 0.25f)))
+            if (DrawFantasyButton(tab2Rect, "🛡️ BANG HỘI", 10, isGuildTab, new Color(0.4f, 0.85f, 1f)))
             {
                 currentChatTab = 2;
             }
@@ -2906,8 +3221,38 @@ namespace GodlessFantasy.UI
                 isChatOpen = false;
             }
 
+            // DÒNG THÔNG TIN QUY TẮC & HỒI CHIÊU DƯỚI TAB
+            Rect ruleRect = new Rect(chatRect.x + 8, chatRect.y + 32, chatRect.width - 16, 18);
+            miniTextStyle.alignment = TextAnchor.MiddleLeft;
+            miniTextStyle.fontSize = 9;
+
+            if (chatFeedbackTimer > 0f && !string.IsNullOrEmpty(chatFeedbackMsg))
+            {
+                miniTextStyle.normal.textColor = chatFeedbackColor;
+                GUI.Label(ruleRect, chatFeedbackMsg, miniTextStyle);
+            }
+            else if (currentChatTab == 0)
+            {
+                miniTextStyle.normal.textColor = new Color(0.75f, 0.85f, 0.95f);
+                string cdStr = (Time.time < nextLocalChatTime) ? $" (⏳ Hồi chiêu: {nextLocalChatTime - Time.time:F1}s)" : " (Sẵn sàng)";
+                GUI.Label(ruleRect, $"💬 Kênh Khu Vực: Người chơi quanh bạn trong tầm nhìn. Giãn cách 5s/tin.{cdStr}", miniTextStyle);
+            }
+            else if (currentChatTab == 1)
+            {
+                miniTextStyle.normal.textColor = new Color(1f, 0.88f, 0.35f);
+                string cdStr = (Time.time < nextWorldChatTime) ? $" (⏳ Chờ {nextWorldChatTime - Time.time:F0}s)" : " (Sẵn sàng)";
+                string quotaStr = $"🌍 Toàn máy chủ. Còn {remainingWorldChatCount}/{MAX_DAILY_WORLD_CHAT} tin hôm nay. Hồi chiêu 1 phút/tin.{cdStr}";
+                GUI.Label(ruleRect, quotaStr, miniTextStyle);
+            }
+            else
+            {
+                miniTextStyle.normal.textColor = new Color(0.6f, 1f, 0.7f);
+                string cdStr = (Time.time < nextGuildChatTime) ? $" (⏳ Hồi chiêu: {nextGuildChatTime - Time.time:F1}s)" : " (Sẵn sàng)";
+                GUI.Label(ruleRect, $"🛡️ Kênh Bang Hội: Chỉ thành viên trong Bang nhìn thấy. Giãn cách 5s/tin.{cdStr}", miniTextStyle);
+            }
+
             // KHUNG LỊCH SỬ CHAT CỦA TAB TƯƠNG ỨNG
-            Rect histRect = new Rect(chatRect.x + 8, chatRect.y + 34, chatRect.width - 16, chatRect.height - 76);
+            Rect histRect = new Rect(chatRect.x + 8, chatRect.y + 52, chatRect.width - 16, chatRect.height - 94);
             GUI.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
             GUI.DrawTexture(histRect, Texture2D.whiteTexture);
             GUI.color = Color.white;
@@ -2915,6 +3260,7 @@ namespace GodlessFantasy.UI
 
             standardTextStyle.alignment = TextAnchor.UpperLeft;
             standardTextStyle.fontSize = 11;
+            standardTextStyle.normal.textColor = new Color(0.9f, 0.95f, 1.0f);
             string currentHistory = (currentChatTab == 0) ? localChatHistory : (currentChatTab == 1) ? worldChatHistory : guildChatHistory;
             GUI.Label(new Rect(histRect.x + 6, histRect.y + 6, histRect.width - 12, histRect.height - 12), currentHistory, standardTextStyle);
 

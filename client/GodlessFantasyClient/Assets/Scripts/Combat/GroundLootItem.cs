@@ -129,7 +129,7 @@ namespace GodlessFantasy.Combat
             GUI.Label(r, promptText, labelStyle);
         }
 
-        public static void SpawnLoot(Vector3 position, string name, string rank, Color col, string icon, int qty = 1)
+        public static void SpawnLoot(Vector3 position, string name, string rank, Color col, string icon, int qty = 1, string specificId = null)
         {
             GameObject lootObj = new GameObject($"Loot_{name}");
             lootObj.transform.position = position;
@@ -147,7 +147,7 @@ namespace GodlessFantasy.Combat
             col2d.radius = 0.4f;
 
             var loot = lootObj.AddComponent<GroundLootItem>();
-            loot.itemId = "loot_" + System.Guid.NewGuid().ToString().Substring(0, 6);
+            loot.itemId = !string.IsNullOrEmpty(specificId) ? specificId : ("loot_" + System.Guid.NewGuid().ToString().Substring(0, 6));
             loot.itemName = name;
             loot.tierRank = rank;
             loot.tierColor = col;
