@@ -1711,4 +1711,106 @@ input[type="range"].slider-temperature {
     transform: translateY(-1px);
 }
 
+/* ============================================================
+   COLOR MATCH / HARMONIZATION PICKER UI
+   ============================================================ */
+.color-match-banner {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: rgba(15, 23, 42, 0.94);
+    border: 1.5px solid #38bdf8;
+    border-radius: 30px;
+    padding: 8px 18px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65), 0 0 20px rgba(56, 189, 248, 0.35);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+    animation: bannerPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bannerPop {
+    0% { transform: translateX(-50%) translateY(-10px) scale(0.96); opacity: 0; }
+    100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+
+.cmb-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cmb-icon {
+    font-size: 16px;
+    animation: cmbPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes cmbPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+}
+
+.cmb-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #e2e8f0;
+    letter-spacing: 0.2px;
+}
+
+.cmb-highlight {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+.cmb-cancel-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.cmb-cancel-btn:hover {
+    background: rgba(239, 68, 68, 0.35);
+    border-color: #ef4444;
+    color: #fee2e2;
+}
+
+.canvas-assembly-frame.picking-color-match {
+    cursor: crosshair !important;
+}
+
+.canvas-assembly-frame.picking-color-match .canvas-wrapper {
+    cursor: crosshair !important;
+}
+
+.selection-box.color-match-source-box {
+    border: 2px dashed #f59e0b !important;
+    background: rgba(245, 158, 11, 0.18) !important;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.5) !important;
+    animation: srcBoxPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes srcBoxPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+    50% { box-shadow: 0 0 24px rgba(245, 158, 11, 0.7); }
+}
+
+.context-item.context-color-match {
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+.context-item.context-color-match:hover {
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+}
+
+
 

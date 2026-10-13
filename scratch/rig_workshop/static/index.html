@@ -179,6 +179,15 @@
                         </div>
                     </div>
 
+                    <!-- FLOATING BANNER: COLOR MATCH PICK MODE -->
+                    <div id="color-match-banner" class="color-match-banner" style="display: none;">
+                        <div class="cmb-content">
+                            <span class="cmb-icon">🎯</span>
+                            <span class="cmb-text">Đang căn màu cho <b id="cmb-source-name" class="cmb-highlight">idle_body</b>: Hãy nhấp vào <b>sprite mẫu</b> trên canvas hoặc danh sách Layers để đồng bộ phong cách màu</span>
+                            <button class="btn btn-secondary cmb-cancel-btn" id="btn-cancel-color-match">✕ Hủy (Esc)</button>
+                        </div>
+                    </div>
+
                     <div class="canvas-assembly-frame" id="canvas-assembly-frame">
                         <div class="ruler-corner" id="ruler-corner" title="Nhấp đúp để căn giữa góc nhìn (Đơn vị: Pixel 64x64)">px</div>
                         <canvas id="ruler-x" class="ruler-x" height="22"></canvas>
@@ -518,6 +527,9 @@
                         <button class="btn btn-secondary btn-full" id="btn-pe-tint-color" title="Nhuộm vùng chọn theo màu trên bảng màu nhưng giữ nguyên sáng tối bóng đổ">
                             🎭 Nhuộm Sang Màu Đang Chọn
                         </button>
+                        <button class="btn btn-secondary btn-full" id="btn-pe-color-match" style="margin-top: 6px;" title="Lấy phong cách màu của một mảnh khác và đồng bộ vào mảnh/vùng chọn hiện tại">
+                            🎯 Đồng Bộ Màu Theo Mảnh Khác...
+                        </button>
                     </div>
 
                     <div class="panel-section">
@@ -787,6 +799,9 @@
             <div class="context-menu-header" id="ctx-part-title">Mảnh: idle_body</div>
             <div class="context-item context-highlight" id="ctx-edit-pixel">
                 <span class="icon">🎨</span> Chỉnh sửa chi tiết trong Xưởng Vẽ
+            </div>
+            <div class="context-item context-color-match" id="ctx-color-match">
+                <span class="icon">🎯</span> Căn màu / Đồng bộ phong cách theo mảnh khác...
             </div>
             <div class="context-divider"></div>
             <div class="context-item" id="ctx-move-up">

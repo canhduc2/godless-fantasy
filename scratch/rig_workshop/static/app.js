@@ -76,6 +76,11 @@ class RigWorkshopApp {
         this.assemblerHistory = [];
         this.assemblerRedoStack = [];
 
+        // Color Match / Harmonization State
+        this.isColorMatchPicking = false;
+        this.colorMatchSourcePartKey = null;
+        this.colorHarmonizeHistory = [];
+
         // Dragging, Panning & Marquee selection state
         this.toolMode = 'select'; // 'select' or 'pan'
         this.panX = 0;
@@ -803,6 +808,26 @@ class RigWorkshopApp {
         const badgePart = document.getElementById('badge-selected-part');
         const arrangeHint = document.getElementById('arrange-count-hint');
 
+        if (this.isColorMatchPicking && this.colorMatchSourcePartKey) {
+            const dirData = this.getCurrentDirData();
+            const part = dirData ? dirData[this.colorMatchSourcePartKey] : null;
+            if (part && part.visible) {
+                const img = this.getImage(part.file);
+                const pw = img && img.complete ? img.naturalWidth : 16;
+                const ph = img && img.complete ? img.naturalHeight : 16;
+                this.selectionBox.style.display = 'block';
+                this.selectionBox.classList.add('color-match-source-box');
+                this.selectionBox.style.left = `${part.x * this.zoom}px`;
+                this.selectionBox.style.top = `${part.y * this.zoom}px`;
+                this.selectionBox.style.width = `${pw * this.zoom}px`;
+                this.selectionBox.style.height = `${ph * this.zoom}px`;
+                if (coordInd) coordInd.innerText = `🎯 ĐANG CHỌN MẪU MÀU CHO: ${PART_NAMES_VI[this.colorMatchSourcePartKey] || this.colorMatchSourcePartKey} (Nhấp vào sprite mẫu)`;
+                return;
+            }
+        } else {
+            this.selectionBox.classList.remove('color-match-source-box');
+        }
+
         if (!this.showBbox || this.selectedPartKeys.size === 0) {
             this.selectionBox.style.display = 'none';
             if (badgePart) badgePart.innerText = 'Chưa chọn bộ phận';
@@ -1033,6 +1058,18 @@ class RigWorkshopApp {
             item.appendChild(controls);
 
             item.addEventListener('click', (e) => {
+                if (this.isColorMatchPicking) {
+                    e.stopPropagation();
+                    if (part.key === this.colorMatchSourcePartKey) {
+                        this.showToast('⚠️ Vui lòng nhấp vào một mảnh khác để lấy mẫu màu!', '#f59e0b');
+                        return;
+                    }
+                    const sourceKey = this.colorMatchSourcePartKey;
+                    this.endColorMatchPickMode();
+                    this.applyColorHarmonization(sourceKey, part.key);
+                    return;
+                }
+
                 if (e.ctrlKey || e.metaKey || e.shiftKey) {
                     if (this.selectedPartKeys.has(part.key)) {
                         this.selectedPartKeys.delete(part.key);
@@ -1481,6 +1518,9 @@ class RigWorkshopApp {
         const btnTintColor = document.getElementById('btn-pe-tint-color');
         if (btnTintColor) btnTintColor.addEventListener('click', () => this.peApplyColorTint());
 
+        const btnPeColorMatch = document.getElementById('btn-pe-color-match');
+        if (btnPeColorMatch) btnPeColorMatch.addEventListener('click', () => this.promptPeColorMatch());
+
         // Selection Action Buttons
         const btnSelAll = document.getElementById('btn-pe-select-all');
         if (btnSelAll) btnSelAll.addEventListener('click', () => this.peSelectAll());
@@ -1558,6 +1598,315 @@ class RigWorkshopApp {
         const g = (c >> 8) & 255;
         const b = c & 255;
         return this.rgbToHsl(r, g, b);
+    }
+
+    // ============================================================
+    // LAB / XYZ / RGB COLOR ENGINE (FOR COLOR MATCHING & HARMONIZATION)
+    // ============================================================
+    rgbToXyz(r, g, b) {
+        const toLin = (c) => {
+            const v = c / 255;
+            return v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92;
+        };
+        const rL = toLin(r);
+        const gL = toLin(g);
+        const bL = toLin(b);
+        const x = rL * 0.4124564 + gL * 0.3575761 + bL * 0.1804375;
+        const y = rL * 0.2126729 + gL * 0.7151522 + bL * 0.0721750;
+        const z = rL * 0.0193339 + gL * 0.1191920 + bL * 0.9503041;
+        return [x, y, z];
+    }
+
+    xyzToLab(x, y, z) {
+        const xn = x / 0.95047;
+        const yn = y / 1.00000;
+        const zn = z / 1.08883;
+        const delta = 6.0 / 29.0;
+        const f = (t) => t > delta * delta * delta ? Math.cbrt(t) : (t / (3.0 * delta * delta)) + 4.0 / 29.0;
+        const fx = f(xn);
+        const fy = f(yn);
+        const fz = f(zn);
+        const L = 116.0 * fy - 16.0;
+        const a = 500.0 * (fx - fy);
+        const b = 200.0 * (fy - fz);
+        return [L, a, b];
+    }
+
+    rgbToLab(r, g, b) {
+        const [x, y, z] = this.rgbToXyz(r, g, b);
+        return this.xyzToLab(x, y, z);
+    }
+
+    labToXyz(L, a, b) {
+        const fy = (L + 16.0) / 116.0;
+        const fx = fy + a / 500.0;
+        const fz = fy - b / 200.0;
+        const delta = 6.0 / 29.0;
+        const finv = (t) => t > delta ? t * t * t : 3.0 * delta * delta * (t - 4.0 / 29.0);
+        const x = finv(fx) * 0.95047;
+        const y = finv(fy) * 1.00000;
+        const z = finv(fz) * 1.08883;
+        return [x, y, z];
+    }
+
+    xyzToRgb(x, y, z) {
+        const rL = x * 3.2404542 + y * -1.5371385 + z * -0.4985314;
+        const gL = x * -0.9692660 + y * 1.8760108 + z * 0.0415560;
+        const bL = x * 0.0556434 + y * -0.2040259 + z * 1.0572252;
+        const toSrgb = (c) => {
+            const v = Math.max(0, Math.min(1, c));
+            return v > 0.0031308 ? 1.055 * Math.pow(v, 1.0 / 2.4) - 0.055 : 12.92 * v;
+        };
+        return [
+            Math.round(toSrgb(rL) * 255),
+            Math.round(toSrgb(gL) * 255),
+            Math.round(toSrgb(bL) * 255)
+        ];
+    }
+
+    labToRgb(L, a, b) {
+        const [x, y, z] = this.labToXyz(L, a, b);
+        return this.xyzToRgb(x, y, z);
+    }
+
+    harmonizeImageData(sourceImgData, targetImgData, selectedPixelsSet = null, sourceWidth = 0) {
+        const sD = sourceImgData.data;
+        const tD = targetImgData.data;
+
+        // 1. Gather Target Lab statistics
+        const tLabs = [];
+        for (let i = 0; i < tD.length; i += 4) {
+            if (tD[i + 3] > 40) {
+                const lab = this.rgbToLab(tD[i], tD[i + 1], tD[i + 2]);
+                if (lab[0] >= 16) {
+                    tLabs.push(lab);
+                }
+            }
+        }
+        if (tLabs.length < 5) {
+            for (let i = 0; i < tD.length; i += 4) {
+                if (tD[i + 3] > 40) {
+                    tLabs.push(this.rgbToLab(tD[i], tD[i + 1], tD[i + 2]));
+                }
+            }
+        }
+        if (tLabs.length === 0) return 0;
+
+        let meanLt = 0, meanAt = 0, meanBt = 0;
+        for (const lab of tLabs) {
+            meanLt += lab[0];
+            meanAt += lab[1];
+            meanBt += lab[2];
+        }
+        meanLt /= tLabs.length;
+        meanAt /= tLabs.length;
+        meanBt /= tLabs.length;
+
+        let varLt = 0, varAt = 0, varBt = 0;
+        for (const lab of tLabs) {
+            varLt += (lab[0] - meanLt) * (lab[0] - meanLt);
+            varAt += (lab[1] - meanAt) * (lab[1] - meanAt);
+            varBt += (lab[2] - meanBt) * (lab[2] - meanBt);
+        }
+        const stdLt = Math.sqrt(varLt / tLabs.length) || 1;
+        const stdAt = Math.sqrt(varAt / tLabs.length) || 1;
+        const stdBt = Math.sqrt(varBt / tLabs.length) || 1;
+
+        // 2. Gather Source Lab statistics
+        const sLabs = [];
+        for (let i = 0; i < sD.length; i += 4) {
+            if (sD[i + 3] > 40) {
+                const lab = this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]);
+                if (lab[0] >= 16) {
+                    sLabs.push(lab);
+                }
+            }
+        }
+        if (sLabs.length < 5) {
+            for (let i = 0; i < sD.length; i += 4) {
+                if (sD[i + 3] > 40) {
+                    sLabs.push(this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]));
+                }
+            }
+        }
+        if (sLabs.length === 0) return 0;
+
+        let meanLs = 0, meanAs = 0, meanBs = 0;
+        for (const lab of sLabs) {
+            meanLs += lab[0];
+            meanAs += lab[1];
+            meanBs += lab[2];
+        }
+        meanLs /= sLabs.length;
+        meanAs /= sLabs.length;
+        meanBs /= sLabs.length;
+
+        let varLs = 0, varAs = 0, varBs = 0;
+        for (const lab of sLabs) {
+            varLs += (lab[0] - meanLs) * (lab[0] - meanLs);
+            varAs += (lab[1] - meanAs) * (lab[1] - meanAs);
+            varBs += (lab[2] - meanBs) * (lab[2] - meanBs);
+        }
+        const stdLs = Math.sqrt(varLs / sLabs.length) || 1;
+        const stdAs = Math.sqrt(varAs / sLabs.length) || 1;
+        const stdBs = Math.sqrt(varBs / sLabs.length) || 1;
+
+        const scaleL = Math.min(2.2, Math.max(0.45, stdLt / (stdLs + 0.001)));
+        const scaleA = Math.min(2.2, Math.max(0.45, stdAt / (stdAs + 0.001)));
+        const scaleB = Math.min(2.2, Math.max(0.45, stdBt / (stdBs + 0.001)));
+
+        // 3. Reinhard Transfer
+        let modifiedCount = 0;
+        const hasSelection = selectedPixelsSet && selectedPixelsSet.size > 0 && sourceWidth > 0;
+
+        for (let i = 0; i < sD.length; i += 4) {
+            if (sD[i + 3] <= 10) continue;
+
+            if (hasSelection) {
+                const pxIdx = i / 4;
+                const px = pxIdx % sourceWidth;
+                const py = Math.floor(pxIdx / sourceWidth);
+                if (!selectedPixelsSet.has(`${px},${py}`)) continue;
+            }
+
+            const [curL, curA, curB] = this.rgbToLab(sD[i], sD[i + 1], sD[i + 2]);
+
+            let newL = meanLt + (curL - meanLs) * scaleL;
+            let newA = meanAt + (curA - meanAs) * scaleA;
+            let newB = meanBt + (curB - meanBs) * scaleB;
+            newL = Math.max(0, Math.min(100, newL));
+
+            let finL = newL;
+            let finA = newA;
+            let finB = newB;
+            if (curL < 18) {
+                const w = Math.max(0, Math.min(1, curL / 18));
+                finL = (1 - w) * curL + w * newL;
+                finA = (1 - w) * curA + w * newA;
+                finB = (1 - w) * curB + w * newB;
+            }
+
+            const [finR, finG, finB_rgb] = this.labToRgb(finL, finA, finB);
+            sD[i] = finR;
+            sD[i + 1] = finG;
+            sD[i + 2] = finB_rgb;
+            modifiedCount++;
+        }
+
+        return modifiedCount;
+    }
+
+    startColorMatchPickMode(sourceKey) {
+        if (!sourceKey) return;
+        this.isColorMatchPicking = true;
+        this.colorMatchSourcePartKey = sourceKey;
+
+        const banner = document.getElementById('color-match-banner');
+        const nameEl = document.getElementById('cmb-source-name');
+        if (banner) banner.style.display = 'flex';
+        if (nameEl) nameEl.innerText = PART_NAMES_VI[sourceKey] || sourceKey;
+
+        const frame = document.getElementById('canvas-assembly-frame');
+        if (frame) frame.classList.add('picking-color-match');
+
+        this.updateSelectionBox();
+        this.showToast(`🎯 Đang căn màu cho ${PART_NAMES_VI[sourceKey] || sourceKey}. Nhấp vào sprite mẫu trên màn hình hoặc Layers!`, '#38bdf8');
+    }
+
+    endColorMatchPickMode() {
+        this.isColorMatchPicking = false;
+        this.colorMatchSourcePartKey = null;
+
+        const banner = document.getElementById('color-match-banner');
+        if (banner) banner.style.display = 'none';
+
+        const frame = document.getElementById('canvas-assembly-frame');
+        if (frame) frame.classList.remove('picking-color-match');
+
+        this.updateSelectionBox();
+    }
+
+    async applyColorHarmonization(sourceKey, targetKey) {
+        const dirData = this.getCurrentDirData();
+        if (!dirData) return;
+
+        const sourcePart = dirData[sourceKey];
+        const targetPart = dirData[targetKey];
+        if (!sourcePart || !targetPart) {
+            this.showToast('❌ Không tìm thấy thông tin bộ phận!', '#ef4444');
+            return;
+        }
+
+        const sourceNameVi = PART_NAMES_VI[sourceKey] || sourceKey;
+        const targetNameVi = PART_NAMES_VI[targetKey] || targetKey;
+
+        this.showToast(`⏳ Đang đồng bộ phong cách màu từ "${targetNameVi}" sang "${sourceNameVi}"...`, '#38bdf8');
+
+        try {
+            const ensureLoaded = (file) => new Promise((resolve, reject) => {
+                const img = this.getImage(file);
+                if (img && img.complete && img.naturalWidth > 0) return resolve(img);
+                const temp = new Image();
+                temp.crossOrigin = 'anonymous';
+                temp.onload = () => resolve(temp);
+                temp.onerror = () => reject(new Error(`Không thể nạp ảnh: ${file}`));
+                temp.src = `/parts/${file}?t=${Date.now()}`;
+            });
+
+            const [sourceImg, targetImg] = await Promise.all([
+                ensureLoaded(sourcePart.file),
+                ensureLoaded(targetPart.file)
+            ]);
+
+            const sCanvas = document.createElement('canvas');
+            sCanvas.width = sourceImg.naturalWidth;
+            sCanvas.height = sourceImg.naturalHeight;
+            const sCtx = sCanvas.getContext('2d');
+            sCtx.drawImage(sourceImg, 0, 0);
+            const sImgData = sCtx.getImageData(0, 0, sCanvas.width, sCanvas.height);
+
+            const tCanvas = document.createElement('canvas');
+            tCanvas.width = targetImg.naturalWidth;
+            tCanvas.height = targetImg.naturalHeight;
+            const tCtx = tCanvas.getContext('2d');
+            tCtx.drawImage(targetImg, 0, 0);
+            const tImgData = tCtx.getImageData(0, 0, tCanvas.width, tCanvas.height);
+
+            const count = this.harmonizeImageData(sImgData, tImgData);
+            if (count === 0) {
+                this.showToast('⚠️ Không tìm thấy pixel hợp lệ để đồng bộ màu!', '#f59e0b');
+                return;
+            }
+
+            sCtx.putImageData(sImgData, 0, 0);
+            const newPngDataUrl = sCanvas.toDataURL('image/png');
+
+            const res = await fetch('/api/save_part', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    part_name: sourcePart.file,
+                    image_data: newPngDataUrl
+                })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                this.invalidatePartCache(sourcePart.file);
+                const refreshedImg = new Image();
+                refreshedImg.src = `/parts/${sourcePart.file}?t=${Date.now()}`;
+                await new Promise((res) => { refreshedImg.onload = res; refreshedImg.onerror = res; });
+                this.imageCache.set(sourcePart.file, refreshedImg);
+
+                this.renderAll();
+                this.showToast(`✨ Đã đồng bộ màu cho "${sourceNameVi}" theo phong cách của "${targetNameVi}" (${count} px)!`, '#10b981');
+            } else {
+                this.showToast(`❌ Lỗi lưu ảnh: ${result.error}`, '#ef4444');
+            }
+        } catch (err) {
+            console.error('Harmonization error:', err);
+            this.showToast(`❌ Lỗi khi đồng bộ màu: ${err.message}`, '#ef4444');
+        }
     }
 
     openPixelEditorForPart(partFile) {
@@ -2081,6 +2430,73 @@ class RigWorkshopApp {
         this.showToast(`🎭 Đã nhuộm màu ${this.peColor} (${count} px)`);
     }
 
+    async promptPeColorMatch() {
+        if (!this.peCurrentPartName) return;
+        const dirData = this.getCurrentDirData();
+        if (!dirData) return;
+
+        const options = [];
+        for (const key of PART_KEYS) {
+            const part = dirData[key];
+            if (part && part.file && part.file !== this.peCurrentPartName) {
+                options.push({
+                    key,
+                    name: `${PART_NAMES_VI[key] || key} (${part.file})`,
+                    file: part.file
+                });
+            }
+        }
+
+        if (options.length === 0) {
+            this.showToast('⚠️ Không có mảnh mẫu nào khác để đồng bộ màu!', '#f59e0b');
+            return;
+        }
+
+        const promptMsg = 'Chọn số thứ tự của mảnh mẫu để lấy phong cách màu:\n\n' +
+            options.map((opt, idx) => `${idx + 1}. ${opt.name}`).join('\n');
+
+        const ans = window.prompt(promptMsg, '1');
+        if (!ans) return;
+        const idx = parseInt(ans.trim(), 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= options.length) {
+            this.showToast('⚠️ Lựa chọn không hợp lệ!', '#f59e0b');
+            return;
+        }
+
+        const chosenTarget = options[idx];
+        this.showToast(`⏳ Đang đồng bộ màu theo ${chosenTarget.name}...`, '#38bdf8');
+
+        try {
+            const targetImg = new Image();
+            targetImg.crossOrigin = 'anonymous';
+            await new Promise((res, rej) => {
+                targetImg.onload = res;
+                targetImg.onerror = () => rej(new Error(`Không thể nạp ảnh: ${chosenTarget.file}`));
+                targetImg.src = `/parts/${chosenTarget.file}?t=${Date.now()}`;
+            });
+
+            const tCanvas = document.createElement('canvas');
+            tCanvas.width = targetImg.naturalWidth;
+            tCanvas.height = targetImg.naturalHeight;
+            const tCtx = tCanvas.getContext('2d');
+            tCtx.drawImage(targetImg, 0, 0);
+            const tImgData = tCtx.getImageData(0, 0, tCanvas.width, tCanvas.height);
+
+            const w = this.peCanvas.width;
+            const h = this.peCanvas.height;
+            const sImgData = this.peCtx.getImageData(0, 0, w, h);
+
+            this.pushPeHistory();
+            const count = this.harmonizeImageData(sImgData, tImgData, this.peSelectedPixels, w);
+
+            this.peCtx.putImageData(sImgData, 0, 0);
+            this.showToast(`✨ Đã đồng bộ màu theo "${chosenTarget.name}" (${count} px)!`, '#10b981');
+        } catch (e) {
+            console.error('PE Harmonization error:', e);
+            this.showToast(`❌ Lỗi: ${e.message}`, '#ef4444');
+        }
+    }
+
     peSelectAll() {
         const w = this.peCanvas.width;
         const h = this.peCanvas.height;
@@ -2439,6 +2855,24 @@ class RigWorkshopApp {
             const part = dirData && this.selectedPartKey ? dirData[this.selectedPartKey] : null;
             if (part) this.openPixelEditorForPart(part.file);
         });
+
+        const ctxColorMatch = document.getElementById('ctx-color-match');
+        if (ctxColorMatch) {
+            ctxColorMatch.addEventListener('click', () => {
+                this.hideContextMenu();
+                if (this.selectedPartKey) {
+                    this.startColorMatchPickMode(this.selectedPartKey);
+                }
+            });
+        }
+
+        const btnCancelColorMatch = document.getElementById('btn-cancel-color-match');
+        if (btnCancelColorMatch) {
+            btnCancelColorMatch.addEventListener('click', () => {
+                this.endColorMatchPickMode();
+                this.showToast('Đã hủy chế độ căn màu', '#64748b');
+            });
+        }
 
         document.getElementById('ctx-move-up').addEventListener('click', () => {
             this.hideContextMenu();
@@ -2819,6 +3253,21 @@ class RigWorkshopApp {
             }
         }
 
+        if (this.isColorMatchPicking) {
+            if (hitKey) {
+                if (hitKey === this.colorMatchSourcePartKey) {
+                    this.showToast('⚠️ Vui lòng nhấp vào một mảnh khác để lấy mẫu màu!', '#f59e0b');
+                    return;
+                }
+                const sourceKey = this.colorMatchSourcePartKey;
+                this.endColorMatchPickMode();
+                this.applyColorHarmonization(sourceKey, hitKey);
+            } else {
+                this.showToast('ℹ️ Hãy nhấp vào một sprite mẫu trên canvas hoặc danh sách Layers (hoặc Esc để hủy)', '#64748b');
+            }
+            return;
+        }
+
         const isCtrl = e.ctrlKey || e.metaKey || e.shiftKey;
 
         if (hitKey) {
@@ -2884,6 +3333,9 @@ class RigWorkshopApp {
     }
 
     onCanvasRightClick(e) {
+        if (this.isColorMatchPicking) {
+            this.endColorMatchPickMode();
+        }
         const rect = this.canvas.getBoundingClientRect();
         const clientX = e.clientX - rect.left;
         const clientY = e.clientY - rect.top;
@@ -3086,6 +3538,15 @@ class RigWorkshopApp {
     // KEYBOARD ENGINE (CTRL+S, CTRL+Z, CTRL+Y, FLIPS & NUDGE)
     // ============================================================
     onKeyDown(e) {
+        if (e.key === 'Escape') {
+            if (this.isColorMatchPicking) {
+                this.endColorMatchPickMode();
+                this.showToast('Đã hủy chế độ căn màu', '#64748b');
+                return;
+            }
+            this.hideContextMenu();
+        }
+
         // Space key activation for pan tool
         if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
             e.preventDefault();
