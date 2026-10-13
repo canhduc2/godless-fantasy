@@ -54,6 +54,48 @@ namespace GodlessFantasy.Player
         public string requiredClass = "Toàn Hệ"; // Kị Sĩ, Pháp Sư, Võ Sĩ, Xạ Thủ, Toàn Hệ
         public string element = "Vô Hệ";         // Hỏa, Băng, Lôi, Quang / Ánh Sáng, Ám / Bóng Tối, Phong, Mộc, Vô Hệ, Toàn Hệ
 
+        // ─── THUỘC TÍNH ẨN / TÍNH NĂNG ĐẶC BIỆT (HIDDEN TRAITS & SPECIAL PROPERTIES) ───
+        // Tái sử dụng linh hoạt cho nhiều loại Trang Phục (Costume) và Trang Bị:
+        // Ví dụ: ItemTraits.GENDER_SWAP ("gender_swap"), "speed_boost", "stealth_aura", v.v.
+        public System.Collections.Generic.List<string> specialTraits = new System.Collections.Generic.List<string>();
+
+        public bool HasTrait(string traitId)
+        {
+            if (specialTraits == null || specialTraits.Count == 0 || string.IsNullOrEmpty(traitId)) return false;
+            for (int i = 0; i < specialTraits.Count; i++)
+            {
+                if (string.Equals(specialTraits[i], traitId, System.StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        public void AddTrait(string traitId)
+        {
+            if (specialTraits == null) specialTraits = new System.Collections.Generic.List<string>();
+            if (!HasTrait(traitId)) specialTraits.Add(traitId);
+        }
+
+        public InventoryItem WithTrait(string traitId)
+        {
+            AddTrait(traitId);
+            return this;
+        }
+
+        public InventoryItem WithTraits(params string[] traits)
+        {
+            if (traits != null)
+            {
+                for (int i = 0; i < traits.Length; i++) AddTrait(traits[i]);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Thuộc tính ẩn cho phép đổi giới tính Nam <-> Nữ [G]
+        /// </summary>
+        public bool CanSwitchGender => HasTrait(ItemTraits.GENDER_SWAP);
+
         public string RequirementTag
         {
             get
@@ -133,7 +175,20 @@ namespace GodlessFantasy.Player
             copy.isEquipped = isEquipped;
             copy.equippedHotbarSlot = equippedHotbarSlot;
             copy.slotIndex = slotIndex;
+            if (specialTraits != null)
+                copy.specialTraits = new System.Collections.Generic.List<string>(specialTraits);
             return copy;
         }
+    }
+
+    /// <summary>
+    /// Các định danh Thuộc Tính Ẩn & Tính Năng Đặc Biệt của Trang Bị / Ngoại Trang
+    /// </summary>
+    public static class ItemTraits
+    {
+        public const string GENDER_SWAP = "gender_swap"; // Cho phép chuyển đổi giới tính Nam <-> Nữ [G]
+        public const string SPEED_BOOST = "speed_boost"; // Tăng tốc độ di chuyển
+        public const string STEALTH     = "stealth";     // Ẩn thân
+        public const string FLIGHT      = "flight";      // Bay lượn
     }
 }

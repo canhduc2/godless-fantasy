@@ -280,9 +280,7 @@ namespace GodlessFantasy.Player
             // Phím [G]: Đổi giới tính Nam <-> Nữ
             if (Input.GetKeyDown(KeyCode.G))
             {
-                IsFemale = !IsFemale;
-                string genderText = IsFemale ? "Nữ Anime (Croptop)" : "Nam Anime (Áo Ba Lỗ)";
-                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🚻 Giới Tính: {genderText} [G]", new Color(0.3f, 0.9f, 1f));
+                TryToggleGender();
             }
 
             // Phím [K]: Chuyển đổi Ngoại Trang (Skins)
@@ -619,12 +617,39 @@ namespace GodlessFantasy.Player
         }
 
         /// <summary>
+        /// Thực hiện chuyển đổi giới tính Nam <-> Nữ:
+        /// Yêu cầu bắt buộc: Đang mặc Ngoại Trang (Costume) có thuộc tính ẩn 'gender_swap' (Chuyển Giới).
+        /// </summary>
+        public bool TryToggleGender()
+        {
+            if (useProceduralRig && rig2D != null)
+                return rig2D.TryToggleGender();
+
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            if (inventoryManager != null && !inventoryManager.CanSwitchGender())
+            {
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.4f, "⛔ Cần mặc Ngoại Trang có thuộc tính Chuyển Giới để đổi giới tính!", new Color(1f, 0.4f, 0.4f));
+                AudioManager.PlayHit();
+                return false;
+            }
+
+            IsFemale = !IsFemale;
+            string genderText = IsFemale ? "Nữ" : "Nam";
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🚻 {genderText} [G]", new Color(0.35f, 0.95f, 0.55f));
+            AudioManager.PlayPickup();
+            return true;
+        }
+
+        /// <summary>
         /// Lấy Avatar Texture tương ứng chính xác 100% với Nhân Vật đang hiển thị (HUD & Trang Bị)!
         /// </summary>
-        public Texture2D GetPortraitTexture()
+        public Texture GetPortraitTexture()
         {
             if (useProceduralRig && rig2D != null)
                 return rig2D.GetPortraitTexture();
+
+            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.AvatarTexture != null)
+                return LiveCharacterUIMirror.Instance.AvatarTexture;
 
             if (CurrentSkin == SkinType.SoulKnight)
                 return Resources.Load<Texture2D>("Characters/avatar_soul_knight");
@@ -636,10 +661,13 @@ namespace GodlessFantasy.Player
         /// <summary>
         /// Lấy Texture Toàn Thân (Full Body) theo đúng góc nhìn và giới tính hiện tại cho Tab Trang Bị!
         /// </summary>
-        public Texture2D GetFullBodyTexture()
+        public Texture GetFullBodyTexture()
         {
             if (useProceduralRig && rig2D != null)
                 return rig2D.GetFullBodyTexture();
+
+            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.FullBodyTexture != null)
+                return LiveCharacterUIMirror.Instance.FullBodyTexture;
 
             string genderStr = IsFemale ? "female" : "male";
             string dirName = GetDirectionSpriteName(CurrentDirection);

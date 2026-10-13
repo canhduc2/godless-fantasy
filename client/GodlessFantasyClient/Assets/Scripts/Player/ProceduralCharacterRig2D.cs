@@ -133,6 +133,9 @@ namespace GodlessFantasy.Player
         private Transform partRoot;
         private Transform partShadow;
 
+        public Transform PartRoot => partRoot;
+        public Transform PartShadow => partShadow;
+
         private Transform jointBody;
         private Transform jointHead;
         private Transform jointArmLeft;
@@ -210,6 +213,7 @@ namespace GodlessFantasy.Player
 
             LoadConfigs();
             BuildRigHierarchy();
+            LiveCharacterUIMirror.EnsureInstance();
         }
 
         /// <summary>
@@ -570,6 +574,7 @@ namespace GodlessFantasy.Player
             }
 
             SyncEquippedWeapon();
+            SyncEquippedCostume();
 
             if (isDying)        { AnimateDeath(); return; }
             if (hurtTimer > 0f) { AnimateHurt(); return; }
@@ -943,6 +948,7 @@ namespace GodlessFantasy.Player
 
         private void SyncEquippedWeapon()
         {
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
             if (inventoryManager == null) return;
             var wep = inventoryManager.GetEquippedGear(EquipSlot.Weapon);
             if (srWeapon != null)
@@ -952,6 +958,30 @@ namespace GodlessFantasy.Player
                 {
                     Sprite s = LoadSpr(wep.iconName) ?? LoadSpr("item_weapon");
                     if (s != null) srWeapon.sprite = s;
+                }
+            }
+        }
+
+        private void SyncEquippedCostume()
+        {
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            if (inventoryManager == null) return;
+            var cos = inventoryManager.GetEquippedGear(EquipSlot.Costume);
+            if (srCostume != null)
+            {
+                // Ngoại trang chỉ có icon hiển thị trong ô đồ (Equipment / Inventory slot),
+                // Ngoại hình trên cơ thể nhân vật hoàn toàn trong suốt (không vẽ đè icon hay màu sắc lên người).
+                // Chỉ hiển thị nếu món đồ chỉ định rõ ràng sprite skin toàn thân theo hướng (Characters/skin_...)
+                if (cos != null && !string.IsNullOrEmpty(cos.id) && cos.id.StartsWith("skin_"))
+                {
+                    srCostume.enabled = true;
+                    string dirStr = DirName(FacingDir);
+                    srCostume.sprite = LoadSpr($"Characters/{cos.id}_{dirStr}_0");
+                }
+                else
+                {
+                    srCostume.enabled = false;
+                    srCostume.sprite = null;
                 }
             }
         }
@@ -977,28 +1007,72 @@ namespace GodlessFantasy.Player
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  GHOST AFTERIMAGE
+        //  GHOST AFTERIMAGE — Tin tưởng 100% toạ độ SpriteRenderer cấu hình
         // ════════════════════════════════════════════════════════════════
         private void SpawnGhost()
         {
             if (srBody == null || srBody.sprite == null) return;
 
-            foreach (var (sr, t) in new[] {
-                (srBody, jointBody),
-                (srHead, jointHead)
-            })
+            var ghostRoot = new GameObject("RigGhost");
+
+            // Danh sách toàn bộ các bộ phận của nhân vật theo đúng cấu hình rig_config & animation_config
+            var renderers = new[] {
+                srHairBack,
+                srLegL,
+                srLegR,
+                srBody,
+                srArmL,
+                srArmR,
+                srHead,
+                srHairFront,
+                srCostume
+            };
+
+            for (int i = 0; i < renderers.Length; i++)
             {
-                if (sr == null || sr.sprite == null || t == null) continue;
-                var ghost = new GameObject("RigGhost");
-                ghost.transform.SetPositionAndRotation(t.position, t.rotation);
-                ghost.transform.localScale = t.lossyScale;
-                var gsr = ghost.AddComponent<SpriteRenderer>();
+                var sr = renderers[i];
+                if (sr == null || !sr.enabled || sr.sprite == null) continue;
+
+                var partGhost = new GameObject(sr.gameObject.name + "_Ghost");
+                partGhost.transform.SetParent(ghostRoot.transform, false);
+                // Sử dụng chính xác toạ độ thế giới của SpriteRenderer (đã tính toán bù trừ pivot offset theo config)
+                partGhost.transform.SetPositionAndRotation(sr.transform.position, sr.transform.rotation);
+                partGhost.transform.localScale = sr.transform.lossyScale;
+
+                var gsr = partGhost.AddComponent<SpriteRenderer>();
                 gsr.sprite       = sr.sprite;
-                gsr.sortingOrder = 9;
                 gsr.flipX        = sr.flipX;
-                gsr.color        = new Color(0.25f, 0.85f, 1.0f, 0.35f);
-                Destroy(ghost, 0.15f);
+                gsr.flipY        = sr.flipY;
+                gsr.sortingOrder = Mathf.Max(0, sr.sortingOrder - 2); // Nằm ngay sau lưng nhân vật thật
+                gsr.color        = new Color(0.20f, 0.85f, 1.0f, 0.35f);
             }
+
+            StartCoroutine(FadeAndDestroyGhost(ghostRoot, 0.20f));
+        }
+
+        private IEnumerator FadeAndDestroyGhost(GameObject ghostObj, float duration)
+        {
+            if (ghostObj == null) yield break;
+            var srs = ghostObj.GetComponentsInChildren<SpriteRenderer>();
+            float elapsed = 0f;
+
+            while (elapsed < duration && ghostObj != null)
+            {
+                elapsed += Time.deltaTime;
+                float alpha = Mathf.Lerp(0.35f, 0f, elapsed / duration);
+                for (int i = 0; i < srs.Length; i++)
+                {
+                    if (srs[i] != null)
+                    {
+                        var c = srs[i].color;
+                        c.a = alpha;
+                        srs[i].color = c;
+                    }
+                }
+                yield return null;
+            }
+
+            if (ghostObj != null) Destroy(ghostObj);
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -1015,10 +1089,13 @@ namespace GodlessFantasy.Player
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  AVATAR & FULL BODY TEXTURES
+        //  AVATAR & FULL BODY TEXTURES — Đồng bộ động theo thời gian thực (60fps)
         // ════════════════════════════════════════════════════════════════
-        public Texture2D GetPortraitTexture()
+        public Texture GetPortraitTexture()
         {
+            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.AvatarTexture != null)
+                return LiveCharacterUIMirror.Instance.AvatarTexture;
+
             if (CurrentSkin == SkinType.SoulKnight)
                 return Resources.Load<Texture2D>("Characters/avatar_soul_knight");
             if (CurrentSkin == SkinType.VoidReaper)
@@ -1026,13 +1103,44 @@ namespace GodlessFantasy.Player
             return Resources.Load<Texture2D>(IsFemale ? "Characters/avatar_female" : "Characters/avatar_male");
         }
 
-        public Texture2D GetFullBodyTexture()
+        public Texture GetFullBodyTexture()
         {
+            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.FullBodyTexture != null)
+                return LiveCharacterUIMirror.Instance.FullBodyTexture;
+
             string genderStr = IsFemale ? "female" : "male";
             string dirName   = DirName(FacingDir);
             return Resources.Load<Texture2D>($"Characters/fullbody_{genderStr}")
                 ?? Resources.Load<Texture2D>($"Characters/Rig/{genderStr}/{dirName}/body")
                 ?? GetPortraitTexture();
+        }
+
+        /// <summary>
+        /// Thực hiện chuyển đổi giới tính Nam <-> Nữ:
+        /// Yêu cầu bắt buộc: Người chơi đang trang bị Ngoại Trang (Costume) có thuộc tính ẩn 'gender_swap' (Chuyển Giới).
+        /// Nếu không thỏa mãn -> Từ chối và thông báo lỗi rõ ràng.
+        /// </summary>
+        public bool TryToggleGender()
+        {
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            bool canToggle = inventoryManager != null && inventoryManager.CanSwitchGender();
+
+            if (!canToggle)
+            {
+                string msg = "⛔ Cần mặc Ngoại Trang có thuộc tính Chuyển Giới để đổi giới tính!";
+                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.4f, msg, new Color(1f, 0.4f, 0.4f));
+                AudioManager.PlayHit();
+                return false;
+            }
+
+            IsFemale = !IsFemale;
+            sprCache.Clear();
+            LoadDirectionSprites();
+            string label = IsFemale ? "Nữ" : "Nam";
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f,
+                $"🚻 {label} [G]", new Color(0.35f, 0.95f, 0.55f));
+            AudioManager.PlayPickup();
+            return true;
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -1044,12 +1152,7 @@ namespace GodlessFantasy.Player
 
             if (Input.GetKeyDown(KeyCode.G))
             {
-                IsFemale = !IsFemale;
-                sprCache.Clear();
-                LoadDirectionSprites();
-                string label = IsFemale ? "Nữ Anime (Croptop)" : "Nam Anime (Áo Ba Lỗ)";
-                FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f,
-                    $"🚻 {label} [G]", new Color(0.3f, 0.9f, 1f));
+                TryToggleGender();
             }
 
             if (Input.GetKeyDown(KeyCode.F5))

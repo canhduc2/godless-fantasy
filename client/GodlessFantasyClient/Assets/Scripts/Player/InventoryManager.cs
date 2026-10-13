@@ -365,9 +365,16 @@ namespace GodlessFantasy.Player
             pet.isEquipped = true; // Đang xuất chiến
             items.Add(pet);
 
-            // 5. Ngoại Trang (Skin Trang Phục)
-            var skin = new InventoryItem("gear_costume_champion", "Ngoại Trang Thiết Giáp Chiến Thần", ItemType.Costume, EquipSlot.Costume, "Phẩm S", new Color(1f, 0.85f, 0.25f), "item_costume", "+15 Giáp • Che Lấp Toàn Thân (Skin)", "Ngoại trang hoàng gia tuyệt mỹ, biến đổi hoàn toàn diện mạo thành Chiến Binh Hoàng Kim!");
+            // 5. Ngoại Trang (Skin Trang Phục Có Thuộc Tính Ẩn Đặc Biệt)
+            // - Món 1: Thiết Giáp Chiến Thần có Thuộc Tính Ẩn: [Chuyển Giới (G)] -> Cho phép đổi Nam <-> Nữ
+            var skin = new InventoryItem("gear_costume_champion", "Ngoại Trang Thiết Giáp Chiến Thần", ItemType.Costume, EquipSlot.Costume, "Phẩm S", new Color(1f, 0.85f, 0.25f), "item_costume", "+15 Giáp • [Thuộc Tính Ẩn: Chuyển Giới (G)]", "Ngoại trang hoàng gia tuyệt mỹ sở hữu Thuộc Tính Ẩn: Cho phép chủ nhân chuyển đổi tự do giữa hình thái Nam ♂ và Nữ ♀ khi bấm phím [G]!")
+                .WithTrait(ItemTraits.GENDER_SWAP);
             items.Add(skin);
+
+            // - Món 2: Hắc Ám Dạ Hành có Thuộc Tính Ẩn: [Tốc Biến] (Không có chuyển giới, dùng để kiểm thử)
+            var skinDark = new InventoryItem("gear_costume_shadow", "Ngoại Trang Hắc Ám Dạ Hành", ItemType.Costume, EquipSlot.Costume, "Phẩm A", new Color(0.7f, 0.45f, 1f), "item_costume", "+12 Giáp • [Thuộc Tính Ẩn: Tốc Biến]", "Ngoại trang sát thủ bóng đêm, tăng tốc độ di chuyển trong màn đêm nhưng không có chức năng Chuyển Giới.")
+                .WithTrait(ItemTraits.SPEED_BOOST);
+            items.Add(skinDark);
 
             // 6. KHO TRANG BỊ MẪU KIỂM THỬ KHÓA HỆ & THUỘC TÍNH (TEST GEAR FOR ALL CLASSES & ELEMENTS):
             // - Món 1: Chiến Giáp Hỏa Long (Kị Sĩ · Hỏa) -> Người chơi Kị Sĩ Hỏa MẶC ĐƯỢC!
@@ -450,6 +457,25 @@ namespace GodlessFantasy.Player
         {
             equippedGear.TryGetValue(slot, out var item);
             return item;
+        }
+
+        /// <summary>
+        /// Kiểm tra xem người chơi có đang mặc Trang Phục (hoặc Trang Bị) có thuộc tính ẩn 'gender_swap' (Chuyển Giới) hay không.
+        /// </summary>
+        public bool CanSwitchGender()
+        {
+            // Kiểm tra ô Ngoại Trang (Costume)
+            var costume = GetEquippedGear(EquipSlot.Costume);
+            if (costume != null && costume.HasTrait(ItemTraits.GENDER_SWAP))
+                return true;
+
+            // Kiểm tra mở rộng cho bất kỳ trang bị nào đang mặc có trait gender_swap
+            foreach (var kvp in equippedGear)
+            {
+                if (kvp.Value != null && kvp.Value.HasTrait(ItemTraits.GENDER_SWAP))
+                    return true;
+            }
+            return false;
         }
 
         // ================= XỬ LÝ SÁCH KỸ NĂNG & ĐIỀU KIỆN MỞ KHÓA Ô =================

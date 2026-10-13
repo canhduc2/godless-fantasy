@@ -1113,7 +1113,9 @@ namespace GodlessFantasy.UI
             GUI.color = new Color(0.08f, 0.12f, 0.20f);
             GUI.DrawTexture(av, Texture2D.whiteTexture);
             GUI.color = Color.white;
-            Texture2D activePortrait = GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.GetPortraitTexture() ?? playerPortraitTex;
+            Texture activePortrait = GodlessFantasy.Player.ProceduralCharacterRig2D.Instance?.GetPortraitTexture()
+                                    ?? GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.GetPortraitTexture() 
+                                    ?? playerPortraitTex;
             if (activePortrait != null)
             {
                 GUI.DrawTexture(new Rect(av.x + 2, av.y + 2, av.width - 4, av.height - 4), activePortrait);
@@ -1915,7 +1917,8 @@ namespace GodlessFantasy.UI
             GUI.color = Color.white;
             DrawDoubleGoldFrame(centerPortrait, 1);
 
-            Texture2D fullBodyTex = GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.GetFullBodyTexture() 
+            Texture fullBodyTex = GodlessFantasy.Player.ProceduralCharacterRig2D.Instance?.GetFullBodyTexture()
+                                 ?? GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.GetFullBodyTexture() 
                                  ?? GodlessFantasy.Player.CharacterVisualController8Dir.Instance?.GetPortraitTexture() 
                                  ?? playerPortraitTex;
             if (fullBodyTex != null)
@@ -1926,20 +1929,24 @@ namespace GodlessFantasy.UI
             }
 
             bool isFemale = GodlessFantasy.Player.CharacterVisualController8Dir.Instance != null && GodlessFantasy.Player.CharacterVisualController8Dir.Instance.IsFemale;
-            string genderLabel = isFemale ? "Nữ ♀ (Croptop)" : "Nam ♂ (Áo Ba Lỗ)";
+            string genderLabel = isFemale ? "Nữ ♀" : "Nam ♂";
             standardTextStyle.alignment = TextAnchor.LowerCenter;
             standardTextStyle.fontSize = 11;
             standardTextStyle.normal.textColor = new Color(1f, 0.9f, 0.5f);
             GUI.Label(new Rect(centerPortrait.x, centerPortrait.y + centerPortrait.height - 40f, centerPortrait.width, 18f), $"{playerStats?.CharacterName ?? "Dũng Sĩ SquiRRels"} [{genderLabel}]", standardTextStyle);
             standardTextStyle.normal.textColor = Color.white;
 
-            // Nút bấm chuyển đổi giới tính nhanh [🚻 G]
+            // Nút bấm chuyển đổi giới tính nhanh [🚻 G] (Kiểm tra điều kiện Ngoại Trang)
             Rect genderBtnRect = new Rect(centerPortrait.x + (centerPortrait.width - 90f) / 2f, centerPortrait.y + centerPortrait.height - 20f, 90f, 18f);
             if (GUI.Button(genderBtnRect, "🚻 ĐỔI (G)"))
             {
-                if (GodlessFantasy.Player.CharacterVisualController8Dir.Instance != null)
+                if (GodlessFantasy.Player.ProceduralCharacterRig2D.Instance != null)
                 {
-                    GodlessFantasy.Player.CharacterVisualController8Dir.Instance.IsFemale = !GodlessFantasy.Player.CharacterVisualController8Dir.Instance.IsFemale;
+                    GodlessFantasy.Player.ProceduralCharacterRig2D.Instance.TryToggleGender();
+                }
+                else if (GodlessFantasy.Player.CharacterVisualController8Dir.Instance != null)
+                {
+                    GodlessFantasy.Player.CharacterVisualController8Dir.Instance.TryToggleGender();
                 }
             }
 

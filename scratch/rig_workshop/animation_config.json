@@ -17,7 +17,7 @@
     "headTiltAngle": 0.8,
     "armSwingAngle": 18,
     "bodyLeanAngle": 1.2,
-    "legSwingAngle": 22
+    "legSwingAngle": 9
   },
   "run": {
     "speed": 13.5,
@@ -25,9 +25,9 @@
     "squashAmount": 0.035,
     "stretchAmount": 0.035,
     "headTiltAngle": 1.8,
-    "armSwingAngle": 28,
+    "armSwingAngle": 17,
     "bodyLeanAngle": 2.5,
-    "legSwingAngle": 36
+    "legSwingAngle": 13
   },
   "dash": {
     "speed": 0,

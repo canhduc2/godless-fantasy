@@ -27,7 +27,7 @@
       },
       "idle_arm_right": {
         "file": "female_armr_front",
-        "x": 34,
+        "x": 35,
         "y": 25,
         "z": 14,
         "visible": true,
@@ -39,7 +39,7 @@
         "y": 37,
         "z": 10,
         "visible": true,
-        "flip_x": false
+        "flip_x": true
       },
       "idle_leg_right": {
         "file": "female_legr_front",
@@ -53,7 +53,7 @@
     "south_east": {
       "idle_head": {
         "file": "female_head_34",
-        "x": 24,
+        "x": 23,
         "y": 9,
         "z": 12,
         "visible": true,
@@ -71,7 +71,7 @@
         "file": "female_arml_front",
         "x": 24,
         "y": 25,
-        "z": 14,
+        "z": 16,
         "visible": true,
         "flip_x": false
       },
@@ -79,7 +79,7 @@
         "file": "female_arm_far",
         "x": 35,
         "y": 25,
-        "z": 14,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
@@ -87,7 +87,7 @@
         "file": "female_legl_front",
         "x": 27,
         "y": 37,
-        "z": 14,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
@@ -105,7 +105,7 @@
         "file": "female_head_side",
         "x": 24,
         "y": 9,
-        "z": 11,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -113,7 +113,7 @@
         "file": "female_torso_side",
         "x": 28,
         "y": 25,
-        "z": 11,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -121,7 +121,7 @@
         "file": "female_arm_near",
         "x": 26,
         "y": 27,
-        "z": 13,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
@@ -129,7 +129,7 @@
         "file": "female_arm_far",
         "x": 33,
         "y": 26,
-        "z": 9,
+        "z": 11,
         "visible": true,
         "flip_x": false
       },
@@ -137,7 +137,7 @@
         "file": "female_leg_near",
         "x": 29,
         "y": 38,
-        "z": 12,
+        "z": 14,
         "visible": true,
         "flip_x": false
       },
@@ -145,7 +145,7 @@
         "file": "female_leg_far",
         "x": 32,
         "y": 38,
-        "z": 8,
+        "z": 10,
         "visible": true,
         "flip_x": false
       }
@@ -155,47 +155,47 @@
         "file": "female_head_back",
         "x": 25,
         "y": 8,
-        "z": 14,
+        "z": 16,
         "visible": true,
-        "flip_x": false
+        "flip_x": true
       },
       "idle_body": {
         "file": "female_torso_back",
-        "x": 26,
+        "x": 25,
         "y": 25,
-        "z": 12,
+        "z": 10,
         "visible": true,
         "flip_x": false
       },
       "idle_arm_left": {
         "file": "female_arml_back",
         "x": 24,
-        "y": 26,
-        "z": 9,
+        "y": 25,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
       "idle_arm_right": {
         "file": "female_arm_far",
-        "x": 35,
+        "x": 34,
         "y": 26,
-        "z": 9,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
       "idle_leg_left": {
         "file": "female_legl_back",
-        "x": 26,
+        "x": 31,
         "y": 38,
-        "z": 10,
+        "z": 14,
         "visible": true,
-        "flip_x": false
+        "flip_x": true
       },
       "idle_leg_right": {
         "file": "female_leg_far",
-        "x": 32,
+        "x": 26,
         "y": 38,
-        "z": 8,
+        "z": 13,
         "visible": true,
         "flip_x": false
       }
@@ -213,7 +213,7 @@
         "file": "female_torso_back",
         "x": 26,
         "y": 25,
-        "z": 12,
+        "z": 11,
         "visible": true,
         "flip_x": false
       },
@@ -221,7 +221,7 @@
         "file": "female_arml_back",
         "x": 24,
         "y": 26,
-        "z": 9,
+        "z": 12,
         "visible": true,
         "flip_x": false
       },
@@ -229,7 +229,7 @@
         "file": "female_armr_back",
         "x": 35,
         "y": 26,
-        "z": 9,
+        "z": 12,
         "visible": true,
         "flip_x": false
       },
@@ -237,7 +237,7 @@
         "file": "female_legl_back",
         "x": 26,
         "y": 38,
-        "z": 10,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -245,7 +245,7 @@
         "file": "female_legr_back",
         "x": 32,
         "y": 38,
-        "z": 10,
+        "z": 13,
         "visible": true,
         "flip_x": false
       }
@@ -253,25 +253,25 @@
     "north_west": {
       "idle_head": {
         "file": "female_head_back",
-        "x": 25,
+        "x": 24,
         "y": 8,
-        "z": 14,
+        "z": 16,
         "visible": true,
-        "flip_x": true
+        "flip_x": false
       },
       "idle_body": {
         "file": "female_torso_back",
         "x": 26,
         "y": 25,
-        "z": 12,
+        "z": 10,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_right": {
         "file": "female_arml_back",
-        "x": 35,
-        "y": 26,
-        "z": 9,
+        "x": 34,
+        "y": 25,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
@@ -279,23 +279,23 @@
         "file": "female_arm_far",
         "x": 24,
         "y": 26,
-        "z": 9,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
       "idle_leg_right": {
         "file": "female_legl_back",
-        "x": 32,
+        "x": 26,
         "y": 38,
-        "z": 10,
+        "z": 14,
         "visible": true,
-        "flip_x": true
+        "flip_x": false
       },
       "idle_leg_left": {
         "file": "female_leg_far",
-        "x": 26,
+        "x": 31,
         "y": 38,
-        "z": 8,
+        "z": 13,
         "visible": true,
         "flip_x": true
       }
@@ -305,7 +305,7 @@
         "file": "female_head_side",
         "x": 24,
         "y": 9,
-        "z": 11,
+        "z": 13,
         "visible": true,
         "flip_x": true
       },
@@ -313,7 +313,7 @@
         "file": "female_torso_side",
         "x": 27,
         "y": 25,
-        "z": 11,
+        "z": 13,
         "visible": true,
         "flip_x": true
       },
@@ -321,7 +321,7 @@
         "file": "female_arm_near",
         "x": 32,
         "y": 27,
-        "z": 13,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
@@ -329,7 +329,7 @@
         "file": "female_arm_far",
         "x": 25,
         "y": 26,
-        "z": 9,
+        "z": 11,
         "visible": true,
         "flip_x": true
       },
@@ -337,7 +337,7 @@
         "file": "female_leg_near",
         "x": 29,
         "y": 38,
-        "z": 12,
+        "z": 14,
         "visible": true,
         "flip_x": true
       },
@@ -345,7 +345,7 @@
         "file": "female_leg_far",
         "x": 25,
         "y": 38,
-        "z": 8,
+        "z": 10,
         "visible": true,
         "flip_x": true
       }
@@ -353,7 +353,7 @@
     "south_west": {
       "idle_head": {
         "file": "female_head_34",
-        "x": 23,
+        "x": 24,
         "y": 9,
         "z": 12,
         "visible": true,
@@ -371,7 +371,7 @@
         "file": "female_arml_front",
         "x": 34,
         "y": 25,
-        "z": 14,
+        "z": 16,
         "visible": true,
         "flip_x": true
       },
@@ -379,7 +379,7 @@
         "file": "female_arm_far",
         "x": 23,
         "y": 25,
-        "z": 14,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
@@ -387,7 +387,7 @@
         "file": "female_legl_front",
         "x": 31,
         "y": 37,
-        "z": 14,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
@@ -406,7 +406,7 @@
       "idle_head": {
         "file": "male_head_front",
         "x": 21,
-        "y": 8,
+        "y": 7,
         "z": 14,
         "visible": true,
         "flip_x": false
@@ -439,7 +439,7 @@
         "file": "male_legl_front",
         "x": 23,
         "y": 39,
-        "z": 11,
+        "z": 12,
         "visible": true,
         "flip_x": false
       },
@@ -447,7 +447,7 @@
         "file": "male_legr_front",
         "x": 32,
         "y": 39,
-        "z": 11,
+        "z": 12,
         "visible": true,
         "flip_x": false
       }
@@ -455,49 +455,49 @@
     "south_east": {
       "idle_head": {
         "file": "male_head_front",
-        "x": 18,
-        "y": 9,
-        "z": 14,
+        "x": 21,
+        "y": 8,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
       "idle_body": {
         "file": "male_torso_front",
-        "x": 20,
+        "x": 24,
         "y": 25,
-        "z": 10,
+        "z": 11,
         "visible": true,
         "flip_x": false
       },
       "idle_arm_left": {
         "file": "male_arml_front",
-        "x": 16,
+        "x": 20,
         "y": 28,
-        "z": 12,
+        "z": 14,
         "visible": true,
         "flip_x": false
       },
       "idle_arm_right": {
-        "file": "male_arm_far",
-        "x": 31,
-        "y": 27,
-        "z": 9,
+        "file": "male_arml_front",
+        "x": 36,
+        "y": 28,
+        "z": 14,
         "visible": true,
-        "flip_x": false
+        "flip_x": true
       },
       "idle_leg_left": {
-        "file": "male_legl_front",
-        "x": 19,
+        "file": "male_leg_far",
+        "x": 21,
         "y": 39,
-        "z": 12,
+        "z": 13,
         "visible": true,
-        "flip_x": false
+        "flip_x": true
       },
       "idle_leg_right": {
         "file": "male_leg_far",
-        "x": 27,
+        "x": 33,
         "y": 39,
-        "z": 11,
+        "z": 12,
         "visible": true,
         "flip_x": false
       }
@@ -507,7 +507,7 @@
         "file": "male_head_side",
         "x": 21,
         "y": 7,
-        "z": 14,
+        "z": 16,
         "visible": true,
         "flip_x": false
       },
@@ -515,7 +515,7 @@
         "file": "male_torso_side",
         "x": 25,
         "y": 25,
-        "z": 11,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -523,7 +523,7 @@
         "file": "male_arm_near",
         "x": 24,
         "y": 29,
-        "z": 13,
+        "z": 15,
         "visible": true,
         "flip_x": false
       },
@@ -531,7 +531,7 @@
         "file": "male_arm_far",
         "x": 28,
         "y": 26,
-        "z": 9,
+        "z": 11,
         "visible": true,
         "flip_x": false
       },
@@ -539,7 +539,7 @@
         "file": "male_leg_near",
         "x": 26,
         "y": 40,
-        "z": 12,
+        "z": 14,
         "visible": true,
         "flip_x": false
       },
@@ -547,7 +547,7 @@
         "file": "male_leg_far",
         "x": 25,
         "y": 40,
-        "z": 8,
+        "z": 10,
         "visible": true,
         "flip_x": false
       }
@@ -555,49 +555,49 @@
     "north_east": {
       "idle_head": {
         "file": "male_head_back",
-        "x": 18,
+        "x": 22,
         "y": 8,
-        "z": 14,
+        "z": 16,
         "visible": true,
         "flip_x": false
       },
       "idle_body": {
         "file": "male_torso_back",
-        "x": 20,
+        "x": 24,
         "y": 25,
-        "z": 12,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
       "idle_arm_left": {
         "file": "male_arml_back",
-        "x": 17,
+        "x": 21,
         "y": 27,
-        "z": 9,
+        "z": 16,
         "visible": true,
         "flip_x": false
       },
       "idle_arm_right": {
-        "file": "male_arm_far",
-        "x": 31,
+        "file": "male_arml_back",
+        "x": 35,
         "y": 27,
-        "z": 9,
+        "z": 16,
         "visible": true,
-        "flip_x": false
+        "flip_x": true
       },
       "idle_leg_left": {
-        "file": "male_legl_back",
-        "x": 20,
-        "y": 40,
-        "z": 12,
+        "file": "male_leg_far",
+        "x": 25,
+        "y": 39,
+        "z": 14,
         "visible": true,
         "flip_x": false
       },
       "idle_leg_right": {
         "file": "male_leg_far",
-        "x": 27,
-        "y": 40,
-        "z": 12,
+        "x": 32,
+        "y": 39,
+        "z": 15,
         "visible": true,
         "flip_x": false
       }
@@ -623,7 +623,7 @@
         "file": "male_arml_back",
         "x": 21,
         "y": 27,
-        "z": 9,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -631,7 +631,7 @@
         "file": "male_armr_back",
         "x": 35,
         "y": 27,
-        "z": 9,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -639,7 +639,7 @@
         "file": "male_legl_back",
         "x": 23,
         "y": 40,
-        "z": 12,
+        "z": 13,
         "visible": true,
         "flip_x": false
       },
@@ -647,7 +647,7 @@
         "file": "male_legr_back",
         "x": 32,
         "y": 40,
-        "z": 12,
+        "z": 13,
         "visible": true,
         "flip_x": false
       }
@@ -655,49 +655,49 @@
     "north_west": {
       "idle_head": {
         "file": "male_head_back",
-        "x": 26,
+        "x": 22,
         "y": 8,
-        "z": 14,
+        "z": 16,
         "visible": true,
         "flip_x": true
       },
       "idle_body": {
         "file": "male_torso_back",
-        "x": 28,
+        "x": 24,
         "y": 25,
-        "z": 12,
+        "z": 13,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_right": {
         "file": "male_arml_back",
-        "x": 39,
+        "x": 35,
         "y": 27,
-        "z": 9,
+        "z": 16,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_left": {
-        "file": "male_arm_far",
-        "x": 17,
+        "file": "male_arml_back",
+        "x": 21,
         "y": 27,
-        "z": 9,
+        "z": 16,
         "visible": true,
-        "flip_x": true
+        "flip_x": false
       },
       "idle_leg_right": {
-        "file": "male_legl_back",
-        "x": 35,
-        "y": 40,
-        "z": 12,
+        "file": "male_leg_far",
+        "x": 28,
+        "y": 39,
+        "z": 14,
         "visible": true,
         "flip_x": true
       },
       "idle_leg_left": {
         "file": "male_leg_far",
-        "x": 26,
-        "y": 40,
-        "z": 12,
+        "x": 21,
+        "y": 39,
+        "z": 15,
         "visible": true,
         "flip_x": true
       }
@@ -705,49 +705,49 @@
     "west": {
       "idle_head": {
         "file": "male_head_side",
-        "x": 23,
+        "x": 24,
         "y": 7,
-        "z": 14,
+        "z": 16,
         "visible": true,
         "flip_x": true
       },
       "idle_body": {
         "file": "male_torso_side",
-        "x": 27,
+        "x": 28,
         "y": 25,
-        "z": 11,
+        "z": 13,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_right": {
         "file": "male_arm_near",
-        "x": 25,
+        "x": 26,
         "y": 29,
-        "z": 13,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_left": {
         "file": "male_arm_far",
-        "x": 20,
+        "x": 21,
         "y": 26,
-        "z": 9,
+        "z": 11,
         "visible": true,
         "flip_x": true
       },
       "idle_leg_right": {
         "file": "male_leg_near",
-        "x": 25,
+        "x": 26,
         "y": 40,
-        "z": 12,
+        "z": 14,
         "visible": true,
         "flip_x": true
       },
       "idle_leg_left": {
         "file": "male_leg_far",
-        "x": 28,
+        "x": 29,
         "y": 40,
-        "z": 8,
+        "z": 10,
         "visible": true,
         "flip_x": true
       }
@@ -755,49 +755,49 @@
     "south_west": {
       "idle_head": {
         "file": "male_head_front",
-        "x": 25,
-        "y": 9,
-        "z": 14,
+        "x": 22,
+        "y": 8,
+        "z": 15,
         "visible": true,
         "flip_x": true
       },
       "idle_body": {
         "file": "male_torso_front",
-        "x": 28,
+        "x": 24,
         "y": 25,
-        "z": 10,
+        "z": 11,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_right": {
         "file": "male_arml_front",
-        "x": 40,
+        "x": 36,
         "y": 28,
-        "z": 12,
+        "z": 14,
         "visible": true,
         "flip_x": true
       },
       "idle_arm_left": {
-        "file": "male_arm_far",
-        "x": 17,
-        "y": 27,
-        "z": 9,
+        "file": "male_arml_front",
+        "x": 20,
+        "y": 28,
+        "z": 14,
         "visible": true,
-        "flip_x": true
+        "flip_x": false
       },
       "idle_leg_right": {
-        "file": "male_legl_front",
-        "x": 36,
+        "file": "male_leg_far",
+        "x": 32,
         "y": 39,
-        "z": 12,
+        "z": 13,
         "visible": true,
-        "flip_x": true
+        "flip_x": false
       },
       "idle_leg_left": {
         "file": "male_leg_far",
-        "x": 26,
+        "x": 20,
         "y": 39,
-        "z": 11,
+        "z": 12,
         "visible": true,
         "flip_x": true
       }
