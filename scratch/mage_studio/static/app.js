@@ -37,7 +37,7 @@
         strokeOriginX: null,
         strokeOriginY: null,
         lockedAxis: null,
-        zoom: 3.5,
+        zoom: 4,
         autoSave: true,
         isDrawing: false,
         lastX: null,
@@ -115,6 +115,8 @@
         applyZoom();
     }
 
+    const ZOOM_PRESETS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16];
+
     // ================= CANVAS ZOOM & PAN =================
     function applyZoom() {
         const displayW = CANVAS_WIDTH * state.zoom;
@@ -123,31 +125,44 @@
         canvasContainer.style.width = `${displayW}px`;
         canvasContainer.style.height = `${displayH}px`;
 
-        [paintCanvas, onionCanvas, overlayCanvas].forEach(c => {
-            c.style.width = `${displayW}px`;
-            c.style.height = `${displayH}px`;
-        });
+        paintCanvas.style.width = `${displayW}px`;
+        paintCanvas.style.height = `${displayH}px`;
+
+        onionCanvas.style.width = `${displayW}px`;
+        onionCanvas.style.height = `${displayH}px`;
+
+        // overlayCanvas có độ phân giải bằng displayW x displayH để vẽ lưới pixel, con trỏ và viền sắc nét từng pixel màn hình!
+        overlayCanvas.width = displayW;
+        overlayCanvas.height = displayH;
+        overlayCanvas.style.width = `${displayW}px`;
+        overlayCanvas.style.height = `${displayH}px`;
 
         document.getElementById('zoomLevelLabel').textContent = `${Math.round(state.zoom * 100)}%`;
-        renderOverlay();
+        renderOverlay(state.lastHoverX, state.lastHoverY);
     }
 
     function zoomIn() {
-        if (state.zoom < 14) {
-            state.zoom = Math.min(14, state.zoom + 0.5);
-            applyZoom();
+        const idx = ZOOM_PRESETS.findIndex(z => z >= state.zoom);
+        if (idx !== -1 && idx < ZOOM_PRESETS.length - 1) {
+            state.zoom = ZOOM_PRESETS[idx + 1];
+        } else if (idx === -1) {
+            state.zoom = ZOOM_PRESETS[ZOOM_PRESETS.length - 1];
         }
+        applyZoom();
     }
 
     function zoomOut() {
-        if (state.zoom > 1) {
-            state.zoom = Math.max(1, state.zoom - 0.5);
-            applyZoom();
+        const idx = ZOOM_PRESETS.findIndex(z => z >= state.zoom);
+        if (idx > 0) {
+            state.zoom = ZOOM_PRESETS[idx - 1];
+        } else if (idx === -1) {
+            state.zoom = ZOOM_PRESETS[0];
         }
+        applyZoom();
     }
 
     function zoomReset() {
-        state.zoom = 3.5;
+        state.zoom = 4;
         applyZoom();
     }
 
@@ -224,135 +239,118 @@
         }
     }
 
-    function drawPixelMarchingAnts(ctx, x, y, w, h) {
-        if (w <= 0 || h <= 0) return;
-        const timeOffset = Math.floor(Date.now() / 120);
-
-        // Chu vi đường viền kín khít từng pixel (clockwise perimeter, 100% discrete integer fillRect)
-        // 1. Cạnh trên: từ trái sang phải
-        for (let dx = 0; dx < w; dx++) {
-            const d = dx;
-            const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
-            ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
-            ctx.fillRect(x + dx, y, 1, 1);
-        }
-
-        // 2. Cạnh phải: từ trên xuống dưới
-        if (h > 2 && w > 0) {
-            for (let dy = 1; dy < h - 1; dy++) {
-                const d = w + dy;
-                const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
-                ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
-                ctx.fillRect(x + w - 1, y + dy, 1, 1);
-            }
-        }
-
-        // 3. Cạnh dưới: từ phải sang trái
-        if (h > 1) {
-            for (let dx = 0; dx < w; dx++) {
-                const d = w + (h - 1) + dx;
-                const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
-                ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
-                ctx.fillRect(x + (w - 1 - dx), y + h - 1, 1, 1);
-            }
-        }
-
-        // 4. Cạnh trái: từ dưới lên trên
-        if (h > 2 && w > 1) {
-            for (let dy = 1; dy < h - 1; dy++) {
-                const d = 2 * w + (h - 1) + (h - 1 - dy);
-                const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
-                ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
-                ctx.fillRect(x, y + dy, 1, 1);
-            }
-        }
-    }
-
     function renderOverlay(hoverX = null, hoverY = null) {
-        overlayCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        const zm = state.zoom;
+        const dispW = CANVAS_WIDTH * zm;
+        const dispH = CANVAS_HEIGHT * zm;
 
-        // 1. Pixel Grid (Chỉ hiện khi zoom lớn)
-        if (state.showGrid && state.zoom >= 3.0) {
-            overlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-            overlayCtx.lineWidth = 0.5;
-            overlayCtx.beginPath();
-            for (let x = 0; x <= CANVAS_WIDTH; x += 4) {
-                overlayCtx.moveTo(x, 0);
-                overlayCtx.lineTo(x, CANVAS_HEIGHT);
+        // 1. Pixel Grid (Lưới chuẩn từng pixel 1x1 khi phóng to >= 300%)
+        if (state.showGrid && zm >= 3) {
+            overlayCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            for (let x = 1; x < CANVAS_WIDTH; x++) {
+                overlayCtx.fillRect(x * zm, 0, 1, dispH);
             }
-            for (let y = 0; y <= CANVAS_HEIGHT; y += 4) {
-                overlayCtx.moveTo(0, y);
-                overlayCtx.lineTo(CANVAS_WIDTH, y);
+            for (let y = 1; y < CANVAS_HEIGHT; y++) {
+                overlayCtx.fillRect(0, y * zm, dispW, 1);
             }
-            overlayCtx.stroke();
         }
 
         // 2. Vertical Symmetry Line (x = 80)
+        // Trục đối xứng chuẩn xác tuyệt đối nằm giữa cột 79 và cột 80
         if (state.symmetry) {
             overlayCtx.save();
             overlayCtx.strokeStyle = '#e5ab2e';
             overlayCtx.lineWidth = 1;
             overlayCtx.setLineDash([4, 4]);
             overlayCtx.beginPath();
-            overlayCtx.moveTo(80, 0);
-            overlayCtx.lineTo(80, CANVAS_HEIGHT);
+            const symScreenX = 80 * zm;
+            overlayCtx.moveTo(symScreenX + 0.5, 0);
+            overlayCtx.lineTo(symScreenX + 0.5, dispH);
             overlayCtx.stroke();
             overlayCtx.restore();
         }
 
         // 3. Floating Selection Preview (khi đang di chuyển vùng chọn)
         if (state.floatingSelection) {
-            overlayCtx.drawImage(state.floatingSelection.canvas, state.floatingSelection.x, state.floatingSelection.y);
+            const fsX = state.floatingSelection.x * zm;
+            const fsY = state.floatingSelection.y * zm;
+            const fsW = state.floatingSelection.w * zm;
+            const fsH = state.floatingSelection.h * zm;
+            overlayCtx.imageSmoothingEnabled = false;
+            overlayCtx.drawImage(state.floatingSelection.canvas, fsX, fsY, fsW, fsH);
         }
 
-        // 4. Active Selection Marquee (Kiến bò chuẩn pixel khít rịt)
+        // 4. Active Selection Marquee (Kiến bò chuyển động chuẩn viền pixel màn hình)
         if (state.selection) {
-            drawPixelMarchingAnts(overlayCtx, state.selection.x, state.selection.y, state.selection.w, state.selection.h);
+            const selX = state.selection.x * zm;
+            const selY = state.selection.y * zm;
+            const selW = state.selection.w * zm;
+            const selH = state.selection.h * zm;
+
+            overlayCtx.save();
+            overlayCtx.lineWidth = 1;
+            const timeDash = (Date.now() / 60) % 8;
+
+            // Nét đứt màu đen lót nền
+            overlayCtx.strokeStyle = '#000000';
+            overlayCtx.setLineDash([4, 4]);
+            overlayCtx.lineDashOffset = -timeDash;
+            overlayCtx.strokeRect(selX + 0.5, selY + 0.5, selW - 1, selH - 1);
+
+            // Nét đứt màu trắng xen kẽ
+            overlayCtx.strokeStyle = '#ffffff';
+            overlayCtx.setLineDash([4, 4]);
+            overlayCtx.lineDashOffset = -timeDash + 4;
+            overlayCtx.strokeRect(selX + 0.5, selY + 0.5, selW - 1, selH - 1);
 
             // Bảng kích thước vùng chọn pixel (VD: 24x36)
-            overlayCtx.save();
-            overlayCtx.font = '8px monospace';
+            overlayCtx.font = '10px monospace';
             const dimStr = `${state.selection.w}x${state.selection.h}`;
             const dw = overlayCtx.measureText(dimStr).width;
-            const bx = Math.max(2, Math.min(CANVAS_WIDTH - dw - 6, state.selection.x));
-            const by = state.selection.y >= 12 ? state.selection.y - 4 : state.selection.y + state.selection.h + 9;
-            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-            overlayCtx.fillRect(bx - 2, by - 7, dw + 4, 9);
+            const bx = Math.max(4, Math.min(dispW - dw - 10, selX));
+            const by = selY >= 18 ? selY - 6 : selY + selH + 14;
+            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            overlayCtx.fillRect(bx - 3, by - 10, dw + 6, 13);
             overlayCtx.fillStyle = '#38bdf8';
             overlayCtx.fillText(dimStr, bx, by);
             overlayCtx.restore();
         }
 
-        // 5. Rect Tool Preview (Khít chuẩn pixel integer, không dùng stroke làm lem viền)
+        // 5. Rect Tool Preview (Khít chuẩn pixel integer)
         if (state.tool === 'rect' && state.rectStartX !== null && hoverX !== null && hoverY !== null) {
             const rx = Math.min(state.rectStartX, hoverX);
             const ry = Math.min(state.rectStartY, hoverY);
             const rw = Math.abs(hoverX - state.rectStartX) + 1;
             const rh = Math.abs(hoverY - state.rectStartY) + 1;
+            const srx = rx * zm;
+            const sry = ry * zm;
+            const srw = rw * zm;
+            const srh = rh * zm;
 
-            overlayCtx.fillStyle = 'rgba(56, 189, 248, 0.25)';
-            overlayCtx.fillRect(rx, ry, rw, rh);
+            overlayCtx.fillStyle = 'rgba(56, 189, 248, 0.22)';
+            overlayCtx.fillRect(srx, sry, srw, srh);
 
-            // 1px viền chuẩn khít pixel không stroke mờ
             overlayCtx.fillStyle = '#38bdf8';
-            overlayCtx.fillRect(rx, ry, rw, 1);
-            if (rh > 1) overlayCtx.fillRect(rx, ry + rh - 1, rw, 1);
-            if (rh > 2) {
-                overlayCtx.fillRect(rx, ry + 1, 1, rh - 2);
-                if (rw > 1) overlayCtx.fillRect(rx + rw - 1, ry + 1, 1, rh - 2);
+            overlayCtx.fillRect(srx, sry, srw, 1);
+            if (srh > 1) overlayCtx.fillRect(srx, sry + srh - 1, srw, 1);
+            if (srh > 2) {
+                overlayCtx.fillRect(srx, sry + 1, 1, srh - 2);
+                if (srw > 1) overlayCtx.fillRect(srx + srw - 1, sry + 1, 1, srh - 2);
             }
 
             // Preview đối xứng nếu bật đối xứng
             if (state.symmetry) {
                 const symRx = CANVAS_WIDTH - (rx + rw);
-                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.25)';
-                overlayCtx.fillRect(symRx, ry, rw, rh);
+                const symSrx = symRx * zm;
+                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.22)';
+                overlayCtx.fillRect(symSrx, sry, srw, srh);
                 overlayCtx.fillStyle = '#e5ab2e';
-                overlayCtx.fillRect(symRx, ry, rw, 1);
-                if (rh > 1) overlayCtx.fillRect(symRx, ry + rh - 1, rw, 1);
-                if (rh > 2) {
-                    overlayCtx.fillRect(symRx, ry + 1, 1, rh - 2);
-                    if (rw > 1) overlayCtx.fillRect(symRx + rw - 1, ry + 1, 1, rh - 2);
+                overlayCtx.fillRect(symSrx, sry, srw, 1);
+                if (srh > 1) overlayCtx.fillRect(symSrx, sry + srh - 1, srw, 1);
+                if (srh > 2) {
+                    overlayCtx.fillRect(symSrx, sry + 1, 1, srh - 2);
+                    if (srw > 1) overlayCtx.fillRect(symSrx + srw - 1, sry + 1, 1, srh - 2);
                 }
             }
         }
@@ -361,72 +359,78 @@
         if (state.crosshair && hoverX !== null && hoverY !== null) {
             overlayCtx.save();
             overlayCtx.lineWidth = 1;
-            overlayCtx.setLineDash([2, 3]);
-            overlayCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+            overlayCtx.setLineDash([3, 3]);
+            overlayCtx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+
+            const chY = (hoverY + 0.5) * zm;
+            const chX = (hoverX + 0.5) * zm;
 
             // Ngang
             overlayCtx.beginPath();
-            overlayCtx.moveTo(0, hoverY + 0.5);
-            overlayCtx.lineTo(CANVAS_WIDTH, hoverY + 0.5);
+            overlayCtx.moveTo(0, chY);
+            overlayCtx.lineTo(dispW, chY);
             overlayCtx.stroke();
 
             // Dọc
             overlayCtx.beginPath();
-            overlayCtx.moveTo(hoverX + 0.5, 0);
-            overlayCtx.lineTo(hoverX + 0.5, CANVAS_HEIGHT);
+            overlayCtx.moveTo(chX, 0);
+            overlayCtx.lineTo(chX, dispH);
             overlayCtx.stroke();
 
             // Nhãn tọa độ nhỏ gọn (X, Y)
-            overlayCtx.font = '8px monospace';
-            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+            overlayCtx.font = '10px monospace';
+            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
             const coordText = `(${hoverX},${hoverY})`;
             const textW = overlayCtx.measureText(coordText).width;
-            const badgeX = hoverX + 8 + textW > CANVAS_WIDTH ? hoverX - textW - 8 : hoverX + 8;
-            const badgeY = hoverY - 6 < 8 ? hoverY + 14 : hoverY - 6;
-            overlayCtx.fillRect(badgeX - 2, badgeY - 7, textW + 4, 9);
+            const badgeX = chX + 10 + textW > dispW ? chX - textW - 10 : chX + 10;
+            const badgeY = chY - 10 < 10 ? chY + 20 : chY - 10;
+            overlayCtx.fillRect(badgeX - 3, badgeY - 10, textW + 6, 13);
             overlayCtx.fillStyle = '#38bdf8';
             overlayCtx.fillText(coordText, badgeX, badgeY);
             overlayCtx.restore();
         }
 
-        // 7. Brush Cursor Box (Khít từng pixel 100%, không lệch tọa độ, không stroke làm mờ nét)
+        // 7. Brush Cursor Box (Khít từng pixel 100%, không lệch tọa độ, viền 1px siêu nét)
         if (state.tool !== 'select' && hoverX !== null && hoverY !== null) {
             const sz = state.brushSize;
             const half = Math.floor(sz / 2);
             const startX = hoverX - half;
             const startY = hoverY - half;
 
-            const boxColor = state.tool === 'eraser' ? 'rgba(255, 77, 79, 0.85)' : 'rgba(56, 189, 248, 0.85)';
-            overlayCtx.fillStyle = boxColor;
+            const sx = startX * zm;
+            const sy = startY * zm;
+            const sw = sz * zm;
+            const sh = sz * zm;
 
-            if (sz === 1) {
-                overlayCtx.fillStyle = state.tool === 'eraser' ? 'rgba(255, 77, 79, 0.75)' : 'rgba(56, 189, 248, 0.75)';
-                overlayCtx.fillRect(startX, startY, 1, 1);
-            } else {
-                overlayCtx.fillRect(startX, startY, sz, 1);
-                overlayCtx.fillRect(startX, startY + sz - 1, sz, 1);
-                if (sz > 2) {
-                    overlayCtx.fillRect(startX, startY + 1, 1, sz - 2);
-                    overlayCtx.fillRect(startX + sz - 1, startY + 1, 1, sz - 2);
-                }
+            const strokeColor = state.tool === 'eraser' ? '#ff4d4f' : '#38bdf8';
+            const fillColor = state.tool === 'eraser' ? 'rgba(255, 77, 79, 0.18)' : 'rgba(56, 189, 248, 0.18)';
+
+            // Khung viền sắc nét 1px màn hình bao quanh vùng cọ vẽ
+            overlayCtx.fillStyle = strokeColor;
+            overlayCtx.fillRect(sx, sy, sw, 1);
+            overlayCtx.fillRect(sx, sy + sh - 1, sw, 1);
+            if (sh > 2) {
+                overlayCtx.fillRect(sx, sy + 1, 1, sh - 2);
+                overlayCtx.fillRect(sx + sw - 1, sy + 1, 1, sh - 2);
             }
+            // Lớp phủ nhẹ 18% mờ mờ để vừa nhận biết vùng cọ vừa nhìn rõ pixel bên dưới
+            overlayCtx.fillStyle = fillColor;
+            overlayCtx.fillRect(sx + 1, sy + 1, Math.max(0, sw - 2), Math.max(0, sh - 2));
 
+            // Con trỏ đối xứng nếu bật đối xứng
             if (state.symmetry) {
-                const symX = CANVAS_WIDTH - 1 - hoverX;
-                const symStartX = symX - half;
-                const symStartY = hoverY - half;
-                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.85)';
-                if (sz === 1) {
-                    overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.75)';
-                    overlayCtx.fillRect(symStartX, symStartY, 1, 1);
-                } else {
-                    overlayCtx.fillRect(symStartX, symStartY, sz, 1);
-                    overlayCtx.fillRect(symStartX, symStartY + sz - 1, sz, 1);
-                    if (sz > 2) {
-                        overlayCtx.fillRect(symStartX, symStartY + 1, 1, sz - 2);
-                        overlayCtx.fillRect(symStartX + sz - 1, symStartY + 1, 1, sz - 2);
-                    }
+                const symStartX = CANVAS_WIDTH - (startX + sz);
+                const symSx = symStartX * zm;
+
+                overlayCtx.fillStyle = '#e5ab2e';
+                overlayCtx.fillRect(symSx, sy, sw, 1);
+                overlayCtx.fillRect(symSx, sy + sh - 1, sw, 1);
+                if (sh > 2) {
+                    overlayCtx.fillRect(symSx, sy + 1, 1, sh - 2);
+                    overlayCtx.fillRect(symSx + sw - 1, sy + 1, 1, sh - 2);
                 }
+                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.18)';
+                overlayCtx.fillRect(symSx + 1, sy + 1, Math.max(0, sw - 2), Math.max(0, sh - 2));
             }
         }
     }
@@ -434,15 +438,18 @@
     // ================= PIXEL DRAWING LOGIC =================
     function getCanvasCoordinates(e) {
         const rect = paintCanvas.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0].clientY);
 
-        const x = Math.floor(((clientX - rect.left) / rect.width) * CANVAS_WIDTH);
-        const y = Math.floor(((clientY - rect.top) / rect.height) * CANVAS_HEIGHT);
+        const isInside = clientX >= rect.left && clientX < rect.right && clientY >= rect.top && clientY < rect.bottom;
+
+        const x = Math.floor((clientX - rect.left) / (rect.width / CANVAS_WIDTH));
+        const y = Math.floor((clientY - rect.top) / (rect.height / CANVAS_HEIGHT));
 
         return {
             x: Math.max(0, Math.min(CANVAS_WIDTH - 1, x)),
-            y: Math.max(0, Math.min(CANVAS_HEIGHT - 1, y))
+            y: Math.max(0, Math.min(CANVAS_HEIGHT - 1, y)),
+            isInside: isInside
         };
     }
 
@@ -498,43 +505,31 @@
         const sz = state.brushSize;
         const half = Math.floor(sz / 2);
 
+        function paintAt(px, py) {
+            if (state.tool === 'eraser') {
+                paintCtx.clearRect(px, py, 1, 1);
+            } else if (state.tool === 'dodge') {
+                adjustBrightness(px, py, 1.2);
+            } else if (state.tool === 'burn') {
+                adjustBrightness(px, py, 0.8);
+            } else {
+                paintCtx.fillStyle = `rgba(${colorRgba[0]}, ${colorRgba[1]}, ${colorRgba[2]}, ${colorRgba[3] / 255})`;
+                paintCtx.fillRect(px, py, 1, 1);
+            }
+        }
+
         for (let dy = 0; dy < sz; dy++) {
             for (let dx = 0; dx < sz; dx++) {
                 const px = x - half + dx;
                 const py = y - half + dy;
 
                 if (px >= 0 && px < CANVAS_WIDTH && py >= 0 && py < CANVAS_HEIGHT) {
-                    if (state.tool === 'eraser') {
-                        paintCtx.clearRect(px, py, 1, 1);
-                    } else if (state.tool === 'dodge') {
-                        adjustBrightness(px, py, 1.2);
-                    } else if (state.tool === 'burn') {
-                        adjustBrightness(px, py, 0.8);
-                    } else {
-                        paintCtx.fillStyle = `rgba(${colorRgba[0]}, ${colorRgba[1]}, ${colorRgba[2]}, ${colorRgba[3] / 255})`;
-                        paintCtx.fillRect(px, py, 1, 1);
-                    }
-                }
-            }
-        }
-
-        // Symmetry draw
-        if (state.symmetry) {
-            const symX = CANVAS_WIDTH - 1 - x;
-            for (let dy = 0; dy < sz; dy++) {
-                for (let dx = 0; dx < sz; dx++) {
-                    const px = symX - half + dx;
-                    const py = y - half + dy;
-                    if (px >= 0 && px < CANVAS_WIDTH && py >= 0 && py < CANVAS_HEIGHT) {
-                        if (state.tool === 'eraser') {
-                            paintCtx.clearRect(px, py, 1, 1);
-                        } else if (state.tool === 'dodge') {
-                            adjustBrightness(px, py, 1.2);
-                        } else if (state.tool === 'burn') {
-                            adjustBrightness(px, py, 0.8);
-                        } else {
-                            paintCtx.fillStyle = `rgba(${colorRgba[0]}, ${colorRgba[1]}, ${colorRgba[2]}, ${colorRgba[3] / 255})`;
-                            paintCtx.fillRect(px, py, 1, 1);
+                    paintAt(px, py);
+                    // Đối xứng trục giữa: phản chiếu chính xác từng pixel sang bên đối diện
+                    if (state.symmetry) {
+                        const symPx = CANVAS_WIDTH - 1 - px;
+                        if (symPx >= 0 && symPx < CANVAS_WIDTH) {
+                            paintAt(symPx, py);
                         }
                     }
                 }
@@ -568,7 +563,7 @@
         }
     }
 
-    // Flood fill (Bucket tool)
+    // Flood fill (Bucket tool) - Khớp màu pixel art chính xác 100%
     function floodFill(startX, startY, fillRgba) {
         const imgData = paintCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         const data = imgData.data;
@@ -588,10 +583,10 @@
 
         function match(x, y) {
             const i = (y * CANVAS_WIDTH + x) * 4;
-            return Math.abs(data[i] - targetR) < 10 &&
-                   Math.abs(data[i + 1] - targetG) < 10 &&
-                   Math.abs(data[i + 2] - targetB) < 10 &&
-                   Math.abs(data[i + 3] - targetA) < 10;
+            return data[i] === targetR &&
+                   data[i + 1] === targetG &&
+                   data[i + 2] === targetB &&
+                   data[i + 3] === targetA;
         }
 
         while (stack.length > 0) {
@@ -1085,6 +1080,10 @@
 
             if (state.tool === 'bucket') {
                 floodFill(coords.x, coords.y, hexToRgba(state.color));
+                if (state.symmetry) {
+                    const symX = CANVAS_WIDTH - 1 - coords.x;
+                    floodFill(symX, coords.y, hexToRgba(state.color));
+                }
                 syncLivePreviewAndThumb();
                 scheduleAutoSave();
             } else if (state.tool === 'eyedropper') {
@@ -1102,6 +1101,13 @@
 
         window.addEventListener('mousemove', (e) => {
             let coords = getCanvasCoordinates(e);
+            if (!coords.isInside && !state.isDrawing && !state.isSelecting && !state.isDraggingSelection) {
+                state.lastHoverX = null;
+                state.lastHoverY = null;
+                updateCoordinates('-', '-');
+                renderOverlay(null, null);
+                return;
+            }
             state.lastHoverX = coords.x;
             state.lastHoverY = coords.y;
 
