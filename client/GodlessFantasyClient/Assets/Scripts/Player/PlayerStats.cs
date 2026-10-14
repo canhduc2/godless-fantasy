@@ -100,8 +100,8 @@ namespace GodlessFantasy.Player
         [SerializeField] private float currentStamina = 100f;
 
         [Header("Potion Bag (Bình Dược Liệu)")]
-        [SerializeField] private int hpPotionCount = 5;
-        [SerializeField] private int manaPotionCount = 5;
+        [SerializeField] private int hpPotionCount = 0;
+        [SerializeField] private int manaPotionCount = 0;
 
         private Health health;
         private InventoryManager inventoryManager;
@@ -151,10 +151,10 @@ namespace GodlessFantasy.Player
         public int Intelligence => intelligence;
         public int Vitality => vitality;
         [Header("Stat Points & Currencies (Điểm Tiềm Năng & Tiền Tệ)")]
-        [SerializeField] private int availableStatPoints = 5;
-        [SerializeField] private int gold = 1500;
-        [SerializeField] private int magicCrystals = 25;
-        [SerializeField] private int rebirthPoints = 2;
+        [SerializeField] private int availableStatPoints = 0;
+        [SerializeField] private int gold = 200;
+        [SerializeField] private int magicCrystals = 0;
+        [SerializeField] private int rebirthPoints = 0;
         [SerializeField] private int rebirthCount = 0;
 
         public int AvailableStatPoints => availableStatPoints;
@@ -464,34 +464,39 @@ namespace GodlessFantasy.Player
         public float DodgeRate => 3.0f + Mathf.Max(0, agility - 9) * 0.4f + ((characterClass == "Xạ Thủ") ? 5.0f : 0f);
 
         // ================= HỆ THỐNG PERK BẨM SINH ĐỘC NHẤT THEO HỆ =================
+        [SerializeField] private bool enableInherentPerk = false; // Mặc định tắt (0) theo yêu cầu xóa sạch perk của User
+        public bool EnableInherentPerk => enableInherentPerk;
+
         public string InherentPerkName =>
+            !enableInherentPerk ? "Không có" :
             (characterClass == "Kị Sĩ") ? "Thiết Vệ Kiên Cố" :
             (characterClass == "Pháp Sư") ? "Minh Tưởng Pháp Tắc" :
             (characterClass == "Võ Sĩ") ? "Kim Cang Bá Thể" : "Ưng Nhãn Thần Xạ";
 
         public string InherentPerkDesc =>
+            !enableInherentPerk ? "Chưa kích hoạt Đặc Tính (0)" :
             (characterClass == "Kị Sĩ") ? "+50 HP · +15 Giáp · Tầm Cận Chiến 2.35m · Hồi HP 28s (+2)" :
             (characterClass == "Pháp Sư") ? "+50 Mana · +25 Công Phép · Tầm Xa 5.5m · Hồi Mana +4/3s" :
             (characterClass == "Võ Sĩ") ? "+80 HP · +16 Lực Đấm · +10% Bạo Kích · Tầm Đấm 1.85m · Bước Đi Đầm Chắc" :
             "+2.0m Tầm Bắn (Tổng 9.5m!) · +0.5m/s Tốc Chạy · +15% Bạo Kích";
 
-        public int InherentBonusMaxHp => (characterClass == "Võ Sĩ") ? 80 : (characterClass == "Kị Sĩ") ? 50 : 0;
-        public int InherentBonusMaxMana => (characterClass == "Pháp Sư") ? 50 : 0;
-        public int InherentBonusArmor => (characterClass == "Kị Sĩ") ? 15 : 0;
-        public int InherentBonusMagicAtk => (characterClass == "Pháp Sư") ? 25 : 0;
-        public float InherentBonusCritRate => (characterClass == "Xạ Thủ") ? 15.0f : (characterClass == "Võ Sĩ") ? 10.0f : 0f;
-        public int InherentBonusAttackDmg => (characterClass == "Võ Sĩ") ? 16 : 0;
-        public float InherentBonusBasicRange => (characterClass == "Xạ Thủ") ? 2.0f : 0f;
-        public float InherentBonusMoveSpeed => (characterClass == "Xạ Thủ") ? 0.5f : (characterClass == "Võ Sĩ") ? -0.2f : 0f;
+        public int InherentBonusMaxHp => enableInherentPerk ? ((characterClass == "Võ Sĩ") ? 80 : (characterClass == "Kị Sĩ") ? 50 : 0) : 0;
+        public int InherentBonusMaxMana => enableInherentPerk ? ((characterClass == "Pháp Sư") ? 50 : 0) : 0;
+        public int InherentBonusArmor => enableInherentPerk ? ((characterClass == "Kị Sĩ") ? 15 : 0) : 0;
+        public int InherentBonusMagicAtk => enableInherentPerk ? ((characterClass == "Pháp Sư") ? 25 : 0) : 0;
+        public float InherentBonusCritRate => enableInherentPerk ? ((characterClass == "Xạ Thủ") ? 15.0f : (characterClass == "Võ Sĩ") ? 10.0f : 0f) : 0f;
+        public int InherentBonusAttackDmg => enableInherentPerk ? ((characterClass == "Võ Sĩ") ? 16 : 0) : 0;
+        public float InherentBonusBasicRange => enableInherentPerk ? ((characterClass == "Xạ Thủ") ? 2.0f : 0f) : 0f;
+        public float InherentBonusMoveSpeed => enableInherentPerk ? ((characterClass == "Xạ Thủ") ? 0.5f : (characterClass == "Võ Sĩ") ? -0.2f : 0f) : 0f;
 
         private void ApplyInherentClassPerkStats()
         {
-            if (InherentBonusMaxMana > 0)
+            if (enableInherentPerk && InherentBonusMaxMana > 0)
             {
                 maxMana += InherentBonusMaxMana;
                 currentMana = maxMana;
             }
-            if (health != null && InherentBonusMaxHp > 0)
+            if (enableInherentPerk && health != null && InherentBonusMaxHp > 0)
             {
                 health.IncreaseMaxHealth(InherentBonusMaxHp);
             }
@@ -514,12 +519,7 @@ namespace GodlessFantasy.Player
         }
 
         [SerializeField]
-        private List<RegularPerkDef> acquiredPerks = new List<RegularPerkDef>()
-        {
-            new RegularPerkDef("🔥", "Hỏa Thần Quyết", "Tăng 10% sát thương cho toàn bộ chiêu thức ma pháp thuộc tính Hỏa."),
-            new RegularPerkDef("⚡", "Tốc Biến Tân Thủ", "Tăng 0.5m/s tốc độ chạy cơ bản khi ở trạng thái ngoài giao tranh."),
-            new RegularPerkDef("🛡️", "Hộ Thể Kim Cang", "Giảm 5% sát thương nhận vào khi chiến đấu trong phạm vi làng.")
-        };
+        private List<RegularPerkDef> acquiredPerks = new List<RegularPerkDef>();
 
         public List<RegularPerkDef> AcquiredPerks => acquiredPerks;
 
@@ -830,7 +830,7 @@ namespace GodlessFantasy.Player
         }
 
         // ================= HỆ THỐNG DANH HIỆU (CHARACTER TITLE SYSTEM) =================
-        [SerializeField] private string equippedTitleId = "title_rookie";
+        [SerializeField] private string equippedTitleId = "";
         private List<CharacterTitle> titleList = new List<CharacterTitle>();
 
         public CharacterTitle EquippedTitle => TitleList.Find(t => t.id == equippedTitleId);
@@ -866,15 +866,52 @@ namespace GodlessFantasy.Player
             Debug.Log("<color=yellow>[DANH HIỆU]</color> Đã tháo danh hiệu!");
         }
 
+        /// <summary>
+        /// Áp dụng dữ liệu nhân vật chính thức từ Server khi đăng nhập hoặc tạo nhân vật thành công.
+        /// </summary>
+        public void ApplyCharacterData(string charName, string cClass, string elem, int cLevel, int cStr, int cInt, int cVit, int cAgi, int cGold)
+        {
+            characterName = charName;
+            characterClass = cClass;
+            element = elem;
+            level = Mathf.Max(1, cLevel);
+            strength = cStr;
+            intelligence = cInt;
+            vitality = cVit;
+            agility = cAgi;
+            gold = cGold;
+            magicCrystals = 0;
+            rebirthPoints = 0;
+            availableStatPoints = 0;
+            equippedTitleId = "";
+            acquiredPerks.Clear();
+
+            if (health != null)
+            {
+                health.SetMaxHealth(100 + vitality * 10);
+                health.Revive();
+            }
+            maxMana = 50 + intelligence * 5;
+            currentMana = maxMana;
+
+            var overhead = GetComponent<GodlessFantasy.UI.OverheadStatusBar>();
+            if (overhead != null)
+            {
+                overhead.Setup(GodlessFantasy.UI.OverheadType.Player, charName, $"Lv.{level} · {characterClass} · {element}", 1.05f);
+            }
+            Debug.Log($"<color=green>[PLAYER DATA]</color> Đã cập nhật nhân vật: {charName} (Hệ {characterClass} · {element}, Lv.{level}, {gold} Vàng)");
+        }
+
         public void InitTitles()
         {
             if (titleList.Count > 0) return;
-            titleList.Add(new CharacterTitle("title_rookie", "[Tân Thủ Khai Hoang]", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "🏆", "+30 Máu Tối Đa · +5 Giáp", 30, 5, 0, 0, 0f, true));
-            titleList.Add(new CharacterTitle("title_knight", "[Kị Sĩ Tiên Phong]", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "🛡️", "+15 Giáp Vật Lý · +10 Kháng Phép", 0, 15, 0, 0, 0f, true));
-            titleList.Add(new CharacterTitle("title_archmage", "[Ma Đạo Tôn Sư]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🔮", "+25 Công Phép · +20 Mana Tối Đa", 0, 0, 25, 0, 0f, true));
-            titleList.Add(new CharacterTitle("title_brawler", "[Bá Vương Quyền Cước]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🥊", "+15 ST Đánh Thường · +5% Bạo Kích", 0, 0, 0, 15, 0f, true));
-            titleList.Add(new CharacterTitle("title_archer", "[Thần Tiễn Bách Phát]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🏹", "+0.5 m/s Tốc Chạy · +1.0m Tầm Đánh", 0, 0, 0, 0, 0.5f, true));
-            titleList.Add(new CharacterTitle("title_conqueror", "[Chiến Thần Vô Địch]", "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "👑", "+50 Máu · +20 Công Phép · +15 Giáp", 50, 15, 20, 0, 0f, true));
+            // Danh sách danh hiệu trong game - ban đầu người chơi chưa mở khóa bất kỳ danh hiệu nào (isUnlocked = false)
+            titleList.Add(new CharacterTitle("title_rookie", "[Tân Thủ Khai Hoang]", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "🏆", "+30 Máu Tối Đa · +5 Giáp", 30, 5, 0, 0, 0f, false));
+            titleList.Add(new CharacterTitle("title_knight", "[Kị Sĩ Tiên Phong]", "Phẩm C", new Color(0.35f, 0.65f, 1.0f), "🛡️", "+15 Giáp Vật Lý · +10 Kháng Phép", 0, 15, 0, 0, 0f, false));
+            titleList.Add(new CharacterTitle("title_archmage", "[Ma Đạo Tôn Sư]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🔮", "+25 Công Phép · +20 Mana Tối Đa", 0, 0, 25, 0, 0f, false));
+            titleList.Add(new CharacterTitle("title_brawler", "[Bá Vương Quyền Cước]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🥊", "+15 ST Đánh Thường · +5% Bạo Kích", 0, 0, 0, 15, 0f, false));
+            titleList.Add(new CharacterTitle("title_archer", "[Thần Tiễn Bách Phát]", "Phẩm B", new Color(0.85f, 0.45f, 1.0f), "🏹", "+0.5 m/s Tốc Chạy · +1.0m Tầm Đánh", 0, 0, 0, 0, 0.5f, false));
+            titleList.Add(new CharacterTitle("title_conqueror", "[Chiến Thần Vô Địch]", "Phẩm S", new Color(1.0f, 0.85f, 0.25f), "👑", "+50 Máu · +20 Công Phép · +15 Giáp", 50, 15, 20, 0, 0f, false));
         }
     }
 

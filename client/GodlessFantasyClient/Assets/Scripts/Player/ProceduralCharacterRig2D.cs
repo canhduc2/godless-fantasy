@@ -123,6 +123,12 @@ namespace GodlessFantasy.Player
             set => FacingDir = value;
         }
 
+        // Override hỗ trợ Multiplayer Entity từ xa
+        public bool? RemoteIsMovingOverride = null;
+        public Direction8? RemoteFacingDirOverride = null;
+
+        public void SetGender(bool female) => ForceSetGender(female);
+
         // ─── REFERENCES ─────────────────────────────────────────────────
         private Rigidbody2D      rb;
         private PlayerMovement   movement;
@@ -170,6 +176,14 @@ namespace GodlessFantasy.Player
         private SpriteRenderer srShadow;
         private SpriteRenderer srCostume;
 
+        // ─── WEARABLE OVERLAYS (Trang Phục & Giáp Độc Lập Bám Khớp Xương) ────
+        private SpriteRenderer srWearableHelmet;
+        private SpriteRenderer srWearableArmor;
+        private SpriteRenderer srWearablePants;
+        private SpriteRenderer srWearableBootsL;
+        private SpriteRenderer srWearableBootsR;
+        private readonly Dictionary<EquipSlot, Sprite> customWearableOverrides = new Dictionary<EquipSlot, Sprite>();
+
         // ─── SPRITE CACHE ────────────────────────────────────────────────
         private static readonly Dictionary<string, Sprite> sprCache = new Dictionary<string, Sprite>();
 
@@ -213,7 +227,6 @@ namespace GodlessFantasy.Player
 
             LoadConfigs();
             BuildRigHierarchy();
-            LiveCharacterUIMirror.EnsureInstance();
         }
 
         /// <summary>
@@ -308,7 +321,113 @@ namespace GodlessFantasy.Player
             srCostume = EnsureSR(jointCostume, 14);
             srCostume.enabled = false;
 
+            // Wearable Overlays: Mũ (Head), Áo (Body), Quần (Body/Hông), Giày (Chân)
+            var helmetObj = CreateOffsetVisual(jointHead, "Wearable_Helmet", -DEFAULT_PIVOT_HEAD);
+            srWearableHelmet = EnsureSR(helmetObj, 16);
+            srWearableHelmet.enabled = false;
+
+            var armorObj = CreateOffsetVisual(jointBody, "Wearable_Armor", -DEFAULT_PIVOT_BODY);
+            srWearableArmor = EnsureSR(armorObj, 12);
+            srWearableArmor.enabled = false;
+
+            var pantsObj = CreateOffsetVisual(jointBody, "Wearable_Pants", -DEFAULT_PIVOT_BODY);
+            srWearablePants = EnsureSR(pantsObj, 11);
+            srWearablePants.enabled = false;
+
+            var bootLObj = CreateOffsetVisual(jointLegLeft, "Wearable_BootsL", -DEFAULT_PIVOT_LEG_L);
+            var bootRObj = CreateOffsetVisual(jointLegRight, "Wearable_BootsR", -DEFAULT_PIVOT_LEG_R);
+            srWearableBootsL = EnsureSR(bootLObj, 10);
+            srWearableBootsR = EnsureSR(bootRObj, 10);
+            srWearableBootsL.enabled = false;
+            srWearableBootsR.enabled = false;
+
             LoadDirectionSprites();
+        }
+
+        public void SetDirectWearableOverride(EquipSlot slot, Sprite spr)
+        {
+            customWearableOverrides[slot] = spr;
+            ApplyWearableSprite(slot, spr);
+        }
+
+        public void ClearWearableOverrides()
+        {
+            customWearableOverrides.Clear();
+            SyncEquippedWearables();
+        }
+
+        public void ApplyWearableSprite(EquipSlot slot, Sprite spr)
+        {
+            switch (slot)
+            {
+                case EquipSlot.Helmet:
+                    if (srWearableHelmet != null)
+                    {
+                        srWearableHelmet.sprite = spr;
+                        srWearableHelmet.enabled = (spr != null);
+                    }
+                    break;
+                case EquipSlot.Armor:
+                    if (srWearableArmor != null)
+                    {
+                        srWearableArmor.sprite = spr;
+                        srWearableArmor.enabled = (spr != null);
+                    }
+                    break;
+                case EquipSlot.Pants:
+                    if (srWearablePants != null)
+                    {
+                        srWearablePants.sprite = spr;
+                        srWearablePants.enabled = (spr != null);
+                    }
+                    break;
+                case EquipSlot.Boots:
+                    if (srWearableBootsL != null)
+                    {
+                        srWearableBootsL.sprite = spr;
+                        srWearableBootsL.enabled = (spr != null);
+                    }
+                    if (srWearableBootsR != null)
+                    {
+                        srWearableBootsR.sprite = spr;
+                        srWearableBootsR.enabled = (spr != null);
+                    }
+                    break;
+                case EquipSlot.Costume:
+                    if (srCostume != null)
+                    {
+                        srCostume.sprite = spr;
+                        srCostume.enabled = (spr != null);
+                    }
+                    break;
+            }
+        }
+
+        public void SyncEquippedWearables()
+        {
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>() ?? FindAnyObjectByType<InventoryManager>();
+            if (inventoryManager == null) return;
+
+            EquipSlot[] checkSlots = { EquipSlot.Helmet, EquipSlot.Armor, EquipSlot.Pants, EquipSlot.Boots, EquipSlot.Costume };
+            foreach (var slot in checkSlots)
+            {
+                if (customWearableOverrides.TryGetValue(slot, out Sprite sprOverride) && sprOverride != null)
+                {
+                    ApplyWearableSprite(slot, sprOverride);
+                    continue;
+                }
+
+                var item = inventoryManager.GetEquippedItem(slot);
+                if (item != null)
+                {
+                    Sprite spr = item.icon != null ? item.icon : Resources.Load<Sprite>(item.iconName);
+                    ApplyWearableSprite(slot, spr);
+                }
+                else
+                {
+                    ApplyWearableSprite(slot, null);
+                }
+            }
         }
 
         private Transform CreateJoint(string name, Vector3 localPos)
@@ -580,8 +699,8 @@ namespace GodlessFantasy.Player
             if (hurtTimer > 0f) { AnimateHurt(); return; }
 
             bool isDashing = movement != null && movement.IsDashing;
-            bool isMoving  = (movement != null && movement.IsMoving)
-                          || (rb != null && rb.linearVelocity.sqrMagnitude > 0.04f);
+            bool isMoving  = RemoteIsMovingOverride ?? ((movement != null && movement.IsMoving)
+                          || (rb != null && rb.linearVelocity.sqrMagnitude > 0.04f));
             bool isRunning = movement != null && movement.IsRunning;
 
             if (isDashing)       AnimateDash();
@@ -686,7 +805,7 @@ namespace GodlessFantasy.Player
             if (run)
             {
                 ghostTimer += Time.deltaTime;
-                if (ghostTimer > 0.10f)
+                if (ghostTimer > 0.12f)
                 {
                     ghostTimer = 0f;
                     SpawnGhost();
@@ -721,7 +840,7 @@ namespace GodlessFantasy.Player
             jointBody.localRotation     = Quaternion.Euler(0f, 0f, lean);
 
             ghostTimer += Time.deltaTime;
-            if (ghostTimer > 0.04f)
+            if (ghostTimer > 0.07f)
             {
                 ghostTimer = 0f;
                 SpawnGhost();
@@ -946,18 +1065,34 @@ namespace GodlessFantasy.Player
             srWeapon.sortingOrder     = order;
         }
 
+        private string cachedWepId = null;
+        private string cachedWepIcon = null;
+        private bool cachedWepActive = false;
+        private string cachedCostumeId = null;
+        private Direction8 cachedCostumeDir = (Direction8)(-1);
+
         private void SyncEquippedWeapon()
         {
             if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
             if (inventoryManager == null) return;
             var wep = inventoryManager.GetEquippedGear(EquipSlot.Weapon);
+            bool hasWep = (wep != null);
+            string wepIcon = (wep != null) ? wep.iconName : null;
+            string wepId = (wep != null) ? wep.id : null;
+
             if (srWeapon != null)
             {
-                srWeapon.enabled = (wep != null);
-                if (wep != null && !string.IsNullOrEmpty(wep.iconName))
+                if (hasWep != cachedWepActive || wepIcon != cachedWepIcon || wepId != cachedWepId)
                 {
-                    Sprite s = LoadSpr(wep.iconName) ?? LoadSpr("item_weapon");
-                    if (s != null) srWeapon.sprite = s;
+                    cachedWepActive = hasWep;
+                    cachedWepIcon = wepIcon;
+                    cachedWepId = wepId;
+                    srWeapon.enabled = hasWep;
+                    if (hasWep && !string.IsNullOrEmpty(wepIcon))
+                    {
+                        Sprite s = LoadSpr(wepIcon) ?? LoadSpr("item_weapon");
+                        if (s != null) srWeapon.sprite = s;
+                    }
                 }
             }
         }
@@ -967,21 +1102,26 @@ namespace GodlessFantasy.Player
             if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
             if (inventoryManager == null) return;
             var cos = inventoryManager.GetEquippedGear(EquipSlot.Costume);
+            string cosId = (cos != null) ? cos.id : null;
+
             if (srCostume != null)
             {
-                // Ngoại trang chỉ có icon hiển thị trong ô đồ (Equipment / Inventory slot),
-                // Ngoại hình trên cơ thể nhân vật hoàn toàn trong suốt (không vẽ đè icon hay màu sắc lên người).
-                // Chỉ hiển thị nếu món đồ chỉ định rõ ràng sprite skin toàn thân theo hướng (Characters/skin_...)
-                if (cos != null && !string.IsNullOrEmpty(cos.id) && cos.id.StartsWith("skin_"))
+                if (cosId != cachedCostumeId || FacingDir != cachedCostumeDir)
                 {
-                    srCostume.enabled = true;
-                    string dirStr = DirName(FacingDir);
-                    srCostume.sprite = LoadSpr($"Characters/{cos.id}_{dirStr}_0");
-                }
-                else
-                {
-                    srCostume.enabled = false;
-                    srCostume.sprite = null;
+                    cachedCostumeId = cosId;
+                    cachedCostumeDir = FacingDir;
+
+                    if (cos != null && !string.IsNullOrEmpty(cos.id) && cos.id.StartsWith("skin_"))
+                    {
+                        srCostume.enabled = true;
+                        string dirStr = DirName(FacingDir);
+                        srCostume.sprite = LoadSpr($"Characters/{cos.id}_{dirStr}_0");
+                    }
+                    else
+                    {
+                        srCostume.enabled = false;
+                        srCostume.sprite = null;
+                    }
                 }
             }
         }
@@ -991,6 +1131,12 @@ namespace GodlessFantasy.Player
         // ════════════════════════════════════════════════════════════════
         private void UpdateFacingDirection()
         {
+            if (RemoteFacingDirOverride.HasValue)
+            {
+                FacingDir = RemoteFacingDirOverride.Value;
+                return;
+            }
+
             if (mainCam == null) mainCam = Camera.main;
             Vector2 aimDir;
 
@@ -1028,6 +1174,7 @@ namespace GodlessFantasy.Player
                 srCostume
             };
 
+            var ghostSrs = new List<SpriteRenderer>(9);
             for (int i = 0; i < renderers.Length; i++)
             {
                 var sr = renderers[i];
@@ -1045,22 +1192,22 @@ namespace GodlessFantasy.Player
                 gsr.flipY        = sr.flipY;
                 gsr.sortingOrder = Mathf.Max(0, sr.sortingOrder - 2); // Nằm ngay sau lưng nhân vật thật
                 gsr.color        = new Color(0.20f, 0.85f, 1.0f, 0.35f);
+                ghostSrs.Add(gsr);
             }
 
-            StartCoroutine(FadeAndDestroyGhost(ghostRoot, 0.20f));
+            StartCoroutine(FadeAndDestroyGhost(ghostRoot, ghostSrs, 0.20f));
         }
 
-        private IEnumerator FadeAndDestroyGhost(GameObject ghostObj, float duration)
+        private IEnumerator FadeAndDestroyGhost(GameObject ghostObj, List<SpriteRenderer> srs, float duration)
         {
             if (ghostObj == null) yield break;
-            var srs = ghostObj.GetComponentsInChildren<SpriteRenderer>();
             float elapsed = 0f;
 
             while (elapsed < duration && ghostObj != null)
             {
                 elapsed += Time.deltaTime;
                 float alpha = Mathf.Lerp(0.35f, 0f, elapsed / duration);
-                for (int i = 0; i < srs.Length; i++)
+                for (int i = 0; i < srs.Count; i++)
                 {
                     if (srs[i] != null)
                     {
@@ -1089,30 +1236,62 @@ namespace GodlessFantasy.Player
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  AVATAR & FULL BODY TEXTURES — Đồng bộ động theo thời gian thực (60fps)
+        //  AVATAR & FULL BODY TEXTURES — Tĩnh Chính Diện (South / Front) Sắc Nét, Siêu Nhẹ (300+ FPS)
         // ════════════════════════════════════════════════════════════════
+        private static Texture2D cachedAvatarMale;
+        private static Texture2D cachedAvatarFemale;
+        private static Texture2D cachedAvatarSoulKnight;
+        private static Texture2D cachedAvatarVoidReaper;
+        private static Texture2D cachedFullBodyMale;
+        private static Texture2D cachedFullBodyFemale;
+        private static Texture2D cachedFullBodySoulKnight;
+        private static Texture2D cachedFullBodyVoidReaper;
+
+        private static Texture2D LoadRigBodyTexture(bool isFemale)
+        {
+            string path = isFemale ? "Characters/Rig/female/south/body" : "Characters/Rig/male/south/body";
+            var tex = Resources.Load<Texture2D>(path);
+            if (tex != null) return tex;
+            var sp = Resources.Load<Sprite>(path);
+            if (sp != null) return sp.texture;
+            string fbPath = isFemale ? "Characters/fullbody_female" : "Characters/fullbody_male";
+            tex = Resources.Load<Texture2D>(fbPath);
+            if (tex != null) return tex;
+            sp = Resources.Load<Sprite>(fbPath);
+            if (sp != null) return sp.texture;
+            return isFemale ? Resources.Load<Texture2D>("player_female_base") : Resources.Load<Texture2D>("player_male_base");
+        }
+
         public Texture GetPortraitTexture()
         {
-            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.AvatarTexture != null)
-                return LiveCharacterUIMirror.Instance.AvatarTexture;
-
             if (CurrentSkin == SkinType.SoulKnight)
-                return Resources.Load<Texture2D>("Characters/avatar_soul_knight");
+            {
+                if (cachedAvatarSoulKnight == null) cachedAvatarSoulKnight = Resources.Load<Texture2D>("Characters/avatar_soul_knight");
+                if (cachedAvatarSoulKnight != null) return cachedAvatarSoulKnight;
+            }
             if (CurrentSkin == SkinType.VoidReaper)
-                return Resources.Load<Texture2D>("Characters/avatar_void_reaper");
-            return Resources.Load<Texture2D>(IsFemale ? "Characters/avatar_female" : "Characters/avatar_male");
+            {
+                if (cachedAvatarVoidReaper == null) cachedAvatarVoidReaper = Resources.Load<Texture2D>("Characters/avatar_void_reaper");
+                if (cachedAvatarVoidReaper != null) return cachedAvatarVoidReaper;
+            }
+
+            return LoadRigBodyTexture(IsFemale);
         }
 
         public Texture GetFullBodyTexture()
         {
-            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.FullBodyTexture != null)
-                return LiveCharacterUIMirror.Instance.FullBodyTexture;
+            if (CurrentSkin == SkinType.SoulKnight)
+            {
+                if (cachedFullBodySoulKnight == null) cachedFullBodySoulKnight = Resources.Load<Texture2D>("Characters/skin_soul_knight_south_0") ?? Resources.Load<Texture2D>("Characters/avatar_soul_knight");
+                if (cachedFullBodySoulKnight != null) return cachedFullBodySoulKnight;
+            }
+            if (CurrentSkin == SkinType.VoidReaper)
+            {
+                if (cachedFullBodyVoidReaper == null) cachedFullBodyVoidReaper = Resources.Load<Texture2D>("Characters/skin_void_reaper_south_0") ?? Resources.Load<Texture2D>("Characters/avatar_void_reaper");
+                if (cachedFullBodyVoidReaper != null) return cachedFullBodyVoidReaper;
+            }
 
-            string genderStr = IsFemale ? "female" : "male";
-            string dirName   = DirName(FacingDir);
-            return Resources.Load<Texture2D>($"Characters/fullbody_{genderStr}")
-                ?? Resources.Load<Texture2D>($"Characters/Rig/{genderStr}/{dirName}/body")
-                ?? GetPortraitTexture();
+            return LoadRigBodyTexture(IsFemale);
         }
 
         /// <summary>
@@ -1136,11 +1315,38 @@ namespace GodlessFantasy.Player
             IsFemale = !IsFemale;
             sprCache.Clear();
             LoadDirectionSprites();
+
+            // Kiểm tra và tự động tháo trang bị nếu không còn tương thích với giới tính mới
+            if (inventoryManager != null)
+            {
+                inventoryManager.OnGenderSwapped(IsFemale);
+            }
+
             string label = IsFemale ? "Nữ" : "Nam";
             FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f,
                 $"🚻 {label} [G]", new Color(0.35f, 0.95f, 0.55f));
             AudioManager.PlayPickup();
             return true;
+        }
+
+        /// <summary>
+        /// Ép đổi giới tính dành cho GM / Studio Testing Playground
+        /// </summary>
+        public void ForceSetGender(bool female)
+        {
+            if (IsFemale == female) return;
+            IsFemale = female;
+            sprCache.Clear();
+            LoadDirectionSprites();
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            if (inventoryManager != null)
+            {
+                inventoryManager.OnGenderSwapped(IsFemale);
+            }
+            string label = IsFemale ? "Nữ" : "Nam";
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f,
+                $"🚻 {label} [Dev Test]", new Color(0.35f, 0.95f, 0.55f));
+            AudioManager.PlayPickup();
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -1201,7 +1407,7 @@ namespace GodlessFantasy.Player
         private Sprite LoadSpr(string path)
         {
             if (string.IsNullOrEmpty(path)) return null;
-            if (sprCache.TryGetValue(path, out var c) && c != null) return c;
+            if (sprCache.TryGetValue(path, out var c)) return c;
 
             // 1. Thử Resources.Load<Sprite>
             var s = Resources.Load<Sprite>(path);
@@ -1223,7 +1429,7 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            if (s != null) sprCache[path] = s;
+            sprCache[path] = s;
             return s;
         }
 

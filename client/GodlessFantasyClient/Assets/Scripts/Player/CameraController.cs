@@ -26,7 +26,7 @@ namespace GodlessFantasy.Player
         public static CameraController Instance { get; private set; }
 
         private Camera cam;
-        private float targetZoom = 5.0f;
+        private float targetZoom = 11.25f; // Mặc định tầm nhìn ~20m mỗi bên (tổng chiều ngang ~40m ở tỉ lệ 16:9)
 
         private void Awake()
         {
@@ -35,6 +35,9 @@ namespace GodlessFantasy.Player
             if (cam != null)
             {
                 cam.orthographic = true;
+                // Tính zoom sao cho tầm nhìn ngang đạt ~20m mỗi bên (halfWidth ≈ 20m)
+                float aspect = (cam.aspect > 0.1f) ? cam.aspect : (16f / 9f);
+                targetZoom = Mathf.Clamp(20.0f / aspect, minZoom, maxZoom);
                 cam.orthographicSize = targetZoom;
                 cam.backgroundColor = new Color(0.06f, 0.08f, 0.12f, 1f);
             }
@@ -98,19 +101,21 @@ namespace GodlessFantasy.Player
             bool isBlockedByUI = GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI() || GodlessFantasy.UI.CombatHUD.IsAnyModalOpen();
             if (!isBlockedByUI)
             {
-                // Phím nóng [Z] hoặc Click chuột giữa (Scroll wheel button): Chuyển đổi nhanh Tầm nhìn Tiêu chuẩn (5.0m) <-> Toàn cảnh viễn vọng (50m)
+                // Phím nóng [Z] hoặc Click chuột giữa (Scroll wheel button): Chuyển đổi nhanh Tầm nhìn Tiêu chuẩn (20m mỗi bên) <-> Toàn cảnh viễn vọng (50m)
                 bool isTypingChat = GodlessFantasy.UI.CombatHUD.Instance != null && GodlessFantasy.UI.CombatHUD.Instance.IsChatFocused();
                 if (!isTypingChat && (Input.GetKeyDown(KeyCode.Z) || Input.GetMouseButtonDown(2)))
                 {
-                    if (targetZoom > 14f)
+                    float aspect = (cam != null && cam.aspect > 0.1f) ? cam.aspect : (16f / 9f);
+                    float standardZoom20m = Mathf.Clamp(20.0f / aspect, minZoom, maxZoom);
+                    if (targetZoom > 18f)
                     {
-                        targetZoom = 5.0f;
+                        targetZoom = standardZoom20m;
                         GodlessFantasy.Combat.FloatingDamageManager.ShowFloatingText(
-                            Vector3.zero, "🔍 Tầm Nhìn Tiêu Chuẩn [Z]", new Color(0.4f, 0.85f, 1f));
+                            Vector3.zero, "🔍 Tầm Nhìn Tiêu Chuẩn 20m [Z]", new Color(0.4f, 0.85f, 1f));
                     }
                     else
                     {
-                        targetZoom = 28.5f; // Đạt cự ly ~50.6m sang mỗi bên với màn hình tỉ lệ 16:9
+                        targetZoom = Mathf.Clamp(50.0f / aspect, minZoom, maxZoom); // Đạt cự ly ~50m sang mỗi bên với màn hình tỉ lệ 16:9
                         GodlessFantasy.Combat.FloatingDamageManager.ShowFloatingText(
                             Vector3.zero, "🔭 Toàn Cảnh Viễn Vọng 50m [Z]", new Color(1f, 0.85f, 0.3f));
                     }

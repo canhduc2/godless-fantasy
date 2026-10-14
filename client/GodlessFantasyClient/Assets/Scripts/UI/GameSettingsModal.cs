@@ -38,6 +38,15 @@ namespace GodlessFantasy.UI
 
         private void Update()
         {
+            // Vô hiệu hóa hoàn toàn khi đang ở màn hình Đăng Nhập / Tạo Nhân Vật
+            bool isAuthActive = (AuthUniverseModal.Instance != null && AuthUniverseModal.Instance.IsOpen)
+                             || (CharacterCreationModal.Instance != null && CharacterCreationModal.Instance.IsOpen);
+            if (isAuthActive)
+            {
+                if (IsOpen) IsOpen = false;
+                return;
+            }
+
             // Phím [O]: Bật / Tắt cửa sổ Cài Đặt
             if (Input.GetKeyDown(KeyCode.O))
             {

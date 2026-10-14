@@ -79,6 +79,7 @@ namespace GodlessFantasy.Player
         }
 
         public bool IsDashing => isDashing;
+        public Vector2 TargetPosition => targetPosition;
         // Đang di chuyển khi có lệnh di chuyển (hoặc có gia tốc dời hình) hoặc đang lướt
         public bool IsMoving => (isMovingToTarget && (ActualVelocityMagnitude > 0.08f || stuckTimer < 0.25f)) || isDashing;
         public float DashCooldownRemaining => Mathf.Max(0, (lastDashTime + CurrentDashCooldown) - Time.time);
@@ -115,8 +116,32 @@ namespace GodlessFantasy.Player
             lastPhysicalPos = (rb != null) ? rb.position : (Vector2)transform.position;
         }
 
+        private Combat.Health healthComponent;
+        public bool IsDead
+        {
+            get
+            {
+                if (healthComponent == null) healthComponent = GetComponent<Combat.Health>();
+                if (healthComponent != null && healthComponent.IsDead) return true;
+                if (GodlessFantasy.UI.DeathScreenModal.Instance != null && GodlessFantasy.UI.DeathScreenModal.Instance.IsDead) return true;
+                return false;
+            }
+        }
+
         private void Update()
         {
+            if (GameInput.IsAuthOrCreationActive())
+            {
+                StopMoving();
+                return;
+            }
+
+            if (IsDead)
+            {
+                StopMoving();
+                return;
+            }
+
             if (clickMarkerTimer > 0f) clickMarkerTimer -= Time.deltaTime;
             if (isDashing) return;
 
@@ -127,11 +152,23 @@ namespace GodlessFantasy.Player
             // Độc lập hướng ngắm: Nhân vật luôn hướng mặt theo con trỏ chuột độc lập với hướng di chuyển
             if (spriteRenderer != null)
             {
-                if (mainCamera == null) mainCamera = Camera.main;
-                if (mainCamera != null)
+                // Với hệ thống Sprite Frame 8 hướng, tuyệt đối không lật flipX vì đã có đủ 8 hướng vẽ tay riêng biệt
+                var anim8 = GetComponent<CharacterSpriteAnimator8Dir>();
+                bool is8DirActive = (anim8 != null && anim8.enabled) || 
+                                   (CharacterVisualController8Dir.Instance != null && CharacterVisualController8Dir.Instance.useTraditionalFrameAnimation);
+
+                if (is8DirActive)
                 {
-                    Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
-                    spriteRenderer.flipX = (mouseWorld.x < transform.position.x);
+                    spriteRenderer.flipX = false;
+                }
+                else
+                {
+                    if (mainCamera == null) mainCamera = Camera.main;
+                    if (mainCamera != null)
+                    {
+                        Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(GameInput.GetMousePosition());
+                        spriteRenderer.flipX = (mouseWorld.x < transform.position.x);
+                    }
                 }
             }
 
@@ -194,6 +231,13 @@ namespace GodlessFantasy.Player
 
         private void FixedUpdate()
         {
+            if (IsDead)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                isMovingToTarget = false;
+                return;
+            }
+
             if (isDashing) return;
 
             Vector2 currentPos = rb.position;
@@ -245,6 +289,7 @@ namespace GodlessFantasy.Player
 
         public void MoveTo(Vector2 worldPos)
         {
+            if (IsDead) return;
             targetPosition = worldPos;
             isMovingToTarget = true;
             stuckTimer = -0.2f; // Khởi tạo khoảng trễ gia tốc
@@ -254,6 +299,7 @@ namespace GodlessFantasy.Player
 
         public void SetTargetPosition(Vector2 worldPos)
         {
+            if (IsDead) return;
             targetPosition = worldPos;
             isMovingToTarget = true;
             stuckTimer = -0.2f;
@@ -269,7 +315,7 @@ namespace GodlessFantasy.Player
 
         private void HandleMouseMovement()
         {
-            if (BlockWorldClick || GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI()) return;
+            if (IsDead || BlockWorldClick || GodlessFantasy.UI.CombatHUD.IsMouseOverAnyUI()) return;
 
             // Click chuột trái để di chuyển
             if (GameInput.GetLeftMouseButtonDown())

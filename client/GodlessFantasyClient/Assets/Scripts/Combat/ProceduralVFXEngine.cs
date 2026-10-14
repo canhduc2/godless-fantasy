@@ -1454,6 +1454,14 @@ namespace GodlessFantasy.Combat
 
         public void SpawnPixelImpactBurst(Vector3 center, ElementalPalette palette, float radius)
         {
+            // Tối ưu hóa hiệu năng & Draw Calls: Bỏ qua sinh hiệu ứng nổ nếu nằm ngoài camera / xa hơn 28m
+            if (Camera.main != null)
+            {
+                Vector3 camPos = Camera.main.transform.position;
+                camPos.z = center.z;
+                if ((camPos - center).sqrMagnitude > 28f * 28f) return;
+            }
+
             // 1. Chớp sáng tâm va chạm (Gọn gàng 0.55m, không làm nổ bung bắp cải 10 mét)
             GameObject flash = new GameObject("ImpactFlash");
             flash.transform.position = center;

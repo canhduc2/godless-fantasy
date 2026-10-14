@@ -129,7 +129,20 @@ namespace GodlessFantasy.AI
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
         }
 
-        private void Update()
+        private void OnEnable()
+        {
+            MonsterAIManager.Register(this);
+        }
+
+        private void OnDisable()
+        {
+            MonsterAIManager.Unregister(this);
+        }
+
+        /// <summary>
+        /// Được gọi tập trung từ MonsterAIManager (Zero C++ Bridge Overhead)
+        /// </summary>
+        public void TickAI(float dt, Vector3 playerPos, bool isPlayerStealth)
         {
             if (health != null && health.IsDead)
             {
@@ -137,13 +150,10 @@ namespace GodlessFantasy.AI
                 return;
             }
 
-            if (playerTransform == null) FindPlayer();
-
             float distFromSpawn = Vector2.Distance(transform.position, spawnPoint);
-            float distToPlayer = playerTransform != null ? Vector2.Distance(transform.position, playerTransform.position) : 999f;
+            float distToPlayer = Vector2.Distance(transform.position, playerPos);
 
             // Kiểm tra trạng thái ẩn nấp của người chơi
-            bool isPlayerStealth = GodlessFantasy.Player.PlayerMovement.IsPlayerInStealth;
             if (isPlayerStealth && (currentState == MonsterState.Chase || currentState == MonsterState.AttackTelegraph))
             {
                 SetState(MonsterState.Wander);

@@ -318,14 +318,18 @@
              VIEW 2: PIXEL ART STUDIO (XƯỞNG VẼ PIXEL)
              ============================================================ -->
         <div id="view-pixel-editor" class="tab-view">
+            <!-- PIXEL STUDIO TOP HEADER -->
             <div class="pixel-editor-header">
                 <div class="pe-header-left">
-                    <button class="btn btn-secondary" id="btn-pe-back">
+                    <button class="btn btn-secondary" id="btn-pe-back" title="Quay lại giao diện Lắp Ghép Xương">
                         ⬅️ Quay lại Ghép Xương
                     </button>
                     <div class="pe-title-info">
-                        <span class="pe-title" id="pe-current-part-name">Đang vẽ: male_torso_front</span>
+                        <span class="pe-title" id="pe-current-part-name">female_torso_front</span>
                         <span class="pe-dimensions" id="pe-dimensions">16 x 19 px</span>
+                        <span class="info-badge info-accent" id="pe-badge-gender">👩 Nữ</span>
+                        <span class="info-badge" id="pe-badge-dir">South (Trước)</span>
+                        <span class="info-badge" id="pe-badge-part">🥋 Thân</span>
                     </div>
                 </div>
 
@@ -336,8 +340,78 @@
                     <button class="btn btn-secondary" id="btn-pe-download" title="Tải ảnh PNG của mảnh này">
                         📥 Tải PNG
                     </button>
+                    <button class="btn btn-secondary" id="btn-pe-save-stay" title="Lưu mảnh này vào ổ cứng và cập nhật Unity ngay (không thoát khỏi phòng vẽ) [Ctrl+S]">
+                        💾 Lưu Mảnh Này
+                    </button>
                     <button class="btn btn-primary" id="btn-pe-save" title="Lưu mảnh và quay lại ghép xương">
-                        💾 LƯU MẢNH & QUAY LẠI GHÉP XƯƠNG
+                        💾 LƯU & VỀ GHÉP XƯƠNG
+                    </button>
+                </div>
+            </div>
+
+            <!-- PIXEL STUDIO SUB-NAVIGATION BAR (CHUYỂN HƯỚNG / GIỚI TÍNH / BỘ PHẬN NHANH) -->
+            <div class="pixel-editor-subnav">
+                <!-- 1. GENDER TOGGLE -->
+                <div class="pe-nav-section">
+                    <span class="pe-nav-label">Giới Tính:</span>
+                    <div class="pe-toggle-pill">
+                        <button class="pe-nav-gender-btn active" data-gender="female" id="pe-gender-female" title="Chuyển sang bộ phận Nữ">
+                            <span>👩</span> Nữ
+                        </button>
+                        <button class="pe-nav-gender-btn" data-gender="male" id="pe-gender-male" title="Chuyển sang bộ phận Nam">
+                            <span>👨</span> Nam
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pe-nav-divider"></div>
+
+                <!-- 2. 8-DIRECTIONS SELECTOR -->
+                <div class="pe-nav-section">
+                    <span class="pe-nav-label">8 Hướng:</span>
+                    <div class="pe-nav-dir-buttons">
+                        <button class="pe-nav-dir-btn active" data-dir="south" title="South - Hướng Trước (S)">⬇ S</button>
+                        <button class="pe-nav-dir-btn" data-dir="south_east" title="South-East - Chếch Trước Phải (SE)">↘ SE</button>
+                        <button class="pe-nav-dir-btn" data-dir="east" title="East - Hướng Phải (E)">➡ E</button>
+                        <button class="pe-nav-dir-btn" data-dir="north_east" title="North-East - Chếch Sau Phải (NE)">↗ NE</button>
+                        <button class="pe-nav-dir-btn" data-dir="north" title="North - Hướng Sau / Lưng (N)">⬆ N</button>
+                        <button class="pe-nav-dir-btn" data-dir="north_west" title="North-West - Chếch Sau Trái (NW)">↖ NW</button>
+                        <button class="pe-nav-dir-btn" data-dir="west" title="West - Hướng Trái (W)">⬅ W</button>
+                        <button class="pe-nav-dir-btn" data-dir="south_west" title="South-West - Chếch Trước Trái (SW)">↙ SW</button>
+                    </div>
+                </div>
+
+                <div class="pe-nav-divider"></div>
+
+                <!-- 3. 6-PARTS SELECTOR -->
+                <div class="pe-nav-section">
+                    <span class="pe-nav-label">Mảnh Khớp:</span>
+                    <div class="pe-nav-part-buttons">
+                        <button class="pe-nav-part-btn" data-part="idle_head" title="Đầu (Head)">👤 Đầu</button>
+                        <button class="pe-nav-part-btn active" data-part="idle_body" title="Thân (Body/Torso)">🥋 Thân</button>
+                        <button class="pe-nav-part-btn" data-part="idle_arm_left" title="Tay Trái (Arm Left)">💪 Tay Trái</button>
+                        <button class="pe-nav-part-btn" data-part="idle_arm_right" title="Tay Phải (Arm Right)">🥊 Tay Phải</button>
+                        <button class="pe-nav-part-btn" data-part="idle_leg_left" title="Chân Trái (Leg Left)">🦵 Chân Trái</button>
+                        <button class="pe-nav-part-btn" data-part="idle_leg_right" title="Chân Phải (Leg Right)">🥾 Chân Phải</button>
+                    </div>
+                </div>
+
+                <div class="pe-nav-divider"></div>
+
+                <!-- 4. DIRECT FILE PICKER -->
+                <div class="pe-nav-section">
+                    <span class="pe-nav-label">Tệp Ảnh:</span>
+                    <select id="pe-select-part-file" class="pe-file-select" title="Chọn trực tiếp file ảnh trong thư mục parts">
+                    </select>
+                </div>
+
+                <!-- 5. AUTOSAVE & LIVE ANIM PREVIEW TOGGLE -->
+                <div class="pe-nav-section pe-nav-end">
+                    <label class="pe-autosave-label" title="Tự động lưu thay đổi khi bạn bấm đổi hướng hoặc đổi bộ phận">
+                        <input type="checkbox" id="pe-check-autosave" checked> ⚡ Tự lưu khi đổi mảnh
+                    </label>
+                    <button class="btn btn-secondary btn-sm" id="btn-pe-toggle-live-anim" title="Bật/Tắt cửa sổ xem trước hoạt ảnh chuyển động trực tiếp 60 FPS">
+                        🎬 Xem Hoạt Ảnh
                     </button>
                 </div>
             </div>
@@ -414,6 +488,39 @@
                         <canvas id="pe-canvas"></canvas>
                         <canvas id="pe-cursor-canvas"></canvas>
                     </div>
+
+                    <!-- LIVE ANIMATION MINI-VIEWPORT WIDGET (DRAGGABLE / COLLAPSIBLE) -->
+                    <div id="pe-live-anim-widget" class="pe-live-anim-panel" style="display: none;">
+                        <div class="pe-anim-panel-header" id="pe-anim-panel-drag-handle">
+                            <div class="pe-anim-title">
+                                <span class="anim-live-dot">●</span> 🎬 HOẠT ẢNH TRỰC TIẾP
+                            </div>
+                            <div class="pe-anim-header-btns">
+                                <button class="mini-icon-btn" id="btn-pe-anim-minimize" title="Thu nhỏ / Phóng to">🗕</button>
+                                <button class="mini-icon-btn" id="btn-pe-anim-close" title="Đóng cửa sổ xem trước">✖</button>
+                            </div>
+                        </div>
+                        <div class="pe-anim-panel-body" id="pe-anim-panel-body">
+                            <div class="pe-anim-canvas-box">
+                                <canvas id="pe-mini-anim-canvas" width="64" height="64"></canvas>
+                            </div>
+                            <div class="pe-anim-controls">
+                                <div class="pe-anim-states">
+                                    <button class="pe-anim-state-btn active" data-state="idle" title="Đứng thở (Idle)">🧘 Đứng</button>
+                                    <button class="pe-anim-state-btn" data-state="walk" title="Đi bộ (Walk)">🚶 Đi</button>
+                                    <button class="pe-anim-state-btn" data-state="run" title="Chạy nhanh (Run)">🏃 Chạy</button>
+                                    <button class="pe-anim-state-btn" data-state="attack" title="Chém đao (Attack)">⚔️ Chém</button>
+                                </div>
+                                <div class="pe-anim-dir-row">
+                                    <span id="pe-anim-info-label" class="pe-anim-telemetry">60 FPS</span>
+                                    <button class="btn btn-primary btn-xs" id="btn-pe-goto-anim-tab" title="Mở Xưởng Hoạt Ảnh toàn màn hình">
+                                        Mở Full Tab ↗
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="pe-status-bar">
                         <span id="pe-coord">Toạ độ: X: 0, Y: 0</span>
                         <span>💡 Phím tắt: [B] Bút | [E] Tẩy | [G] Đổ màu | [I] Hút | [D] Cọ sáng | [K] Cọ tối | [M] Vùng chọn | [W] Đũa thần | [Ctrl+A] Chọn hết | [Esc] Bỏ chọn | [Ctrl+S] Lưu</span>
@@ -580,6 +687,19 @@
             <div class="anim-workspace">
                 <!-- LEFT SIDEBAR: STATES & PLAYBACK -->
                 <aside class="anim-sidebar left-panel">
+                    <!-- GENDER SELECTOR -->
+                    <div class="panel-section">
+                        <h2 class="section-title">👤 GIỚI TÍNH NHÂN VẬT</h2>
+                        <div class="pe-toggle-pill" style="width: 100%;">
+                            <button class="anim-gender-btn active" data-gender="female" id="anim-btn-female">
+                                <span>👩</span> Nữ (Female)
+                            </button>
+                            <button class="anim-gender-btn" data-gender="male" id="anim-btn-male">
+                                <span>👨</span> Nam (Male)
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="panel-section">
                         <h2 class="section-title">🎬 TRẠNG THÁI HOẠT ẢNH</h2>
                         <div class="anim-state-grid">
@@ -663,11 +783,15 @@
                 <main class="anim-viewport-container">
                     <div class="viewport-header">
                         <div class="current-info">
+                            <span class="info-badge" id="anim-badge-gender">👩 Nữ (Female)</span>
                             <span class="info-badge info-accent" id="anim-badge-state">🧘 Đứng Thở (Idle)</span>
                             <span class="info-badge" id="anim-badge-dir">South (Trước)</span>
                             <span class="info-badge" id="anim-badge-fps">60 FPS</span>
                         </div>
                         <div class="viewport-actions">
+                            <button class="btn btn-secondary btn-sm" id="btn-anim-edit-part" title="Chuyển sang Xưởng Vẽ Pixel để chỉnh sửa mảnh này">
+                                🎨 Chỉnh Sửa Trong Xưởng Vẽ
+                            </button>
                             <div class="setting-row" style="margin-bottom:0">
                                 <label style="font-size:12px">Zoom:</label>
                                 <select id="select-anim-zoom" style="padding:4px 8px;font-size:12px">

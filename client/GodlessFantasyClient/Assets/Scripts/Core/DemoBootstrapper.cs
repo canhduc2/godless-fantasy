@@ -34,6 +34,11 @@ namespace GodlessFantasy.Core
 
         private void Start()
         {
+            // TỐI ƯU HIỆU NĂNG CỰC ĐẠI (300+ FPS): Tắt VSync, mở khóa Frame Rate và tối ưu Physics 2D
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = -1;
+            GamePhysicsOptimizer.Initialize();
+
             BuildDemoWorld();
         }
 
@@ -55,6 +60,7 @@ namespace GodlessFantasy.Core
             gameObject.AddComponent<EnvironmentAtmosphereManager>();
             var mapMgr = gameObject.AddComponent<BlockMapManager>();
             mapMgr.InitializeMap(-135, 135, -66, 66);
+            gameObject.AddComponent<GodlessFantasy.AI.MonsterAIManager>();
             gameObject.AddComponent<TerrainPainterTool>();
             gameObject.AddComponent<ItemCreatorModal>();
             gameObject.AddComponent<GodlessFantasy.UI.SkillTestingMatrixModal>();
@@ -68,6 +74,10 @@ namespace GodlessFantasy.Core
             gameObject.AddComponent<SkillDatabase>();
             gameObject.AddComponent<SkillVFXManager>();
             gameObject.AddComponent<GodlessFantasy.Guild.GuildManager>();
+            gameObject.AddComponent<GodlessFantasy.Network.GameNetworkClient>();
+            gameObject.AddComponent<GodlessFantasy.Network.NetworkPlayerManager>();
+            gameObject.AddComponent<GodlessFantasy.UI.AuthUniverseModal>();
+            gameObject.AddComponent<GodlessFantasy.UI.CharacterCreationModal>();
             GameSettings.Initialize();
             AudioManager.EnsureExists();
 
@@ -115,6 +125,7 @@ namespace GodlessFantasy.Core
             GameObject playerObj = new GameObject("Player_Hero");
             playerObj.tag = "Player";
             playerObj.transform.position = new Vector3(-70.0f, 0, 0); // Đứng ở quảng trường Đại Đô Thị Làng Tân Thủ
+            GamePhysicsOptimizer.SetLayer(playerObj, GamePhysicsOptimizer.LayerPlayer);
 
             var pSr = playerObj.AddComponent<SpriteRenderer>();
             pSr.sprite = playerSprite;
@@ -166,6 +177,7 @@ namespace GodlessFantasy.Core
             {
                 GameObject petObj = new GameObject("Pet_Squirrel_Companion");
                 petObj.transform.position = playerObj.transform.position + new Vector3(-1.0f, -0.3f, 0);
+                GamePhysicsOptimizer.SetLayer(petObj, GamePhysicsOptimizer.LayerPet);
 
                 var petSr = petObj.AddComponent<SpriteRenderer>();
                 petSr.sprite = petSprite;
@@ -203,7 +215,8 @@ namespace GodlessFantasy.Core
             if (mainCam != null)
             {
                 mainCam.orthographic = true;
-                mainCam.orthographicSize = 3.6f;
+                float aspect = (mainCam.aspect > 0.1f) ? mainCam.aspect : (16f / 9f);
+                mainCam.orthographicSize = 20.0f / aspect; // Tầm nhìn mặc định ~20m mỗi bên (tổng chiều ngang ~40m)
                 mainCam.backgroundColor = new Color(0.06f, 0.08f, 0.12f, 1f);
 
                 if (!mainCam.TryGetComponent<CameraController>(out var camCtrl))
@@ -320,6 +333,7 @@ namespace GodlessFantasy.Core
             {
                 dummyObj.transform.localScale = new Vector3(scale, scale, 1f);
             }
+            GamePhysicsOptimizer.SetLayer(dummyObj, GamePhysicsOptimizer.LayerEnemy);
 
             var sr = dummyObj.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;

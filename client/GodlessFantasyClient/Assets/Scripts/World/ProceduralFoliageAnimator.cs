@@ -45,8 +45,26 @@ namespace GodlessFantasy.World
             }
         }
 
+        private static Camera cachedMainCam;
+        private static float lastCamCacheTime = 0f;
+
         private void Update()
         {
+            if (Time.time - lastCamCacheTime > 2f || cachedMainCam == null)
+            {
+                cachedMainCam = Camera.main;
+                lastCamCacheTime = Time.time;
+            }
+
+            // TỐI ƯU CỰC ĐẠI CHO 300+ FPS: Culling theo khoảng cách Camera / Người chơi
+            // Nếu ở xa hơn 22m, bỏ qua toàn bộ phép biến đổi transform và tính sin/cos!
+            if (cachedMainCam != null)
+            {
+                float dx = transform.position.x - cachedMainCam.transform.position.x;
+                float dy = transform.position.y - cachedMainCam.transform.position.y;
+                if (dx * dx + dy * dy > 484f) return; // 22m * 22m = 484
+            }
+
             float t = Time.time * speed + phaseOffset;
 
             switch (animType)

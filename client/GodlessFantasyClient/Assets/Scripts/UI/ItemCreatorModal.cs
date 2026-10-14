@@ -19,8 +19,8 @@ namespace GodlessFantasy.UI
         public static ItemCreatorModal Instance { get; private set; }
 
         public bool IsOpen = false;
-        private int studioMode = 0; // 0 = Tạo Vật Phẩm, 1 = Tạo Kỹ Năng, 2 = Live Inventory Inspector
-        private readonly string[] modeTabs = { "⚔️ THIẾT KẾ VẬT PHẨM & TRANG BỊ", "📜 THIẾT KẾ KỸ NĂNG (140 VFX)", "🎒 CHỈNH SỬA TÚI ĐỒ (LIVE INSPECTOR)" };
+        private int studioMode = 0; // 0 = Tạo Vật Phẩm, 1 = Tạo Kỹ Năng, 2 = Live Inventory Inspector, 3 = Xưởng Pixel Art & Hoạt Ảnh 8 Hướng
+        private readonly string[] modeTabs = { "⚔️ THIẾT KẾ VẬT PHẨM & TRANG BỊ", "📜 THIẾT KẾ KỸ NĂNG (140 VFX)", "🎒 CHỈNH SỬA TÚI ĐỒ (LIVE INSPECTOR)", "🎨 XƯỞNG PIXEL ART & HOẠT ẢNH 8 HƯỚNG" };
 
         private Vector2 presetScrollPos;
         private Vector2 formScrollPos;
@@ -28,14 +28,57 @@ namespace GodlessFantasy.UI
         // Texture Cache để vẽ icon trực quan
         private Dictionary<string, Texture2D> iconTexCache = new Dictionary<string, Texture2D>();
 
-        // ================= FORM 1: VẬT PHẨM =================
+        // ================= FORM 4: XƯỞNG PIXEL ART & HOẠT ẢNH 8 HƯỚNG (FRAME-BY-FRAME STUDIO) =================
+        private const int CANVAS_SIZE = 32;
+        private const int TOTAL_STUDIO_FRAMES = 8;
+        private int currentFrameIndex = 0; // 0..7
+        private int currentEditDirIndex = 0; // 0..7 (South, SouthEast, East, NorthEast, North, NorthWest, West, SouthWest)
+        private readonly string[] studioDirLabels = { "Nam (S)", "Đ.Nam (SE)", "Đông (E)", "Đ.Bắc (NE)", "Bắc (N)", "T.Bắc (NW)", "Tây (W)", "T.Nam (SW)" };
+        private readonly string[] studioDirCodes = { "south", "south_east", "east", "north_east", "north", "north_west", "west", "south_west" };
+
+        private Color32[][][] multiFramePixels; // [8 hướng][8 frames][CANVAS_SIZE * CANVAS_SIZE]
+        private Texture2D[] frameTextures; // 8 textures xem trước cho 8 frame của hướng đang chọn
+        private Texture2D canvasTex;
+        private Color32[] canvasPixels;
+
+        // Bật/tắt Onion Skin (vệt mờ frame trước để căn nhịp bước đi)
+        private bool enableOnionSkin = true;
+        private float onionSkinAlpha = 0.35f;
+
+        // Clipboard Copy / Paste / Move
+        private Color32[] clipboardPixels = null;
+        private int clipboardW = 0;
+        private int clipboardH = 0;
+
+        // Trình chiếu xem trước (Live Preview)
+        private bool isPreviewPlaying = true;
+        private float previewFps = 8.5f;
+        private float previewTimer = 0f;
+        private int previewCurrentFrame = 0;
+        private int previewDirIndex = 0;
+
+        public enum CostumeTool { Pencil, Eraser, FillBucket, EyeDropper, BoxSelect, MoveSelection }
+        private CostumeTool currentCostumeTool = CostumeTool.Pencil;
+        private Color32 currentCostumeColor = new Color32(235, 185, 50, 255); // Hoàng Kim
+        private RectInt costumeBoxSelection = new RectInt(0, 0, 0, 0);
+        private bool isBoxDragging = false;
+        private Vector2Int boxDragStart;
+
+        private EquipSlot targetCostumeSlot = EquipSlot.Costume;
+        private string costumeItemName = "Pháp Sư Áo Choàng Đỏ";
+        private string costumeItemId = "custom_mage_costume";
+        private int costumeTierIdx = 5; // S
+        private Sprite liveWearableSprite;
+        private Texture2D customIconPreviewTex;
+
+        // ================= FORM 1: VẬT PHẨM & TRANG BỊ =================
         private string formItemName = "Bảo Kiếm Hoàng Kim";
         private string formItemId = "custom_wep_1";
-        private int formTypeIndex = 0; // 0=Equipment, 1=Consumable, 2=Pet, 3=Material
-        private readonly string[] typeNames = { "Trang Bị", "Dược Phẩm", "Thú Cưng", "Nguyên Liệu" };
+        private int formTypeIndex = 0; // 0=Equipment, 1=Costume, 2=Consumable, 3=Pet, 4=Material
+        private readonly string[] typeNames = { "Trang Bị", "Ngoại Trang", "Dược Phẩm", "Thú Cưng", "Nguyên Liệu" };
 
-        private int formSlotIndex = 7; // 0=Không, 1=Mũ, 2=Áo, 3=Quần, 4=Giày, 5=Nhẫn, 6=Dây Chuyền, 7=Vũ Khí
-        private readonly string[] slotNames = { "Không", "Mũ", "Áo", "Quần", "Giày", "Nhẫn", "Dây Chuyền", "Vũ Khí" };
+        private int formSlotIndex = 7; // 0=Không, 1=Mũ, 2=Áo, 3=Quần, 4=Giày, 5=Nhẫn, 6=Dây Chuyền, 7=Vũ Khí, 8=Ngoại Trang
+        private readonly string[] slotNames = { "Không", "Mũ", "Áo", "Quần", "Giày", "Nhẫn", "Dây Chuyền", "Vũ Khí", "Ngoại Trang" };
 
         private int formTierIndex = 4;
         private readonly string[] tierNames = { "Phẩm E", "Phẩm D", "Phẩm C", "Phẩm B", "Phẩm A", "Phẩm S", "Phẩm X" };
@@ -49,8 +92,21 @@ namespace GodlessFantasy.UI
             new Color(1.0f, 0.25f, 0.35f)   // X: Đỏ thần thoại
         };
 
+        // RÀNG BUỘC: GIỚI TÍNH, HỆ & THUỘC TÍNH NGUYÊN TỐ
+        private int formItemGenderIndex = 0; // 0=All, 1=Male, 2=Female
+        private readonly string[] genderNames = { "Chung (Cả Nam & Nữ)", "Chỉ Nam ♂", "Chỉ Nữ ♀" };
+
+        private string formItemReqClass = "Toàn Hệ";
+        private string formItemElement = "Toàn Thuộc Tính";
+
+        // Thuộc tính ẩn (Special Traits)
+        private bool formItemHasGenderSwapTrait = false;
+        private bool formItemHasSpeedTrait = false;
+        private bool formItemHasLifestealTrait = false;
+        private bool formItemHasInvulTrait = false;
+
         private int formItemIconIndex = 0;
-        private readonly string[] defaultItemIconOptions = { "item_weapon", "item_helmet", "item_armor", "item_pants", "item_boots", "item_ring", "item_necklace", "item_potion_hp", "item_potion_mana", "pet_squirrel" };
+        private readonly string[] defaultItemIconOptions = { "item_weapon", "item_helmet", "item_armor", "item_pants", "item_boots", "item_ring", "item_necklace", "item_costume", "item_potion_hp", "item_potion_mana", "pet_squirrel" };
         private List<string> customItemIconsList = new List<string>();
 
         // Cơ chế nạp ảnh ngoài cho vật phẩm (Custom External Item Icon)
@@ -200,8 +256,10 @@ namespace GodlessFantasy.UI
         private string editItemQuantity = "1";
         private string editItemStats = "";
         private string editItemDesc = "";
+        private int editItemGenderIndex = 0;
         private string editItemReqClass = "Toàn Hệ";
-        private string editItemElement = "Vô Hệ";
+        private string editItemElement = "Toàn Thuộc Tính";
+        private bool editItemHasGenderSwap = false;
 
         // Chỉ số Kỹ năng nếu ô được chọn là SkillScroll:
         private string editSkillMana = "25";
@@ -300,6 +358,11 @@ namespace GodlessFantasy.UI
             public string strVal;
             public string vitVal;
             public string agiVal;
+            public int genderIdx; // 0=All, 1=Male, 2=Female
+            public string reqClass; // "Toàn Hệ", "Kị Sĩ, Võ Sĩ", etc.
+            public string reqElement; // "Toàn Thuộc Tính", "Hỏa, Lôi", "Hỏa, Băng, Lôi", "Hỏa, Băng, Phong, Lôi"
+            public bool hasGenderSwap;
+            public bool hasSpeed;
         }
 
         private struct SkillPreset
@@ -322,16 +385,30 @@ namespace GodlessFantasy.UI
 
         private readonly ItemPreset[] itemPresets = new ItemPreset[]
         {
-            new ItemPreset { name = "Bảo Kiếm Hoàng Kim", id = "custom_wep_gold", typeIdx = 0, slotIdx = 7, tierIdx = 4, icon = "item_weapon", stats = "+20 Công (Dam) · +25 Trí Tuệ (INT) · +15 Sức Mạnh (STR)", desc = "Kiếm cổ đại dát vàng tăng mạnh sức công kích và ma pháp.", dmg = "20", armor = "0", hp = "0", mp = "0", intVal = "25", strVal = "15", vitVal = "0", agiVal = "0" },
-            new ItemPreset { name = "Mũ Chiến Binh Sắt", id = "custom_helm_iron", typeIdx = 0, slotIdx = 1, tierIdx = 2, icon = "item_helmet", stats = "+10 Giáp · +12 Thể Lực (VIT) · +5 Sức Mạnh (STR)", desc = "Mũ giáp bền bỉ che chắn cho dũng sĩ trong giao tranh.", dmg = "0", armor = "10", hp = "0", mp = "0", intVal = "0", strVal = "5", vitVal = "12", agiVal = "0" },
-            new ItemPreset { name = "Áo Choàng Thánh Quang", id = "custom_armor_holy", typeIdx = 0, slotIdx = 2, tierIdx = 5, icon = "item_armor", stats = "+18 Giáp · +30 Thể Lực (VIT) · +15 Trí Tuệ (INT)", desc = "Áo choàng hộ mệnh thần thánh ban phước lành bình an.", dmg = "0", armor = "18", hp = "0", mp = "0", intVal = "15", strVal = "0", vitVal = "30", agiVal = "0" },
-            new ItemPreset { name = "Quần Phù Thủy Gió", id = "custom_pants_wind", typeIdx = 0, slotIdx = 3, tierIdx = 3, icon = "item_pants", stats = "+8 Giáp · +18 Nhanh Nhẹn (AGI) · +10 Trí Tuệ (INT)", desc = "Vải lụa nhẹ như gió giúp dũng sĩ lướt đi linh hoạt.", dmg = "0", armor = "8", hp = "0", mp = "0", intVal = "10", strVal = "0", vitVal = "0", agiVal = "18" },
-            new ItemPreset { name = "Giày Phong Hành Thần", id = "custom_boots_speed", typeIdx = 0, slotIdx = 4, tierIdx = 3, icon = "item_boots", stats = "+6 Giáp · +20 Nhanh Nhẹn (AGI)", desc = "Đôi giày tăng mạnh tốc độ di chuyển và giảm hồi chiêu Lướt.", dmg = "0", armor = "6", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "20" },
-            new ItemPreset { name = "Nhẫn Hộ Mệnh Cổ Đại", id = "custom_ring_guard", typeIdx = 0, slotIdx = 5, tierIdx = 4, icon = "item_ring", stats = "+15 Thể Lực (VIT) · +15 Sức Mạnh (STR)", desc = "Nhẫn hộ mệnh giúp giảm sát thương nhận vào.", dmg = "0", armor = "0", hp = "0", mp = "0", intVal = "0", strVal = "15", vitVal = "15", agiVal = "0" },
-            new ItemPreset { name = "Dây Chuyền Thần Ma", id = "custom_neck_magic", typeIdx = 0, slotIdx = 6, tierIdx = 5, icon = "item_necklace", stats = "+35 Trí Tuệ (INT) · +60 Mana", desc = "Trang sức tỏa hào quang ma thuật vô biên.", dmg = "0", armor = "0", hp = "0", mp = "60", intVal = "35", strVal = "0", vitVal = "0", agiVal = "0" },
-            new ItemPreset { name = "Bình Siêu Máu HP", id = "custom_pot_hp_super", typeIdx = 1, slotIdx = 0, tierIdx = 3, icon = "item_potion_hp", stats = "Hồi +100 Máu (HP) tức thì", desc = "Bình dược phẩm tinh khiết hồi phục sinh lực thần tốc.", dmg = "0", armor = "0", hp = "100", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0" },
-            new ItemPreset { name = "Bình Đại Mana MP", id = "custom_pot_mp_grand", typeIdx = 1, slotIdx = 0, tierIdx = 3, icon = "item_potion_mana", stats = "Hồi +80 Mana tức thì", desc = "Nước suối pháp thuật tái tạo nguồn năng lượng dồi dào.", dmg = "0", armor = "0", hp = "0", mp = "80", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0" },
-            new ItemPreset { name = "Sóc Thần Hoàng Kim", id = "custom_pet_gold_sq", typeIdx = 2, slotIdx = 0, tierIdx = 5, icon = "pet_squirrel", stats = "Thú Cưng Đồng Hành · +5 Thể Lực (VIT) · +5 Nhanh Nhẹn (AGI)", desc = "Thú cưng linh vật quý tộc đồng hành cùng dũng sĩ.", dmg = "0", armor = "0", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "5", agiVal = "5" }
+            // === 1. BỘ TRANG BỊ ĐA HỆ & ĐA THUỘC TÍNH (2, 3, 4 NGUYÊN TỐ) ===
+            new ItemPreset { name = "Chiến Giáp Hỏa Long", id = "preset_flame_armor", typeIdx = 0, slotIdx = 2, tierIdx = 5, icon = "item_armor", stats = "+28 Giáp · +45 Thể Lực (VIT)", desc = "Chiến giáp đúc từ vảy rồng lửa, hỗ trợ cả Kị Sĩ và Võ Sĩ mang nguyên tố Hỏa hoặc Lôi.", dmg = "0", armor = "28", hp = "0", mp = "0", intVal = "0", strVal = "15", vitVal = "45", agiVal = "0", genderIdx = 0, reqClass = "Kị Sĩ, Võ Sĩ", reqElement = "Hỏa, Lôi", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Chiến Bào Nam Vương", id = "preset_male_king", typeIdx = 0, slotIdx = 2, tierIdx = 5, icon = "item_armor", stats = "+32 Giáp · +50 Sức Mạnh (STR)", desc = "Chiến bào hùng dũng chỉ dành riêng cho đấng mày râu (Nam ♂). Nữ nhân không thể mặc!", dmg = "0", armor = "32", hp = "0", mp = "0", intVal = "0", strVal = "50", vitVal = "25", agiVal = "0", genderIdx = 1, reqClass = "Kị Sĩ, Võ Sĩ", reqElement = "Hỏa, Lôi", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Váy Chiến Nữ Valkyrie", id = "preset_female_valkyrie", typeIdx = 0, slotIdx = 2, tierIdx = 5, icon = "item_armor", stats = "+30 Giáp · +45 Nhanh Nhẹn (AGI)", desc = "Trang phục thanh tao may đo riêng cho nữ chiến binh (Nữ ♀). Nam nhân không thể mặc!", dmg = "0", armor = "30", hp = "0", mp = "0", intVal = "15", strVal = "0", vitVal = "20", agiVal = "45", genderIdx = 2, reqClass = "Kị Sĩ, Xạ Thủ", reqElement = "Hỏa, Băng, Quang", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Nhẫn Tam Nguyên (3 Hệ)", id = "preset_tri_ring", typeIdx = 0, slotIdx = 5, tierIdx = 5, icon = "item_ring", stats = "+25 Công · +20 Toàn Chỉ Số", desc = "Bảo nhẫn hội tụ Tam Đại Nguyên Tố (Hỏa, Băng, Lôi). Cả 3 hệ này đều kích hoạt uy lực!", dmg = "25", armor = "0", hp = "50", mp = "50", intVal = "20", strVal = "20", vitVal = "20", agiVal = "20", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Hỏa, Băng, Lôi", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Thánh Bùa Tứ Tượng (4 Hệ)", id = "preset_quad_amulet", typeIdx = 0, slotIdx = 6, tierIdx = 5, icon = "item_necklace", stats = "+20 Giáp · +35 Thể Lực (VIT)", desc = "Bùa hộ mệnh thần bí tương thích 4 nguyên tố Tứ Tượng (Hỏa, Băng, Phong, Lôi).", dmg = "0", armor = "20", hp = "100", mp = "80", intVal = "15", strVal = "15", vitVal = "35", agiVal = "15", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Hỏa, Băng, Phong, Lôi", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Võ Khố Lửa Băng (2 Hệ)", id = "preset_dual_pants", typeIdx = 0, slotIdx = 3, tierIdx = 4, icon = "item_pants", stats = "+22 Giáp · +30 Thể Lực", desc = "Quần giáp tôi luyện từ băng hỏa song hàn, tương thích cho Kị Sĩ và Võ Sĩ mang nguyên tố Hỏa hoặc Băng.", dmg = "0", armor = "22", hp = "60", mp = "0", intVal = "0", strVal = "10", vitVal = "30", agiVal = "10", genderIdx = 0, reqClass = "Kị Sĩ, Võ Sĩ", reqElement = "Hỏa, Băng", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Pháp Bào Băng Sương", id = "preset_mage_frost_robe", typeIdx = 0, slotIdx = 2, tierIdx = 4, icon = "item_armor", stats = "+12 Giáp · +40 Trí Tuệ (INT)", desc = "Áo dệt từ tơ tuyết vĩnh cửu. Chỉ Pháp Sư hệ Băng hoặc Mộc mới lĩnh hội được.", dmg = "0", armor = "12", hp = "0", mp = "100", intVal = "40", strVal = "0", vitVal = "15", agiVal = "0", genderIdx = 0, reqClass = "Pháp Sư", reqElement = "Băng, Mộc", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Áo Da Phong Linh", id = "preset_wind_vest", typeIdx = 0, slotIdx = 2, tierIdx = 5, icon = "item_armor", stats = "+16 Giáp · +38 Nhanh Nhẹn (AGI)", desc = "Áo da nhẹ bẫng tựa gió thoảng, hỗ trợ thần tiễn thủ và pháp sư mang nguyên tố Phong hoặc Ánh Sáng.", dmg = "0", armor = "16", hp = "0", mp = "40", intVal = "15", strVal = "0", vitVal = "15", agiVal = "38", genderIdx = 0, reqClass = "Xạ Thủ, Pháp Sư", reqElement = "Phong, Quang", hasGenderSwap = false, hasSpeed = false },
+
+            // === 2. BỘ NGOẠI TRANG CÓ THUỘC TÍNH ẨN (CHUYỂN GIỚI [G] & TỐC BIẾN) ===
+            new ItemPreset { name = "Ngoại Trang Thánh Nữ", id = "preset_costume_valkyrie", typeIdx = 1, slotIdx = 8, tierIdx = 5, icon = "item_costume", stats = "+18 Giáp • [Thuộc Tính Ẩn: Chuyển Giới (G)]", desc = "Chiến bào thánh khiết của các nữ chiến thần phương Bắc, chỉ phái Nữ ♀ mới có thể khoác lên người!", dmg = "0", armor = "18", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0", genderIdx = 2, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = true, hasSpeed = false },
+            new ItemPreset { name = "Ngoại Trang Thiết Giáp Chiến Thần", id = "preset_costume_champion", typeIdx = 1, slotIdx = 8, tierIdx = 5, icon = "item_costume", stats = "+15 Giáp • [Thuộc Tính Ẩn: Chuyển Giới (G)]", desc = "Ngoại trang hoàng gia tuyệt mỹ sở hữu Thuộc Tính Ẩn: Cho phép chủ nhân chuyển đổi tự do giữa hình thái Nam ♂ và Nữ ♀ khi bấm phím [G]!", dmg = "0", armor = "15", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = true, hasSpeed = false },
+            new ItemPreset { name = "Ngoại Trang Hắc Ám Dạ Hành", id = "preset_costume_shadow", typeIdx = 1, slotIdx = 8, tierIdx = 4, icon = "item_costume", stats = "+12 Giáp • [Thuộc Tính Ẩn: Tốc Biến]", desc = "Ngoại trang sát thủ bóng đêm, tăng tốc độ di chuyển trong màn đêm nhưng không có chức năng Chuyển Giới.", dmg = "0", armor = "12", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = true },
+
+            // === 3. TRANG BỊ CƠ BẢN & VẬT PHẨM ===
+            new ItemPreset { name = "Bảo Kiếm Hoàng Kim", id = "custom_wep_gold", typeIdx = 0, slotIdx = 7, tierIdx = 4, icon = "item_weapon", stats = "+20 Công (Dam) · +25 Trí Tuệ (INT) · +15 Sức Mạnh (STR)", desc = "Kiếm cổ đại dát vàng tăng mạnh sức công kích và ma pháp.", dmg = "20", armor = "0", hp = "0", mp = "0", intVal = "25", strVal = "15", vitVal = "0", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Mũ Chiến Binh Sắt", id = "custom_helm_iron", typeIdx = 0, slotIdx = 1, tierIdx = 2, icon = "item_helmet", stats = "+10 Giáp · +12 Thể Lực (VIT) · +5 Sức Mạnh (STR)", desc = "Mũ giáp bền bỉ che chắn cho dũng sĩ trong giao tranh.", dmg = "0", armor = "10", hp = "0", mp = "0", intVal = "0", strVal = "5", vitVal = "12", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Áo Choàng Thánh Quang", id = "custom_armor_holy", typeIdx = 0, slotIdx = 2, tierIdx = 5, icon = "item_armor", stats = "+18 Giáp · +30 Thể Lực (VIT) · +15 Trí Tuệ (INT)", desc = "Áo choàng hộ mệnh thần thánh ban phước lành bình an.", dmg = "0", armor = "18", hp = "0", mp = "0", intVal = "15", strVal = "0", vitVal = "30", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Quần Phù Thủy Gió", id = "custom_pants_wind", typeIdx = 0, slotIdx = 3, tierIdx = 3, icon = "item_pants", stats = "+8 Giáp · +18 Nhanh Nhẹn (AGI) · +10 Trí Tuệ (INT)", desc = "Vải lụa nhẹ như gió giúp dũng sĩ lướt đi linh hoạt.", dmg = "0", armor = "8", hp = "0", mp = "0", intVal = "10", strVal = "0", vitVal = "0", agiVal = "18", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Giày Phong Hành Thần", id = "custom_boots_speed", typeIdx = 0, slotIdx = 4, tierIdx = 3, icon = "item_boots", stats = "+6 Giáp · +20 Nhanh Nhẹn (AGI)", desc = "Đôi giày tăng mạnh tốc độ di chuyển và giảm hồi chiêu Lướt.", dmg = "0", armor = "6", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "20", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Bình Siêu Máu HP", id = "custom_pot_hp_super", typeIdx = 2, slotIdx = 0, tierIdx = 3, icon = "item_potion_hp", stats = "Hồi +100 Máu (HP) tức thì", desc = "Bình dược phẩm tinh khiết hồi phục sinh lực thần tốc.", dmg = "0", armor = "0", hp = "100", mp = "0", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Bình Đại Mana MP", id = "custom_pot_mp_grand", typeIdx = 2, slotIdx = 0, tierIdx = 3, icon = "item_potion_mana", stats = "Hồi +80 Mana tức thì", desc = "Nước suối pháp thuật tái tạo nguồn năng lượng dồi dào.", dmg = "0", armor = "0", hp = "0", mp = "80", intVal = "0", strVal = "0", vitVal = "0", agiVal = "0", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false },
+            new ItemPreset { name = "Sóc Thần Hoàng Kim", id = "custom_pet_gold_sq", typeIdx = 3, slotIdx = 0, tierIdx = 5, icon = "pet_squirrel", stats = "Thú Cưng Đồng Hành · +5 Thể Lực (VIT) · +5 Nhanh Nhẹn (AGI)", desc = "Thú cưng linh vật quý tộc đồng hành cùng dũng sĩ.", dmg = "0", armor = "0", hp = "0", mp = "0", intVal = "0", strVal = "0", vitVal = "5", agiVal = "5", genderIdx = 0, reqClass = "Toàn Hệ", reqElement = "Toàn Thuộc Tính", hasGenderSwap = false, hasSpeed = false }
         };
 
         private readonly SkillPreset[] skillPresets = new SkillPreset[]
@@ -476,7 +553,7 @@ namespace GodlessFantasy.UI
                 DrawSkillFormColumn(new Rect(col2Rect.x + 8, col2Rect.y + 26, col2Rect.width - 16, col2Rect.height - 32));
                 DrawSkillPreviewColumn(new Rect(col3Rect.x + 8, col3Rect.y + 26, col3Rect.width - 16, col3Rect.height - 32));
             }
-            else
+            else if (studioMode == 2)
             {
                 DrawColumnFrame(col1Rect, "🎒 24 Ô HÀNH TRANG (SLOTS)");
                 DrawColumnFrame(col2Rect, "🛠️ LIVE INSPECTOR (CHỈNH TRỰC TIẾP)");
@@ -484,6 +561,16 @@ namespace GodlessFantasy.UI
                 DrawInventorySlotsListColumn(new Rect(col1Rect.x + 6, col1Rect.y + 26, col1Rect.width - 12, col1Rect.height - 32));
                 DrawInventoryItemEditorColumn(new Rect(col2Rect.x + 8, col2Rect.y + 26, col2Rect.width - 16, col2Rect.height - 32));
                 DrawInventoryLivePreviewColumn(new Rect(col3Rect.x + 8, col3Rect.y + 26, col3Rect.width - 16, col3Rect.height - 32));
+            }
+            else
+            {
+                EnsureCostumeCanvas();
+                DrawColumnFrame(col1Rect, "🎬 8 HƯỚNG & CÔNG CỤ PIXEL");
+                DrawColumnFrame(col2Rect, "🖌️ CANVAS TỪNG FRAME & ONION SKIN");
+                DrawColumnFrame(col3Rect, "▶️ XEM HOẠT ẢNH & XUẤT SPRITE");
+                DrawCostumeToolsColumn(new Rect(col1Rect.x + 6, col1Rect.y + 26, col1Rect.width - 12, col1Rect.height - 32));
+                DrawCostumeCanvasColumn(new Rect(col2Rect.x + 8, col2Rect.y + 26, col2Rect.width - 16, col2Rect.height - 32));
+                DrawCostumePreviewActionsColumn(new Rect(col3Rect.x + 8, col3Rect.y + 26, col3Rect.width - 16, col3Rect.height - 32));
             }
         }
 
@@ -533,7 +620,7 @@ namespace GodlessFantasy.UI
                 bool isSelected = (formItemId == p.id);
                 if (isSelected) GUI.color = new Color(1f, 0.85f, 0.3f);
 
-                string iconLabel = (p.typeIdx == 0) ? "⚔️" : (p.typeIdx == 1) ? "🧪" : "🐿️";
+                string iconLabel = (p.typeIdx == 0) ? "⚔️" : (p.typeIdx == 1) ? "👘" : (p.typeIdx == 2) ? "🧪" : "🐿️";
                 if (GUI.Button(btnRect, $"{iconLabel} {p.name}", pStyle))
                 {
                     formItemName = p.name;
@@ -552,6 +639,13 @@ namespace GodlessFantasy.UI
                     formItemBonusStr = p.strVal ?? "0";
                     formItemBonusVit = p.vitVal ?? "0";
                     formItemBonusAgi = p.agiVal ?? "0";
+                    formItemGenderIndex = p.genderIdx;
+                    formItemReqClass = string.IsNullOrEmpty(p.reqClass) ? "Toàn Hệ" : p.reqClass;
+                    formItemElement = string.IsNullOrEmpty(p.reqElement) ? "Toàn Thuộc Tính" : p.reqElement;
+                    formItemHasGenderSwapTrait = p.hasGenderSwap;
+                    formItemHasSpeedTrait = p.hasSpeed;
+                    formItemHasLifestealTrait = false;
+                    formItemHasInvulTrait = false;
                 }
                 GUI.color = Color.white;
             }
@@ -640,7 +734,7 @@ namespace GodlessFantasy.UI
         // ================= CỘT 2: BẢNG FORM THIẾT KẾ VẬT PHẨM =================
         private void DrawItemFormColumn(Rect r)
         {
-            float totalContentH = 670f;
+            float totalContentH = 920f;
             Rect viewRect = new Rect(0, 0, r.width - 16f, Mathf.Max(r.height, totalContentH));
             formScrollPos = GUI.BeginScrollView(r, formScrollPos, viewRect, false, true);
 
@@ -667,6 +761,11 @@ namespace GodlessFantasy.UI
                 formSlotIndex = GUI.SelectionGrid(new Rect(95, curY, viewRect.width - 95, 38), formSlotIndex, slotNames, 4);
                 curY += 42f;
             }
+            else if (formTypeIndex == 1) // Ngoại Trang (Costume)
+            {
+                GUI.Label(new Rect(0, curY, viewRect.width, 20), "👘 Vị Trí Mặc: <color=#00e5ff>Ngoại Trang (Costume Slot) [Tự Động]</color>", lbl);
+                curY += 24f;
+            }
 
             // 3. Phẩm Cấp (Các nút to có màu riêng biệt, không bị cụt chữ)
             GUI.Label(new Rect(0, curY, 90, 20), "Phẩm Cấp:", lbl);
@@ -685,6 +784,79 @@ namespace GodlessFantasy.UI
             }
             GUI.color = Color.white;
             curY += 28f;
+
+            // 3.1 RÀNG BUỘC GIỚI TÍNH (Gender Restriction)
+            GUI.Label(new Rect(0, curY, 130, 20), "⚧ Ràng Buộc Giới Tính:", lbl);
+            formItemGenderIndex = GUI.Toolbar(new Rect(135, curY, viewRect.width - 135, 24), formItemGenderIndex, genderNames);
+            curY += 28f;
+
+            // 3.2 RÀNG BUỘC HỆ / CHỨC NGHIỆP (Multi-class Restriction)
+            GUI.Label(new Rect(0, curY, 130, 20), "⚔️ Hệ / Phái Cho Phép:", lbl);
+            formItemReqClass = GUI.TextField(new Rect(135, curY, viewRect.width - 135, 22), formItemReqClass);
+            curY += 24f;
+
+            float classBtnW = (viewRect.width - 16f) / 5f;
+            if (GUI.Button(new Rect(0, curY, classBtnW, 20), "Toàn Hệ")) formItemReqClass = "Toàn Hệ";
+            if (GUI.Button(new Rect(classBtnW + 4, curY, classBtnW, 20), "⚔️ Kị Sĩ")) formItemReqClass = "Kị Sĩ";
+            if (GUI.Button(new Rect((classBtnW + 4) * 2, curY, classBtnW, 20), "🔮 Pháp Sư")) formItemReqClass = "Pháp Sư";
+            if (GUI.Button(new Rect((classBtnW + 4) * 3, curY, classBtnW, 20), "🥊 Võ Sĩ")) formItemReqClass = "Võ Sĩ";
+            if (GUI.Button(new Rect((classBtnW + 4) * 4, curY, classBtnW, 20), "🏹 Xạ Thủ")) formItemReqClass = "Xạ Thủ";
+            curY += 22f;
+
+            float multiClassW = (viewRect.width - 12f) / 4f;
+            if (GUI.Button(new Rect(0, curY, multiClassW, 20), "⚔️🥊 Kị Sĩ, Võ Sĩ")) formItemReqClass = "Kị Sĩ, Võ Sĩ";
+            if (GUI.Button(new Rect(multiClassW + 4, curY, multiClassW, 20), "🔮🏹 Pháp Sư, Xạ Thủ")) formItemReqClass = "Pháp Sư, Xạ Thủ";
+            if (GUI.Button(new Rect((multiClassW + 4) * 2, curY, multiClassW, 20), "⚔️🏹 Kị Sĩ, Xạ Thủ")) formItemReqClass = "Kị Sĩ, Xạ Thủ";
+            if (GUI.Button(new Rect((multiClassW + 4) * 3, curY, multiClassW, 20), "🔮🥊 Pháp Sư, Võ Sĩ")) formItemReqClass = "Pháp Sư, Võ Sĩ";
+            curY += 26f;
+
+            // 3.3 RÀNG BUỘC THUỘC TÍNH NGUYÊN TỐ (Multi-element: 2, 3, 4 thuộc tính)
+            GUI.Label(new Rect(0, curY, 130, 20), "🔥 Thuộc Tính Nguyên Tố:", lbl);
+            formItemElement = GUI.TextField(new Rect(135, curY, viewRect.width - 135, 22), formItemElement);
+            curY += 24f;
+
+            float elemBtnW = (viewRect.width - 28f) / 8f;
+            if (GUI.Button(new Rect(0, curY, elemBtnW, 20), "Toàn Hệ")) formItemElement = "Toàn Thuộc Tính";
+            if (GUI.Button(new Rect(elemBtnW + 4, curY, elemBtnW, 20), "🔥 Hỏa")) formItemElement = "Hỏa";
+            if (GUI.Button(new Rect((elemBtnW + 4) * 2, curY, elemBtnW, 20), "❄️ Băng")) formItemElement = "Băng";
+            if (GUI.Button(new Rect((elemBtnW + 4) * 3, curY, elemBtnW, 20), "⚡ Lôi")) formItemElement = "Lôi";
+            if (GUI.Button(new Rect((elemBtnW + 4) * 4, curY, elemBtnW, 20), "🌪️ Phong")) formItemElement = "Phong";
+            if (GUI.Button(new Rect((elemBtnW + 4) * 5, curY, elemBtnW, 20), "🌿 Mộc")) formItemElement = "Mộc";
+            if (GUI.Button(new Rect((elemBtnW + 4) * 6, curY, elemBtnW, 20), "✨ Quang")) formItemElement = "Quang";
+            if (GUI.Button(new Rect((elemBtnW + 4) * 7, curY, elemBtnW, 20), "🔮 Ám")) formItemElement = "Ám";
+            curY += 22f;
+
+            float dualElemW = (viewRect.width - 16f) / 5f;
+            if (GUI.Button(new Rect(0, curY, dualElemW, 20), "🔥❄️ Hỏa, Băng")) formItemElement = "Hỏa, Băng";
+            if (GUI.Button(new Rect(dualElemW + 4, curY, dualElemW, 20), "🔥⚡ Hỏa, Lôi")) formItemElement = "Hỏa, Lôi";
+            if (GUI.Button(new Rect((dualElemW + 4) * 2, curY, dualElemW, 20), "❄️🌿 Băng, Mộc")) formItemElement = "Băng, Mộc";
+            if (GUI.Button(new Rect((dualElemW + 4) * 3, curY, dualElemW, 20), "🌪️✨ Phong, Quang")) formItemElement = "Phong, Quang";
+            if (GUI.Button(new Rect((dualElemW + 4) * 4, curY, dualElemW, 20), "✨🔮 Quang, Ám")) formItemElement = "Quang, Ám";
+            curY += 22f;
+
+            float triElemW = (viewRect.width - 8f) / 3f;
+            if (GUI.Button(new Rect(0, curY, triElemW, 20), "🔥❄️⚡ Hỏa, Băng, Lôi (3 Hệ)")) formItemElement = "Hỏa, Băng, Lôi";
+            if (GUI.Button(new Rect(triElemW + 4, curY, triElemW, 20), "🔥❄️✨ Hỏa, Băng, Quang (3 Hệ)")) formItemElement = "Hỏa, Băng, Quang";
+            if (GUI.Button(new Rect((triElemW + 4) * 2, curY, triElemW, 20), "🛡️ Tứ Tượng: Hỏa, Băng, Phong, Lôi (4 Hệ)")) formItemElement = "Hỏa, Băng, Phong, Lôi";
+            curY += 26f;
+
+            // 3.4 THUỘC TÍNH ẨN (Special Traits)
+            GUI.Label(new Rect(0, curY, viewRect.width, 18), "✨ Thuộc Tính Ẩn Đặc Biệt (Traits):", lbl);
+            curY += 20f;
+            Rect traitBox = new Rect(0, curY, viewRect.width, 46f);
+            GUI.color = new Color(0.08f, 0.12f, 0.20f, 0.85f);
+            GUI.DrawTexture(traitBox, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            FantasyUITheme.DrawOutline(traitBox, new Color(0.35f, 0.65f, 0.95f, 0.6f), 1);
+
+            float trY = curY + 2f;
+            float trColW = (viewRect.width - 16f) / 2f;
+            formItemHasGenderSwapTrait = GUI.Toggle(new Rect(8f, trY, trColW, 20f), formItemHasGenderSwapTrait, " 🔄 Chuyển Giới [G] (Gender Swap)");
+            formItemHasSpeedTrait = GUI.Toggle(new Rect(8f + trColW, trY, trColW, 20f), formItemHasSpeedTrait, " ⚡ Tăng Tốc Độ (Speed Boost)");
+            trY += 22f;
+            formItemHasLifestealTrait = GUI.Toggle(new Rect(8f, trY, trColW, 20f), formItemHasLifestealTrait, " 🩸 Hút Máu Khi Đánh (Lifesteal)");
+            formItemHasInvulTrait = GUI.Toggle(new Rect(8f + trColW, trY, trColW, 20f), formItemHasInvulTrait, " 🛡️ Hộ Thể Kim Cang (Invulnerable)");
+            curY += 52f;
 
             // 4. KHO ICON DẠNG LƯỚI ẢNH THẬT (Visual Icon Picker)
             GUI.Label(new Rect(0, curY, viewRect.width, 20), "🖼️ Kho Icon Mẫu (Click chọn trực tiếp hình ảnh):", lbl);
@@ -1089,10 +1261,10 @@ namespace GodlessFantasy.UI
             Texture2D itemTex = GetCachedTexture(currentItemIcon);
             GUI.DrawTexture(new Rect(slotBox.x + 4, slotBox.y + 4, 48, 48), itemTex);
             FantasyUITheme.DrawOutline(slotBox, tierColors[formTierIndex], 2);
-            pY += 66f;
+            pY += 62f;
 
             // 2. Khung Giả Lập Tooltip Thực Tế Trong Game
-            Rect tipBox = new Rect(r.x, pY, r.width, 180f);
+            Rect tipBox = new Rect(r.x, pY, r.width, 142f);
             FantasyUITheme.DrawDoubleGoldFrame(tipBox, 1);
 
             var tTitleStyle = new GUIStyle(GUI.skin.label)
@@ -1102,11 +1274,10 @@ namespace GodlessFantasy.UI
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = new Color(1f, 0.88f, 0.45f) }
             };
-            GUI.Label(new Rect(tipBox.x + 6, tipBox.y + 6, tipBox.width - 12, 18), formItemName, tTitleStyle);
+            GUI.Label(new Rect(tipBox.x + 6, tipBox.y + 4, tipBox.width - 12, 18), formItemName, tTitleStyle);
 
-            // Vạch vàng
             GUI.color = new Color(0.85f, 0.70f, 0.30f, 0.6f);
-            GUI.DrawTexture(new Rect(tipBox.x + 8, tipBox.y + 26, tipBox.width - 16, 1), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(tipBox.x + 8, tipBox.y + 24, tipBox.width - 16, 1), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             var tBodyStyle = new GUIStyle(GUI.skin.label)
@@ -1116,17 +1287,60 @@ namespace GodlessFantasy.UI
                 normal = { textColor = Color.white }
             };
 
-            string slotStr = (formTypeIndex == 0) ? $"Vị Trí: {slotNames[formSlotIndex]}" : $"Loại: {typeNames[formTypeIndex]}";
+            string slotStr = (formTypeIndex == 1) ? "Ngoại Trang (Skin)" : (formTypeIndex == 0 ? $"Vị Trí: {slotNames[formSlotIndex]}" : $"Loại: {typeNames[formTypeIndex]}");
+            string genderStr = (formItemGenderIndex == 0) ? "Cả Nam & Nữ [Unisex]" : (formItemGenderIndex == 1) ? "Nam ♂" : "Nữ ♀";
+            string traitStr = formItemHasGenderSwapTrait ? " · [G] Chuyển Giới" : "";
             string bodyText = $"• Phẩm: <color=#{ColorUtility.ToHtmlStringRGB(tierColors[formTierIndex])}>{tierNames[formTierIndex]}</color> | {slotStr}\n" +
+                              $"• Yêu Cầu: {genderStr} | {formItemReqClass} | {formItemElement}{traitStr}\n" +
                               $"• {formItemStats}\n" +
                               $"• {formItemDesc}";
 
-            GUI.Label(new Rect(tipBox.x + 8, tipBox.y + 30, tipBox.width - 16, 140f), bodyText, tBodyStyle);
-            pY += 194f;
+            GUI.Label(new Rect(tipBox.x + 8, tipBox.y + 28, tipBox.width - 16, 108f), bodyText, tBodyStyle);
+            pY += 148f;
 
-            // 3. CÁC NÚT HÀNH ĐỘNG NỔI BẬT
-            float btnH = 26f;
-            float btnGap = 4f;
+            // 3. ĐÁNH GIÁ TƯƠNG THÍCH NHÂN VẬT THỰC TẾ (LIVE HERO COMPATIBILITY)
+            bool heroFemale = ProceduralCharacterRig2D.Instance != null ? ProceduralCharacterRig2D.Instance.IsFemale
+                            : (CharacterVisualController8Dir.Instance != null && CharacterVisualController8Dir.Instance.IsFemale);
+            string heroClass = PlayerStats.Instance != null ? PlayerStats.Instance.CharacterClass : "Kị Sĩ";
+            string heroElem = PlayerStats.Instance != null ? PlayerStats.Instance.Element : "Hỏa";
+
+            bool genderOk = (formItemGenderIndex == 0) || (formItemGenderIndex == 1 && !heroFemale) || (formItemGenderIndex == 2 && heroFemale);
+            bool classOk = (formItemReqClass == "Toàn Hệ") || formItemReqClass.Contains(heroClass);
+            bool elemOk = (formItemElement == "Toàn Thuộc Tính") || formItemElement.Contains(heroElem);
+            bool canEquip = genderOk && classOk && elemOk;
+
+            Rect evalBox = new Rect(r.x, pY, r.width, 36f);
+            GUI.color = canEquip ? new Color(0.08f, 0.25f, 0.12f, 0.95f) : new Color(0.28f, 0.08f, 0.08f, 0.95f);
+            GUI.DrawTexture(evalBox, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            FantasyUITheme.DrawOutline(evalBox, canEquip ? Color.green : Color.red, 1);
+
+            var evalStyle = new GUIStyle(GUI.skin.label) { fontSize = 10, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, wordWrap = true };
+            if (canEquip)
+            {
+                evalStyle.normal.textColor = Color.green;
+                GUI.Label(evalBox, $"🟢 ĐỦ ĐIỀU KIỆN MẶC CHO HERO\n({(heroFemale ? "Nữ ♀" : "Nam ♂")} · {heroClass} · {heroElem})", evalStyle);
+            }
+            else
+            {
+                evalStyle.normal.textColor = new Color(1f, 0.45f, 0.45f);
+                string failReason = !genderOk ? "Sai Giới Tính" : (!classOk ? "Khác Hệ" : "Khác Thuộc Tính");
+                GUI.Label(evalBox, $"⛔ BỊ KHÓA ({failReason}) CHO HERO\n({(heroFemale ? "Nữ ♀" : "Nam ♂")} · {heroClass} · {heroElem})", evalStyle);
+            }
+            pY += 40f;
+
+            // 4. CÁC NÚT HÀNH ĐỘNG NỔI BẬT
+            float btnH = 22f;
+            float btnGap = 3f;
+
+            // Nút Mặc Thử Ngay
+            GUI.color = canEquip ? new Color(1.0f, 0.85f, 0.25f) : new Color(0.7f, 0.7f, 0.7f);
+            if (GUI.Button(new Rect(r.x, pY, r.width, btnH), canEquip ? "⚡ MẶC THỬ NGAY (EQUIP)" : "⚠️ MẶC CƯỠNG CHẾ (TEST)"))
+            {
+                EquipDirectlyFromStudio();
+            }
+            pY += btnH + btnGap;
+
             GUI.color = new Color(0.2f, 0.95f, 0.4f);
             if (GUI.Button(new Rect(r.x, pY, r.width, btnH), "➕ TẠO VÀO TÚI ĐỒ"))
             {
@@ -1138,7 +1352,6 @@ namespace GodlessFantasy.UI
             if (GUI.Button(new Rect(r.x, pY, r.width, btnH), "💾 LƯU DATABASE (JSON)"))
             {
                 SaveItemToDatabase();
-                studioExportStatus = $"✅ Đã lưu '{formItemName}' vào JSON database!";
             }
             pY += btnH + btnGap;
 
@@ -1151,10 +1364,32 @@ namespace GodlessFantasy.UI
             pY += btnH + btnGap;
             GUI.color = Color.white;
 
+            // 5. QUICK SANDBOX TOGGLES CHO TESTER
+            float sbW = (r.width - 6f) / 2f;
+            if (GUI.Button(new Rect(r.x, pY, sbW, 20f), heroFemale ? "Đổi: Nam ♂" : "Đổi: Nữ ♀"))
+            {
+                if (ProceduralCharacterRig2D.Instance != null) ProceduralCharacterRig2D.Instance.ForceSetGender(!heroFemale);
+                if (CharacterVisualController8Dir.Instance != null) CharacterVisualController8Dir.Instance.ForceSetGender(!heroFemale);
+            }
+            if (GUI.Button(new Rect(r.x + sbW + 6f, pY, sbW, 20f), "Đổi Hệ/Element"))
+            {
+                if (PlayerStats.Instance != null)
+                {
+                    string[] cList = { "Kị Sĩ", "Pháp Sư", "Võ Sĩ", "Xạ Thủ" };
+                    int curCIdx = System.Array.IndexOf(cList, PlayerStats.Instance.CharacterClass);
+                    PlayerStats.Instance.SetCharacterClass(cList[(curCIdx + 1 + cList.Length) % cList.Length]);
+
+                    string[] eList = { "Hỏa", "Băng", "Lôi", "Phong", "Mộc", "Quang", "Ám" };
+                    int curEIdx = System.Array.IndexOf(eList, PlayerStats.Instance.Element);
+                    PlayerStats.Instance.SetElement(eList[(curEIdx + 1 + eList.Length) % eList.Length]);
+                }
+            }
+            pY += 24f;
+
             if (!string.IsNullOrEmpty(studioExportStatus))
             {
                 var stStyle = new GUIStyle(GUI.skin.label) { fontSize = 10, alignment = TextAnchor.MiddleCenter, wordWrap = true, normal = { textColor = studioExportStatus.StartsWith("✅") ? Color.green : Color.yellow } };
-                GUI.Label(new Rect(r.x, pY, r.width, 30), studioExportStatus, stStyle);
+                GUI.Label(new Rect(r.x, pY, r.width, 24), studioExportStatus, stStyle);
             }
         }
 
@@ -1281,6 +1516,46 @@ namespace GodlessFantasy.UI
             }
         }
 
+        private void EquipDirectlyFromStudio()
+        {
+            var inv = FindAnyObjectByType<InventoryManager>();
+            if (inv == null) return;
+
+            ItemType t = (formTypeIndex == 0) ? ItemType.Equipment :
+                         (formTypeIndex == 1) ? ItemType.Costume :
+                         (formTypeIndex == 2) ? ItemType.Consumable :
+                         (formTypeIndex == 3) ? ItemType.Pet : ItemType.Material;
+            EquipSlot s = (formTypeIndex == 1) ? EquipSlot.Costume : (EquipSlot)formSlotIndex;
+            string tier = tierNames[formTierIndex];
+            Color c = tierColors[formTierIndex];
+            string[] allItemIcons = GetAllItemIcons();
+            string icon = allItemIcons[Mathf.Clamp(formItemIconIndex, 0, allItemIcons.Length - 1)];
+
+            var newItem = new InventoryItem(formItemId, formItemName, t, s, tier, c, icon, formItemStats, formItemDesc, 1, null, formItemReqClass, formItemElement, (ItemGender)formItemGenderIndex);
+            if (formItemHasGenderSwapTrait) newItem.AddTrait(ItemTraits.GENDER_SWAP);
+
+            // Kiểm tra điều kiện mặc
+            bool heroFemale = ProceduralCharacterRig2D.Instance != null ? ProceduralCharacterRig2D.Instance.IsFemale
+                            : (CharacterVisualController8Dir.Instance != null && CharacterVisualController8Dir.Instance.IsFemale);
+            string heroClass = PlayerStats.Instance != null ? PlayerStats.Instance.CharacterClass : "Kị Sĩ";
+            string heroElem = PlayerStats.Instance != null ? PlayerStats.Instance.Element : "Hỏa";
+            if (!newItem.CanPlayerEquip(heroFemale, heroClass, heroElem, out string reason))
+            {
+                studioExportStatus = $"⛔ Không thể mặc: {reason}";
+                return;
+            }
+
+            // Tự động thêm vào túi đồ và mặc ngay lập tức
+            if (!inv.AddItem(newItem))
+            {
+                studioExportStatus = "⚠️ Túi đồ đầy, không thể thêm đồ để mặc!";
+                return;
+            }
+
+            inv.EquipGearItem(newItem, false);
+            studioExportStatus = $"⚡ ĐÃ MẶC THÀNH CÔNG '{formItemName}' VÀO Ô {s}!";
+        }
+
         private void CreateAndAddItem()
         {
             var inv = FindAnyObjectByType<InventoryManager>();
@@ -1293,15 +1568,18 @@ namespace GodlessFantasy.UI
             }
 
             ItemType t = (formTypeIndex == 0) ? ItemType.Equipment :
-                         (formTypeIndex == 1) ? ItemType.Consumable :
-                         (formTypeIndex == 2) ? ItemType.Pet : ItemType.Material;
-            EquipSlot s = (EquipSlot)formSlotIndex;
+                         (formTypeIndex == 1) ? ItemType.Costume :
+                         (formTypeIndex == 2) ? ItemType.Consumable :
+                         (formTypeIndex == 3) ? ItemType.Pet : ItemType.Material;
+            EquipSlot s = (formTypeIndex == 1) ? EquipSlot.Costume : (EquipSlot)formSlotIndex;
             string tier = tierNames[formTierIndex];
             Color c = tierColors[formTierIndex];
             string[] allItemIcons = GetAllItemIcons();
             string icon = allItemIcons[Mathf.Clamp(formItemIconIndex, 0, allItemIcons.Length - 1)];
 
-            var newItem = new InventoryItem(formItemId, formItemName, t, s, tier, c, icon, formItemStats, formItemDesc, 1);
+            var newItem = new InventoryItem(formItemId, formItemName, t, s, tier, c, icon, formItemStats, formItemDesc, 1, null, formItemReqClass, formItemElement, (ItemGender)formItemGenderIndex);
+            if (formItemHasGenderSwapTrait) newItem.AddTrait(ItemTraits.GENDER_SWAP);
+
             if (!inv.AddItem(newItem))
             {
                 studioExportStatus = "⚠️ Hành trang đã đầy (24/24)! Không thể tạo thêm.";
@@ -1320,15 +1598,19 @@ namespace GodlessFantasy.UI
             }
 
             ItemType t = (formTypeIndex == 0) ? ItemType.Equipment :
-                         (formTypeIndex == 1) ? ItemType.Consumable :
-                         (formTypeIndex == 2) ? ItemType.Pet : ItemType.Material;
-            EquipSlot s = (EquipSlot)formSlotIndex;
+                         (formTypeIndex == 1) ? ItemType.Costume :
+                         (formTypeIndex == 2) ? ItemType.Consumable :
+                         (formTypeIndex == 3) ? ItemType.Pet : ItemType.Material;
+            EquipSlot s = (formTypeIndex == 1) ? EquipSlot.Costume : (EquipSlot)formSlotIndex;
             string tier = tierNames[formTierIndex];
             Color c = tierColors[formTierIndex];
             string[] allItemIcons = GetAllItemIcons();
             string icon = allItemIcons[Mathf.Clamp(formItemIconIndex, 0, allItemIcons.Length - 1)];
 
-            ItemDatabase.Instance.RegisterNewItemFromForm(formItemId, formItemName, t, s, tier, c, icon, formItemStats, formItemDesc, 1);
+            var traits = new List<string>();
+            if (formItemHasGenderSwapTrait) traits.Add(ItemTraits.GENDER_SWAP);
+
+            ItemDatabase.Instance.RegisterNewItemFromForm(formItemId, formItemName, t, s, tier, c, icon, formItemStats, formItemDesc, 1, formItemReqClass, formItemElement, (ItemGender)formItemGenderIndex, traits);
             studioExportStatus = $"✅ Đã lưu '{formItemName}' vào JSON database!";
         }
 
@@ -1475,16 +1757,23 @@ namespace GodlessFantasy.UI
         private string GenerateItemCSharpCode()
         {
             ItemType t = (formTypeIndex == 0) ? ItemType.Equipment :
-                         (formTypeIndex == 1) ? ItemType.Consumable :
-                         (formTypeIndex == 2) ? ItemType.Pet : ItemType.Material;
-            EquipSlot s = (EquipSlot)formSlotIndex;
+                         (formTypeIndex == 1) ? ItemType.Costume :
+                         (formTypeIndex == 2) ? ItemType.Consumable :
+                         (formTypeIndex == 3) ? ItemType.Pet : ItemType.Material;
+            EquipSlot s = (formTypeIndex == 1) ? EquipSlot.Costume : (EquipSlot)formSlotIndex;
             string tier = tierNames[formTierIndex];
             Color c = tierColors[formTierIndex];
             string[] allItemIcons = GetAllItemIcons();
             string icon = allItemIcons[Mathf.Clamp(formItemIconIndex, 0, allItemIcons.Length - 1)];
 
+            string genderStr = ((ItemGender)formItemGenderIndex).ToString();
+            string traitCode = formItemHasGenderSwapTrait ? $"\n    .WithTrait(ItemTraits.GENDER_SWAP)" : "";
+
             return $"// Vật phẩm: {formItemName}\n" +
-                   $"var {formItemId.Replace("-", "_")} = new InventoryItem(\"{formItemId}\", \"{formItemName}\", ItemType.{t}, EquipSlot.{s}, \"{tier}\", new Color({c.r:F2}f, {c.g:F2}f, {c.b:F2}f), \"{icon}\", \"{formItemStats}\", \"{formItemDesc}\", 1);";
+                   $"var {formItemId.Replace("-", "_")} = new InventoryItem(\"{formItemId}\", \"{formItemName}\", ItemType.{t}, EquipSlot.{s}, \"{tier}\", new Color({c.r:F2}f, {c.g:F2}f, {c.b:F2}f), \"{icon}\", \"{formItemStats}\", \"{formItemDesc}\", 1)\n" +
+                   $"    .WithGender(ItemGender.{genderStr})\n" +
+                   $"    .WithClass(\"{formItemReqClass}\")\n" +
+                   $"    .WithElement(\"{formItemElement}\"){traitCode};";
         }
 
         private string GenerateSkillCSharpCode()
@@ -1681,9 +1970,10 @@ namespace GodlessFantasy.Database
             if (editTierIndex < 0) editTierIndex = 0;
             editItemQuantity = it.quantity.ToString();
             editItemStats = it.statsInfo ?? "";
-            editItemDesc = it.description ?? "";
             editItemReqClass = it.requiredClass ?? "Toàn Hệ";
-            editItemElement = it.element ?? "Vô Hệ";
+            editItemElement = it.element ?? "Toàn Thuộc Tính";
+            editItemGenderIndex = (int)it.requiredGender;
+            editItemHasGenderSwap = it.HasTrait(ItemTraits.GENDER_SWAP);
 
             if (it.scrollData != null)
             {
@@ -1753,6 +2043,24 @@ namespace GodlessFantasy.Database
             GUI.Label(new Rect(0, curY, 90, 20), "Mô Tả:", lbl);
             editItemDesc = GUI.TextArea(new Rect(95, curY, viewRect.width - 95, 42), editItemDesc);
             curY += 48f;
+
+            if (it.itemType == ItemType.Equipment || it.itemType == ItemType.Costume)
+            {
+                GUI.Label(new Rect(0, curY, 90, 20), "Giới Tính:", lbl);
+                editItemGenderIndex = GUI.Toolbar(new Rect(95, curY, viewRect.width - 95, 22), editItemGenderIndex, genderNames);
+                curY += 26f;
+
+                GUI.Label(new Rect(0, curY, 90, 20), "Hệ Yêu Cầu:", lbl);
+                editItemReqClass = GUI.TextField(new Rect(95, curY, viewRect.width - 95, 22), editItemReqClass);
+                curY += 26f;
+
+                GUI.Label(new Rect(0, curY, 90, 20), "Thuộc Tính:", lbl);
+                editItemElement = GUI.TextField(new Rect(95, curY, viewRect.width - 95, 22), editItemElement);
+                curY += 26f;
+
+                editItemHasGenderSwap = GUI.Toggle(new Rect(95, curY, viewRect.width - 95, 20), editItemHasGenderSwap, " 🚻 Thuộc tính ẩn: [G] Chuyển Giới (Gender Swap)");
+                curY += 24f;
+            }
 
             if (it.itemType == ItemType.SkillScroll && it.scrollData != null)
             {
@@ -1850,6 +2158,11 @@ namespace GodlessFantasy.Database
             if (int.TryParse(editItemQuantity, out int q)) it.quantity = Mathf.Max(1, q);
             it.statsInfo = editItemStats;
             it.description = editItemDesc;
+            it.requiredGender = (ItemGender)editItemGenderIndex;
+            it.requiredClass = editItemReqClass;
+            it.element = editItemElement;
+            if (editItemHasGenderSwap) it.AddTrait(ItemTraits.GENDER_SWAP);
+            else it.RemoveTrait(ItemTraits.GENDER_SWAP);
 
             if (it.scrollData != null)
             {
@@ -2060,6 +2373,882 @@ namespace GodlessFantasy.Database
             }
 
             GodlessFantasy.Core.AudioManager.PlayCast();
+        }
+
+        // ==============================================================================================
+        //  FORM 4: XƯỞNG THIẾT KẾ PHỤC TRANG & RIG (ALL-IN-ONE COSTUME WORKSHOP)
+        // ==============================================================================================
+        // ==============================================================================================
+        //  FORM 4: XƯỞNG PIXEL ART & HOẠT ẢNH 8 HƯỚNG (FRAME-BY-FRAME PIXEL STUDIO)
+        // ==============================================================================================
+        private void EnsureCostumeCanvas()
+        {
+            if (canvasTex != null && canvasPixels != null && multiFramePixels != null) return;
+
+            multiFramePixels = new Color32[8][][];
+            for (int d = 0; d < 8; d++)
+            {
+                multiFramePixels[d] = new Color32[TOTAL_STUDIO_FRAMES][];
+                for (int f = 0; f < TOTAL_STUDIO_FRAMES; f++)
+                {
+                    multiFramePixels[d][f] = new Color32[CANVAS_SIZE * CANVAS_SIZE];
+                    for (int i = 0; i < CANVAS_SIZE * CANVAS_SIZE; i++)
+                    {
+                        multiFramePixels[d][f][i] = new Color32(0, 0, 0, 0); // Trong suốt mặc định
+                    }
+                }
+            }
+
+            frameTextures = new Texture2D[TOTAL_STUDIO_FRAMES];
+            for (int f = 0; f < TOTAL_STUDIO_FRAMES; f++)
+            {
+                frameTextures[f] = new Texture2D(CANVAS_SIZE, CANVAS_SIZE, TextureFormat.RGBA32, false);
+                frameTextures[f].filterMode = FilterMode.Point;
+                frameTextures[f].wrapMode = TextureWrapMode.Clamp;
+            }
+
+            canvasPixels = new Color32[CANVAS_SIZE * CANVAS_SIZE];
+            canvasTex = new Texture2D(CANVAS_SIZE, CANVAS_SIZE, TextureFormat.RGBA32, false);
+            canvasTex.filterMode = FilterMode.Point;
+            canvasTex.wrapMode = TextureWrapMode.Clamp;
+
+            // Tự động nạp mẫu gốc Pháp Sư cho cả 8 hướng ban đầu
+            for (int d = 0; d < 8; d++)
+            {
+                LoadMagePresetForDirection(d, silent: true);
+            }
+
+            // Nạp frame 0 của hướng hiện tại lên canvas
+            LoadFrameIntoCanvas(0);
+        }
+
+        private void LoadMagePresetForDirection(int dirIdx, bool silent = false)
+        {
+            if (dirIdx < 0 || dirIdx >= 8) return;
+            string dirCode = studioDirCodes[dirIdx];
+
+            for (int f = 0; f < TOTAL_STUDIO_FRAMES; f++)
+            {
+                Texture2D rawTex = Resources.Load<Texture2D>($"Characters/Mage/mage_{dirCode}_{f}");
+                if (rawTex != null)
+                {
+                    for (int y = 0; y < CANVAS_SIZE; y++)
+                    {
+                        for (int x = 0; x < CANVAS_SIZE; x++)
+                        {
+                            float u = (x + 0.5f) / CANVAS_SIZE;
+                            float v = (y + 0.5f) / CANVAS_SIZE;
+                            Color c = rawTex.GetPixelBilinear(u, v);
+                            multiFramePixels[dirIdx][f][y * CANVAS_SIZE + x] = (c.a > 0.15f) ? (Color32)c : new Color32(0, 0, 0, 0);
+                        }
+                    }
+                }
+            }
+
+            RefreshFrameTexturesForCurrentDir();
+            if (!silent)
+            {
+                LoadFrameIntoCanvas(currentFrameIndex);
+                studioExportStatus = $"✅ Đã nạp mẫu Pháp Sư ({studioDirLabels[dirIdx]}) đầy đủ 8 Frame!";
+                GodlessFantasy.Core.AudioManager.PlayPickup();
+            }
+        }
+
+        private void RefreshFrameTexturesForCurrentDir()
+        {
+            if (frameTextures == null || multiFramePixels == null) return;
+            for (int f = 0; f < TOTAL_STUDIO_FRAMES; f++)
+            {
+                if (frameTextures[f] != null)
+                {
+                    frameTextures[f].SetPixels32(multiFramePixels[currentEditDirIndex][f]);
+                    frameTextures[f].Apply();
+                }
+            }
+        }
+
+        private void LoadFrameIntoCanvas(int frameIdx)
+        {
+            currentFrameIndex = Mathf.Clamp(frameIdx, 0, TOTAL_STUDIO_FRAMES - 1);
+            if (multiFramePixels == null || canvasPixels == null || canvasTex == null) return;
+
+            System.Array.Copy(multiFramePixels[currentEditDirIndex][currentFrameIndex], canvasPixels, canvasPixels.Length);
+            canvasTex.SetPixels32(canvasPixels);
+            canvasTex.Apply();
+            UpdateLiveWearableSprite();
+        }
+
+        private void SaveCanvasIntoCurrentFrame()
+        {
+            if (multiFramePixels == null || canvasPixels == null) return;
+            System.Array.Copy(canvasPixels, multiFramePixels[currentEditDirIndex][currentFrameIndex], canvasPixels.Length);
+            if (frameTextures != null && frameTextures[currentFrameIndex] != null)
+            {
+                frameTextures[currentFrameIndex].SetPixels32(canvasPixels);
+                frameTextures[currentFrameIndex].Apply();
+            }
+        }
+
+        private void SwitchDirection(int newDirIdx)
+        {
+            if (newDirIdx == currentEditDirIndex) return;
+            SaveCanvasIntoCurrentFrame();
+            currentEditDirIndex = Mathf.Clamp(newDirIdx, 0, 7);
+            RefreshFrameTexturesForCurrentDir();
+            LoadFrameIntoCanvas(currentFrameIndex);
+        }
+
+        // ─── CỘT 1: HƯỚNG, TIMELINE FRAME, CÔNG CỤ VẼ & BẢNG MÀU ──────────────────────────────────
+        private void DrawCostumeToolsColumn(Rect r)
+        {
+            float curY = r.y + 4f;
+            var lbl = new GUIStyle(GUI.skin.label) { fontSize = 11, fontStyle = FontStyle.Bold, normal = { textColor = new Color(0.9f, 0.95f, 1f) } };
+            var subLbl = new GUIStyle(GUI.skin.label) { fontSize = 10, normal = { textColor = new Color(0.7f, 0.85f, 1f) } };
+
+            // 1. CHỌN HƯỚNG BIÊN TẬP (8 DIRECTIONS)
+            GUI.Label(new Rect(r.x, curY, r.width, 18), "🧭 HƯỚNG ĐANG VẼ:", lbl);
+            curY += 20f;
+            int newDir = GUI.SelectionGrid(new Rect(r.x, curY, r.width, 42f), currentEditDirIndex, studioDirLabels, 4);
+            if (newDir != currentEditDirIndex)
+            {
+                SwitchDirection(newDir);
+            }
+            curY += 46f;
+
+            // 2. TIMELINE CHỌN FRAME (8 FRAMES: 0..7)
+            GUI.Label(new Rect(r.x, curY, r.width, 18), $"🎞️ FRAME HIỆN TẠI: [{currentFrameIndex + 1}/8]", lbl);
+            curY += 20f;
+
+            float frameBtnW = (r.width - 14f) / 8f;
+            for (int f = 0; f < TOTAL_STUDIO_FRAMES; f++)
+            {
+                Rect fRect = new Rect(r.x + f * (frameBtnW + 2f), curY, frameBtnW, 26f);
+                bool isActive = (f == currentFrameIndex);
+                GUI.color = isActive ? new Color(1f, 0.85f, 0.25f) : new Color(0.80f, 0.85f, 0.95f);
+                if (GUI.Button(fRect, $"F{f}"))
+                {
+                    SaveCanvasIntoCurrentFrame();
+                    LoadFrameIntoCanvas(f);
+                }
+                if (isActive)
+                {
+                    FantasyUITheme.DrawOutline(fRect, Color.yellow, 2);
+                }
+                GUI.color = Color.white;
+            }
+            curY += 30f;
+
+            // Nút thao tác Frame nhanh (Nạp mẫu, nhân bản, xóa)
+            float actionBtnW = (r.width - 6f) / 3f;
+            if (GUI.Button(new Rect(r.x, curY, actionBtnW, 22f), "📥 Nạp Mẫu"))
+            {
+                LoadMagePresetForDirection(currentEditDirIndex);
+            }
+            if (GUI.Button(new Rect(r.x + actionBtnW + 3f, curY, actionBtnW, 22f), "📑 Nhân Bản"))
+            {
+                SaveCanvasIntoCurrentFrame();
+                int nextFrame = (currentFrameIndex + 1) % TOTAL_STUDIO_FRAMES;
+                System.Array.Copy(canvasPixels, multiFramePixels[currentEditDirIndex][nextFrame], canvasPixels.Length);
+                RefreshFrameTexturesForCurrentDir();
+                LoadFrameIntoCanvas(nextFrame);
+                studioExportStatus = $"📑 Đã nhân bản Frame {currentFrameIndex} sang Frame {nextFrame}!";
+            }
+            GUI.color = new Color(1f, 0.45f, 0.45f);
+            if (GUI.Button(new Rect(r.x + (actionBtnW + 3f) * 2f, curY, actionBtnW, 22f), "🗑️ Xóa Frame"))
+            {
+                ClearCostumeCanvas();
+            }
+            GUI.color = Color.white;
+            curY += 28f;
+
+            // 3. BỘ CÔNG CỤ VẼ & THAO TÁC PIXEL
+            GUI.Label(new Rect(r.x, curY, r.width, 18), "🖌️ BỘ CÔNG CỤ PIXEL:", lbl);
+            curY += 20f;
+            string[] toolNames = { "✏️ Vẽ", "🧹 Tẩy", "🪣 Đổ", "💧 Hút", "🔲 Chọn", "✋ Dời" };
+            int curToolIdx = (int)currentCostumeTool;
+            int newToolIdx = GUI.SelectionGrid(new Rect(r.x, curY, r.width, 48f), curToolIdx, toolNames, 3);
+            if (newToolIdx != curToolIdx) currentCostumeTool = (CostumeTool)newToolIdx;
+            curY += 52f;
+
+            // 4. THAO TÁC VÙNG CHỌN (COPY / PASTE / DI DỜI CHÍNH XÁC)
+            GUI.Label(new Rect(r.x, curY, r.width, 18), "📋 THAO TÁC VÙNG CHỌN:", lbl);
+            curY += 20f;
+
+            float cpBtnW = (r.width - 4f) / 2f;
+            if (GUI.Button(new Rect(r.x, curY, cpBtnW, 22f), "📋 Copy Vùng"))
+            {
+                CopySelection();
+            }
+            if (GUI.Button(new Rect(r.x + cpBtnW + 4f, curY, cpBtnW, 22f), "📥 Dán (Paste)"))
+            {
+                PasteClipboard();
+            }
+            curY += 26f;
+
+            // 4 nút dời pixel vi mô: ⬅️ ➡️ ⬆️ ⬇️
+            GUI.Label(new Rect(r.x, curY, 80, 20), "Dời 1 Pixel:", subLbl);
+            float arrowW = 26f;
+            float arrowStartX = r.x + 85f;
+            if (GUI.Button(new Rect(arrowStartX, curY, arrowW, 20f), "⬅️")) MoveSelectedPixels(-1, 0);
+            if (GUI.Button(new Rect(arrowStartX + arrowW + 3f, curY, arrowW, 20f), "➡️")) MoveSelectedPixels(1, 0);
+            if (GUI.Button(new Rect(arrowStartX + (arrowW + 3f) * 2f, curY, arrowW, 20f), "⬆️")) MoveSelectedPixels(0, 1);
+            if (GUI.Button(new Rect(arrowStartX + (arrowW + 3f) * 3f, curY, arrowW, 20f), "⬇️")) MoveSelectedPixels(0, -1);
+            curY += 26f;
+
+            // 5. BẢNG MÀU PIXEL ART CHUẨN
+            GUI.Label(new Rect(r.x, curY, r.width, 18), "🎨 BẢNG MÀU CHỌN NHANH:", lbl);
+            curY += 20f;
+
+            Color32[] palette = {
+                new Color32(235, 185, 50, 255),  // Hoàng Kim
+                new Color32(230, 40, 40, 255),   // Đỏ Huyết / Áo Choàng Pháp Sư
+                new Color32(144, 36, 0, 255),    // Đỏ Thẫm Áo Choàng
+                new Color32(50, 150, 250, 255),  // Lam Băng
+                new Color32(50, 210, 90, 255),   // Lục Bảo
+                new Color32(180, 70, 240, 255),  // Tím Ma Thuật
+                new Color32(255, 130, 40, 255),  // Cam Lửa
+                new Color32(255, 255, 255, 255), // Trắng Tinh
+                new Color32(180, 190, 205, 255), // Bạc Thiết Giáp
+                new Color32(36, 36, 0, 255),     // Đen Thẫm Mũ Trùm
+                new Color32(25, 28, 38, 255),    // Đen Obsidian
+                new Color32(245, 190, 160, 255)  // Màu Da Người
+            };
+
+            float swatchSize = (r.width - 18f) / 4f;
+            for (int i = 0; i < palette.Length; i++)
+            {
+                int row = i / 4;
+                int col = i % 4;
+                Rect swRect = new Rect(r.x + col * (swatchSize + 6f), curY + row * (swatchSize + 6f), swatchSize, swatchSize);
+
+                GUI.color = palette[i];
+                GUI.DrawTexture(swRect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+
+                bool isSelected = (currentCostumeColor.r == palette[i].r && currentCostumeColor.g == palette[i].g && currentCostumeColor.b == palette[i].b && currentCostumeColor.a == palette[i].a);
+                if (isSelected)
+                {
+                    FantasyUITheme.DrawOutline(swRect, Color.yellow, 2);
+                }
+                else
+                {
+                    FantasyUITheme.DrawOutline(swRect, Color.black, 1);
+                }
+
+                if (GUI.Button(swRect, GUIContent.none, GUIStyle.none))
+                {
+                    currentCostumeColor = palette[i];
+                    if (currentCostumeTool == CostumeTool.Eraser) currentCostumeTool = CostumeTool.Pencil;
+                }
+            }
+            curY += (palette.Length / 4) * (swatchSize + 6f) + 8f;
+
+            // Màu Đang Chọn
+            GUI.Label(new Rect(r.x, curY, 80, 20), "Màu Hiện Tại:", subLbl);
+            Rect curColRect = new Rect(r.x + 85, curY, r.width - 85, 20);
+            GUI.color = currentCostumeColor;
+            GUI.DrawTexture(curColRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            FantasyUITheme.DrawOutline(curColRect, Color.white, 1);
+        }
+
+        // ─── CỘT 2: CANVAS PIXEL & ONION SKINNING ──────────────────────────────────────────────────
+        private void DrawCostumeCanvasColumn(Rect r)
+        {
+            var lbl = new GUIStyle(GUI.skin.label) { fontSize = 11, fontStyle = FontStyle.Bold, normal = { textColor = new Color(0.9f, 0.95f, 1f) } };
+            var tipStyle = new GUIStyle(GUI.skin.label) { fontSize = 10, fontStyle = FontStyle.Italic, normal = { textColor = new Color(0.6f, 0.85f, 1f) } };
+
+            // Điều khiển Onion Skin
+            float optY = r.y + 4f;
+            enableOnionSkin = GUI.Toggle(new Rect(r.x, optY, 150, 18), enableOnionSkin, " 👻 Bật Onion Skin");
+            if (enableOnionSkin)
+            {
+                GUI.Label(new Rect(r.x + 160, optY, 80, 18), "Độ Mờ:", tipStyle);
+                onionSkinAlpha = GUI.HorizontalSlider(new Rect(r.x + 220, optY, r.width - 230, 16), onionSkinAlpha, 0.1f, 0.8f);
+            }
+            optY += 22f;
+
+            float canvasDispSize = Mathf.Min(r.width - 20f, 260f);
+            float canvasX = r.x + (r.width - canvasDispSize) / 2f;
+            float canvasY = optY;
+            Rect canvasRect = new Rect(canvasX, canvasY, canvasDispSize, canvasDispSize);
+
+            // 1. Nền Checkerboard tối
+            GUI.color = new Color(0.08f, 0.10f, 0.14f, 1f);
+            GUI.DrawTexture(canvasRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // 2. Lớp Onion Skin (Vệt mờ frame trước để căn chỉnh bước đi)
+            if (enableOnionSkin && frameTextures != null)
+            {
+                int prevFrame = (currentFrameIndex > 0) ? (currentFrameIndex - 1) : (TOTAL_STUDIO_FRAMES - 1);
+                Texture2D prevTex = frameTextures[prevFrame];
+                if (prevTex != null)
+                {
+                    GUI.color = new Color(1f, 1f, 1f, onionSkinAlpha);
+                    GUI.DrawTexture(canvasRect, prevTex, ScaleMode.StretchToFill);
+                    GUI.color = Color.white;
+                }
+            }
+
+            // 3. Lớp Bản Vẽ Pixel Frame Hiện Tại
+            if (canvasTex != null)
+            {
+                GUI.DrawTexture(canvasRect, canvasTex, ScaleMode.StretchToFill);
+            }
+
+            // 4. Viền Canvas
+            FantasyUITheme.DrawDoubleGoldFrame(canvasRect, 1);
+
+            // 5. Khung Vùng Chọn (Box Selection)
+            if (costumeBoxSelection.width > 0 && costumeBoxSelection.height > 0)
+            {
+                float pxW = canvasDispSize / CANVAS_SIZE;
+                float pxH = canvasDispSize / CANVAS_SIZE;
+                float selX = canvasX + costumeBoxSelection.x * pxW;
+                float selY = canvasY + (CANVAS_SIZE - costumeBoxSelection.y - costumeBoxSelection.height) * pxH;
+                Rect selScreenRect = new Rect(selX, selY, costumeBoxSelection.width * pxW, costumeBoxSelection.height * pxH);
+
+                GUI.color = new Color(1f, 0.85f, 0.2f, 0.25f);
+                GUI.DrawTexture(selScreenRect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                FantasyUITheme.DrawOutline(selScreenRect, new Color(1f, 0.9f, 0.2f, 0.95f), 2);
+            }
+
+            // 6. Xử Lý Tương Tác Chuột Vẽ Pixel
+            HandleCanvasMouseInput(canvasRect);
+
+            // 7. Gán Nhanh Vùng Chọn Vào Trang Bị
+            float barY = canvasY + canvasDispSize + 8f;
+            GUI.Label(new Rect(r.x, barY, r.width, 18), "👉 GÁN VÙNG VẼ VÀO TRANG BỊ / NGOẠI TRANG:", lbl);
+            barY += 20f;
+
+            float slotBtnW = (r.width - 16f) / 5f;
+            EquipSlot[] quickSlots = { EquipSlot.Helmet, EquipSlot.Armor, EquipSlot.Pants, EquipSlot.Boots, EquipSlot.Costume };
+            string[] slotLabels = { "🪖 Mũ", "🥋 Áo", "👖 Quần", "👢 Giày", "👘 Ngoại Trang" };
+
+            for (int i = 0; i < quickSlots.Length; i++)
+            {
+                Rect bRect = new Rect(r.x + i * (slotBtnW + 4f), barY, slotBtnW, 24f);
+                bool isCurrent = (targetCostumeSlot == quickSlots[i]);
+                GUI.color = isCurrent ? new Color(1f, 0.85f, 0.25f) : new Color(0.85f, 0.9f, 1f);
+                if (GUI.Button(bRect, slotLabels[i]))
+                {
+                    targetCostumeSlot = quickSlots[i];
+                    costumeItemName = (targetCostumeSlot == EquipSlot.Helmet) ? "Mũ Pháp Sư Cổ Đại" :
+                                      (targetCostumeSlot == EquipSlot.Armor) ? "Áo Choàng Đỏ Viền Vàng" :
+                                      (targetCostumeSlot == EquipSlot.Pants) ? "Quần Pháp Sư" :
+                                      (targetCostumeSlot == EquipSlot.Boots) ? "Chiến Ngoa Phép Thuật" : "Pháp Sư Toàn Thân 8 Hướng";
+                    UpdateLiveWearableSprite();
+                }
+                GUI.color = Color.white;
+            }
+            barY += 28f;
+
+            GUI.Label(new Rect(r.x, barY, r.width, 36f), "💡 Mẹo: Dùng Onion Skin để quan sát bước chân của frame trước. Dùng [🔲 Chọn] và [✋ Dời] hoặc các nút mũi tên để di chuyển vị trí chi tiết tùy ý!", tipStyle);
+        }
+
+        private void HandleCanvasMouseInput(Rect canvasRect)
+        {
+            Event e = Event.current;
+            if (canvasRect.Contains(e.mousePosition))
+            {
+                float localX = e.mousePosition.x - canvasRect.x;
+                float localY = e.mousePosition.y - canvasRect.y;
+                int px = Mathf.Clamp(Mathf.FloorToInt(localX / (canvasRect.width / CANVAS_SIZE)), 0, CANVAS_SIZE - 1);
+                int py = Mathf.Clamp(CANVAS_SIZE - 1 - Mathf.FloorToInt(localY / (canvasRect.height / CANVAS_SIZE)), 0, CANVAS_SIZE - 1);
+
+                if (e.type == EventType.MouseDown && e.button == 0)
+                {
+                    if (currentCostumeTool == CostumeTool.Pencil)
+                    {
+                        SetCanvasPixel(px, py, currentCostumeColor);
+                    }
+                    else if (currentCostumeTool == CostumeTool.Eraser)
+                    {
+                        SetCanvasPixel(px, py, new Color32(0, 0, 0, 0));
+                    }
+                    else if (currentCostumeTool == CostumeTool.FillBucket)
+                    {
+                        FloodFillCanvas(px, py, currentCostumeColor);
+                    }
+                    else if (currentCostumeTool == CostumeTool.EyeDropper)
+                    {
+                        Color32 sampled = canvasPixels[py * CANVAS_SIZE + px];
+                        if (sampled.a > 0) currentCostumeColor = sampled;
+                        currentCostumeTool = CostumeTool.Pencil;
+                    }
+                    else if (currentCostumeTool == CostumeTool.BoxSelect)
+                    {
+                        isBoxDragging = true;
+                        boxDragStart = new Vector2Int(px, py);
+                        costumeBoxSelection = new RectInt(px, py, 1, 1);
+                    }
+                    else if (currentCostumeTool == CostumeTool.MoveSelection)
+                    {
+                        isBoxDragging = true;
+                        boxDragStart = new Vector2Int(px, py);
+                    }
+                    e.Use();
+                }
+                else if (e.type == EventType.MouseDrag && e.button == 0)
+                {
+                    if (currentCostumeTool == CostumeTool.Pencil)
+                    {
+                        SetCanvasPixel(px, py, currentCostumeColor);
+                    }
+                    else if (currentCostumeTool == CostumeTool.Eraser)
+                    {
+                        SetCanvasPixel(px, py, new Color32(0, 0, 0, 0));
+                    }
+                    else if (currentCostumeTool == CostumeTool.BoxSelect && isBoxDragging)
+                    {
+                        int minX = Mathf.Min(boxDragStart.x, px);
+                        int maxX = Mathf.Max(boxDragStart.x, px);
+                        int minY = Mathf.Min(boxDragStart.y, py);
+                        int maxY = Mathf.Max(boxDragStart.y, py);
+                        costumeBoxSelection = new RectInt(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
+                    }
+                    else if (currentCostumeTool == CostumeTool.MoveSelection && isBoxDragging)
+                    {
+                        int dx = px - boxDragStart.x;
+                        int dy = py - boxDragStart.y;
+                        if (dx != 0 || dy != 0)
+                        {
+                            MoveSelectedPixels(dx, dy);
+                            boxDragStart = new Vector2Int(px, py);
+                        }
+                    }
+                    e.Use();
+                }
+                else if (e.type == EventType.MouseUp && e.button == 0)
+                {
+                    if (isBoxDragging)
+                    {
+                        isBoxDragging = false;
+                        SaveCanvasIntoCurrentFrame();
+                        UpdateLiveWearableSprite();
+                    }
+                }
+            }
+        }
+
+        private void SetCanvasPixel(int x, int y, Color32 col)
+        {
+            if (x < 0 || x >= CANVAS_SIZE || y < 0 || y >= CANVAS_SIZE) return;
+            canvasPixels[y * CANVAS_SIZE + x] = col;
+            canvasTex.SetPixel(x, y, col);
+            canvasTex.Apply();
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+        }
+
+        private void FloodFillCanvas(int startX, int startY, Color32 fillCol)
+        {
+            if (startX < 0 || startX >= CANVAS_SIZE || startY < 0 || startY >= CANVAS_SIZE) return;
+            Color32 targetCol = canvasPixels[startY * CANVAS_SIZE + startX];
+            if (targetCol.r == fillCol.r && targetCol.g == fillCol.g && targetCol.b == fillCol.b && targetCol.a == fillCol.a) return;
+
+            Queue<Vector2Int> q = new Queue<Vector2Int>();
+            q.Enqueue(new Vector2Int(startX, startY));
+            bool[] visited = new bool[CANVAS_SIZE * CANVAS_SIZE];
+
+            while (q.Count > 0)
+            {
+                var pt = q.Dequeue();
+                int idx = pt.y * CANVAS_SIZE + pt.x;
+                if (pt.x < 0 || pt.x >= CANVAS_SIZE || pt.y < 0 || pt.y >= CANVAS_SIZE) continue;
+                if (visited[idx]) continue;
+                visited[idx] = true;
+
+                Color32 c = canvasPixels[idx];
+                if (c.r != targetCol.r || c.g != targetCol.g || c.b != targetCol.b || c.a != targetCol.a) continue;
+
+                canvasPixels[idx] = fillCol;
+                canvasTex.SetPixel(pt.x, pt.y, fillCol);
+
+                if (pt.x > 0) q.Enqueue(new Vector2Int(pt.x - 1, pt.y));
+                if (pt.x < CANVAS_SIZE - 1) q.Enqueue(new Vector2Int(pt.x + 1, pt.y));
+                if (pt.y > 0) q.Enqueue(new Vector2Int(pt.x, pt.y - 1));
+                if (pt.y < CANVAS_SIZE - 1) q.Enqueue(new Vector2Int(pt.x, pt.y + 1));
+            }
+            canvasTex.Apply();
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+        }
+
+        private void CopySelection()
+        {
+            if (costumeBoxSelection.width <= 0 || costumeBoxSelection.height <= 0)
+            {
+                studioExportStatus = "⚠️ Hãy dùng [🔲 Chọn] để khoanh vùng trước khi Copy!";
+                return;
+            }
+
+            clipboardW = costumeBoxSelection.width;
+            clipboardH = costumeBoxSelection.height;
+            clipboardPixels = new Color32[clipboardW * clipboardH];
+
+            for (int y = 0; y < clipboardH; y++)
+            {
+                for (int x = 0; x < clipboardW; x++)
+                {
+                    int srcX = costumeBoxSelection.x + x;
+                    int srcY = costumeBoxSelection.y + y;
+                    clipboardPixels[y * clipboardW + x] = canvasPixels[srcY * CANVAS_SIZE + srcX];
+                }
+            }
+            studioExportStatus = $"📋 Đã copy vùng {clipboardW}x{clipboardH} pixel vào clipboard!";
+            GodlessFantasy.Core.AudioManager.PlayPickup();
+        }
+
+        private void PasteClipboard()
+        {
+            if (clipboardPixels == null || clipboardW <= 0 || clipboardH <= 0)
+            {
+                studioExportStatus = "⚠️ Clipboard rỗng! Hãy chọn vùng và bấm [Copy Vùng] trước.";
+                return;
+            }
+
+            int dstX = (costumeBoxSelection.width > 0) ? costumeBoxSelection.x : 0;
+            int dstY = (costumeBoxSelection.height > 0) ? costumeBoxSelection.y : 0;
+            dstX = Mathf.Clamp(dstX, 0, CANVAS_SIZE - clipboardW);
+            dstY = Mathf.Clamp(dstY, 0, CANVAS_SIZE - clipboardH);
+
+            for (int y = 0; y < clipboardH; y++)
+            {
+                for (int x = 0; x < clipboardW; x++)
+                {
+                    Color32 c = clipboardPixels[y * clipboardW + x];
+                    if (c.a > 0)
+                    {
+                        canvasPixels[(dstY + y) * CANVAS_SIZE + (dstX + x)] = c;
+                    }
+                }
+            }
+
+            costumeBoxSelection = new RectInt(dstX, dstY, clipboardW, clipboardH);
+            canvasTex.SetPixels32(canvasPixels);
+            canvasTex.Apply();
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+            studioExportStatus = $"📥 Đã dán vùng {clipboardW}x{clipboardH} pixel vào canvas!";
+            GodlessFantasy.Core.AudioManager.PlayDrop();
+        }
+
+        private void MoveSelectedPixels(int deltaX, int deltaY)
+        {
+            if (costumeBoxSelection.width <= 0 || costumeBoxSelection.height <= 0)
+            {
+                studioExportStatus = "⚠️ Hãy dùng [🔲 Chọn] để khoanh vùng trước khi di chuyển!";
+                return;
+            }
+
+            Color32[] temp = new Color32[costumeBoxSelection.width * costumeBoxSelection.height];
+            for (int y = 0; y < costumeBoxSelection.height; y++)
+            {
+                for (int x = 0; x < costumeBoxSelection.width; x++)
+                {
+                    int srcX = costumeBoxSelection.x + x;
+                    int srcY = costumeBoxSelection.y + y;
+                    temp[y * costumeBoxSelection.width + x] = canvasPixels[srcY * CANVAS_SIZE + srcX];
+                    canvasPixels[srcY * CANVAS_SIZE + srcX] = new Color32(0, 0, 0, 0); // Xóa vị trí cũ
+                }
+            }
+
+            int newX = Mathf.Clamp(costumeBoxSelection.x + deltaX, 0, CANVAS_SIZE - costumeBoxSelection.width);
+            int newY = Mathf.Clamp(costumeBoxSelection.y + deltaY, 0, CANVAS_SIZE - costumeBoxSelection.height);
+
+            for (int y = 0; y < costumeBoxSelection.height; y++)
+            {
+                for (int x = 0; x < costumeBoxSelection.width; x++)
+                {
+                    int dstX = newX + x;
+                    int dstY = newY + y;
+                    canvasPixels[dstY * CANVAS_SIZE + dstX] = temp[y * costumeBoxSelection.width + x];
+                }
+            }
+
+            costumeBoxSelection = new RectInt(newX, newY, costumeBoxSelection.width, costumeBoxSelection.height);
+            canvasTex.SetPixels32(canvasPixels);
+            canvasTex.Apply();
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+        }
+
+        private void ClearCostumeCanvas()
+        {
+            if (canvasPixels == null || canvasTex == null) return;
+            for (int i = 0; i < canvasPixels.Length; i++) canvasPixels[i] = new Color32(0, 0, 0, 0);
+            canvasTex.SetPixels32(canvasPixels);
+            canvasTex.Apply();
+            costumeBoxSelection = new RectInt(0, 0, 0, 0);
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+            studioExportStatus = $"🗑️ Đã xóa sạch Frame {currentFrameIndex}!";
+        }
+
+        private void UpdateLiveWearableSprite()
+        {
+            if (canvasTex == null) return;
+
+            Rect srcRect;
+            Vector2 pivot;
+
+            if (costumeBoxSelection.width > 0 && costumeBoxSelection.height > 0)
+            {
+                srcRect = new Rect(costumeBoxSelection.x, costumeBoxSelection.y, costumeBoxSelection.width, costumeBoxSelection.height);
+                pivot = new Vector2(0.5f, 0.5f);
+            }
+            else
+            {
+                srcRect = new Rect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                pivot = new Vector2(0.5f, 0.12f);
+            }
+
+            liveWearableSprite = Sprite.Create(canvasTex, srcRect, pivot, 32f);
+        }
+
+        // ─── CỘT 3: XEM TRƯỚC HOẠT ẢNH THỜI GIAN THỰC & XUẤT SPRITE ──────────────────────────────
+        private void DrawCostumePreviewActionsColumn(Rect r)
+        {
+            float pY = r.y + 4f;
+            var lbl = new GUIStyle(GUI.skin.label) { fontSize = 11, fontStyle = FontStyle.Bold, normal = { textColor = new Color(0.9f, 0.95f, 1f) } };
+            var subLbl = new GUIStyle(GUI.skin.label) { fontSize = 10, normal = { textColor = new Color(0.7f, 0.85f, 1f) } };
+
+            // Cập nhật nhịp vòng lặp hoạt ảnh xem trước (Live Loop)
+            if (isPreviewPlaying)
+            {
+                previewTimer += Time.deltaTime * previewFps;
+                previewCurrentFrame = ((int)previewTimer) % TOTAL_STUDIO_FRAMES;
+            }
+
+            // 1. KHUNG XEM TRƯỚC HOẠT ẢNH THỜI GIAN THỰC (LIVE ANIMATION PREVIEW BOX)
+            GUI.Label(new Rect(r.x, pY, r.width, 18), $"▶️ HOẠT ẢNH: Frame {previewCurrentFrame} [{previewFps:F1} FPS]", lbl);
+            pY += 20f;
+
+            Rect previewBox = new Rect(r.x + (r.width - 96f) / 2f, pY, 96f, 96f);
+            GUI.color = new Color(0.06f, 0.08f, 0.14f, 0.98f);
+            GUI.DrawTexture(previewBox, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // Hiển thị frame animation hiện tại của hướng preview
+            if (frameTextures != null && frameTextures[previewCurrentFrame] != null)
+            {
+                GUI.DrawTexture(new Rect(previewBox.x + 6, previewBox.y + 6, previewBox.width - 12, previewBox.height - 12), frameTextures[previewCurrentFrame], ScaleMode.ScaleToFit);
+            }
+
+            FantasyUITheme.DrawOutline(previewBox, tierColors[costumeTierIdx], 2);
+            pY += 102f;
+
+            // Điều khiển Play/Pause và Tốc độ FPS
+            float ctrlW = (r.width - 6f) / 2f;
+            GUI.color = isPreviewPlaying ? new Color(1f, 0.5f, 0.5f) : new Color(0.5f, 1f, 0.5f);
+            if (GUI.Button(new Rect(r.x, pY, ctrlW, 22f), isPreviewPlaying ? "⏸ Tạm Dừng" : "▶ Tiếp Tục"))
+            {
+                isPreviewPlaying = !isPreviewPlaying;
+            }
+            GUI.color = Color.white;
+
+            // Nút Đồng Bộ Frame Xem Trước với Canvas
+            if (GUI.Button(new Rect(r.x + ctrlW + 4f, pY, ctrlW, 22f), "👁️ Xem Frame Vẽ"))
+            {
+                isPreviewPlaying = false;
+                previewCurrentFrame = currentFrameIndex;
+            }
+            pY += 26f;
+
+            // Slider điều chỉnh tốc độ hoạt ảnh
+            GUI.Label(new Rect(r.x, pY, 100, 18), $"Tốc Độ: {previewFps:F1} FPS", subLbl);
+            previewFps = GUI.HorizontalSlider(new Rect(r.x + 105, pY, r.width - 105, 16), previewFps, 4f, 16f);
+            pY += 24f;
+
+            // 2. THIẾT LẬP THÔNG SỐ VẬT PHẨM TRANG PHỤC
+            GUI.Label(new Rect(r.x, pY, 80, 20), "Tên Món Đồ:", lbl);
+            costumeItemName = GUI.TextField(new Rect(r.x + 85, pY, r.width - 85, 20), costumeItemName);
+            pY += 24f;
+
+            GUI.Label(new Rect(r.x, pY, 80, 20), "Phẩm Cấp:", lbl);
+            costumeTierIdx = GUI.SelectionGrid(new Rect(r.x + 85, pY, r.width - 85, 34f), costumeTierIdx, tierNames, 4);
+            pY += 38f;
+
+            // 3. CÁC NÚT HÀNH ĐỘNG CỰC KỲ MẠNH MẼ (LIVE SPRITE ACTIONS)
+            float btnH = 24f;
+            float btnGap = 4f;
+
+            // ⚡ NÚT 1: MẶC THỬ TRỰC TIẾP LÊN NHÂN VẬT (Live Apply To Player)
+            GUI.color = new Color(1.0f, 0.88f, 0.25f);
+            if (GUI.Button(new Rect(r.x, pY, r.width, btnH), "⚡ MẶC THỬ NGAY LÊN NHÂN VẬT"))
+            {
+                LiveTestCostumeOnRig();
+            }
+            pY += btnH + btnGap;
+
+            // 💾 NÚT 2: LƯU TOÀN BỘ 8 FRAMES CỦA HƯỚNG (.PNG)
+            GUI.color = new Color(0.3f, 0.85f, 1f);
+            if (GUI.Button(new Rect(r.x, pY, r.width, btnH), $"💾 LƯU 8 FRAMES [{studioDirCodes[currentEditDirIndex]}] (.PNG)"))
+            {
+                SaveAll8FramesPng();
+            }
+            pY += btnH + btnGap;
+
+            // 💾 NÚT 3: LƯU FRAME HIỆN TẠI (.PNG)
+            GUI.color = new Color(0.85f, 0.9f, 1f);
+            if (GUI.Button(new Rect(r.x, pY, r.width, btnH), $"💾 LƯU FRAME {currentFrameIndex} (.PNG)"))
+            {
+                SaveCostumePng();
+            }
+            pY += btnH + btnGap;
+
+            // 🎒 NÚT 4: TẠO VÀO TÚI ĐỒ (Add To Inventory)
+            GUI.color = new Color(0.2f, 0.95f, 0.45f);
+            if (GUI.Button(new Rect(r.x, pY, r.width, btnH), "🎒 TẠO VÀO TÚI ĐỒ [B]"))
+            {
+                AddCostumeToBag();
+            }
+            pY += btnH + btnGap;
+            GUI.color = Color.white;
+
+            // Trạng thái thông báo Studio
+            if (!string.IsNullOrEmpty(studioExportStatus))
+            {
+                var stStyle = new GUIStyle(GUI.skin.label) { fontSize = 10, alignment = TextAnchor.MiddleCenter, wordWrap = true, normal = { textColor = studioExportStatus.StartsWith("✅") ? Color.green : Color.yellow } };
+                GUI.Label(new Rect(r.x, pY, r.width, 36), studioExportStatus, stStyle);
+            }
+        }
+
+        private void LiveTestCostumeOnRig()
+        {
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+
+            var player = CharacterVisualController8Dir.Instance;
+            if (player != null)
+            {
+                var anim = player.GetComponent<CharacterSpriteAnimator8Dir>();
+                if (anim == null) anim = player.gameObject.AddComponent<CharacterSpriteAnimator8Dir>();
+
+                player.useTraditionalFrameAnimation = true;
+                player.useProceduralRig = false;
+
+                // Gán frame hiện tại làm avatar / sprite ngay lập tức
+                var sr = player.GetComponent<SpriteRenderer>();
+                if (sr != null && liveWearableSprite != null)
+                {
+                    sr.sprite = liveWearableSprite;
+                }
+
+                studioExportStatus = $"✅ ĐÃ MẶC THỬ '{costumeItemName}' TRỰC TIẾP LÊN NHÂN VẬT!";
+                GodlessFantasy.Core.AudioManager.PlayEquip();
+            }
+            else
+            {
+                studioExportStatus = "⚠️ Không tìm thấy CharacterVisualController8Dir trong thế giới!";
+            }
+        }
+
+        private void AddCostumeToBag()
+        {
+            var inv = FindAnyObjectByType<InventoryManager>();
+            if (inv == null) return;
+
+            if (inv.IsFull)
+            {
+                studioExportStatus = "⚠️ Hành trang đã đầy (24/24)! Hãy vứt bớt đồ trước.";
+                return;
+            }
+
+            SaveCanvasIntoCurrentFrame();
+            UpdateLiveWearableSprite();
+
+            ItemType t = (targetCostumeSlot == EquipSlot.Costume) ? ItemType.Costume : ItemType.Equipment;
+            string tier = tierNames[costumeTierIdx];
+            Color c = tierColors[costumeTierIdx];
+
+            string stats = (targetCostumeSlot == EquipSlot.Helmet) ? "+25 Giáp, +80 HP" :
+                           (targetCostumeSlot == EquipSlot.Armor) ? "+45 Giáp, +150 HP" :
+                           (targetCostumeSlot == EquipSlot.Pants) ? "+30 Giáp, +10 Tốc Độ" :
+                           (targetCostumeSlot == EquipSlot.Boots) ? "+18 Tốc Độ, +12 AGI" : "+50 HP, +50 MP, +15 Toàn Chỉ Số";
+
+            string desc = $"Trang phục thủ công 8 hướng được thiết kế từ Godless Studio! Khớp chuẩn bước đi truyền thống.";
+
+            var newItem = new InventoryItem(
+                $"custom_{targetCostumeSlot}_{DateTime.Now.Ticks % 10000}",
+                costumeItemName,
+                t,
+                targetCostumeSlot,
+                tier,
+                c,
+                "item_costume",
+                stats,
+                desc,
+                1,
+                null,
+                "Toàn Hệ",
+                "Toàn Thuộc Tính",
+                ItemGender.All
+            ).WithCustomSprite(liveWearableSprite);
+
+            if (inv.AddItem(newItem))
+            {
+                studioExportStatus = $"✅ Đã tạo thành công '{costumeItemName}' vào túi đồ [B]!";
+                GodlessFantasy.Core.AudioManager.PlayDrop();
+            }
+            else
+            {
+                studioExportStatus = "⚠️ Lỗi khi thêm vật phẩm vào hành trang!";
+            }
+        }
+
+        private void SaveCostumePng()
+        {
+            if (canvasTex == null) return;
+            try
+            {
+                string dir = Path.Combine(Application.persistentDataPath, "custom_characters");
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+                string fileName = $"char_{studioDirCodes[currentEditDirIndex]}_f{currentFrameIndex}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                string fullPath = Path.Combine(dir, fileName);
+
+                byte[] bytes = canvasTex.EncodeToPNG();
+                File.WriteAllBytes(fullPath, bytes);
+
+                studioExportStatus = $"✅ Đã lưu file PNG frame {currentFrameIndex} tại:\n{fileName}";
+                Debug.Log($"<color=green>[PIXEL STUDIO] Đã lưu file PNG:</color> {fullPath}");
+                GodlessFantasy.Core.AudioManager.PlayPickup();
+            }
+            catch (Exception ex)
+            {
+                studioExportStatus = $"⚠️ Lỗi lưu file: {ex.Message}";
+            }
+        }
+
+        private void SaveAll8FramesPng()
+        {
+            try
+            {
+                string dir = Path.Combine(Application.persistentDataPath, "custom_characters", studioDirCodes[currentEditDirIndex]);
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+                for (int f = 0; f < TOTAL_STUDIO_FRAMES; f++)
+                {
+                    if (frameTextures[f] != null)
+                    {
+                        byte[] bytes = frameTextures[f].EncodeToPNG();
+                        string path = Path.Combine(dir, $"frame_{f}.png");
+                        File.WriteAllBytes(path, bytes);
+                    }
+                }
+
+                studioExportStatus = $"✅ Đã lưu đủ 8 Frames hướng {studioDirLabels[currentEditDirIndex]} vào PersistentData!";
+                Debug.Log($"<color=green>[PIXEL STUDIO] Đã lưu đủ 8 Frames vào:</color> {dir}");
+                GodlessFantasy.Core.AudioManager.PlayLevelUp();
+            }
+            catch (Exception ex)
+            {
+                studioExportStatus = $"⚠️ Lỗi lưu 8 frames: {ex.Message}";
+            }
         }
     }
 }

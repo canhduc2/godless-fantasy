@@ -201,32 +201,18 @@ namespace GodlessFantasy.Combat
         /// </summary>
         public bool CanPlayerUse(string playerClass, string playerElement, out string failureReason)
         {
-            // 1. Kiểm tra HỆ
-            if (!string.IsNullOrEmpty(requiredClass) && requiredClass != "Toàn Hệ")
+            // 1. Kiểm tra HỆ (Chức nghiệp - hỗ trợ đơn hệ hoặc đa hệ)
+            if (!GodlessFantasy.Player.InventoryItem.CheckClassMatch(requiredClass, playerClass))
             {
-                if (!string.Equals(requiredClass, playerClass, StringComparison.OrdinalIgnoreCase))
-                {
-                    failureReason = $"Sai Hệ! Cuộn yêu cầu [{requiredClass}], bạn đang là [{playerClass}]";
-                    return false;
-                }
+                failureReason = $"Sai Hệ! Cuộn yêu cầu [{requiredClass}], bạn đang là [{playerClass}]";
+                return false;
             }
 
-            // 2. Kiểm tra THUỘC TÍNH
-            if (!string.IsNullOrEmpty(element) && element != "Vô Hệ" && element != "Toàn Hệ")
+            // 2. Kiểm tra THUỘC TÍNH (Nguyên tố - hỗ trợ đơn thuộc tính hoặc đa thuộc tính)
+            if (!GodlessFantasy.Player.InventoryItem.CheckElementMatch(element, playerElement))
             {
-                bool isMatch = string.Equals(element, playerElement, StringComparison.OrdinalIgnoreCase);
-                // Xử lý đồng nghĩa Quang / Ánh Sáng và Ám / Bóng Tối
-                if (!isMatch)
-                {
-                    if ((element == "Ánh Sáng" || element == "Quang") && (playerElement == "Ánh Sáng" || playerElement == "Quang")) isMatch = true;
-                    else if ((element == "Bóng Tối" || element == "Ám") && (playerElement == "Bóng Tối" || playerElement == "Ám")) isMatch = true;
-                }
-
-                if (!isMatch)
-                {
-                    failureReason = $"Khác Thuộc Tính! Cuộn yêu cầu [{element}], bạn mang [{playerElement}]";
-                    return false;
-                }
+                failureReason = $"Khác Thuộc Tính! Cuộn yêu cầu [{element}], bạn mang [{playerElement}]";
+                return false;
             }
 
             failureReason = null;

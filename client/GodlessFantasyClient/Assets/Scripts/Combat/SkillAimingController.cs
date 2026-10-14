@@ -74,28 +74,12 @@ namespace GodlessFantasy.Combat
             if (isDefaultScrollsInitialized) return;
             isDefaultScrollsInitialized = true;
 
-            // Khởi tạo Bí Kíp mặc định cho Ô 1 (Mở sẵn từ Cấp 1). Các ô 2, 3, 4 mở khóa ở Cấp 25, 50, 75
-            if (equippedSlots[0] == null)
+            // Bắt đầu sạch sẽ: các ô kỹ năng đều trống, người chơi cần học bí kíp thật để trang bị
+            for (int i = 0; i < equippedSlots.Length; i++)
             {
-                equippedSlots[0] = new SkillScrollData(
-                    "scroll_fire_slash", "Bí Kíp [Hệ Kị Sĩ]: Hỏa Kiếm Khí", "Phẩm D", new Color(0.35f, 0.85f, 0.45f), "Hỏa",
-                    15, 1.0f, 25, 1.0f, 1, "icon_skill_flame_cone", "item_scroll_fire",
-                    "Phóng kiếm khí hỏa diễm theo đường thẳng. Tiêu hao ít mana, hồi nhanh.", 8.0f, "Kị Sĩ");
+                equippedSlots[i] = null;
             }
-
-            // Kho bí kíp trong Túi Đồ để người chơi trải nghiệm Kéo Thả (Drag & Drop)
-            if (scrollInventory.Count == 0)
-            {
-                scrollInventory.Add(new SkillScrollData(
-                    "scroll_frost_arrow", "Cuộn Trục: Băng Huyết Tiễn", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Băng",
-                    22, 2.0f, 48, 1.3f, 1, "item_scroll_frost", "item_scroll_frost",
-                    "Bắn mũi tên băng giá cực nhanh, gây sát thương băng và làm tê liệt kẻ địch."));
-
-                scrollInventory.Add(new SkillScrollData(
-                    "scroll_thunder_burst", "Cuộn Trục: Lôi Thần Nộ", "Phẩm S", new Color(1.0f, 0.25f, 0.25f), "Lôi",
-                    32, 4.0f, 55, 1.4f, 2, "item_scroll_generic", "item_scroll_generic",
-                    "Gọi tia sét thần sấm oanh tạc vùng đất chỉ định, giáng đòn chí mạng uy lực."));
-            }
+            scrollInventory.Clear();
         }
 
         public SkillScrollData GetEquippedScroll(int slotIndex)
@@ -143,6 +127,9 @@ namespace GodlessFantasy.Combat
 
         private void Update()
         {
+            // Nếu đang trong menu đăng nhập ban đầu hoặc tạo nhân vật -> tuyệt đối không nhận input số / kỹ năng
+            if (GameInput.IsAuthOrCreationActive()) return;
+
             HandleSkillInput();
             HandleCancelInput();
         }

@@ -29,11 +29,31 @@ namespace GodlessFantasy.UI
         /// Lớp 3: Cửa sổ tính năng, Menu cài đặt, Drawer trượt 5 tab, Cửa sổ Chat, Hội thoại NPC.
         /// </summary>
         public const int DepthModal = 0;
+        public const int DepthModalBase = 0;
 
         /// <summary>
         /// Lớp 4 (Trên cùng tuyệt đối): Hộp thoại cảnh báo bảo vệ xóa đồ (5s Double-check), Tooltip hover chi tiết.
         /// </summary>
         public const int DepthPopupTooltip = -100;
+
+        public static void DrawGradientGoldTitle(Rect r, string title, int fontSize = 16)
+        {
+            EnsureStyles();
+            var titleStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = fontSize,
+                fontStyle = FontStyle.Bold
+            };
+
+            // Đổ bóng đen
+            titleStyle.normal.textColor = new Color(0f, 0f, 0f, 0.95f);
+            GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), title, titleStyle);
+
+            // Chữ hoàng kim
+            titleStyle.normal.textColor = ColorTextGold;
+            GUI.Label(r, title, titleStyle);
+        }
 
         // ================= BẢNG MÀU CHUẨN ĐỒNG BỘ (DESIGN SYSTEM COLOR TOKENS) =================
         public static readonly Color ColorBgDark = new Color(0.06f, 0.08f, 0.14f, 0.98f);
@@ -116,6 +136,36 @@ namespace GodlessFantasy.UI
             }
         }
 
+        private static Texture2D slotFrameTex;
+
+        public static Texture2D GetSlotFrameTexture()
+        {
+            if (slotFrameTex != null) return slotFrameTex;
+            int size = 32;
+            slotFrameTex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            slotFrameTex.filterMode = FilterMode.Point;
+            slotFrameTex.wrapMode = TextureWrapMode.Clamp;
+
+            Color[] px = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    bool isBorder = (x == 0 || x == size - 1 || y == 0 || y == size - 1 || x == 1 || x == size - 2 || y == 1 || y == size - 2);
+                    bool isInnerBevel = (x == 2 || x == size - 3 || y == 2 || y == size - 3);
+                    bool isCornerStud = ((x <= 2 || x >= size - 3) && (y <= 2 || y >= size - 3));
+
+                    if (isCornerStud) px[y * size + x] = ColorCornerStud;
+                    else if (isBorder) px[y * size + x] = ColorBorderGold;
+                    else if (isInnerBevel) px[y * size + x] = ColorBorderInner;
+                    else px[y * size + x] = ColorBgNavyButton;
+                }
+            }
+            slotFrameTex.SetPixels(px);
+            slotFrameTex.Apply();
+            return slotFrameTex;
+        }
+
         // ================= 1. NÚT VUÔNG ICON VIỀN VÀNG CHỐT GÓC (CHUẨN ẢNH MẪU USER) =================
         /// <summary>
         /// Vẽ nút bấm ô vuông viền vàng, 4 chốt góc, nền xanh than ma thuật với icon/ký tự nổi khối (Ví dụ nút [+], [-], [⚙]).
@@ -127,38 +177,9 @@ namespace GodlessFantasy.UI
             bool isHovered = isEnabled && r.Contains(Event.current.mousePosition);
             bool isPressed = isHovered && Event.current.type == EventType.MouseDown && Event.current.button == 0;
 
-            // 1. Nền
-            Color bg = !isEnabled ? new Color(0.05f, 0.07f, 0.10f, 0.9f)
-                     : isHighlighted ? ColorBgHighlighted
-                     : isHovered ? ColorBgHovered
-                     : ColorBgNavyButton;
-            GUI.color = bg;
-            GUI.DrawTexture(r, Texture2D.whiteTexture);
-
-            // 2. Viền ngoài vàng kim (2px)
-            Color border = !isEnabled ? new Color(0.40f, 0.36f, 0.28f, 0.7f)
-                         : isHighlighted ? ColorBorderHighlight
-                         : isHovered ? new Color(1.0f, 0.95f, 0.60f, 1f)
-                         : ColorBorderGold;
-            DrawOutline(r, border, 2);
-
-            // 3. Viền bóng bevel bên trong (1px)
-            if (r.width > 8 && r.height > 8)
-            {
-                Rect inner = new Rect(r.x + 2, r.y + 2, r.width - 4, r.height - 4);
-                DrawOutline(inner, isEnabled ? ColorBorderInner : new Color(0.18f, 0.18f, 0.18f, 0.4f), 1);
-            }
-
-            // 4. Bốn chốt góc nổi khối (Corner Bracket Studs chuẩn mẫu)
-            if (r.width >= 12 && r.height >= 12)
-            {
-                int cSize = (r.height < 24) ? 2 : 3;
-                GUI.color = isEnabled ? ColorCornerStud : new Color(0.5f, 0.45f, 0.35f, 1f);
-                GUI.DrawTexture(new Rect(r.x, r.y, cSize, cSize), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(r.x + r.width - cSize, r.y, cSize, cSize), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(r.x, r.y + r.height - cSize, cSize, cSize), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(r.x + r.width - cSize, r.y + r.height - cSize, cSize, cSize), Texture2D.whiteTexture);
-            }
+            // Tối ưu hóa cực đại: Vẽ 1 Texture gộp duy nhất (1 call) thay vì 13 calls!
+            GUI.color = isHighlighted ? ColorBorderHighlight : isHovered ? new Color(1.0f, 0.95f, 0.60f, 1f) : Color.white;
+            GUI.DrawTexture(r, GetSlotFrameTexture());
             GUI.color = Color.white;
 
             // 5. Icon/Ký tự ở giữa với đổ bóng đen nổi khối (Căn giữa tuyệt đối chính tâm nút)
@@ -331,6 +352,14 @@ namespace GodlessFantasy.UI
         /// </summary>
         public static void DrawDoubleGoldFrame(Rect r, int borderWidth = 2, Color? customBg = null)
         {
+            // Tối ưu hóa cực đại: Các ô slot nhỏ (túi đồ, skill, trang bị <= 70px) vẽ 1 Texture gộp duy nhất (1 call thay vì 13 calls)!
+            if (r.width <= 70 && r.height <= 70 && !customBg.HasValue)
+            {
+                GUI.color = Color.white;
+                GUI.DrawTexture(r, GetSlotFrameTexture());
+                return;
+            }
+
             GUI.color = customBg ?? new Color(0.04f, 0.05f, 0.09f, 1.0f);
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = Color.white;

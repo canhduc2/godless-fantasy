@@ -14,24 +14,31 @@ tools/
 [Mm]emoryCaptures/
 [Aa]ssets/AssetStoreTools*
 
+# .NET / Build Outputs & Databases
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.db
+*.db-shm
+*.db-wal
+
 # Visual Studio / IDE / Rider
 .vs/
 .idea/
-*.csproj
 *.unityproj
-*.sln
 *.suo
 *.user
 *.userprefs
 *.pidb
 *.booproj
+client/**/*.csproj
+client/**/*.sln
+!server/**/*.csproj
+!server/**/*.sln
 
 # OS generated
 Thumbs.db
 ehthumbs.db
 [Dd]esktop.ini
 .DS_Store
-
-# SQLite temp files
-*.db-shm
-*.db-wal

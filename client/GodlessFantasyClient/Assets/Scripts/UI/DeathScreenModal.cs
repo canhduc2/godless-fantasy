@@ -80,6 +80,9 @@ namespace GodlessFantasy.UI
             isStyleInit = true;
         }
 
+        public static Vector2? LastDeathPosition { get; private set; } = null;
+        private static GameObject worldDeathMarkerObj;
+
         public static void TriggerPlayerDeath(List<string> droppedItems)
         {
             if (Instance == null)
@@ -97,8 +100,34 @@ namespace GodlessFantasy.UI
             droppedItemNames = droppedItems ?? new List<string>();
             PlayerMovement.BlockWorldClick = true;
 
+            var player = GameObject.FindWithTag("Player") ?? GameObject.Find("Player_Hero");
+            if (player != null)
+            {
+                LastDeathPosition = player.transform.position;
+                SpawnOrUpdateWorldDeathMarker(player.transform.position);
+            }
+
             AudioManager.PlayExplosion();
-            Debug.Log("<color=red>[TỬ TRẬN]</color> Người chơi đã hy sinh trên chiến trường!");
+            Debug.Log("<color=red>[TỬ TRẬN]</color> Người chơi đã hy sinh trên chiến trường! Lưu vị trí tử trận: " + (LastDeathPosition.HasValue ? LastDeathPosition.Value.ToString() : "N/A"));
+        }
+
+        private void SpawnOrUpdateWorldDeathMarker(Vector3 pos)
+        {
+            if (worldDeathMarkerObj == null)
+            {
+                worldDeathMarkerObj = new GameObject("[WORLD_DEATH_MARKER_LAST]");
+                var sr = worldDeathMarkerObj.AddComponent<SpriteRenderer>();
+                sr.sprite = Resources.Load<Sprite>("skill_death_skull") ?? Resources.Load<Sprite>("vfx_mask_skull");
+                sr.sortingOrder = 15;
+                sr.color = new Color(1f, 0.25f, 0.25f, 0.95f);
+                worldDeathMarkerObj.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+
+                // Thêm hiệu ứng nhấp nháy / bồng bềnh
+                worldDeathMarkerObj.AddComponent<WorldDeathMarkerPulse>();
+            }
+
+            worldDeathMarkerObj.transform.position = new Vector3(pos.x, pos.y, 0f);
+            worldDeathMarkerObj.SetActive(true);
         }
 
         private void Update()
@@ -231,6 +260,31 @@ namespace GodlessFantasy.UI
             GUI.DrawTexture(new Rect(r.x + 3, r.y + 3, 1, r.height - 6), Texture2D.whiteTexture);
             GUI.DrawTexture(new Rect(r.x + r.width - 4, r.y + 3, 1, r.height - 6), Texture2D.whiteTexture);
             GUI.color = Color.white;
+        }
+    }
+
+    public class WorldDeathMarkerPulse : MonoBehaviour
+    {
+        private Vector3 startPos;
+        private SpriteRenderer sr;
+
+        private void Start()
+        {
+            startPos = transform.position;
+            sr = GetComponent<SpriteRenderer>();
+        }
+
+        private void Update()
+        {
+            // Nhẹ nhàng nhấp nhô và bồng bềnh tại vị trí chết
+            float yOffset = Mathf.Sin(Time.time * 2.5f) * 0.12f;
+            transform.position = startPos + new Vector3(0f, yOffset, 0f);
+
+            if (sr != null)
+            {
+                float alpha = 0.75f + Mathf.PingPong(Time.time * 2f, 0.25f);
+                sr.color = new Color(1f, 0.25f, 0.25f, alpha);
+            }
         }
     }
 }

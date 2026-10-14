@@ -127,32 +127,9 @@ namespace GodlessFantasy.Guild
         private void Awake()
         {
             if (Instance == null) Instance = this;
-            InitializeDefaultGuilds();
-        }
-
-        private void InitializeDefaultGuilds()
-        {
-            // Bang hội mẫu 1: Thần Long Hội (Người chơi làm Bang Chủ để trải nghiệm đầy đủ quyền hạn)
-            var g1 = new GuildData("guild_dragon", "Thần Long Hội", "Dũng Sĩ SquiRRels", "6688");
-            g1.slogan = "Chấn hưng bang phái, bình định tứ hải!";
-            g1.members.Add(new GuildMember("Dũng Sĩ SquiRRels", 15, "Kị Sĩ", "Hỏa", true, "Rừng Rậm PvP", true, new Vector2(8f, 2f)));
-            g1.members.Add(new GuildMember("Băng Tâm Tiên Tử", 14, "Pháp Sư", "Băng", true, "Rừng Rậm PvP", false, new Vector2(9.5f, 3f)));
-            g1.members.Add(new GuildMember("Lôi Đình Quyền Vương", 12, "Võ Sĩ", "Lôi", true, "Làng Tân Thủ", false, new Vector2(-12f, 0f)));
-            g1.members.Add(new GuildMember("Huyết Lôi Kiếm Thánh", 18, "Võ Sĩ", "Lôi", true, "Rừng Rậm PvP", false, new Vector2(11f, 1f)));
-            g1.members.Add(new GuildMember("Thanh Long Yểm Nguyệt", 17, "Kị Sĩ", "Mộc", true, "Làng Tân Thủ", false, new Vector2(-8f, 2f)));
-            g1.members.Add(new GuildMember("Bạch Hổ Thần Tướng", 13, "Xạ Thủ", "Quang", false, "Rừng Rậm PvP", false, new Vector2(14f, -2f)));
-            g1.members.Add(new GuildMember("Bích Tiêu Đao Khách", 11, "Xạ Thủ", "Phong", false, "Làng Tân Thủ", false, new Vector2(-10f, -3f)));
-            publicGuilds.Add(g1);
-
-            // Bang hội mẫu 2: Phượng Hoàng Cốc (Pass gia nhập: 1234)
-            var g2 = new GuildData("guild_phoenix", "Phượng Hoàng Cốc", "Hỏa Phượng Tiên", "1234");
-            g2.slogan = "Tự do khám phá, tương trợ anh em!";
-            g2.members.Add(new GuildMember("Hỏa Phượng Tiên", 16, "Pháp Sư", "Hỏa", true, "Làng Tân Thủ", true));
-            g2.members.Add(new GuildMember("Phong Ảnh Xạ Thủ", 11, "Xạ Thủ", "Phong", false, "Rừng Rậm PvP", false));
-            publicGuilds.Add(g2);
-
-            // Mặc định người chơi đang ở trong bang Thần Long Hội
-            currentGuild = g1;
+            // Dọn sạch dữ liệu giả: Người chơi ban đầu chưa gia nhập bang hội nào
+            currentGuild = null;
+            publicGuilds.Clear();
         }
 
         private void Update()

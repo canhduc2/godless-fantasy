@@ -468,11 +468,36 @@ namespace GodlessFantasy.Core
         public static void PlayDash() => Play(Instance?.clipDash, 0.85f);
         public static void PlayHit() => Play(Instance?.clipHit, 0.95f);
         public static void PlayPickup() => Play(Instance?.clipPickup, 0.8f);
+        public static void PlayEquip() => Play(Instance?.clipPickup, 0.9f);
+        public static void PlayDrop() => Play(Instance?.clipPickup, 0.75f);
         public static void PlayLevelUp() => Play(Instance?.clipLevelUp, 1.0f);
         public static void PlayTelegraphCharge() => Play(Instance?.clipTelegraph, 0.9f);
         public static void PlayBossSlam() => Play(Instance?.clipBossSlam, 1.0f);
         public static void PlayTeleport() => Play(Instance?.clipTeleport, 0.9f);
         public static void PlayPetEvolve() => Play(Instance?.clipPetEvolve, 0.95f);
+
+        public static void PlaySlash(Vector3 pos) => PlayAt(Instance?.clipSlash, pos, 0.9f);
+        public static void PlayCast(Vector3 pos) => PlayAt(Instance?.clipCast, pos, 0.85f);
+        public static void PlayExplosion(Vector3 pos) => PlayAt(Instance?.clipExplosion, pos, 1.0f);
+        public static void PlayHit(Vector3 pos) => PlayAt(Instance?.clipHit, pos, 0.95f);
+
+        public static void PlayAt(AudioClip clip, Vector3 worldPos, float volumeScale = 1.0f, float maxDist = 28f)
+        {
+            if (Instance == null || clip == null) return;
+            if (GameSettings.IsMasterMuted || GameSettings.IsSfxMuted) return;
+
+            if (Camera.main != null)
+            {
+                Vector3 camPos = Camera.main.transform.position;
+                camPos.z = worldPos.z;
+                float dist = Vector3.Distance(camPos, worldPos);
+                if (dist > maxDist) return; // Khoảng cách > 28m: Bỏ qua âm thanh để giải phóng CPU
+                float falloff = 1f - (dist / maxDist);
+                Play(clip, volumeScale * falloff);
+                return;
+            }
+            Play(clip, volumeScale);
+        }
 
         private static void Play(AudioClip clip, float volumeScale = 1.0f)
         {

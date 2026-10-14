@@ -28,9 +28,15 @@ namespace GodlessFantasy.Player
         /// </summary>
         public InventoryItem RegisterNewItemFromForm(string id, string name, ItemType type, EquipSlot slot,
                                                      string tierRank, Color tierColor, string iconName,
-                                                     string stats, string description, int quantity = 1)
+                                                     string stats, string description, int quantity = 1,
+                                                     string requiredClass = "Toàn Hệ", string element = "Toàn Thuộc Tính",
+                                                     ItemGender requiredGender = ItemGender.All, List<string> traits = null)
         {
-            var item = new InventoryItem(id, name, type, slot, tierRank, tierColor, iconName, stats, description, quantity);
+            var item = new InventoryItem(id, name, type, slot, tierRank, tierColor, iconName, stats, description, quantity, null, requiredClass, element, requiredGender);
+            if (traits != null)
+            {
+                foreach (var tr in traits) item.WithTrait(tr);
+            }
             registeredItemTemplates.Add(item);
             SaveDatabaseToJson();
             Debug.Log($"<color=cyan>[ITEM ENGINE]</color> Đã tạo thành công vật phẩm mới: {name} ({id})!");

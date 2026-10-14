@@ -46,8 +46,12 @@ namespace GodlessFantasy.Player
         [SerializeField] private SpriteRenderer slashRenderer;
         [SerializeField] private SpriteRenderer costumeRenderer;
 
+        [Header("Hệ Thống Hoạt Ảnh Frame 8 Hướng (Traditional Sprite Animation)")]
+        public bool useTraditionalFrameAnimation = true;
+        private CharacterSpriteAnimator8Dir spriteAnimator;
+
         [Header("Hệ Thống Rig 2D Chibi Thuần Code")]
-        public bool useProceduralRig = true;
+        public bool useProceduralRig = false;
         private ProceduralCharacterRig2D rig2D;
 
         [Header("Trạng Thái Ngoại Hình")]
@@ -59,6 +63,7 @@ namespace GodlessFantasy.Player
             {
                 isFemaleBacking = value;
                 if (rig2D != null) rig2D.IsFemale = value;
+                if (spriteAnimator != null) spriteAnimator.IsFemale = value;
             }
         }
 
@@ -81,6 +86,7 @@ namespace GodlessFantasy.Player
             {
                 dirBacking = value;
                 if (rig2D != null) rig2D.FacingDir = value;
+                if (spriteAnimator != null) spriteAnimator.FacingDirection = value;
             }
         }
 
@@ -108,7 +114,20 @@ namespace GodlessFantasy.Player
             inventoryManager = GetComponent<InventoryManager>();
             mainCamera = Camera.main;
 
-            if (useProceduralRig)
+            if (useTraditionalFrameAnimation)
+            {
+                useProceduralRig = false;
+                var existingRig = GetComponent<ProceduralCharacterRig2D>();
+                if (existingRig != null) existingRig.enabled = false;
+
+                spriteAnimator = GetComponent<CharacterSpriteAnimator8Dir>();
+                if (spriteAnimator == null)
+                    spriteAnimator = gameObject.AddComponent<CharacterSpriteAnimator8Dir>();
+
+                var rootSr = GetComponent<SpriteRenderer>();
+                if (rootSr != null) rootSr.enabled = true;
+            }
+            else if (useProceduralRig)
             {
                 rig2D = GetComponent<ProceduralCharacterRig2D>();
                 if (rig2D == null)
@@ -141,8 +160,8 @@ namespace GodlessFantasy.Player
             visualRoot.localPosition = new Vector3(0f, -0.48f, 0f);
             initialVisualPos = visualRoot.localPosition;
 
-            // Nếu đang dùng Rig 2D, tắt VisualRoot cũ để tránh trùng lặp hiển thị
-            if (useProceduralRig && rig2D != null)
+            // Nếu đang dùng Hoạt ảnh Frame hoặc Rig 2D, tắt VisualRoot cũ để tránh trùng lặp hiển thị
+            if ((useTraditionalFrameAnimation && spriteAnimator != null) || (useProceduralRig && rig2D != null))
             {
                 visualRoot.gameObject.SetActive(false);
                 return;
@@ -260,6 +279,17 @@ namespace GodlessFantasy.Player
 
         private void Update()
         {
+            if (useTraditionalFrameAnimation && spriteAnimator != null)
+            {
+                HandleHotkeys();
+                UpdateDirectionFromAim();
+                bool isMoving = (playerMovement != null && playerMovement.IsMoving) || (rb != null && rb.linearVelocity.sqrMagnitude > 0.04f);
+                spriteAnimator.FacingDirection = CurrentDirection;
+                spriteAnimator.IsMoving = isMoving;
+                spriteAnimator.IsFemale = IsFemale;
+                return;
+            }
+
             if (useProceduralRig && rig2D != null)
             {
                 // Toàn bộ hoạt ảnh 60fps & phím tắt đã do ProceduralCharacterRig2D xử lý mượt mà
@@ -296,11 +326,17 @@ namespace GodlessFantasy.Player
 
         /// <summary>
         /// Kích hoạt trạng thái Ẩn Thân trong bụi rậm (Stealth Camouflage):
-        /// - Làm mờ trong suốt toàn bộ cơ thể (Body, Quần, Giáp, Mũ, Khăn, Vũ khí) với Alpha = 0.35f
+        /// - Làm mờ trong suốt toàn bộ cơ thể (Alpha = 0.35f)
         /// - Giúp người chơi cảm nhận rõ rệt đang ẩn nấp sau tán lá cây!
         /// </summary>
         public void SetStealth(bool inStealth)
         {
+            if (useTraditionalFrameAnimation && spriteAnimator != null)
+            {
+                spriteAnimator.SetStealth(inStealth);
+                return;
+            }
+
             if (useProceduralRig && rig2D != null)
             {
                 rig2D.SetStealth(inStealth);
@@ -634,6 +670,10 @@ namespace GodlessFantasy.Player
             }
 
             IsFemale = !IsFemale;
+            if (inventoryManager != null)
+            {
+                inventoryManager.OnGenderSwapped(IsFemale);
+            }
             string genderText = IsFemale ? "Nữ" : "Nam";
             FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🚻 {genderText} [G]", new Color(0.35f, 0.95f, 0.55f));
             AudioManager.PlayPickup();
@@ -641,20 +681,43 @@ namespace GodlessFantasy.Player
         }
 
         /// <summary>
+        /// Ép đổi giới tính dành cho GM / Studio Testing Playground
+        /// </summary>
+        public void ForceSetGender(bool female)
+        {
+            if (useProceduralRig && rig2D != null)
+            {
+                rig2D.ForceSetGender(female);
+                return;
+            }
+
+            if (IsFemale == female) return;
+            IsFemale = female;
+            if (inventoryManager == null) inventoryManager = GetComponent<InventoryManager>();
+            if (inventoryManager != null)
+            {
+                inventoryManager.OnGenderSwapped(IsFemale);
+            }
+            string genderText = IsFemale ? "Nữ" : "Nam";
+            FloatingDamageManager.ShowFloatingText(transform.position + Vector3.up * 1.3f, $"🚻 {genderText} [Dev Test]", new Color(0.35f, 0.95f, 0.55f));
+            AudioManager.PlayPickup();
+        }
+
+        /// <summary>
         /// Lấy Avatar Texture tương ứng chính xác 100% với Nhân Vật đang hiển thị (HUD & Trang Bị)!
         /// </summary>
         public Texture GetPortraitTexture()
         {
-            if (useProceduralRig && rig2D != null)
-                return rig2D.GetPortraitTexture();
+            if (useTraditionalFrameAnimation)
+            {
+                return Resources.Load<Texture2D>("Characters/Mage/mage_south_0") ?? Resources.Load<Texture2D>("Characters/avatar_male");
+            }
 
-            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.AvatarTexture != null)
-                return LiveCharacterUIMirror.Instance.AvatarTexture;
+            if (rig2D != null) return rig2D.GetPortraitTexture();
+            if (ProceduralCharacterRig2D.Instance != null) return ProceduralCharacterRig2D.Instance.GetPortraitTexture();
 
-            if (CurrentSkin == SkinType.SoulKnight)
-                return Resources.Load<Texture2D>("Characters/avatar_soul_knight");
-            if (CurrentSkin == SkinType.VoidReaper)
-                return Resources.Load<Texture2D>("Characters/avatar_void_reaper");
+            if (CurrentSkin == SkinType.SoulKnight) return Resources.Load<Texture2D>("Characters/avatar_soul_knight");
+            if (CurrentSkin == SkinType.VoidReaper) return Resources.Load<Texture2D>("Characters/avatar_void_reaper");
             return Resources.Load<Texture2D>(IsFemale ? "Characters/avatar_female" : "Characters/avatar_male");
         }
 
@@ -663,32 +726,47 @@ namespace GodlessFantasy.Player
         /// </summary>
         public Texture GetFullBodyTexture()
         {
-            if (useProceduralRig && rig2D != null)
-                return rig2D.GetFullBodyTexture();
+            if (useTraditionalFrameAnimation)
+            {
+                string dirStr = GetDirectionSpriteName(CurrentDirection);
+                return Resources.Load<Texture2D>($"Characters/Mage/mage_{dirStr}_0") ?? Resources.Load<Texture2D>("Characters/Mage/mage_south_0");
+            }
 
-            if (LiveCharacterUIMirror.Instance != null && LiveCharacterUIMirror.Instance.FullBodyTexture != null)
-                return LiveCharacterUIMirror.Instance.FullBodyTexture;
+            if (rig2D != null) return rig2D.GetFullBodyTexture();
+            if (ProceduralCharacterRig2D.Instance != null) return ProceduralCharacterRig2D.Instance.GetFullBodyTexture();
 
-            string genderStr = IsFemale ? "female" : "male";
-            string dirName = GetDirectionSpriteName(CurrentDirection);
-            return Resources.Load<Texture2D>($"Characters/fullbody_{genderStr}")
-                ?? Resources.Load<Texture2D>($"Characters/Rig/{genderStr}/{dirName}/body")
-                ?? GetPortraitTexture();
+            if (CurrentSkin == SkinType.SoulKnight) return Resources.Load<Texture2D>("Characters/skin_soul_knight_south_0") ?? Resources.Load<Texture2D>("Characters/avatar_soul_knight");
+            if (CurrentSkin == SkinType.VoidReaper) return Resources.Load<Texture2D>("Characters/skin_void_reaper_south_0") ?? Resources.Load<Texture2D>("Characters/avatar_void_reaper");
+            return Resources.Load<Texture2D>(IsFemale ? "Characters/Rig/female/south/body" : "Characters/Rig/male/south/body")
+                ?? Resources.Load<Texture2D>(IsFemale ? "Characters/fullbody_female" : "Characters/fullbody_male");
         }
+
+        private string cachedWepIcon8Dir = null;
+        private bool cachedWepActive8Dir = false;
+        private string cachedWepId8Dir = null;
 
         private void SyncEquippedVisuals()
         {
             if (inventoryManager == null) return;
 
-            // Kiểm tra vũ khí đang trang bị
             var wep = inventoryManager.GetEquippedGear(EquipSlot.Weapon);
+            bool hasWep = (wep != null);
+            string wepIcon = (wep != null) ? wep.iconName : null;
+            string wepId = (wep != null) ? wep.id : null;
+
             if (weaponRenderer != null)
             {
-                weaponRenderer.enabled = (wep != null);
-                if (wep != null && !string.IsNullOrEmpty(wep.iconName))
+                if (hasWep != cachedWepActive8Dir || wepIcon != cachedWepIcon8Dir || wepId != cachedWepId8Dir)
                 {
-                    Sprite s = LoadSprite(wep.iconName) ?? LoadSprite("item_weapon");
-                    if (s != null) weaponRenderer.sprite = s;
+                    cachedWepActive8Dir = hasWep;
+                    cachedWepIcon8Dir = wepIcon;
+                    cachedWepId8Dir = wepId;
+                    weaponRenderer.enabled = hasWep;
+                    if (hasWep && !string.IsNullOrEmpty(wepIcon))
+                    {
+                        Sprite s = LoadSprite(wepIcon) ?? LoadSprite("item_weapon");
+                        if (s != null) weaponRenderer.sprite = s;
+                    }
                 }
             }
         }
@@ -821,7 +899,7 @@ namespace GodlessFantasy.Player
         private Sprite LoadSprite(string path)
         {
             if (string.IsNullOrEmpty(path)) return null;
-            if (spriteCache.TryGetValue(path, out var s) && s != null) return s;
+            if (spriteCache.TryGetValue(path, out var s)) return s;
 
             // 1. Thử Resources.Load<Sprite> theo nhiều format path
             s = Resources.Load<Sprite>(path);
@@ -862,7 +940,7 @@ namespace GodlessFantasy.Player
                 }
             }
 
-            if (s != null) spriteCache[path] = s;
+            spriteCache[path] = s;
             return s;
         }
 

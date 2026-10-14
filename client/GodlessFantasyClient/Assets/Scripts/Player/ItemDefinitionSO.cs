@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using GodlessFantasy.Combat;
 
@@ -55,6 +56,10 @@ namespace GodlessFantasy.Player
         public string statsInfo;
         public string description;
         public int quantity = 1;
+        public int requiredGender; // 0=All, 1=Male, 2=Female
+        public string requiredClass = "Toàn Hệ";
+        public string element = "Toàn Thuộc Tính";
+        public List<string> traits = new List<string>();
 
         public static ItemJsonData FromItem(InventoryItem item)
         {
@@ -71,14 +76,24 @@ namespace GodlessFantasy.Player
                 iconName = item.iconName,
                 statsInfo = item.statsInfo,
                 description = item.description,
-                quantity = item.quantity
+                quantity = item.quantity,
+                requiredGender = (int)item.requiredGender,
+                requiredClass = item.requiredClass,
+                element = item.element,
+                traits = item.specialTraits != null ? new List<string>(item.specialTraits) : new List<string>()
             };
         }
 
         public InventoryItem ToItem()
         {
             Color c = new Color(tierR, tierG, tierB, 1f);
-            return new InventoryItem(id, name, (ItemType)itemType, (EquipSlot)equipSlot, tierRank, c, iconName, statsInfo, description, quantity);
+            var it = new InventoryItem(id, name, (ItemType)itemType, (EquipSlot)equipSlot, tierRank, c, iconName, statsInfo, description, quantity, null, requiredClass, element, (ItemGender)requiredGender);
+            if (traits != null)
+            {
+                foreach (var tr in traits) it.WithTrait(tr);
+            }
+            return it;
         }
     }
 }
+

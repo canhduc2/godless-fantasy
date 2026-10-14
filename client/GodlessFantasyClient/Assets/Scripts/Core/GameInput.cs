@@ -68,8 +68,22 @@ namespace GodlessFantasy.Core
             return Vector2.zero;
         }
 
+        public static bool IsAuthOrCreationActive()
+        {
+            try
+            {
+                if (GodlessFantasy.UI.AuthUniverseModal.Instance != null && GodlessFantasy.UI.AuthUniverseModal.Instance.IsOpen)
+                    return true;
+                if (GodlessFantasy.UI.CharacterCreationModal.Instance != null && GodlessFantasy.UI.CharacterCreationModal.Instance.IsOpen)
+                    return true;
+            }
+            catch { }
+            return false;
+        }
+
         public static bool GetDashKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.dKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame;
@@ -79,6 +93,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetRunToggleKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.rightShiftKey.wasPressedThisFrame;
@@ -88,6 +103,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetSkill1KeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame;
@@ -97,6 +113,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetSkill2KeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame;
@@ -106,6 +123,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetSkill3KeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame;
@@ -115,6 +133,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetSkill4KeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.digit4Key.wasPressedThisFrame || Keyboard.current.numpad4Key.wasPressedThisFrame;
@@ -124,6 +143,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetHpPotionKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.qKey.wasPressedThisFrame;
@@ -133,6 +153,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetManaPotionKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.eKey.wasPressedThisFrame;
@@ -142,6 +163,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetInteractKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.fKey.wasPressedThisFrame;
@@ -151,6 +173,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetToggleMuteKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.mKey.wasPressedThisFrame;
@@ -160,6 +183,7 @@ namespace GodlessFantasy.Core
 
         public static bool GetPetInteractKeyDown()
         {
+            if (IsAuthOrCreationActive()) return false;
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
                 return Keyboard.current.pKey.wasPressedThisFrame;

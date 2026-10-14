@@ -91,8 +91,9 @@ namespace GodlessFantasy.UI
             Vector3 worldPos = transform.position + new Vector3(0, heightOffset, 0);
             Vector3 screenPos = mainCam.WorldToScreenPoint(worldPos);
 
-            // Bỏ qua nếu nằm sau lưng camera
+            // Bỏ qua nếu nằm sau lưng camera hoặc nằm ngoài tầm nhìn màn hình (Tối ưu triệt để IMGUI)
             if (screenPos.z < 0) return;
+            if (screenPos.x < -80f || screenPos.x > Screen.width + 80f || screenPos.y < -80f || screenPos.y > Screen.height + 80f) return;
 
             InitStyles();
 
@@ -157,8 +158,14 @@ namespace GodlessFantasy.UI
             float plateH = 20f;
             Rect namePlateRect = new Rect(guiX - plateW / 2f, guiY - 24f, plateW, plateH);
 
-            // Viền đen 8 hướng giúp chữ hiển thị siêu sắc nét trên mọi bề mặt nền cỏ / đất / nước
+            // Viền đen đổ bóng giúp chữ hiển thị sắc nét trên mọi bề mặt
             DrawOutlinedText(namePlateRect, nameString, nameStyle, nameColor, outlineCol);
+
+            // Ẩn thanh máu nếu là quái thường đang đầy 100% máu (giảm 80% Draw Calls thừa trên map)
+            if (entityType == OverheadType.Monster && health != null && health.CurrentHealth >= health.MaxHealth && !displayName.Contains("Boss"))
+            {
+                return;
+            }
 
             // 2. KHUNG NỀN THANH MÁU
             Rect hpBgRect = new Rect(startX, guiY, barW, barH);
@@ -247,20 +254,12 @@ namespace GodlessFantasy.UI
         {
             style.richText = true;
 
-            // 1. Viền đen 8 hướng xung quanh
+            // Tối ưu hóa cực đại: Bóng đổ 1 góc chéo (1 call) thay vì 8 hướng (8 calls)!
             string hexOutline = ColorUtility.ToHtmlStringRGBA(outlineColor);
             string outlineStr = $"<color=#{hexOutline}>{text}</color>";
-
-            GUI.Label(new Rect(r.x - 1, r.y - 1, r.width, r.height), outlineStr, style);
-            GUI.Label(new Rect(r.x,     r.y - 1, r.width, r.height), outlineStr, style);
-            GUI.Label(new Rect(r.x + 1, r.y - 1, r.width, r.height), outlineStr, style);
-            GUI.Label(new Rect(r.x - 1, r.y,     r.width, r.height), outlineStr, style);
-            GUI.Label(new Rect(r.x + 1, r.y,     r.width, r.height), outlineStr, style);
-            GUI.Label(new Rect(r.x - 1, r.y + 1, r.width, r.height), outlineStr, style);
-            GUI.Label(new Rect(r.x,     r.y + 1, r.width, r.height), outlineStr, style);
             GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), outlineStr, style);
 
-            // 2. Nhân chữ chính ở giữa với ĐÚNG MÀU SẮC GỐC NGUYÊN BẢN (Vàng, Tím, Xanh lục...)
+            // Nhân chữ chính ở giữa
             string hexColor = ColorUtility.ToHtmlStringRGBA(textColor);
             string mainStr = $"<color=#{hexColor}>{text}</color>";
             GUI.Label(r, mainStr, style);

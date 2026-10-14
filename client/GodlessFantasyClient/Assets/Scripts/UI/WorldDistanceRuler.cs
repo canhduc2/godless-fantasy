@@ -105,6 +105,21 @@ namespace GodlessFantasy.UI
             isStyleInitialized = true;
         }
 
+        private Transform cachedPlayerTransform;
+        private PlayerStats cachedPlayerStats;
+        private SkillAimingController cachedAimingCtrl;
+        private static string[] cachedMeterStrings;
+
+        private static void EnsureMeterStrings()
+        {
+            if (cachedMeterStrings != null) return;
+            cachedMeterStrings = new string[200];
+            for (int i = 0; i < cachedMeterStrings.Length; i++)
+            {
+                cachedMeterStrings[i] = $"{i}m";
+            }
+        }
+
         private void OnGUI()
         {
             if (!IsEnabled && !GameSettings.IsDistanceRulerEnabled) return;
@@ -112,20 +127,29 @@ namespace GodlessFantasy.UI
             Camera cam = Camera.main;
             if (cam == null) return;
 
-            var player = GameObject.FindWithTag("Player");
-            if (player == null) player = GameObject.Find("Player_Hero");
-            if (player == null)
+            if (cachedPlayerTransform == null)
             {
-                var pm = FindAnyObjectByType<GodlessFantasy.Player.PlayerMovement>();
-                if (pm != null) player = pm.gameObject;
+                var player = GameObject.FindWithTag("Player") ?? GameObject.Find("Player_Hero");
+                if (player == null)
+                {
+                    var pm = FindAnyObjectByType<GodlessFantasy.Player.PlayerMovement>();
+                    if (pm != null) player = pm.gameObject;
+                }
+                if (player != null)
+                {
+                    cachedPlayerTransform = player.transform;
+                    cachedPlayerStats = player.GetComponent<PlayerStats>();
+                    cachedAimingCtrl = player.GetComponent<SkillAimingController>();
+                }
             }
-            if (player == null) return;
+            if (cachedPlayerTransform == null) return;
 
+            EnsureMeterStrings();
             InitStyles();
 
             GUI.depth = FantasyUITheme.DepthBaseHUD - 1; // Nằm trên nền game, dưới các cửa sổ popup modal
 
-            Vector3 playerWorldPos = player.transform.position;
+            Vector3 playerWorldPos = cachedPlayerTransform.position;
             Vector3 playerScreen = cam.WorldToScreenPoint(playerWorldPos);
 
             // Tọa độ màn hình của người chơi
@@ -152,7 +176,7 @@ namespace GodlessFantasy.UI
             DrawZeroTick(zeroScreenX, rulerY);
 
             // Tầm đánh cơ bản của người chơi (Basic Attack Range)
-            var pStats = player.GetComponent<PlayerStats>();
+            var pStats = cachedPlayerStats;
             float basicAtkRange = (pStats != null) ? pStats.DynamicBasicAttackRange : 2.35f;
             string atkIcon = (pStats != null && pStats.CharacterClass.Contains("Võ")) ? "🥊" :
                              (pStats != null && pStats.CharacterClass.Contains("Xạ")) ? "🏹" :
@@ -163,7 +187,7 @@ namespace GodlessFantasy.UI
             DrawRangeMarker(zeroScreenX - basicAtkRange * pixelsPerMeterX, rulerY, basicAtkRange, $"{atkIcon} {atkRangeStr}", new Color(1.0f, 0.55f, 0.15f));
 
             // Tầm ngắm chiêu đang kích hoạt (nếu có)
-            var aimingCtrl = player.GetComponent<SkillAimingController>();
+            var aimingCtrl = cachedAimingCtrl;
             if (aimingCtrl != null && aimingCtrl.IsAiming)
             {
                 var scroll = aimingCtrl.GetEquippedScroll(aimingCtrl.CurrentAimingSlot - 1);
@@ -233,8 +257,8 @@ namespace GodlessFantasy.UI
             }
             else
             {
-                // Vạch nhỏ 1m
-                if (ppm < 14f) return; // Nếu zoom quá xa thì ẩn bớt vạch 1m để không bị rối mắt
+                // Vạch nhỏ 1m: Chỉ vẽ khi zoom cận cảnh (ppm >= 50f). Ở tầm nhìn chuẩn 20m (ppm ~35f-40f), ẩn vạch 1m để tránh tốn 50+ Draw Calls IMGUI
+                if (ppm < 50f) return;
                 tickH = 3f;
                 tickCol = new Color(0.85f, 0.9f, 1f, 0.30f);
             }
@@ -247,7 +271,7 @@ namespace GodlessFantasy.UI
             // In chữ số khoảng cách
             if (isMajor || (isSubMajor && ppm >= 28f))
             {
-                string txt = $"{meters}m";
+                string txt = (cachedMeterStrings != null && meters < cachedMeterStrings.Length) ? cachedMeterStrings[meters] : $"{meters}m";
                 Color textCol = isMajor ? new Color(1f, 0.9f, 0.4f) : new Color(0.85f, 0.92f, 1f);
                 DrawShadowedText(new Rect(x - 20, y - 16, 40, 14), txt, tickLabelStyle, textCol);
             }

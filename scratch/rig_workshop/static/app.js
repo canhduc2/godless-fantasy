@@ -139,6 +139,15 @@ class RigWorkshopApp {
         this.showAnimShadow = true;
         this.showAnimPivots = false;
 
+        // Pixel Studio Subnav & Live Mini Animation State
+        this.peAutoSave = true;
+        this.peIsDirty = false;
+        this.isPeMiniAnimVisible = false;
+        this.peMiniAnimCanvas = document.getElementById('pe-mini-anim-canvas');
+        this.peMiniAnimCtx = this.peMiniAnimCanvas ? this.peMiniAnimCanvas.getContext('2d') : null;
+        if (this.peMiniAnimCtx) this.peMiniAnimCtx.imageSmoothingEnabled = false;
+        this.peMiniAnimState = 'idle';
+
         this.init();
     }
 
@@ -681,11 +690,49 @@ class RigWorkshopApp {
         try {
             const res = await fetch('/api/parts_list');
             this.availableParts = await res.json();
+            this.initPartsDropdown();
             for (const p of this.availableParts) {
                 this.getImage(p.file);
             }
         } catch (e) {
             console.error('Failed to load parts list:', e);
+        }
+    }
+
+    initPartsDropdown() {
+        const select = document.getElementById('pe-select-part-file');
+        if (!select || !this.availableParts) return;
+
+        select.innerHTML = '';
+
+        const femaleGroup = document.createElement('optgroup');
+        femaleGroup.label = '👩 Nhân Vật Nữ (Female)';
+
+        const maleGroup = document.createElement('optgroup');
+        maleGroup.label = '👨 Nhân Vật Nam (Male)';
+
+        const otherGroup = document.createElement('optgroup');
+        otherGroup.label = '📦 Khác';
+
+        for (const p of this.availableParts) {
+            const opt = document.createElement('option');
+            opt.value = p.file;
+            opt.innerText = `${p.file} (${p.width}x${p.height})`;
+            if (p.file.startsWith('female_')) {
+                femaleGroup.appendChild(opt);
+            } else if (p.file.startsWith('male_')) {
+                maleGroup.appendChild(opt);
+            } else {
+                otherGroup.appendChild(opt);
+            }
+        }
+
+        if (femaleGroup.children.length > 0) select.appendChild(femaleGroup);
+        if (maleGroup.children.length > 0) select.appendChild(maleGroup);
+        if (otherGroup.children.length > 0) select.appendChild(otherGroup);
+
+        if (this.peCurrentPartName) {
+            select.value = this.peCurrentPartName;
         }
     }
 
@@ -848,20 +895,22 @@ class RigWorkshopApp {
         document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.ws-tab-btn').forEach(b => b.classList.remove('active'));
 
+        // Header gender selector is always visible and synced across all 3 tabs
+        const headerGender = document.getElementById('header-gender-selector');
+        if (headerGender) headerGender.style.display = 'flex';
+
         if (tabName === 'assembler') {
             document.getElementById('view-assembler').classList.add('active');
             document.getElementById('tab-btn-assembler').classList.add('active');
-            document.getElementById('header-gender-selector').style.display = 'flex';
             this.renderAll();
         } else if (tabName === 'pixel') {
             document.getElementById('view-pixel-editor').classList.add('active');
             document.getElementById('tab-btn-pixel').classList.add('active');
-            document.getElementById('header-gender-selector').style.display = 'none';
+            this.updatePeSubnavUI();
             this.refreshPixelEditorCanvas();
         } else if (tabName === 'anim') {
             document.getElementById('view-anim').classList.add('active');
             document.getElementById('tab-btn-anim').classList.add('active');
-            document.getElementById('header-gender-selector').style.display = 'flex';
             this.onSwitchToAnimTab();
         }
     }
@@ -1446,7 +1495,22 @@ class RigWorkshopApp {
         document.querySelectorAll('.gender-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.gender === g);
         });
-        this.renderAll();
+        document.querySelectorAll('.pe-nav-gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === g);
+        });
+        document.querySelectorAll('.anim-gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === g);
+        });
+        const badgeG = document.getElementById('anim-badge-gender');
+        if (badgeG) badgeG.innerText = g === 'female' ? '👩 Nữ (Female)' : '👨 Nam (Male)';
+        this.updateHeaderBadges();
+        if (this.currentTab === 'assembler') {
+            this.renderAll();
+        } else if (this.currentTab === 'pixel') {
+            this.updatePeSubnavUI();
+        } else if (this.currentTab === 'anim') {
+            this.updateAnimHeaderBadges();
+        }
     }
 
     setDirection(dir) {
@@ -1454,7 +1518,20 @@ class RigWorkshopApp {
         document.querySelectorAll('.dir-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.dir === dir);
         });
-        this.renderAll();
+        document.querySelectorAll('.pe-nav-dir-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dir === dir);
+        });
+        document.querySelectorAll('.anim-dir-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dir === dir);
+        });
+        this.updateHeaderBadges();
+        if (this.currentTab === 'assembler') {
+            this.renderAll();
+        } else if (this.currentTab === 'pixel') {
+            this.updatePeSubnavUI();
+        } else if (this.currentTab === 'anim') {
+            this.updateAnimHeaderBadges();
+        }
     }
 
     updateHeaderBadges() {
@@ -1657,11 +1734,109 @@ class RigWorkshopApp {
         window.addEventListener('mousemove', (e) => this.onPeMouseMove(e));
         window.addEventListener('mouseup', () => this.onPeMouseUp());
 
-        // Pixel Editor Header Actions
+        // Pixel Editor Header & Subnav Actions
         document.getElementById('btn-pe-back').addEventListener('click', () => this.switchTab('assembler'));
-        document.getElementById('btn-pe-save').addEventListener('click', () => this.savePixelPartAndReturn());
+        document.getElementById('btn-pe-save').addEventListener('click', () => this.savePixelPart(false));
+        const btnSaveStay = document.getElementById('btn-pe-save-stay');
+        if (btnSaveStay) btnSaveStay.addEventListener('click', () => this.savePixelPart(true));
         document.getElementById('btn-pe-revert').addEventListener('click', () => this.revertPixelPart());
         document.getElementById('btn-pe-download').addEventListener('click', () => this.downloadPixelPartPng());
+
+        // Subnav Gender Buttons
+        const peBtnFemale = document.getElementById('pe-gender-female');
+        const peBtnMale = document.getElementById('pe-gender-male');
+        if (peBtnFemale) peBtnFemale.addEventListener('click', () => this.switchPixelPart('female', this.currentDir, this.selectedPartKey));
+        if (peBtnMale) peBtnMale.addEventListener('click', () => this.switchPixelPart('male', this.currentDir, this.selectedPartKey));
+
+        // Subnav Direction Buttons
+        document.querySelectorAll('.pe-nav-dir-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.switchPixelPart(this.currentGender, btn.dataset.dir, this.selectedPartKey));
+        });
+
+        // Subnav Part Buttons
+        document.querySelectorAll('.pe-nav-part-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.switchPixelPart(this.currentGender, this.currentDir, btn.dataset.part));
+        });
+
+        // Subnav Direct File Picker
+        const selectPartFile = document.getElementById('pe-select-part-file');
+        if (selectPartFile) {
+            selectPartFile.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    this.openPixelEditorForPart(e.target.value);
+                }
+            });
+        }
+
+        // Subnav Autosave Toggle
+        const checkAutosave = document.getElementById('pe-check-autosave');
+        if (checkAutosave) {
+            checkAutosave.addEventListener('change', (e) => {
+                this.peAutoSave = e.target.checked;
+                this.showToast(this.peAutoSave ? '⚡ Đã bật tự động lưu khi chuyển mảnh' : '⚪ Đã tắt tự lưu', '#4b5563');
+            });
+        }
+
+        // Live Animation Preview Widget Toggle
+        const btnToggleAnim = document.getElementById('btn-pe-toggle-live-anim');
+        const animWidget = document.getElementById('pe-live-anim-widget');
+        if (btnToggleAnim && animWidget) {
+            btnToggleAnim.addEventListener('click', () => {
+                this.isPeMiniAnimVisible = !this.isPeMiniAnimVisible;
+                animWidget.style.display = this.isPeMiniAnimVisible ? 'block' : 'none';
+                btnToggleAnim.classList.toggle('active', this.isPeMiniAnimVisible);
+                if (this.isPeMiniAnimVisible) {
+                    this.showToast('🎬 Đã bật cửa sổ xem trước hoạt ảnh 60 FPS!');
+                }
+            });
+        }
+
+        const btnCloseAnim = document.getElementById('btn-pe-anim-close');
+        if (btnCloseAnim && animWidget) {
+            btnCloseAnim.addEventListener('click', () => {
+                this.isPeMiniAnimVisible = false;
+                animWidget.style.display = 'none';
+                if (btnToggleAnim) btnToggleAnim.classList.remove('active');
+            });
+        }
+
+        const btnMinAnim = document.getElementById('btn-pe-anim-minimize');
+        const bodyAnim = document.getElementById('pe-anim-panel-body');
+        if (btnMinAnim && bodyAnim) {
+            btnMinAnim.addEventListener('click', () => {
+                bodyAnim.style.display = bodyAnim.style.display === 'none' ? 'flex' : 'none';
+            });
+        }
+
+        document.querySelectorAll('.pe-anim-state-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pe-anim-state-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.peMiniAnimState = btn.dataset.state;
+            });
+        });
+
+        const btnGotoAnim = document.getElementById('btn-pe-goto-anim-tab');
+        if (btnGotoAnim) {
+            btnGotoAnim.addEventListener('click', () => this.switchTab('anim'));
+        }
+
+        // Animation Tab: Gender buttons and Edit in Studio button
+        const animBtnFemale = document.getElementById('anim-btn-female');
+        const animBtnMale = document.getElementById('anim-btn-male');
+        if (animBtnFemale) animBtnFemale.addEventListener('click', () => this.setGender('female'));
+        if (animBtnMale) animBtnMale.addEventListener('click', () => this.setGender('male'));
+
+        const btnAnimEditPart = document.getElementById('btn-anim-edit-part');
+        if (btnAnimEditPart) {
+            btnAnimEditPart.addEventListener('click', () => {
+                const dirData = this.getCurrentDirData();
+                const partKey = this.selectedPartKey || 'idle_body';
+                const part = dirData ? dirData[partKey] : null;
+                const file = part && part.file ? part.file : `${this.currentGender}_torso_front`;
+                this.openPixelEditorForPart(file);
+            });
+        }
     }
 
     setPeColor(hex) {
@@ -2000,9 +2175,43 @@ class RigWorkshopApp {
 
     openPixelEditorForPart(partFile) {
         this.peCurrentPartName = partFile;
-        document.getElementById('pe-current-part-name').innerText = `Đang vẽ: ${partFile}`;
+
+        // 1. Infer gender from partFile name
+        if (partFile.startsWith('female_')) {
+            this.currentGender = 'female';
+        } else if (partFile.startsWith('male_')) {
+            this.currentGender = 'male';
+        }
+
+        // 2. Infer or preserve partKey
+        const dirData = this.getCurrentDirData();
+        let matchedKey = null;
+        if (dirData) {
+            for (const key of PART_KEYS) {
+                if (dirData[key] && dirData[key].file === partFile) {
+                    matchedKey = key;
+                    break;
+                }
+            }
+        }
+        if (!matchedKey) {
+            if (partFile.includes('head')) matchedKey = 'idle_head';
+            else if (partFile.includes('torso')) matchedKey = 'idle_body';
+            else if (partFile.includes('arml') || partFile.includes('arm_near')) matchedKey = 'idle_arm_left';
+            else if (partFile.includes('armr') || partFile.includes('arm_far')) matchedKey = 'idle_arm_right';
+            else if (partFile.includes('legl') || partFile.includes('leg_near')) matchedKey = 'idle_leg_left';
+            else if (partFile.includes('legr') || partFile.includes('leg_far')) matchedKey = 'idle_leg_right';
+        }
+        if (matchedKey) this.selectedPartKey = matchedKey;
+
+        // 3. Update Title & UI Badges
+        const titleEl = document.getElementById('pe-current-part-name');
+        if (titleEl) titleEl.innerText = partFile;
+        this.updatePeSubnavUI();
+
         this.switchTab('pixel');
         this.loadPartIntoPixelEditor(partFile);
+        this.peIsDirty = false;
     }
 
     loadPartIntoPixelEditor(partFile) {
@@ -2028,6 +2237,7 @@ class RigWorkshopApp {
         this.peHistory = [];
         this.peRedoStack = [];
         this.pushPeHistory();
+        this.peIsDirty = false;
 
         this.peSelectedPixels = new Set();
         this.peIsSelecting = false;
@@ -2064,6 +2274,9 @@ class RigWorkshopApp {
         this.peHistory.push(imgData);
         if (this.peHistory.length > 30) this.peHistory.shift();
         this.peRedoStack = [];
+        if (this.peHistory.length > 1) {
+            this.peIsDirty = true;
+        }
     }
 
     peUndo() {
@@ -2072,6 +2285,7 @@ class RigWorkshopApp {
             this.peRedoStack.push(current);
             const prev = this.peHistory[this.peHistory.length - 1];
             this.peCtx.putImageData(prev, 0, 0);
+            this.peIsDirty = true;
             this.showToast('↩️ Hoàn tác (Undo)', '#4b5563');
         }
     }
@@ -2081,6 +2295,7 @@ class RigWorkshopApp {
             const next = this.peRedoStack.pop();
             this.peHistory.push(next);
             this.peCtx.putImageData(next, 0, 0);
+            this.peIsDirty = true;
             this.showToast('↪️ Làm lại (Redo)', '#4b5563');
         }
     }
@@ -2776,9 +2991,90 @@ class RigWorkshopApp {
     }
 
 
-    async savePixelPartAndReturn() {
+    async switchPixelPart(gender, dir, partKey) {
+        if (this.peAutoSave && this.peIsDirty) {
+            await this.savePixelPart(true);
+        }
+
+        if (gender) this.currentGender = gender;
+        if (dir) this.currentDir = dir;
+        if (partKey) this.selectedPartKey = partKey;
+
+        // Sync all gender buttons across header, assembler, pixel subnav, and animation tabs
+        document.querySelectorAll('.gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === this.currentGender);
+        });
+        document.querySelectorAll('.pe-nav-gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === this.currentGender);
+        });
+        document.querySelectorAll('.anim-gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === this.currentGender);
+        });
+
+        // Sync direction buttons
+        document.querySelectorAll('.dir-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dir === this.currentDir);
+        });
+        document.querySelectorAll('.pe-nav-dir-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dir === this.currentDir);
+        });
+        document.querySelectorAll('.anim-dir-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dir === this.currentDir);
+        });
+
+        // Determine part file from current config
+        const dirData = this.getCurrentDirData();
+        const pKey = this.selectedPartKey || 'idle_body';
+        const part = dirData ? dirData[pKey] : null;
+        let file = part && part.file ? part.file : `${this.currentGender}_torso_front`;
+
+        this.openPixelEditorForPart(file);
+    }
+
+    updatePeSubnavUI() {
+        const isF = this.currentGender === 'female';
+
+        // Gender buttons
+        document.querySelectorAll('.pe-nav-gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === this.currentGender);
+        });
+
+        // Direction buttons
+        document.querySelectorAll('.pe-nav-dir-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.dir === this.currentDir);
+        });
+
+        // Part buttons
+        document.querySelectorAll('.pe-nav-part-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.part === this.selectedPartKey);
+        });
+
+        // Header Badges
+        const bgG = document.getElementById('pe-badge-gender');
+        if (bgG) bgG.innerText = isF ? '👩 Nữ' : '👨 Nam';
+
+        const bgD = document.getElementById('pe-badge-dir');
+        if (bgD) bgD.innerText = DIR_LABELS_VI[this.currentDir] || this.currentDir;
+
+        const bgP = document.getElementById('pe-badge-part');
+        if (bgP) bgP.innerText = PART_NAMES_VI[this.selectedPartKey] || this.selectedPartKey;
+
+        // Dropdown select value
+        const select = document.getElementById('pe-select-part-file');
+        if (select && this.peCurrentPartName) {
+            select.value = this.peCurrentPartName;
+        }
+
+        // Live anim label
+        const animInfo = document.getElementById('pe-anim-info-label');
+        if (animInfo) {
+            animInfo.innerText = `${isF ? 'Nữ' : 'Nam'} • ${this.currentDir.toUpperCase()} • 60 FPS`;
+        }
+    }
+
+    async savePixelPart(stayInEditor = false) {
         if (!this.peCurrentPartName) return;
-        this.showToast('⏳ Đang lưu mảnh & cập nhật hệ thống Rig...', '#2563eb');
+        this.showToast('⏳ Đang lưu mảnh & xuất ra Unity...', '#2563eb');
 
         const dataUrl = this.peCanvas.toDataURL('image/png');
         try {
@@ -2792,16 +3088,27 @@ class RigWorkshopApp {
             });
             const data = await res.json();
             if (data.success) {
-                this.imageCache.clear();
-                this.showToast(`✅ ${data.message}`);
-                this.switchTab('assembler');
-                this.renderAll();
+                this.peIsDirty = false;
+                this.invalidatePartCache(this.peCurrentPartName);
+                this.showToast(`✅ ${data.message}`, '#059669');
+
+                if (!stayInEditor) {
+                    this.switchTab('assembler');
+                    this.renderAll();
+                } else {
+                    const titleEl = document.getElementById('pe-current-part-name');
+                    if (titleEl) titleEl.innerText = this.peCurrentPartName;
+                }
             } else {
                 this.showToast(`❌ Lỗi: ${data.error}`, '#dc2626');
             }
         } catch (e) {
             this.showToast(`❌ Lỗi kết nối: ${e.message}`, '#dc2626');
         }
+    }
+
+    async savePixelPartAndReturn() {
+        return this.savePixelPart(false);
     }
 
     async revertPixelPart() {
@@ -3628,7 +3935,9 @@ class RigWorkshopApp {
                 if (this.currentTab === 'assembler') {
                     this.saveAndExport();
                 } else if (this.currentTab === 'pixel') {
-                    this.savePixelPartAndReturn();
+                    this.savePixelPart(true);
+                } else if (this.currentTab === 'anim') {
+                    this.saveAnimConfig();
                 }
                 return;
             } else if (k === 'z') {
@@ -4101,22 +4410,18 @@ class RigWorkshopApp {
 
             if (this.currentTab === 'anim' && this.animConfig) {
                 this.updateAndRenderAnim(dt);
+            } else if (this.currentTab === 'pixel' && this.isPeMiniAnimVisible && this.animConfig) {
+                this.updateAndRenderMiniAnim(dt);
             }
             requestAnimationFrame(loop);
         };
         requestAnimationFrame(loop);
     }
 
-    updateAndRenderAnim(dt) {
-        if (!this.animCtx || !this.animConfig) return;
-        const c = this.animConfig[this.currentAnimState] || {};
-        const speed = (c.speed !== undefined ? c.speed : 1.0) * this.animPlaybackSpeed;
+    drawAnimatedRig(ctx, animState, animTimer, gender, dir, showShadow, showPivots) {
+        if (!ctx || !this.animConfig || !this.config) return null;
+        const c = this.animConfig[animState] || this.animConfig['idle'] || {};
 
-        if (this.isAnimPlaying) {
-            this.animTimer += dt * speed;
-        }
-
-        // Calculate motions matching Unity harmonic formulas
         let bobY = 0;
         let squashX = 1;
         let stretchY = 1;
@@ -4136,19 +4441,19 @@ class RigWorkshopApp {
         const squashAmt = c.squashAmount || 0;
         const stretchAmt = c.stretchAmount || 0;
 
-        if (this.currentAnimState === 'idle') {
-            const breath = Math.sin(this.animTimer);
+        if (animState === 'idle') {
+            const breath = Math.sin(animTimer);
             bobY = breath * bobAmt;
             squashX = 1 - breath * squashAmt;
             stretchY = 1 + breath * stretchAmt;
             rootLean = breath * leanAmt;
             headAngle = breath * headAmt;
-            armLAngle = Math.sin(this.animTimer * 1.1) * armAmt;
+            armLAngle = Math.sin(animTimer * 1.1) * armAmt;
             armRAngle = -armLAngle;
             legLAngle = breath * legAmt;
             legRAngle = -legLAngle;
-        } else if (this.currentAnimState === 'walk' || this.currentAnimState === 'run') {
-            const sinT = Math.sin(this.animTimer);
+        } else if (animState === 'walk' || animState === 'run') {
+            const sinT = Math.sin(animTimer);
             const absSin = Math.abs(sinT);
             bobY = absSin * bobAmt;
             squashX = 1 - absSin * squashAmt;
@@ -4159,7 +4464,7 @@ class RigWorkshopApp {
             legRAngle = -legLAngle;
             armLAngle = -sinT * armAmt;
             armRAngle = -armLAngle;
-        } else if (this.currentAnimState === 'dash') {
+        } else if (animState === 'dash') {
             squashX = 1 + squashAmt;
             stretchY = 1 + stretchAmt;
             bobY = bobAmt;
@@ -4169,8 +4474,8 @@ class RigWorkshopApp {
             armRAngle = -armAmt;
             legLAngle = legAmt;
             legRAngle = -legAmt;
-        } else if (this.currentAnimState === 'attack') {
-            const progress = Math.sin(this.animTimer);
+        } else if (animState === 'attack') {
+            const progress = Math.sin(animTimer);
             bobY = Math.abs(progress) * bobAmt;
             squashX = 1 - Math.abs(progress) * squashAmt;
             stretchY = 1 + Math.abs(progress) * stretchAmt;
@@ -4180,8 +4485,8 @@ class RigWorkshopApp {
             armLAngle = -progress * armAmt * 0.4;
             legLAngle = progress * legAmt;
             legRAngle = -legLAngle;
-        } else if (this.currentAnimState === 'hurt') {
-            const jerk = Math.sin(this.animTimer * 10);
+        } else if (animState === 'hurt') {
+            const jerk = Math.sin(animTimer * 10);
             bobY = -Math.abs(jerk) * bobAmt;
             squashX = 1 + squashAmt;
             stretchY = 1 + stretchAmt;
@@ -4191,27 +4496,20 @@ class RigWorkshopApp {
             armRAngle = armAmt;
         }
 
-        // Update live telemetry footer
-        const telemetry = document.getElementById('anim-telemetry');
-        if (telemetry) {
-            telemetry.innerText = `Nhịp: ${(this.animTimer % 6.28).toFixed(2)}s | Bob: ${bobY.toFixed(2)}px | Thân: ${(bodyAngle * 180 / Math.PI).toFixed(1)}° | Đầu: ${(headAngle * 180 / Math.PI).toFixed(1)}° | Tay: ${(armLAngle * 180 / Math.PI).toFixed(1)}° | Chân: ${(legLAngle * 180 / Math.PI).toFixed(1)}°`;
+        ctx.clearRect(0, 0, 64, 64);
+
+        if (showShadow) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.beginPath();
+            ctx.ellipse(32, 53, 10, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
 
-        // Draw Canvas (64x64)
-        this.animCtx.clearRect(0, 0, 64, 64);
-
-        // Ground shadow
-        if (this.showAnimShadow) {
-            this.animCtx.save();
-            this.animCtx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-            this.animCtx.beginPath();
-            this.animCtx.ellipse(32, 53, 10, 4, 0, 0, Math.PI * 2);
-            this.animCtx.fill();
-            this.animCtx.restore();
-        }
-
-        const dirData = this.getCurrentDirData();
-        if (!dirData) return;
+        const gData = this.config[gender];
+        const dirData = gData ? gData[dir] : null;
+        if (!dirData) return null;
 
         const parts = PART_KEYS.map(key => ({
             key,
@@ -4220,7 +4518,6 @@ class RigWorkshopApp {
 
         parts.sort((a, b) => (a.z || 10) - (b.z || 10));
 
-        // Feet origin in 64x64 is at x = 32, y = 53
         const FEET_X = 32;
         const FEET_Y = 53;
 
@@ -4233,7 +4530,6 @@ class RigWorkshopApp {
             const pw = img.naturalWidth;
             const ph = img.naturalHeight;
 
-            // Compute joint pivot for this part
             let jointPivotX = px + pw / 2;
             let jointPivotY = py + ph / 2;
             let partAngle = 0;
@@ -4264,38 +4560,88 @@ class RigWorkshopApp {
                 partAngle = legRAngle;
             }
 
-            this.animCtx.save();
+            ctx.save();
 
             // 1. Root Bobbing & Lean
-            this.animCtx.translate(FEET_X, FEET_Y);
-            this.animCtx.translate(0, -bobY);
-            this.animCtx.rotate(rootLean);
-            this.animCtx.scale(squashX, stretchY);
-            this.animCtx.translate(-FEET_X, -FEET_Y);
+            ctx.translate(FEET_X, FEET_Y);
+            ctx.translate(0, -bobY);
+            ctx.rotate(rootLean);
+            ctx.scale(squashX, stretchY);
+            ctx.translate(-FEET_X, -FEET_Y);
 
             // 2. Part Joint Rotation
-            this.animCtx.translate(jointPivotX, jointPivotY);
-            this.animCtx.rotate(partAngle);
-            this.animCtx.translate(-jointPivotX, -jointPivotY);
+            ctx.translate(jointPivotX, jointPivotY);
+            ctx.rotate(partAngle);
+            ctx.translate(-jointPivotX, -jointPivotY);
 
             // 3. Draw Part (handling flip_x / flip_y)
             if (part.flip_x || part.flip_y) {
-                this.animCtx.save();
-                this.animCtx.translate(px + (part.flip_x ? pw : 0), py + (part.flip_y ? ph : 0));
-                this.animCtx.scale(part.flip_x ? -1 : 1, part.flip_y ? -1 : 1);
-                this.animCtx.drawImage(img, 0, 0);
-                this.animCtx.restore();
+                ctx.save();
+                ctx.translate(px + (part.flip_x ? pw : 0), py + (part.flip_y ? ph : 0));
+                ctx.scale(part.flip_x ? -1 : 1, part.flip_y ? -1 : 1);
+                ctx.drawImage(img, 0, 0);
+                ctx.restore();
             } else {
-                this.animCtx.drawImage(img, px, py);
+                ctx.drawImage(img, px, py);
             }
 
             // 4. Pivot visualization
-            if (this.showAnimPivots) {
-                this.animCtx.fillStyle = '#f43f5e';
-                this.animCtx.fillRect(jointPivotX - 1, jointPivotY - 1, 2, 2);
+            if (showPivots) {
+                ctx.fillStyle = '#f43f5e';
+                ctx.fillRect(jointPivotX - 1, jointPivotY - 1, 2, 2);
             }
 
-            this.animCtx.restore();
+            ctx.restore();
+        }
+
+        return { bobY, bodyAngle, headAngle, armLAngle, legLAngle };
+    }
+
+    updateAndRenderAnim(dt) {
+        if (!this.animCtx || !this.animConfig) return;
+        const c = this.animConfig[this.currentAnimState] || {};
+        const speed = (c.speed !== undefined ? c.speed : 1.0) * this.animPlaybackSpeed;
+
+        if (this.isAnimPlaying) {
+            this.animTimer += dt * speed;
+        }
+
+        const telemetryData = this.drawAnimatedRig(
+            this.animCtx,
+            this.currentAnimState,
+            this.animTimer,
+            this.currentGender,
+            this.currentDir,
+            this.showAnimShadow,
+            this.showAnimPivots
+        );
+
+        const telemetry = document.getElementById('anim-telemetry');
+        if (telemetry && telemetryData) {
+            telemetry.innerText = `Nhịp: ${(this.animTimer % 6.28).toFixed(2)}s | Bob: ${telemetryData.bobY.toFixed(2)}px | Thân: ${(telemetryData.bodyAngle * 180 / Math.PI).toFixed(1)}° | Đầu: ${(telemetryData.headAngle * 180 / Math.PI).toFixed(1)}° | Tay: ${(telemetryData.armLAngle * 180 / Math.PI).toFixed(1)}° | Chân: ${(telemetryData.legLAngle * 180 / Math.PI).toFixed(1)}°`;
+        }
+    }
+
+    updateAndRenderMiniAnim(dt) {
+        if (!this.peMiniAnimCtx || !this.animConfig) return;
+        const c = this.animConfig[this.peMiniAnimState || 'idle'] || {};
+        const speed = (c.speed !== undefined ? c.speed : 1.0);
+
+        this.animTimer += dt * speed;
+
+        this.drawAnimatedRig(
+            this.peMiniAnimCtx,
+            this.peMiniAnimState || 'idle',
+            this.animTimer,
+            this.currentGender,
+            this.currentDir,
+            true,
+            false
+        );
+
+        const animInfo = document.getElementById('pe-anim-info-label');
+        if (animInfo) {
+            animInfo.innerText = `${this.currentGender === 'female' ? 'Nữ' : 'Nam'} • ${this.currentDir.toUpperCase()} • 60 FPS`;
         }
     }
 

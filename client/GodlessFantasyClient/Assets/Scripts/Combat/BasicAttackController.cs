@@ -82,6 +82,8 @@ namespace GodlessFantasy.Combat
 
         private void Update()
         {
+            if (GodlessFantasy.Core.GameInput.IsAuthOrCreationActive()) return;
+
             if (mainCam == null) mainCam = Camera.main;
 
             HandleTargetSelectionInput();
