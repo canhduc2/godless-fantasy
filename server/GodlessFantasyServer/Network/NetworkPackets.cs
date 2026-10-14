@@ -129,6 +129,7 @@ namespace GodlessFantasyServer.Network
     public class CharRollStatsReqDto
     {
         public string className { get; set; } = "Kị Sĩ";
+        public bool isReroll { get; set; } = false;
     }
 
     public class CharRollStatsRespDto
@@ -139,6 +140,9 @@ namespace GodlessFantasyServer.Network
         public int vit { get; set; }
         public int agi { get; set; }
         public int totalPoints { get; set; }
+        public int rerollsLeft { get; set; } = 1;
+        public bool isExistingRoll { get; set; } = false;
+        public string message { get; set; } = "";
     }
 
     public class CharCreateReqDto

@@ -140,6 +140,7 @@ namespace GodlessFantasy.Network
     public class CharRollStatsReqDto
     {
         public string className;
+        public bool isReroll;
     }
 
     [Serializable]
@@ -151,6 +152,9 @@ namespace GodlessFantasy.Network
         public int vit;
         public int agi;
         public int totalPoints;
+        public int rerollsLeft;
+        public bool isExistingRoll;
+        public string message;
     }
 
     [Serializable]

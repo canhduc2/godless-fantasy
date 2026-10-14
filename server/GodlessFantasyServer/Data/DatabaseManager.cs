@@ -42,6 +42,19 @@ namespace GodlessFantasyServer.Data
         public string CreatedAt { get; set; } = "";
     }
 
+    public class PendingCharacterRoll
+    {
+        public int AccountId { get; set; }
+        public int UniverseId { get; set; }
+        public string ClassName { get; set; } = "Kị Sĩ";
+        public string Element { get; set; } = "Hỏa";
+        public int Strength { get; set; } = 10;
+        public int Intelligence { get; set; } = 10;
+        public int Vitality { get; set; } = 10;
+        public int Agility { get; set; } = 10;
+        public int RerollsLeft { get; set; } = 1;
+    }
+
     public class DatabaseManager
     {
         private static DatabaseManager? _instance;
@@ -120,6 +133,19 @@ namespace GodlessFantasyServer.Data
                     );
 
                     CREATE INDEX IF NOT EXISTS idx_char_acc_uni ON characters(account_id, universe_id);
+
+                    CREATE TABLE IF NOT EXISTS pending_character_rolls (
+                        account_id INTEGER NOT NULL,
+                        universe_id INTEGER NOT NULL,
+                        class_name TEXT NOT NULL,
+                        element TEXT NOT NULL,
+                        strength INTEGER NOT NULL,
+                        intelligence INTEGER NOT NULL,
+                        vitality INTEGER NOT NULL,
+                        agility INTEGER NOT NULL,
+                        rerolls_left INTEGER NOT NULL DEFAULT 1,
+                        PRIMARY KEY (account_id, universe_id)
+                    );
                 ";
                 await tableCmd.ExecuteNonQueryAsync();
             }
@@ -473,6 +499,83 @@ namespace GodlessFantasyServer.Data
             var count = await cmd.ExecuteScalarAsync();
             return Convert.ToInt32(count ?? 0);
         }
+
+        #region Pending Character Roll Methods
+
+        public async Task<PendingCharacterRoll?> GetPendingRollAsync(int accountId, int universeId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT account_id, universe_id, class_name, element, strength, intelligence, vitality, agility, rerolls_left
+                FROM pending_character_rolls
+                WHERE account_id = @accId AND universe_id = @uniId
+                LIMIT 1;
+            ";
+            cmd.Parameters.AddWithValue("@accId", accountId);
+            cmd.Parameters.AddWithValue("@uniId", universeId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new PendingCharacterRoll
+                {
+                    AccountId = reader.GetInt32(0),
+                    UniverseId = reader.GetInt32(1),
+                    ClassName = reader.GetString(2),
+                    Element = reader.GetString(3),
+                    Strength = reader.GetInt32(4),
+                    Intelligence = reader.GetInt32(5),
+                    Vitality = reader.GetInt32(6),
+                    Agility = reader.GetInt32(7),
+                    RerollsLeft = reader.GetInt32(8)
+                };
+            }
+            return null;
+        }
+
+        public async Task SaveOrUpdatePendingRollAsync(PendingCharacterRoll roll)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT OR REPLACE INTO pending_character_rolls (
+                    account_id, universe_id, class_name, element, strength, intelligence, vitality, agility, rerolls_left
+                ) VALUES (
+                    @accId, @uniId, @class, @elem, @str, @int, @vit, @agi, @rerolls
+                );
+            ";
+            cmd.Parameters.AddWithValue("@accId", roll.AccountId);
+            cmd.Parameters.AddWithValue("@uniId", roll.UniverseId);
+            cmd.Parameters.AddWithValue("@class", roll.ClassName);
+            cmd.Parameters.AddWithValue("@elem", roll.Element);
+            cmd.Parameters.AddWithValue("@str", roll.Strength);
+            cmd.Parameters.AddWithValue("@int", roll.Intelligence);
+            cmd.Parameters.AddWithValue("@vit", roll.Vitality);
+            cmd.Parameters.AddWithValue("@agi", roll.Agility);
+            cmd.Parameters.AddWithValue("@rerolls", roll.RerollsLeft);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task DeletePendingRollAsync(int accountId, int universeId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "DELETE FROM pending_character_rolls WHERE account_id = @accId AND universe_id = @uniId;";
+            cmd.Parameters.AddWithValue("@accId", accountId);
+            cmd.Parameters.AddWithValue("@uniId", universeId);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        #endregion
 
         #endregion
     }

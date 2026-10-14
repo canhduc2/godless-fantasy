@@ -289,11 +289,123 @@ namespace GodlessFantasyServer.Network
 
         private async Task HandleCharRollStatsAsync(ClientSession session, string dataJson)
         {
+            if (session.AccountId <= 0 || session.SelectedUniverseId <= 0)
+            {
+                await session.SendPacketAsync(OpCodes.CharRollStatsResp, new CharRollStatsRespDto
+                {
+                    message = "Chưa đăng nhập hoặc chưa chọn vũ trụ!",
+                    rerollsLeft = 0
+                });
+                return;
+            }
+
             var req = JsonSerializer.Deserialize<CharRollStatsReqDto>(dataJson);
             string cls = req?.className ?? "Kị Sĩ";
+            bool isReroll = req?.isReroll ?? false;
 
-            var rolled = CharacterGenerator.RollStats(cls);
-            await session.SendPacketAsync(OpCodes.CharRollStatsResp, rolled);
+            var pending = await DatabaseManager.Instance.GetPendingRollAsync(session.AccountId, session.SelectedUniverseId);
+
+            if (pending == null)
+            {
+                // Chưa có lần đổ xúc xắc nào: Khởi tạo lần đầu tiên (Initial Roll)
+                var rolled = CharacterGenerator.RollStats(cls);
+                pending = new PendingCharacterRoll
+                {
+                    AccountId = session.AccountId,
+                    UniverseId = session.SelectedUniverseId,
+                    ClassName = cls,
+                    Element = rolled.element,
+                    Strength = rolled.str,
+                    Intelligence = rolled.intStat,
+                    Vitality = rolled.vit,
+                    Agility = rolled.agi,
+                    RerollsLeft = 1 // Cho phép quay thêm đúng 1 lần duy nhất theo GDD
+                };
+                await DatabaseManager.Instance.SaveOrUpdatePendingRollAsync(pending);
+
+                await session.SendPacketAsync(OpCodes.CharRollStatsResp, new CharRollStatsRespDto
+                {
+                    element = pending.Element,
+                    str = pending.Strength,
+                    intStat = pending.Intelligence,
+                    vit = pending.Vitality,
+                    agi = pending.Agility,
+                    totalPoints = pending.Strength + pending.Intelligence + pending.Vitality + pending.Agility,
+                    rerollsLeft = pending.RerollsLeft,
+                    isExistingRoll = false,
+                    message = "Khởi tạo thuộc tính thành công!"
+                });
+                Console.WriteLine($"[ROLL] Initial roll for Acc {session.AccountId} in Uni {session.SelectedUniverseId}: {pending.Element} (Rerolls left: {pending.RerollsLeft})");
+            }
+            else
+            {
+                // Đã có bản roll trước đó
+                if (isReroll)
+                {
+                    // Người dùng bấm nút Đổ Lại
+                    if (pending.RerollsLeft <= 0)
+                    {
+                        // Đã hết lượt re-roll -> Từ chối và trả về kết quả cũ
+                        await session.SendPacketAsync(OpCodes.CharRollStatsResp, new CharRollStatsRespDto
+                        {
+                            element = pending.Element,
+                            str = pending.Strength,
+                            intStat = pending.Intelligence,
+                            vit = pending.Vitality,
+                            agi = pending.Agility,
+                            totalPoints = pending.Strength + pending.Intelligence + pending.Vitality + pending.Agility,
+                            rerollsLeft = 0,
+                            isExistingRoll = true,
+                            message = "Bạn đã hết lượt đổ xúc xắc miễn phí (Tối đa 1 lần đổi)!"
+                        });
+                        Console.WriteLine($"[ROLL BLOCKED] Acc {session.AccountId} attempted re-roll but has 0 rerolls left.");
+                        return;
+                    }
+
+                    // Tiêu hao 1 lượt re-roll
+                    var rolled = CharacterGenerator.RollStats(cls);
+                    pending.ClassName = cls;
+                    pending.Element = rolled.element;
+                    pending.Strength = rolled.str;
+                    pending.Intelligence = rolled.intStat;
+                    pending.Vitality = rolled.vit;
+                    pending.Agility = rolled.agi;
+                    pending.RerollsLeft = 0; // Hết lượt!
+                    await DatabaseManager.Instance.SaveOrUpdatePendingRollAsync(pending);
+
+                    await session.SendPacketAsync(OpCodes.CharRollStatsResp, new CharRollStatsRespDto
+                    {
+                        element = pending.Element,
+                        str = pending.Strength,
+                        intStat = pending.Intelligence,
+                        vit = pending.Vitality,
+                        agi = pending.Agility,
+                        totalPoints = pending.Strength + pending.Intelligence + pending.Vitality + pending.Agility,
+                        rerollsLeft = 0,
+                        isExistingRoll = false,
+                        message = "Đã sử dụng lượt đổ xúc xắc lại cuối cùng!"
+                    });
+                    Console.WriteLine($"[ROLL] Re-rolled for Acc {session.AccountId}: {pending.Element} (0 rerolls left)");
+                }
+                else
+                {
+                    // Người chơi vào lại cửa sổ tạo nhân vật (ví dụ ấn Quay lại rồi vào lại)
+                    // Server giữ nguyên kết quả trước đó và số lượt re-roll còn lại, KHÔNG tự động re-roll!
+                    await session.SendPacketAsync(OpCodes.CharRollStatsResp, new CharRollStatsRespDto
+                    {
+                        element = pending.Element,
+                        str = pending.Strength,
+                        intStat = pending.Intelligence,
+                        vit = pending.Vitality,
+                        agi = pending.Agility,
+                        totalPoints = pending.Strength + pending.Intelligence + pending.Vitality + pending.Agility,
+                        rerollsLeft = pending.RerollsLeft,
+                        isExistingRoll = true,
+                        message = pending.RerollsLeft > 0 ? "Khôi phục bộ thuộc tính đã đổ trước đó." : "Khôi phục bộ thuộc tính (Đã hết lượt đổ lại)."
+                    });
+                    Console.WriteLine($"[ROLL RESTORE] Restored roll for Acc {session.AccountId}: {pending.Element} (Rerolls left: {pending.RerollsLeft})");
+                }
+            }
         }
 
         private async Task HandleCharCreateAsync(ClientSession session, string dataJson)
@@ -309,13 +421,24 @@ namespace GodlessFantasyServer.Network
                 return;
             }
 
+            // Lấy thông tin pending roll có thật từ Database
+            var pending = await DatabaseManager.Instance.GetPendingRollAsync(session.AccountId, session.SelectedUniverseId);
+            string finalElement = pending != null ? pending.Element : req.element;
+            int finalStr = pending != null ? pending.Strength : req.str;
+            int finalInt = pending != null ? pending.Intelligence : req.intStat;
+            int finalVit = pending != null ? pending.Vitality : req.vit;
+            int finalAgi = pending != null ? pending.Agility : req.agi;
+
             var (success, msg, newChar) = await DatabaseManager.Instance.CreateCharacterAsync(
                 session.AccountId, session.SelectedUniverseId, req.name, req.gender,
-                req.className, req.element, req.str, req.intStat, req.vit, req.agi
+                req.className, finalElement, finalStr, finalInt, finalVit, finalAgi
             );
 
             if (success && newChar != null)
             {
+                // Xóa pending roll vì nhân vật đã được tạo thành công!
+                await DatabaseManager.Instance.DeletePendingRollAsync(session.AccountId, session.SelectedUniverseId);
+
                 session.ActiveCharacter = newChar;
                 session.PosX = newChar.PosX;
                 session.PosY = newChar.PosY;

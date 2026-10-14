@@ -79,12 +79,11 @@ namespace GodlessFantasy.UI
             targetUniverseId = universeId;
             targetUniverseName = universeName;
             IsOpen = true;
-            freeRerollLeft = 1;
-            statusMessage = "Hãy đặt tên và Đổ xúc xắc để nhận Hệ Nguyên Tố & Điểm Thuộc Tính!";
+            statusMessage = "Đang đồng bộ dữ liệu thuộc tính từ máy chủ...";
             statusColor = new Color(0.4f, 0.9f, 1f);
 
-            // Tự động roll lần đầu tiên
-            RollStats();
+            // Gửi yêu cầu lấy bộ thuộc tính từ máy chủ (isReroll = false: không tiêu tốn lượt quay)
+            FetchOrInitStats();
         }
 
         public void CloseModal()
@@ -92,7 +91,7 @@ namespace GodlessFantasy.UI
             IsOpen = false;
         }
 
-        private void RollStats()
+        private void FetchOrInitStats()
         {
             isRolling = true;
             var net = GameNetworkClient.Instance;
@@ -100,7 +99,23 @@ namespace GodlessFantasy.UI
             {
                 net.SendPacket(OpCodes.CharRollStatsReq, new CharRollStatsReqDto
                 {
-                    className = selectedClass
+                    className = selectedClass,
+                    isReroll = false
+                });
+            }
+        }
+
+        private void RequestReroll()
+        {
+            if (freeRerollLeft <= 0 || isRolling) return;
+            isRolling = true;
+            var net = GameNetworkClient.Instance;
+            if (net != null && net.IsConnected)
+            {
+                net.SendPacket(OpCodes.CharRollStatsReq, new CharRollStatsReqDto
+                {
+                    className = selectedClass,
+                    isReroll = true
                 });
             }
         }
@@ -113,8 +128,20 @@ namespace GodlessFantasy.UI
             currentInt = resp.intStat;
             currentVit = resp.vit;
             currentAgi = resp.agi;
+            freeRerollLeft = resp.rerollsLeft;
 
-            statusMessage = $"🎲 Đã đổ xúc xắc thành công! Bạn nhận được Hệ {currentElement}!";
+            if (resp.isExistingRoll)
+            {
+                statusMessage = string.IsNullOrEmpty(resp.message)
+                    ? $"🎲 Đã khôi phục Hệ {currentElement} (Còn {freeRerollLeft} lượt đổ lại)"
+                    : resp.message;
+            }
+            else
+            {
+                statusMessage = string.IsNullOrEmpty(resp.message)
+                    ? $"🎲 Đã đổ xúc xắc thành công! Bạn nhận được Hệ {currentElement}!"
+                    : resp.message;
+            }
             statusColor = GetElementColor(currentElement);
         }
 
@@ -340,8 +367,7 @@ namespace GodlessFantasy.UI
             {
                 if (canRoll)
                 {
-                    freeRerollLeft--;
-                    RollStats();
+                    RequestReroll();
                 }
             }
 
