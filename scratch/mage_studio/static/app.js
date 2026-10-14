@@ -31,11 +31,10 @@
         symmetry: false,
         onionSkin: true,
         showGrid: true,
-        crosshair: true,
         orthoLock: false,
         shiftKey: false,
-        strokeOriginX: null,
-        strokeOriginY: null,
+        drawStartX: null,
+        drawStartY: null,
         lockedAxis: null,
         zoom: 4,
         autoSave: true,
@@ -257,18 +256,13 @@
         }
 
         // 2. Vertical Symmetry Line (x = 80)
-        // Trục đối xứng chuẩn xác tuyệt đối nằm giữa cột 79 và cột 80
+        // Trục đối xứng chuẩn xác tuyệt đối nằm giữa cột 79 và cột 80 (đốm 1px sắc nét, không canvas stroke)
         if (state.symmetry) {
-            overlayCtx.save();
-            overlayCtx.strokeStyle = '#e5ab2e';
-            overlayCtx.lineWidth = 1;
-            overlayCtx.setLineDash([4, 4]);
-            overlayCtx.beginPath();
+            overlayCtx.fillStyle = '#e5ab2e';
             const symScreenX = 80 * zm;
-            overlayCtx.moveTo(symScreenX + 0.5, 0);
-            overlayCtx.lineTo(symScreenX + 0.5, dispH);
-            overlayCtx.stroke();
-            overlayCtx.restore();
+            for (let sy = 0; sy < dispH; sy += 8) {
+                overlayCtx.fillRect(symScreenX, sy, 1, 4);
+            }
         }
 
         // 3. Floating Selection Preview (khi đang di chuyển vùng chọn)
@@ -281,43 +275,32 @@
             overlayCtx.drawImage(state.floatingSelection.canvas, fsX, fsY, fsW, fsH);
         }
 
-        // 4. Active Selection Marquee (Kiến bò chuyển động chuẩn viền pixel màn hình)
+        // 4. Active Selection Marquee (100% viền integer pixel, ZERO canvas stroke, kiến bò nhấp nháy chuẩn nét)
         if (state.selection) {
-            const selX = state.selection.x * zm;
-            const selY = state.selection.y * zm;
-            const selW = state.selection.w * zm;
-            const selH = state.selection.h * zm;
+            const selX0 = state.selection.x * zm;
+            const selY0 = state.selection.y * zm;
+            const selX1 = (state.selection.x + state.selection.w) * zm;
+            const selY1 = (state.selection.y + state.selection.h) * zm;
+            const timeDash = Math.floor(Date.now() / 80) % 8;
 
-            overlayCtx.save();
-            overlayCtx.lineWidth = 1;
-            const timeDash = (Date.now() / 60) % 8;
+            // Đường ngang trên & dưới
+            for (let px = selX0; px < selX1; px++) {
+                const isWhite = Math.floor((px + timeDash) / 4) % 2 === 0;
+                overlayCtx.fillStyle = isWhite ? '#ffffff' : '#000000';
+                overlayCtx.fillRect(px, selY0, 1, 1);
+                overlayCtx.fillRect(px, selY1 - 1, 1, 1);
+            }
 
-            // Nét đứt màu đen lót nền
-            overlayCtx.strokeStyle = '#000000';
-            overlayCtx.setLineDash([4, 4]);
-            overlayCtx.lineDashOffset = -timeDash;
-            overlayCtx.strokeRect(selX + 0.5, selY + 0.5, selW - 1, selH - 1);
-
-            // Nét đứt màu trắng xen kẽ
-            overlayCtx.strokeStyle = '#ffffff';
-            overlayCtx.setLineDash([4, 4]);
-            overlayCtx.lineDashOffset = -timeDash + 4;
-            overlayCtx.strokeRect(selX + 0.5, selY + 0.5, selW - 1, selH - 1);
-
-            // Bảng kích thước vùng chọn pixel (VD: 24x36)
-            overlayCtx.font = '10px monospace';
-            const dimStr = `${state.selection.w}x${state.selection.h}`;
-            const dw = overlayCtx.measureText(dimStr).width;
-            const bx = Math.max(4, Math.min(dispW - dw - 10, selX));
-            const by = selY >= 18 ? selY - 6 : selY + selH + 14;
-            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-            overlayCtx.fillRect(bx - 3, by - 10, dw + 6, 13);
-            overlayCtx.fillStyle = '#38bdf8';
-            overlayCtx.fillText(dimStr, bx, by);
-            overlayCtx.restore();
+            // Đường dọc trái & phải
+            for (let py = selY0; py < selY1; py++) {
+                const isWhite = Math.floor((py + timeDash) / 4) % 2 === 0;
+                overlayCtx.fillStyle = isWhite ? '#ffffff' : '#000000';
+                overlayCtx.fillRect(selX0, py, 1, 1);
+                overlayCtx.fillRect(selX1 - 1, py, 1, 1);
+            }
         }
 
-        // 5. Rect Tool Preview (Khít chuẩn pixel integer)
+        // 5. Rect Tool Preview (Khung viền chuẩn pixel integer 1px, không tô màu mờ che pixel bên dưới)
         if (state.tool === 'rect' && state.rectStartX !== null && hoverX !== null && hoverY !== null) {
             const rx = Math.min(state.rectStartX, hoverX);
             const ry = Math.min(state.rectStartY, hoverY);
@@ -327,9 +310,6 @@
             const sry = ry * zm;
             const srw = rw * zm;
             const srh = rh * zm;
-
-            overlayCtx.fillStyle = 'rgba(56, 189, 248, 0.22)';
-            overlayCtx.fillRect(srx, sry, srw, srh);
 
             overlayCtx.fillStyle = '#38bdf8';
             overlayCtx.fillRect(srx, sry, srw, 1);
@@ -343,8 +323,6 @@
             if (state.symmetry) {
                 const symRx = CANVAS_WIDTH - (rx + rw);
                 const symSrx = symRx * zm;
-                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.22)';
-                overlayCtx.fillRect(symSrx, sry, srw, srh);
                 overlayCtx.fillStyle = '#e5ab2e';
                 overlayCtx.fillRect(symSrx, sry, srw, 1);
                 if (srh > 1) overlayCtx.fillRect(symSrx, sry + srh - 1, srw, 1);
@@ -355,42 +333,7 @@
             }
         }
 
-        // 6. Full-canvas Crosshair Laser Guidelines (Thước ngắm dóng hàng/cột)
-        if (state.crosshair && hoverX !== null && hoverY !== null) {
-            overlayCtx.save();
-            overlayCtx.lineWidth = 1;
-            overlayCtx.setLineDash([3, 3]);
-            overlayCtx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
-
-            const chY = (hoverY + 0.5) * zm;
-            const chX = (hoverX + 0.5) * zm;
-
-            // Ngang
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(0, chY);
-            overlayCtx.lineTo(dispW, chY);
-            overlayCtx.stroke();
-
-            // Dọc
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(chX, 0);
-            overlayCtx.lineTo(chX, dispH);
-            overlayCtx.stroke();
-
-            // Nhãn tọa độ nhỏ gọn (X, Y)
-            overlayCtx.font = '10px monospace';
-            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-            const coordText = `(${hoverX},${hoverY})`;
-            const textW = overlayCtx.measureText(coordText).width;
-            const badgeX = chX + 10 + textW > dispW ? chX - textW - 10 : chX + 10;
-            const badgeY = chY - 10 < 10 ? chY + 20 : chY - 10;
-            overlayCtx.fillRect(badgeX - 3, badgeY - 10, textW + 6, 13);
-            overlayCtx.fillStyle = '#38bdf8';
-            overlayCtx.fillText(coordText, badgeX, badgeY);
-            overlayCtx.restore();
-        }
-
-        // 7. Brush Cursor Box (Khít từng pixel 100%, không lệch tọa độ, viền 1px siêu nét)
+        // 6. Brush Cursor Box (Khung viền 1px siêu nét, hoàn toàn trong suốt không làm mờ/lệch màu pixel bên dưới)
         if (state.tool !== 'select' && hoverX !== null && hoverY !== null) {
             const sz = state.brushSize;
             const half = Math.floor(sz / 2);
@@ -402,20 +345,14 @@
             const sw = sz * zm;
             const sh = sz * zm;
 
-            const strokeColor = state.tool === 'eraser' ? '#ff4d4f' : '#38bdf8';
-            const fillColor = state.tool === 'eraser' ? 'rgba(255, 77, 79, 0.18)' : 'rgba(56, 189, 248, 0.18)';
-
-            // Khung viền sắc nét 1px màn hình bao quanh vùng cọ vẽ
-            overlayCtx.fillStyle = strokeColor;
+            // Khung viền 1px màn hình bao quanh đúng phạm vi cọ vẽ, không tô mờ bên trong
+            overlayCtx.fillStyle = state.tool === 'eraser' ? '#ff4d4f' : '#ffffff';
             overlayCtx.fillRect(sx, sy, sw, 1);
             overlayCtx.fillRect(sx, sy + sh - 1, sw, 1);
             if (sh > 2) {
                 overlayCtx.fillRect(sx, sy + 1, 1, sh - 2);
                 overlayCtx.fillRect(sx + sw - 1, sy + 1, 1, sh - 2);
             }
-            // Lớp phủ nhẹ 18% mờ mờ để vừa nhận biết vùng cọ vừa nhìn rõ pixel bên dưới
-            overlayCtx.fillStyle = fillColor;
-            overlayCtx.fillRect(sx + 1, sy + 1, Math.max(0, sw - 2), Math.max(0, sh - 2));
 
             // Con trỏ đối xứng nếu bật đối xứng
             if (state.symmetry) {
@@ -429,8 +366,6 @@
                     overlayCtx.fillRect(symSx, sy + 1, 1, sh - 2);
                     overlayCtx.fillRect(symSx + sw - 1, sy + 1, 1, sh - 2);
                 }
-                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.18)';
-                overlayCtx.fillRect(symSx + 1, sy + 1, Math.max(0, sw - 2), Math.max(0, sh - 2));
             }
         }
     }
@@ -1074,8 +1009,8 @@
             state.isDrawing = true;
             saveHistoryState();
 
-            state.strokeOriginX = coords.x;
-            state.strokeOriginY = coords.y;
+            state.drawStartX = coords.x;
+            state.drawStartY = coords.y;
             state.lockedAxis = null;
 
             if (state.tool === 'bucket') {
@@ -1157,18 +1092,18 @@
 
             // Tự động căn di chuyển chuột theo hàng/cột (Orthogonal Lock chống lệch nét)
             const isOrtho = state.orthoLock || e.shiftKey || state.shiftKey;
-            if (state.isDrawing && isOrtho && state.strokeOriginX !== null && state.strokeOriginY !== null) {
+            if (state.isDrawing && isOrtho && state.drawStartX !== null && state.drawStartY !== null) {
                 if (!state.lockedAxis) {
-                    const dx = Math.abs(coords.x - state.strokeOriginX);
-                    const dy = Math.abs(coords.y - state.strokeOriginY);
+                    const dx = Math.abs(coords.x - state.drawStartX);
+                    const dy = Math.abs(coords.y - state.drawStartY);
                     if (dx >= 2 || dy >= 2) {
                         state.lockedAxis = dx >= dy ? 'x' : 'y';
                     }
                 }
                 if (state.lockedAxis === 'x') {
-                    coords.y = state.strokeOriginY; // Khóa chặt hàng ngang
+                    coords.y = state.drawStartY; // Khóa chặt hàng ngang
                 } else if (state.lockedAxis === 'y') {
-                    coords.x = state.strokeOriginX; // Khóa chặt cột dọc
+                    coords.x = state.drawStartX; // Khóa chặt cột dọc
                 }
             }
 
@@ -1227,8 +1162,8 @@
                 state.isDrawing = false;
                 state.lastX = null;
                 state.lastY = null;
-                state.strokeOriginX = null;
-                state.strokeOriginY = null;
+                state.drawStartX = null;
+                state.drawStartY = null;
                 state.lockedAxis = null;
                 syncLivePreviewAndThumb();
                 scheduleAutoSave();
@@ -1309,13 +1244,6 @@
             state.onionSkin = e.target.checked;
             renderOnionSkin();
         });
-        const chkCross = document.getElementById('chkCrosshair');
-        if (chkCross) {
-            chkCross.addEventListener('change', (e) => {
-                state.crosshair = e.target.checked;
-                renderOverlay();
-            });
-        }
         const chkOrtho = document.getElementById('chkOrthoLock');
         if (chkOrtho) {
             chkOrtho.addEventListener('change', (e) => {
@@ -1574,15 +1502,6 @@
                 }
             }
 
-            // C key: Toggle Crosshair (Thước ngắm dóng hàng/cột)
-            if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                state.crosshair = !state.crosshair;
-                const chk = document.getElementById('chkCrosshair');
-                if (chk) chk.checked = state.crosshair;
-                renderOverlay();
-                showToast(state.crosshair ? '🎯 Đã BẬT Thước ngắm laser dóng hàng/cột.' : '🎯 Đã TẮT Thước ngắm.');
-                return;
-            }
 
             // Ctrl + S (Save)
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
