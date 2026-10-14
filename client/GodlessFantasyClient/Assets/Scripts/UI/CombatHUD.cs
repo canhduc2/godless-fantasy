@@ -93,8 +93,19 @@ namespace GodlessFantasy.UI
         private InventoryItem dragItem = null;
         private Vector2 dragStartPos = Vector2.zero;
         private bool isDraggingItem = false;
+        private bool isPotentialDrag = false;
         private bool isDraggingFromHotbar = false;
         private int dragHotbarSourceSlot = -1;
+
+        private void CancelAllDragging()
+        {
+            isDraggingItem = false;
+            isPotentialDrag = false;
+            dragItem = null;
+            dragSourceSlot = -1;
+            isDraggingFromHotbar = false;
+            dragHotbarSourceSlot = -1;
+        }
 
         // Chat Modal State (3 Tab: Khu Vực, Thế Giới & Bang Hội)
         public const int MAX_DAILY_WORLD_CHAT = 5;
@@ -586,12 +597,7 @@ namespace GodlessFantasy.UI
                 {
                     inventoryManager.CancelTargetingSlotEnhancement();
                 }
-                if (isDraggingItem)
-                {
-                    isDraggingItem = false;
-                    dragSourceSlot = -1;
-                    dragItem = null;
-                }
+                CancelAllDragging();
             }
 
             // Phím M: Phím tắt nhanh mở hoặc đóng Menu tính năng (Drawer)
@@ -795,10 +801,16 @@ namespace GodlessFantasy.UI
             // Chặn Click-to-Move xuyên màn hình khi chuột ở trên bất kỳ vùng UI nào
             PlayerMovement.BlockWorldClick = IsMouseOverAnyUI(Event.current.mousePosition);
 
-            // KÍCH HOẠT KÉO THẢ TOÀN CỤC KHI DI CHUỘT
-            if (Event.current.type == EventType.MouseDrag && dragItem != null && !isDraggingItem)
+            // Tự động giải phóng nếu chuột trái không còn được nhấn
+            if (!Input.GetMouseButton(0) && (isDraggingItem || isPotentialDrag || dragItem != null || dragSourceSlot >= 0 || isDraggingFromHotbar))
             {
-                if (Vector2.Distance(Event.current.mousePosition, dragStartPos) > 4f)
+                CancelAllDragging();
+            }
+
+            // KÍCH HOẠT KÉO THẢ TOÀN CỤC KHI ĐANG NHẤN GIỮ CHUỘT TRÁI VÀ KÉO ĐỦ KHOẢNG CÁCH (> 8px)
+            if (isPotentialDrag && !isDraggingItem && dragItem != null && Input.GetMouseButton(0))
+            {
+                if (Vector2.Distance(Event.current.mousePosition, dragStartPos) > 8f)
                 {
                     isDraggingItem = true;
                 }
@@ -885,13 +897,9 @@ namespace GodlessFantasy.UI
             }
 
             // HỦY KÉO THẢ TOÀN CỤC NẾU NHẢ CHUỘT RA NGOÀI CÁC Ô HỢP LỆ
-            if (Event.current.type == EventType.MouseUp && isDraggingItem)
+            if (Event.current.type == EventType.MouseUp)
             {
-                isDraggingItem = false;
-                dragItem = null;
-                dragSourceSlot = -1;
-                isDraggingFromHotbar = false;
-                dragHotbarSourceSlot = -1;
+                CancelAllDragging();
             }
         }
 
@@ -1866,23 +1874,20 @@ namespace GodlessFantasy.UI
                                 FloatingDamageManager.ShowFloatingText(spawnPos, $"⚡ Đã lắp [{dragItem.itemName}] vào Ô [{slotNumber}]!", Color.green);
                             }
                         }
-                        isDraggingItem = false;
-                        dragItem = null;
-                        dragSourceSlot = -1;
-                        isDraggingFromHotbar = false;
-                        dragHotbarSourceSlot = -1;
+                        CancelAllDragging();
                         Event.current.Use();
                     }
                 }
                 else
                 {
-                    // Bắt đầu kéo kỹ năng từ Hotbar ra ngoài
+                    // Bắt đầu bấm giữ để chuẩn bị kéo kỹ năng từ Hotbar
                     if (scroll != null && Event.current.type == EventType.MouseDown && Event.current.button == 0)
                     {
                         isDraggingFromHotbar = true;
                         dragHotbarSourceSlot = slotIndex;
                         dragItem = inventoryManager?.FindItemByScroll(scroll);
                         dragStartPos = Event.current.mousePosition;
+                        isPotentialDrag = true;
                         isDraggingItem = false;
                         Event.current.Use();
                     }
@@ -1911,9 +1916,9 @@ namespace GodlessFantasy.UI
                 }
             }
 
-            if (isDraggingFromHotbar && !isDraggingItem && dragItem != null)
+            if (isDraggingFromHotbar && !isDraggingItem && dragItem != null && Input.GetMouseButton(0))
             {
-                if (Vector2.Distance(Event.current.mousePosition, dragStartPos) > 4f)
+                if (Vector2.Distance(Event.current.mousePosition, dragStartPos) > 8f)
                 {
                     isDraggingItem = true;
                 }
@@ -2574,16 +2579,19 @@ namespace GodlessFantasy.UI
                         {
                             if (item != null)
                             {
+                                selectedInventoryItem = item;
                                 dragSourceSlot = index;
                                 dragItem = item;
                                 dragStartPos = Event.current.mousePosition - inventoryScrollPos + scrollAreaRect.position;
+                                isPotentialDrag = true;
                                 isDraggingItem = false;
-                                selectedInventoryItem = item;
+                                isDraggingFromHotbar = false;
                                 Event.current.Use();
                             }
                             else
                             {
                                 selectedInventoryItem = null;
+                                CancelAllDragging();
                                 Event.current.Use();
                             }
                         }
@@ -2602,12 +2610,13 @@ namespace GodlessFantasy.UI
                             {
                                 inventoryManager?.SwapSlots(dragSourceSlot, index);
                             }
-                            isDraggingItem = false;
-                            dragSourceSlot = -1;
-                            dragItem = null;
-                            isDraggingFromHotbar = false;
-                            dragHotbarSourceSlot = -1;
+                            CancelAllDragging();
                             Event.current.Use();
+                        }
+                        else
+                        {
+                            // Nhả chuột khi chỉ click xem thông tin (chưa kéo) -> Xóa toàn bộ trạng thái chờ kéo
+                            CancelAllDragging();
                         }
                     }
 
@@ -2673,16 +2682,13 @@ namespace GodlessFantasy.UI
                 }
             }
 
-            // Kích hoạt kéo khi di chuyển chuột xa khỏi điểm bấm ban đầu
-            if (dragSourceSlot >= 0 && dragItem != null && !isDraggingItem)
+            // Kích hoạt kéo khi di chuyển chuột xa khỏi điểm bấm ban đầu và ĐANG NHẤN GIỮ CHUỘT TRÁI
+            if (isPotentialDrag && !isDraggingItem && dragItem != null && Input.GetMouseButton(0))
             {
                 Vector2 curScreenPos = Event.current.mousePosition - inventoryScrollPos + scrollAreaRect.position;
-                if (Vector2.Distance(curScreenPos, dragStartPos) > 4f)
+                if (Vector2.Distance(curScreenPos, dragStartPos) > 8f)
                 {
                     isDraggingItem = true;
-                }
-                if (isDraggingItem)
-                {
                     Event.current.Use();
                 }
             }
@@ -2817,11 +2823,7 @@ namespace GodlessFantasy.UI
                                     FloatingDamageManager.ShowFloatingText(spawnPos, $"⚡ Đã lắp [{dragItem.itemName}] vào Ô [{slot + 1}]!", Color.green);
                                     GodlessFantasy.Core.AudioManager.PlayEquip();
                                 }
-                                isDraggingItem = false;
-                                dragItem = null;
-                                dragSourceSlot = -1;
-                                isDraggingFromHotbar = false;
-                                dragHotbarSourceSlot = -1;
+                                CancelAllDragging();
                                 Event.current.Use();
                             }
                         }
@@ -2834,11 +2836,7 @@ namespace GodlessFantasy.UI
                             {
                                 Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
                                 FloatingDamageManager.ShowFloatingText(spawnPos, $"🔒 Ô kỹ năng [{slot + 1}] mở khóa ở Cấp {reqLv}!", Color.red);
-                                isDraggingItem = false;
-                                dragItem = null;
-                                dragSourceSlot = -1;
-                                isDraggingFromHotbar = false;
-                                dragHotbarSourceSlot = -1;
+                                CancelAllDragging();
                                 Event.current.Use();
                             }
                         }
@@ -2860,11 +2858,7 @@ namespace GodlessFantasy.UI
                                     Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
                                     FloatingDamageManager.ShowFloatingText(spawnPos, $"🔄 Đã chuyển kỹ năng sang Ô [{slot + 1}]!", Color.yellow);
                                 }
-                                isDraggingItem = false;
-                                dragItem = null;
-                                dragSourceSlot = -1;
-                                isDraggingFromHotbar = false;
-                                dragHotbarSourceSlot = -1;
+                                CancelAllDragging();
                                 Event.current.Use();
                             }
                         }
@@ -2882,6 +2876,7 @@ namespace GodlessFantasy.UI
                             dragHotbarSourceSlot = targetSlot;
                             dragItem = inventoryManager?.FindItemByScroll(eqScroll);
                             dragStartPos = Event.current.mousePosition;
+                            isPotentialDrag = true;
                             isDraggingItem = false;
                             Event.current.Use();
                         }
@@ -3452,9 +3447,7 @@ namespace GodlessFantasy.UI
                             FloatingDamageManager.ShowFloatingText(spawnPos, $"⚡ Đã lắp [{dragItem.itemName}] vào Ô [{targetSlot + 1}]!", Color.green);
                             GodlessFantasy.Core.AudioManager.PlayEquip();
                         }
-                        isDraggingItem = false;
-                        dragItem = null;
-                        dragSourceSlot = -1;
+                        CancelAllDragging();
                         Event.current.Use();
                     }
                 }
@@ -3625,6 +3618,57 @@ namespace GodlessFantasy.UI
             GUI.Label(new Rect(r.x, r.y, r.width, 22), "QUẢN LÝ THÚ CƯNG", boldWhiteStyle);
             boldWhiteStyle.normal.textColor = Color.white;
 
+            var petItem = inventoryManager?.Items.Find(it => it.itemType == ItemType.Pet);
+            bool hasPet = petItem != null || (petFollower != null && petFollower.gameObject.activeInHierarchy);
+
+            if (!hasPet)
+            {
+                Rect emptyCardRect = new Rect(r.x + 10f, r.y + 30f, r.width - 20f, r.height - 40f);
+                DrawDoubleGoldFrame(emptyCardRect, 1);
+
+                float cx = emptyCardRect.x + emptyCardRect.width / 2f;
+                float cy = emptyCardRect.y + 24f;
+
+                var emptyIconStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 28,
+                    fontStyle = FontStyle.Bold,
+                    normal = { textColor = new Color(1f, 0.85f, 0.35f) }
+                };
+                GUI.Label(new Rect(emptyCardRect.x, cy, emptyCardRect.width, 36f), "🐾", emptyIconStyle);
+
+                var emptyTitleStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 13,
+                    fontStyle = FontStyle.Bold,
+                    normal = { textColor = new Color(1f, 0.82f, 0.3f) }
+                };
+                GUI.Label(new Rect(emptyCardRect.x, cy + 38f, emptyCardRect.width, 22f), "CHƯA CÓ THÚ CƯNG ĐỒNG HÀNH", emptyTitleStyle);
+
+                var emptyDescStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 11,
+                    wordWrap = true,
+                    normal = { textColor = new Color(0.85f, 0.88f, 0.92f) }
+                };
+                Rect descRect = new Rect(emptyCardRect.x + 20f, cy + 65f, emptyCardRect.width - 40f, 95f);
+                string descText = "Tài khoản của bạn hiện chưa sở hữu hoặc chưa triệu hồi Thú Cưng nào.\n\n" +
+                                  "• <b>Thu phục:</b> Đánh bại Boss thế giới, hoàn thành nhiệm vụ hoặc mở Trứng Linh Thú.\n" +
+                                  "• <b>Tác dụng:</b> Thú Cưng tăng Tốc độ di chuyển, tăng Giáp Hộ Thể và tự động nhặt vật phẩm.\n" +
+                                  "• <b>Tiến hóa:</b> Cho ăn Hạt Dẻ để tăng Cấp và tiến hóa ngoại hình chiến binh hoàng kim!";
+                GUI.Label(descRect, descText, emptyDescStyle);
+
+                float guideBtnW = 200f;
+                float guideBtnH = 28f;
+                float guideBtnX = cx - guideBtnW / 2f;
+                float guideBtnY = emptyCardRect.y + emptyCardRect.height - 38f;
+                DrawFantasyButton(new Rect(guideBtnX, guideBtnY, guideBtnW, guideBtnH), "ĐI KHÁM PHÁ THẾ GIỚI", 11, false, new Color(0.4f, 0.5f, 0.6f));
+                return;
+            }
+
             float boxSize = 130f;
             float pY = r.y + 30f;
 
@@ -3641,9 +3685,9 @@ namespace GodlessFantasy.UI
             float btnW = r.width - (btnX - r.x) - 10f;
             float btnH = 28f;
 
-            if (DrawFantasyButton(new Rect(btnX, pY + 4, btnW, btnH), "THÁO RA (CẤT LỒNG)", 11))
+            string summonLabel = (petItem != null && petItem.isEquipped) ? "CẤT VÀO LỒNG" : "XUẤT CHIẾN";
+            if (DrawFantasyButton(new Rect(btnX, pY + 4, btnW, btnH), summonLabel, 11))
             {
-                var petItem = inventoryManager?.Items.Find(it => it.itemType == ItemType.Pet);
                 if (petItem != null) inventoryManager?.TogglePetSummon(petItem);
             }
 

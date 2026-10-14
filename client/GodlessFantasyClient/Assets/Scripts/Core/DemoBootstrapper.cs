@@ -54,7 +54,6 @@ namespace GodlessFantasy.Core
             Sprite stoneTile = Resources.Load<Sprite>("tile_stone");
             Sprite safeTile = Resources.Load<Sprite>("tile_safezone");
             Sprite grassTile = Resources.Load<Sprite>("tile_grass");
-            Sprite petSprite = Resources.Load<Sprite>("pet_squirrel");
 
             // 2. Xây Dựng Bản Đồ Thế Giới Khối Địa Hình & Chunk Streaming Siêu Rộng x3 (270m x 132m)
             gameObject.AddComponent<EnvironmentAtmosphereManager>();
@@ -171,22 +170,6 @@ namespace GodlessFantasy.Core
             SetPrivateField(pInventory, "skillAimingController", pCombat);
             SetPrivateField(pInventory, "playerStats", pStats);
             pInventory.SyncEquippedScrollsToCombat();
-
-            // 6. Thú Cưng Mini (Cute Mascot Pet Sóc Chibi của SquiRRels Studio!)
-            if (petSprite != null)
-            {
-                GameObject petObj = new GameObject("Pet_Squirrel_Companion");
-                petObj.transform.position = playerObj.transform.position + new Vector3(-1.0f, -0.3f, 0);
-                GamePhysicsOptimizer.SetLayer(petObj, GamePhysicsOptimizer.LayerPet);
-
-                var petSr = petObj.AddComponent<SpriteRenderer>();
-                petSr.sprite = petSprite;
-                petSr.sortingOrder = 8; // Layer 8 (ngay dưới chân nhân vật 10)
-
-                var petFollower = petObj.AddComponent<PetFollower>();
-                petFollower.SetOwner(playerObj.transform);
-                SetPrivateField(pInventory, "petFollower", petFollower);
-            }
 
             // 7. Tạo Dàn NPC Làng Tân Thủ Hoàn Chỉnh (Trưởng Làng, Shop, Thợ Rèn, Dược Sư, Sứ Giả RP)
             Sprite npcElderSprite = Resources.Load<Sprite>("npc_elder") ?? dummySprite;
