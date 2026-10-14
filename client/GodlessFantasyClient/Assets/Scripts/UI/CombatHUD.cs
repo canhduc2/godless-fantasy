@@ -1930,7 +1930,16 @@ namespace GodlessFantasy.UI
             GUI.DrawTexture(new Rect(r.x + 3, r.y + 3, r.width - 6, r.height - 6), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            if (dashIcon != null) GUI.DrawTexture(new Rect(r.x + 4, r.y + 4, r.width - 8, r.height - 8), dashIcon);
+            if (dashIcon == null) dashIcon = LoadTextureSafe("icon_skill_dash");
+            if (dashIcon != null)
+            {
+                GUI.DrawTexture(new Rect(r.x + 4, r.y + 4, r.width - 8, r.height - 8), dashIcon);
+            }
+            else
+            {
+                Texture2D emblem = LoadTextureSafe("emblem_dash");
+                if (emblem != null) GUI.DrawTexture(new Rect(r.x + 4, r.y + 4, r.width - 8, r.height - 8), emblem);
+            }
 
             // Khung viền slot
             Texture2D frameSlotTex = LoadTextureSafe("ui_frame_slot");
@@ -4859,14 +4868,6 @@ namespace GodlessFantasy.UI
 
         private void DrawFantasyFrame(Rect r, Color bgColor, Color borderColor, Color cornerColor)
         {
-            // Tối ưu hóa cực đại: Ô slot nhỏ (skill, trang bị, nút bấm <= 70px) vẽ 1 Texture gộp duy nhất (1 call thay vì 13 calls)!
-            if (r.width <= 70 && r.height <= 70)
-            {
-                GUI.color = Color.white;
-                GUI.DrawTexture(r, FantasyUITheme.GetSlotFrameTexture());
-                return;
-            }
-
             GUI.color = bgColor;
             GUI.DrawTexture(r, Texture2D.whiteTexture);
 

@@ -352,14 +352,6 @@ namespace GodlessFantasy.UI
         /// </summary>
         public static void DrawDoubleGoldFrame(Rect r, int borderWidth = 2, Color? customBg = null)
         {
-            // Tối ưu hóa cực đại: Các ô slot nhỏ (túi đồ, skill, trang bị <= 70px) vẽ 1 Texture gộp duy nhất (1 call thay vì 13 calls)!
-            if (r.width <= 70 && r.height <= 70 && !customBg.HasValue)
-            {
-                GUI.color = Color.white;
-                GUI.DrawTexture(r, GetSlotFrameTexture());
-                return;
-            }
-
             GUI.color = customBg ?? new Color(0.04f, 0.05f, 0.09f, 1.0f);
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = Color.white;

@@ -31,6 +31,12 @@
         symmetry: false,
         onionSkin: true,
         showGrid: true,
+        crosshair: true,
+        orthoLock: false,
+        shiftKey: false,
+        strokeOriginX: null,
+        strokeOriginY: null,
+        lockedAxis: null,
         zoom: 3.5,
         autoSave: true,
         isDrawing: false,
@@ -235,7 +241,49 @@
             overlayCtx.restore();
         }
 
-        // 3. Brush Cursor Hover Box
+        // 3. Full-canvas Crosshair Laser Guidelines (Thước ngắm dóng hàng/cột chống lệch nét)
+        if (state.crosshair && hoverX !== null && hoverY !== null) {
+            overlayCtx.save();
+            overlayCtx.lineWidth = 1;
+            overlayCtx.setLineDash([2, 3]);
+            overlayCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)'; // Cyan laser
+
+            // Ngang
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(0, hoverY + 0.5);
+            overlayCtx.lineTo(CANVAS_WIDTH, hoverY + 0.5);
+            overlayCtx.stroke();
+
+            // Dọc
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(hoverX + 0.5, 0);
+            overlayCtx.lineTo(hoverX + 0.5, CANVAS_HEIGHT);
+            overlayCtx.stroke();
+
+            // Nếu bật đối xứng, vẽ thêm đường dóng dọc đối xứng
+            if (state.symmetry) {
+                const symX = CANVAS_WIDTH - 1 - hoverX;
+                overlayCtx.strokeStyle = 'rgba(229, 171, 46, 0.45)';
+                overlayCtx.beginPath();
+                overlayCtx.moveTo(symX + 0.5, 0);
+                overlayCtx.lineTo(symX + 0.5, CANVAS_HEIGHT);
+                overlayCtx.stroke();
+            }
+
+            // Nhãn tọa độ nhỏ gọn (X, Y) cạnh con trỏ
+            overlayCtx.font = '8px monospace';
+            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+            const coordText = `(${hoverX},${hoverY})`;
+            const textW = overlayCtx.measureText(coordText).width;
+            const badgeX = hoverX + 8 + textW > CANVAS_WIDTH ? hoverX - textW - 8 : hoverX + 8;
+            const badgeY = hoverY - 6 < 8 ? hoverY + 14 : hoverY - 6;
+            overlayCtx.fillRect(badgeX - 2, badgeY - 7, textW + 4, 9);
+            overlayCtx.fillStyle = '#38bdf8';
+            overlayCtx.fillText(coordText, badgeX, badgeY);
+            overlayCtx.restore();
+        }
+
+        // 4. Brush Cursor Hover Box
         if (hoverX !== null && hoverY !== null) {
             const sz = state.brushSize;
             const startX = Math.floor(hoverX - sz / 2);
@@ -701,6 +749,10 @@
             saveHistoryState();
             const coords = getCanvasCoordinates(e);
 
+            state.strokeOriginX = coords.x;
+            state.strokeOriginY = coords.y;
+            state.lockedAxis = null;
+
             if (state.tool === 'bucket') {
                 floodFill(coords.x, coords.y, hexToRgba(state.color));
                 syncLivePreviewAndThumb();
@@ -719,7 +771,25 @@
         });
 
         window.addEventListener('mousemove', (e) => {
-            const coords = getCanvasCoordinates(e);
+            let coords = getCanvasCoordinates(e);
+
+            // Tự động căn di chuyển chuột theo hàng/cột (Orthogonal Lock chống lệch nét)
+            const isOrtho = state.orthoLock || e.shiftKey || state.shiftKey;
+            if (state.isDrawing && isOrtho && state.strokeOriginX !== null && state.strokeOriginY !== null) {
+                if (!state.lockedAxis) {
+                    const dx = Math.abs(coords.x - state.strokeOriginX);
+                    const dy = Math.abs(coords.y - state.strokeOriginY);
+                    if (dx >= 2 || dy >= 2) {
+                        state.lockedAxis = dx >= dy ? 'x' : 'y';
+                    }
+                }
+                if (state.lockedAxis === 'x') {
+                    coords.y = state.strokeOriginY; // Khóa chặt hàng ngang
+                } else if (state.lockedAxis === 'y') {
+                    coords.x = state.strokeOriginX; // Khóa chặt cột dọc
+                }
+            }
+
             updateCoordinates(coords.x, coords.y);
             renderOverlay(coords.x, coords.y);
 
@@ -764,6 +834,9 @@
                 state.isDrawing = false;
                 state.lastX = null;
                 state.lastY = null;
+                state.strokeOriginX = null;
+                state.strokeOriginY = null;
+                state.lockedAxis = null;
                 syncLivePreviewAndThumb();
                 scheduleAutoSave();
             }
@@ -834,7 +907,7 @@
             state.autoSave = e.target.checked;
         });
 
-        // Grid & Onion Skin
+        // Grid & Onion Skin & Crosshair & OrthoLock
         document.getElementById('chkGrid').addEventListener('change', (e) => {
             state.showGrid = e.target.checked;
             renderOverlay();
@@ -843,6 +916,20 @@
             state.onionSkin = e.target.checked;
             renderOnionSkin();
         });
+        const chkCross = document.getElementById('chkCrosshair');
+        if (chkCross) {
+            chkCross.addEventListener('change', (e) => {
+                state.crosshair = e.target.checked;
+                renderOverlay();
+            });
+        }
+        const chkOrtho = document.getElementById('chkOrthoLock');
+        if (chkOrtho) {
+            chkOrtho.addEventListener('change', (e) => {
+                state.orthoLock = e.target.checked;
+                showToast(state.orthoLock ? '📐 Đã BẬT Khóa hàng/cột (chống lệch nét).' : '📐 Đã TẮT Khóa hàng/cột.');
+            });
+        }
 
         // Color palette swatches
         document.querySelectorAll('.swatch').forEach(sw => {
@@ -1011,8 +1098,22 @@
 
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
+            if (e.key === 'Shift') {
+                state.shiftKey = true;
+            }
+
             // Check if user is typing in an input
             if (e.target.tagName === 'INPUT') return;
+
+            // C key: Toggle Crosshair (Thước ngắm dóng hàng/cột)
+            if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                state.crosshair = !state.crosshair;
+                const chk = document.getElementById('chkCrosshair');
+                if (chk) chk.checked = state.crosshair;
+                renderOverlay();
+                showToast(state.crosshair ? '🎯 Đã BẬT Thước ngắm laser dóng hàng/cột.' : '🎯 Đã TẮT Thước ngắm.');
+                return;
+            }
 
             // Ctrl + S (Save)
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -1059,6 +1160,12 @@
             if (e.key.toLowerCase() === 'b') setTool('bucket');
             if (e.key.toLowerCase() === 'i') setTool('eyedropper');
             if (e.key.toLowerCase() === 'r') setTool('rect');
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift') {
+                state.shiftKey = false;
+            }
         });
     }
 
