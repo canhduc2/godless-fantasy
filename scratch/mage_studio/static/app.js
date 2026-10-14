@@ -44,6 +44,20 @@
         lastY: null,
         rectStartX: null,
         rectStartY: null,
+        // Selection & Move state
+        selection: null, // { x, y, w, h }
+        floatingSelection: null, // { x, y, w, h, canvas, originX, originY }
+        clipboard: null, // { w, h, canvas }
+        isSelecting: false,
+        isDraggingSelection: false,
+        selectStartX: null,
+        selectStartY: null,
+        dragSelectStartX: null,
+        dragSelectStartY: null,
+        dragSelectOriginX: 0,
+        dragSelectOriginY: 0,
+        lastHoverX: null,
+        lastHoverY: null,
         recentColors: ['#9E2532', '#7D1A25', '#FFC83B', '#1B161D', '#FFD700'],
         undoStack: [],
         redoStack: [],
@@ -175,6 +189,7 @@
     }
 
     function loadCurrentFrameToCanvas() {
+        commitSelection();
         const key = getCacheKey(state.gender, state.direction, state.frame);
         const cached = state.frameImagesCache[key];
 
@@ -209,10 +224,54 @@
         }
     }
 
+    function drawPixelMarchingAnts(ctx, x, y, w, h) {
+        if (w <= 0 || h <= 0) return;
+        const timeOffset = Math.floor(Date.now() / 120);
+
+        // Chu vi đường viền kín khít từng pixel (clockwise perimeter, 100% discrete integer fillRect)
+        // 1. Cạnh trên: từ trái sang phải
+        for (let dx = 0; dx < w; dx++) {
+            const d = dx;
+            const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
+            ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
+            ctx.fillRect(x + dx, y, 1, 1);
+        }
+
+        // 2. Cạnh phải: từ trên xuống dưới
+        if (h > 2 && w > 0) {
+            for (let dy = 1; dy < h - 1; dy++) {
+                const d = w + dy;
+                const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
+                ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
+                ctx.fillRect(x + w - 1, y + dy, 1, 1);
+            }
+        }
+
+        // 3. Cạnh dưới: từ phải sang trái
+        if (h > 1) {
+            for (let dx = 0; dx < w; dx++) {
+                const d = w + (h - 1) + dx;
+                const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
+                ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
+                ctx.fillRect(x + (w - 1 - dx), y + h - 1, 1, 1);
+            }
+        }
+
+        // 4. Cạnh trái: từ dưới lên trên
+        if (h > 2 && w > 1) {
+            for (let dy = 1; dy < h - 1; dy++) {
+                const d = 2 * w + (h - 1) + (h - 1 - dy);
+                const isWhite = (((d - timeOffset) % 4 + 4) % 4) < 2;
+                ctx.fillStyle = isWhite ? '#ffffff' : '#090d16';
+                ctx.fillRect(x, y + dy, 1, 1);
+            }
+        }
+    }
+
     function renderOverlay(hoverX = null, hoverY = null) {
         overlayCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-        // 1. Pixel Grid
+        // 1. Pixel Grid (Chỉ hiện khi zoom lớn)
         if (state.showGrid && state.zoom >= 3.0) {
             overlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
             overlayCtx.lineWidth = 0.5;
@@ -241,12 +300,69 @@
             overlayCtx.restore();
         }
 
-        // 3. Full-canvas Crosshair Laser Guidelines (Thước ngắm dóng hàng/cột chống lệch nét)
+        // 3. Floating Selection Preview (khi đang di chuyển vùng chọn)
+        if (state.floatingSelection) {
+            overlayCtx.drawImage(state.floatingSelection.canvas, state.floatingSelection.x, state.floatingSelection.y);
+        }
+
+        // 4. Active Selection Marquee (Kiến bò chuẩn pixel khít rịt)
+        if (state.selection) {
+            drawPixelMarchingAnts(overlayCtx, state.selection.x, state.selection.y, state.selection.w, state.selection.h);
+
+            // Bảng kích thước vùng chọn pixel (VD: 24x36)
+            overlayCtx.save();
+            overlayCtx.font = '8px monospace';
+            const dimStr = `${state.selection.w}x${state.selection.h}`;
+            const dw = overlayCtx.measureText(dimStr).width;
+            const bx = Math.max(2, Math.min(CANVAS_WIDTH - dw - 6, state.selection.x));
+            const by = state.selection.y >= 12 ? state.selection.y - 4 : state.selection.y + state.selection.h + 9;
+            overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+            overlayCtx.fillRect(bx - 2, by - 7, dw + 4, 9);
+            overlayCtx.fillStyle = '#38bdf8';
+            overlayCtx.fillText(dimStr, bx, by);
+            overlayCtx.restore();
+        }
+
+        // 5. Rect Tool Preview (Khít chuẩn pixel integer, không dùng stroke làm lem viền)
+        if (state.tool === 'rect' && state.rectStartX !== null && hoverX !== null && hoverY !== null) {
+            const rx = Math.min(state.rectStartX, hoverX);
+            const ry = Math.min(state.rectStartY, hoverY);
+            const rw = Math.abs(hoverX - state.rectStartX) + 1;
+            const rh = Math.abs(hoverY - state.rectStartY) + 1;
+
+            overlayCtx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+            overlayCtx.fillRect(rx, ry, rw, rh);
+
+            // 1px viền chuẩn khít pixel không stroke mờ
+            overlayCtx.fillStyle = '#38bdf8';
+            overlayCtx.fillRect(rx, ry, rw, 1);
+            if (rh > 1) overlayCtx.fillRect(rx, ry + rh - 1, rw, 1);
+            if (rh > 2) {
+                overlayCtx.fillRect(rx, ry + 1, 1, rh - 2);
+                if (rw > 1) overlayCtx.fillRect(rx + rw - 1, ry + 1, 1, rh - 2);
+            }
+
+            // Preview đối xứng nếu bật đối xứng
+            if (state.symmetry) {
+                const symRx = CANVAS_WIDTH - (rx + rw);
+                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.25)';
+                overlayCtx.fillRect(symRx, ry, rw, rh);
+                overlayCtx.fillStyle = '#e5ab2e';
+                overlayCtx.fillRect(symRx, ry, rw, 1);
+                if (rh > 1) overlayCtx.fillRect(symRx, ry + rh - 1, rw, 1);
+                if (rh > 2) {
+                    overlayCtx.fillRect(symRx, ry + 1, 1, rh - 2);
+                    if (rw > 1) overlayCtx.fillRect(symRx + rw - 1, ry + 1, 1, rh - 2);
+                }
+            }
+        }
+
+        // 6. Full-canvas Crosshair Laser Guidelines (Thước ngắm dóng hàng/cột)
         if (state.crosshair && hoverX !== null && hoverY !== null) {
             overlayCtx.save();
             overlayCtx.lineWidth = 1;
             overlayCtx.setLineDash([2, 3]);
-            overlayCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)'; // Cyan laser
+            overlayCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
 
             // Ngang
             overlayCtx.beginPath();
@@ -260,17 +376,7 @@
             overlayCtx.lineTo(hoverX + 0.5, CANVAS_HEIGHT);
             overlayCtx.stroke();
 
-            // Nếu bật đối xứng, vẽ thêm đường dóng dọc đối xứng
-            if (state.symmetry) {
-                const symX = CANVAS_WIDTH - 1 - hoverX;
-                overlayCtx.strokeStyle = 'rgba(229, 171, 46, 0.45)';
-                overlayCtx.beginPath();
-                overlayCtx.moveTo(symX + 0.5, 0);
-                overlayCtx.lineTo(symX + 0.5, CANVAS_HEIGHT);
-                overlayCtx.stroke();
-            }
-
-            // Nhãn tọa độ nhỏ gọn (X, Y) cạnh con trỏ
+            // Nhãn tọa độ nhỏ gọn (X, Y)
             overlayCtx.font = '8px monospace';
             overlayCtx.fillStyle = 'rgba(15, 23, 42, 0.88)';
             const coordText = `(${hoverX},${hoverY})`;
@@ -283,21 +389,44 @@
             overlayCtx.restore();
         }
 
-        // 4. Brush Cursor Hover Box
-        if (hoverX !== null && hoverY !== null) {
+        // 7. Brush Cursor Box (Khít từng pixel 100%, không lệch tọa độ, không stroke làm mờ nét)
+        if (state.tool !== 'select' && hoverX !== null && hoverY !== null) {
             const sz = state.brushSize;
-            const startX = Math.floor(hoverX - sz / 2);
-            const startY = Math.floor(hoverY - sz / 2);
+            const half = Math.floor(sz / 2);
+            const startX = hoverX - half;
+            const startY = hoverY - half;
 
-            overlayCtx.strokeStyle = state.tool === 'eraser' ? '#ff4d4f' : '#38bdf8';
-            overlayCtx.lineWidth = 1;
-            overlayCtx.strokeRect(startX + 0.5, startY + 0.5, sz, sz);
+            const boxColor = state.tool === 'eraser' ? 'rgba(255, 77, 79, 0.85)' : 'rgba(56, 189, 248, 0.85)';
+            overlayCtx.fillStyle = boxColor;
+
+            if (sz === 1) {
+                overlayCtx.fillStyle = state.tool === 'eraser' ? 'rgba(255, 77, 79, 0.75)' : 'rgba(56, 189, 248, 0.75)';
+                overlayCtx.fillRect(startX, startY, 1, 1);
+            } else {
+                overlayCtx.fillRect(startX, startY, sz, 1);
+                overlayCtx.fillRect(startX, startY + sz - 1, sz, 1);
+                if (sz > 2) {
+                    overlayCtx.fillRect(startX, startY + 1, 1, sz - 2);
+                    overlayCtx.fillRect(startX + sz - 1, startY + 1, 1, sz - 2);
+                }
+            }
 
             if (state.symmetry) {
                 const symX = CANVAS_WIDTH - 1 - hoverX;
-                const symStartX = Math.floor(symX - sz / 2);
-                overlayCtx.strokeStyle = 'rgba(229, 171, 46, 0.8)';
-                overlayCtx.strokeRect(symStartX + 0.5, startY + 0.5, sz, sz);
+                const symStartX = symX - half;
+                const symStartY = hoverY - half;
+                overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.85)';
+                if (sz === 1) {
+                    overlayCtx.fillStyle = 'rgba(229, 171, 46, 0.75)';
+                    overlayCtx.fillRect(symStartX, symStartY, 1, 1);
+                } else {
+                    overlayCtx.fillRect(symStartX, symStartY, sz, 1);
+                    overlayCtx.fillRect(symStartX, symStartY + sz - 1, sz, 1);
+                    if (sz > 2) {
+                        overlayCtx.fillRect(symStartX, symStartY + 1, 1, sz - 2);
+                        overlayCtx.fillRect(symStartX + sz - 1, symStartY + 1, 1, sz - 2);
+                    }
+                }
             }
         }
     }
@@ -498,8 +627,156 @@
         }
     }
 
-    // Flip Horizontal Frame
+    // ================= MARQUEE SELECTION & MOVE FUNCTIONS =================
+    function updateSelectionUI() {
+        const sec = document.getElementById('selectionActionSection');
+        if (!sec) return;
+        if (state.selection) {
+            sec.classList.remove('hidden');
+            const dims = document.getElementById('selectionDims');
+            if (dims) dims.textContent = `${state.selection.w}x${state.selection.h}`;
+        } else {
+            sec.classList.add('hidden');
+        }
+    }
+
+    function commitSelection() {
+        if (state.floatingSelection) {
+            paintCtx.drawImage(state.floatingSelection.canvas, state.floatingSelection.x, state.floatingSelection.y);
+            state.floatingSelection = null;
+            syncLivePreviewAndThumb();
+            scheduleAutoSave();
+        }
+        state.selection = null;
+        updateSelectionUI();
+        renderOverlay(state.lastHoverX, state.lastHoverY);
+    }
+
+    function liftSelection() {
+        if (!state.selection || state.floatingSelection) return;
+        saveHistoryState();
+        const { x, y, w, h } = state.selection;
+        const liftedCanvas = document.createElement('canvas');
+        liftedCanvas.width = w;
+        liftedCanvas.height = h;
+        const liftedCtx = liftedCanvas.getContext('2d');
+        liftedCtx.drawImage(paintCanvas, x, y, w, h, 0, 0, w, h);
+
+        // Xóa sạch vùng cũ trên canvas để nâng lên vùng nổi di chuyển
+        paintCtx.clearRect(x, y, w, h);
+
+        state.floatingSelection = {
+            x: x,
+            y: y,
+            w: w,
+            h: h,
+            canvas: liftedCanvas,
+            originX: x,
+            originY: y
+        };
+        syncLivePreviewAndThumb();
+    }
+
+    function deleteSelection() {
+        if (!state.selection) return;
+        saveHistoryState();
+        if (state.floatingSelection) {
+            state.floatingSelection = null;
+        } else {
+            paintCtx.clearRect(state.selection.x, state.selection.y, state.selection.w, state.selection.h);
+        }
+        state.selection = null;
+        updateSelectionUI();
+        syncLivePreviewAndThumb();
+        scheduleAutoSave();
+        renderOverlay(state.lastHoverX, state.lastHoverY);
+        showToast('🗑️ Đã xóa vùng chọn.');
+    }
+
+    function copySelection() {
+        if (!state.selection) return;
+        const { x, y, w, h } = state.selection;
+        const clipCanvas = document.createElement('canvas');
+        clipCanvas.width = w;
+        clipCanvas.height = h;
+        const clipCtx = clipCanvas.getContext('2d');
+
+        if (state.floatingSelection) {
+            clipCtx.drawImage(state.floatingSelection.canvas, 0, 0);
+        } else {
+            clipCtx.drawImage(paintCanvas, x, y, w, h, 0, 0, w, h);
+        }
+
+        state.clipboard = { w, h, canvas: clipCanvas };
+        showToast(`📋 Đã sao chép vùng chọn (${w}x${h}px)`);
+    }
+
+    function cutSelection() {
+        if (!state.selection) return;
+        copySelection();
+        deleteSelection();
+        showToast('✂️ Đã cắt vùng chọn.');
+    }
+
+    function pasteSelection() {
+        if (!state.clipboard) {
+            showToast('Bộ nhớ tạm đang trống.', true);
+            return;
+        }
+        commitSelection();
+        saveHistoryState();
+
+        const w = state.clipboard.w;
+        const h = state.clipboard.h;
+        let px = state.lastHoverX !== null ? Math.floor(state.lastHoverX - w / 2) : Math.floor((CANVAS_WIDTH - w) / 2);
+        let py = state.lastHoverY !== null ? Math.floor(state.lastHoverY - h / 2) : Math.floor((CANVAS_HEIGHT - h) / 2);
+        px = Math.max(0, Math.min(CANVAS_WIDTH - w, px));
+        py = Math.max(0, Math.min(CANVAS_HEIGHT - h, py));
+
+        const pastedCanvas = document.createElement('canvas');
+        pastedCanvas.width = w;
+        pastedCanvas.height = h;
+        pastedCanvas.getContext('2d').drawImage(state.clipboard.canvas, 0, 0);
+
+        state.floatingSelection = {
+            x: px,
+            y: py,
+            w: w,
+            h: h,
+            canvas: pastedCanvas,
+            originX: px,
+            originY: py
+        };
+        state.selection = { x: px, y: py, w, h };
+        setTool('select');
+        updateSelectionUI();
+        renderOverlay(state.lastHoverX, state.lastHoverY);
+        showToast(`📋 Đã dán (${w}x${h}px). Kéo chuột để di chuyển!`);
+    }
+
+    // Flip Horizontal Frame (hoặc Lật Ngang Vùng Chọn nếu đang có selection)
     function flipHorizontal() {
+        if (state.selection) {
+            saveHistoryState();
+            if (!state.floatingSelection) {
+                liftSelection();
+            }
+            const w = state.floatingSelection.w;
+            const h = state.floatingSelection.h;
+            const tmp = document.createElement('canvas');
+            tmp.width = w;
+            tmp.height = h;
+            const tmpCtx = tmp.getContext('2d');
+            tmpCtx.translate(w, 0);
+            tmpCtx.scale(-1, 1);
+            tmpCtx.drawImage(state.floatingSelection.canvas, 0, 0);
+
+            state.floatingSelection.canvas = tmp;
+            renderOverlay(state.lastHoverX, state.lastHoverY);
+            showToast('↔️ Đã lật ngang vùng chọn.');
+            return;
+        }
+
         saveHistoryState();
         const tmp = document.createElement('canvas');
         tmp.width = CANVAS_WIDTH;
@@ -523,17 +800,21 @@
     function syncLivePreviewAndThumb() {
         const key = getCacheKey(state.gender, state.direction, state.frame);
 
-        // Update cache copy
+        // Update cache copy (nếu đang di chuyển selection, vẽ kèm cả vùng đang bay để preview không bị thủng lỗ)
         const copyCanvas = document.createElement('canvas');
         copyCanvas.width = CANVAS_WIDTH;
         copyCanvas.height = CANVAS_HEIGHT;
-        copyCanvas.getContext('2d').drawImage(paintCanvas, 0, 0);
+        const copyCtx = copyCanvas.getContext('2d');
+        copyCtx.drawImage(paintCanvas, 0, 0);
+        if (state.floatingSelection) {
+            copyCtx.drawImage(state.floatingSelection.canvas, state.floatingSelection.x, state.floatingSelection.y);
+        }
         state.frameImagesCache[key] = copyCanvas;
 
         // Update active thumbnail
         const thumbImg = document.getElementById(`thumbImg_${state.frame}`);
         if (thumbImg) {
-            thumbImg.src = paintCanvas.toDataURL('image/png');
+            thumbImg.src = copyCanvas.toDataURL('image/png');
         }
     }
 
@@ -550,6 +831,11 @@
     }
 
     async function saveCurrentFrame(isAuto = false) {
+        // Tự động chốt vùng chọn nổi vào canvas trước khi lưu
+        if (state.floatingSelection) {
+            commitSelection();
+        }
+
         const statusEl = document.getElementById('saveStatusIndicator');
         statusEl.className = 'status-indicator saving';
         statusEl.textContent = 'Đang lưu vào Unity...';
@@ -615,6 +901,7 @@
 
     function selectFrame(f) {
         if (state.frame === f) return;
+        commitSelection();
         state.frame = f;
 
         document.querySelectorAll('.frame-card').forEach(c => {
@@ -627,6 +914,7 @@
     // ================= DIRECTION & GENDER SWITCHING =================
     async function setDirection(dir) {
         if (state.direction === dir) return;
+        commitSelection();
         state.direction = dir;
 
         document.querySelectorAll('.dir-tab').forEach(t => {
@@ -648,6 +936,7 @@
 
     async function setGender(gender) {
         if (state.gender === gender) return;
+        commitSelection();
         state.gender = gender;
 
         document.querySelectorAll('.gender-btn').forEach(b => {
@@ -690,10 +979,16 @@
     }
 
     function setTool(toolName) {
+        if (state.tool === 'select' && toolName !== 'select') {
+            commitSelection();
+        }
         state.tool = toolName;
         document.querySelectorAll('.tool-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.tool === toolName);
         });
+        if (toolName !== 'select') {
+            paintCanvas.style.cursor = 'crosshair';
+        }
     }
 
     // ================= LIVE PREVIEW LOOP =================
@@ -724,7 +1019,7 @@
 
         // If currently editing this frame on canvas, render live canvas!
         if (activeFrameIdx === state.frame) {
-            imgToDraw = paintCanvas;
+            imgToDraw = (state.floatingSelection && state.frameImagesCache[key]) ? state.frameImagesCache[key] : paintCanvas;
         }
 
         if (imgToDraw) {
@@ -738,6 +1033,11 @@
             previewCtx.restore();
         }
 
+        // Nếu đang có vùng chọn, tự động render lại overlay để hiệu ứng kiến bò (marching ants) chuyển động liên tục
+        if (state.selection) {
+            renderOverlay(state.lastHoverX, state.lastHoverY);
+        }
+
         requestAnimationFrame(previewAnimationLoop);
     }
 
@@ -745,9 +1045,39 @@
     function bindEvents() {
         // Pointer drawing on Paint Canvas
         paintCanvas.addEventListener('mousedown', (e) => {
+            const coords = getCanvasCoordinates(e);
+
+            // Thao tác với công cụ Vùng chọn (Select / Move)
+            if (state.tool === 'select') {
+                const inSelection = state.selection &&
+                    coords.x >= state.selection.x && coords.x < state.selection.x + state.selection.w &&
+                    coords.y >= state.selection.y && coords.y < state.selection.y + state.selection.h;
+
+                if (inSelection) {
+                    // Click trong vùng chọn: Nhấc pixel lên & kéo di chuyển!
+                    if (!state.floatingSelection) {
+                        liftSelection();
+                    }
+                    state.isDraggingSelection = true;
+                    state.dragSelectStartX = coords.x;
+                    state.dragSelectStartY = coords.y;
+                    state.dragSelectOriginX = state.floatingSelection.x;
+                    state.dragSelectOriginY = state.floatingSelection.y;
+                } else {
+                    // Click ra ngoài: Áp dụng vùng chọn cũ, bắt đầu tạo vùng chọn mới!
+                    commitSelection();
+                    state.isSelecting = true;
+                    state.selectStartX = coords.x;
+                    state.selectStartY = coords.y;
+                    state.selection = { x: coords.x, y: coords.y, w: 1, h: 1 };
+                    updateSelectionUI();
+                }
+                renderOverlay(coords.x, coords.y);
+                return;
+            }
+
             state.isDrawing = true;
             saveHistoryState();
-            const coords = getCanvasCoordinates(e);
 
             state.strokeOriginX = coords.x;
             state.strokeOriginY = coords.y;
@@ -772,6 +1102,52 @@
 
         window.addEventListener('mousemove', (e) => {
             let coords = getCanvasCoordinates(e);
+            state.lastHoverX = coords.x;
+            state.lastHoverY = coords.y;
+
+            if (state.tool === 'select') {
+                if (state.isSelecting) {
+                    const minX = Math.min(state.selectStartX, coords.x);
+                    const minY = Math.min(state.selectStartY, coords.y);
+                    const maxX = Math.max(state.selectStartX, coords.x);
+                    const maxY = Math.max(state.selectStartY, coords.y);
+                    state.selection = {
+                        x: minX,
+                        y: minY,
+                        w: maxX - minX + 1,
+                        h: maxY - minY + 1
+                    };
+                    updateSelectionUI();
+                    updateCoordinates(coords.x, coords.y);
+                    renderOverlay(coords.x, coords.y);
+                    return;
+                }
+
+                if (state.isDraggingSelection && state.floatingSelection) {
+                    const dx = coords.x - state.dragSelectStartX;
+                    const dy = coords.y - state.dragSelectStartY;
+                    let nx = state.dragSelectOriginX + dx;
+                    let ny = state.dragSelectOriginY + dy;
+                    nx = Math.max(0, Math.min(CANVAS_WIDTH - state.floatingSelection.w, nx));
+                    ny = Math.max(0, Math.min(CANVAS_HEIGHT - state.floatingSelection.h, ny));
+                    state.floatingSelection.x = nx;
+                    state.floatingSelection.y = ny;
+                    state.selection.x = nx;
+                    state.selection.y = ny;
+                    updateCoordinates(coords.x, coords.y);
+                    renderOverlay(coords.x, coords.y);
+                    return;
+                }
+
+                const inSel = state.selection &&
+                    coords.x >= state.selection.x && coords.x < state.selection.x + state.selection.w &&
+                    coords.y >= state.selection.y && coords.y < state.selection.y + state.selection.h;
+                paintCanvas.style.cursor = inSel ? 'move' : 'crosshair';
+
+                updateCoordinates(coords.x, coords.y);
+                renderOverlay(coords.x, coords.y);
+                return;
+            }
 
             // Tự động căn di chuyển chuột theo hàng/cột (Orthogonal Lock chống lệch nét)
             const isOrtho = state.orthoLock || e.shiftKey || state.shiftKey;
@@ -796,14 +1172,7 @@
             if (!state.isDrawing) return;
 
             if (state.tool === 'rect') {
-                // Preview rect outline on overlay
-                renderOverlay(coords.x, coords.y);
-                const rx = Math.min(state.rectStartX, coords.x);
-                const ry = Math.min(state.rectStartY, coords.y);
-                const rw = Math.abs(coords.x - state.rectStartX) + 1;
-                const rh = Math.abs(coords.y - state.rectStartY) + 1;
-                overlayCtx.strokeStyle = '#38bdf8';
-                overlayCtx.strokeRect(rx, ry, rw, rh);
+                // renderOverlay đã preview khung khít pixel hoàn hảo
             } else if (state.tool === 'pencil' || state.tool === 'eraser' || state.tool === 'dodge' || state.tool === 'burn') {
                 if (state.lastX !== null && state.lastY !== null) {
                     drawLine(state.lastX, state.lastY, coords.x, coords.y, hexToRgba(state.color));
@@ -815,6 +1184,24 @@
         });
 
         window.addEventListener('mouseup', (e) => {
+            const coords = getCanvasCoordinates(e);
+            if (state.tool === 'select') {
+                if (state.isSelecting) {
+                    state.isSelecting = false;
+                    // Nếu click chuột một điểm mà không kéo tạo hộp chọn -> bỏ chọn
+                    if (state.selection && state.selectStartX === coords.x && state.selectStartY === coords.y && state.selection.w <= 1 && state.selection.h <= 1) {
+                        state.selection = null;
+                        updateSelectionUI();
+                    }
+                }
+                if (state.isDraggingSelection) {
+                    state.isDraggingSelection = false;
+                    syncLivePreviewAndThumb();
+                }
+                renderOverlay(coords.x, coords.y);
+                return;
+            }
+
             if (state.isDrawing) {
                 if (state.tool === 'rect' && state.rectStartX !== null) {
                     const coords = getCanvasCoordinates(e);
@@ -1096,6 +1483,16 @@
             }
         });
 
+        // Selection Action Buttons
+        const btnDeselect = document.getElementById('btnDeselect');
+        if (btnDeselect) btnDeselect.addEventListener('click', commitSelection);
+        const btnCutSel = document.getElementById('btnCutSelection');
+        if (btnCutSel) btnCutSel.addEventListener('click', cutSelection);
+        const btnCopySel = document.getElementById('btnCopySelection');
+        if (btnCopySel) btnCopySel.addEventListener('click', copySelection);
+        const btnDeleteSel = document.getElementById('btnDeleteSelection');
+        if (btnDeleteSel) btnDeleteSel.addEventListener('click', deleteSelection);
+
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Shift') {
@@ -1104,6 +1501,72 @@
 
             // Check if user is typing in an input
             if (e.target.tagName === 'INPUT') return;
+
+            // Arrow Keys Nudge khi đang có vùng chọn (Di chuyển pixel từng nấc 1px hoặc 4px với Shift)
+            if (state.selection && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                e.preventDefault();
+                if (!state.floatingSelection) {
+                    liftSelection();
+                }
+                const step = e.shiftKey ? 4 : 1;
+                let nx = state.floatingSelection.x;
+                let ny = state.floatingSelection.y;
+                if (e.key === 'ArrowUp') ny -= step;
+                if (e.key === 'ArrowDown') ny += step;
+                if (e.key === 'ArrowLeft') nx -= step;
+                if (e.key === 'ArrowRight') nx += step;
+                nx = Math.max(0, Math.min(CANVAS_WIDTH - state.floatingSelection.w, nx));
+                ny = Math.max(0, Math.min(CANVAS_HEIGHT - state.floatingSelection.h, ny));
+                state.floatingSelection.x = nx;
+                state.floatingSelection.y = ny;
+                state.selection.x = nx;
+                state.selection.y = ny;
+                renderOverlay(state.lastHoverX, state.lastHoverY);
+                syncLivePreviewAndThumb();
+                return;
+            }
+
+            // Delete / Backspace khi đang có vùng chọn: Xóa vùng chọn
+            if (state.selection && (e.key === 'Delete' || e.key === 'Backspace')) {
+                e.preventDefault();
+                deleteSelection();
+                return;
+            }
+
+            // Enter / Escape khi đang có vùng chọn: Áp dụng / Bỏ chọn
+            if (state.selection && (e.key === 'Enter' || e.key === 'Escape')) {
+                e.preventDefault();
+                commitSelection();
+                showToast('✔️ Đã áp dụng vùng chọn.');
+                return;
+            }
+
+            // Ctrl + C (Copy selection)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+                if (state.selection) {
+                    e.preventDefault();
+                    copySelection();
+                    return;
+                }
+            }
+
+            // Ctrl + X (Cut selection)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x') {
+                if (state.selection) {
+                    e.preventDefault();
+                    cutSelection();
+                    return;
+                }
+            }
+
+            // Ctrl + V (Paste selection)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+                if (state.clipboard) {
+                    e.preventDefault();
+                    pasteSelection();
+                    return;
+                }
+            }
 
             // C key: Toggle Crosshair (Thước ngắm dóng hàng/cột)
             if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -1137,15 +1600,17 @@
                 return;
             }
 
-            // Direction Keys (WASD / Arrows)
-            if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's' && !e.ctrlKey) {
-                setDirection('south');
-            } else if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') {
-                setDirection('north');
-            } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-                setDirection('west');
-            } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-                setDirection('east');
+            // Direction Keys (WASD / Arrows khi KHÔNG có selection)
+            if (!state.selection) {
+                if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's' && !e.ctrlKey) {
+                    setDirection('south');
+                } else if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') {
+                    setDirection('north');
+                } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+                    setDirection('west');
+                } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+                    setDirection('east');
+                }
             }
 
             // 1..8 number keys for 8 directions
@@ -1157,9 +1622,15 @@
             // Tool shortcuts
             if (e.key.toLowerCase() === 'p') setTool('pencil');
             if (e.key.toLowerCase() === 'e') setTool('eraser');
+            if (e.key.toLowerCase() === 'm' || (e.key.toLowerCase() === 's' && !e.ctrlKey && !state.selection)) setTool('select');
             if (e.key.toLowerCase() === 'b') setTool('bucket');
             if (e.key.toLowerCase() === 'i') setTool('eyedropper');
             if (e.key.toLowerCase() === 'r') setTool('rect');
+
+            // H key: Lật ngang frame hoặc lật ngang vùng chọn
+            if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                flipHorizontal();
+            }
         });
 
         window.addEventListener('keyup', (e) => {

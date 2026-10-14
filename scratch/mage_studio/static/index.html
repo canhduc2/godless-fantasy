@@ -78,6 +78,9 @@
                     <button class="tool-btn" data-tool="eraser" title="Tẩy xóa pixel (E)">
                         <span class="tool-icon">🧹</span> Tẩy xóa
                     </button>
+                    <button class="tool-btn" data-tool="select" title="Vùng chọn & Di chuyển pixel (M hoặc S)">
+                        <span class="tool-icon">⬚</span> Vùng chọn
+                    </button>
                     <button class="tool-btn" data-tool="bucket" title="Đổ màu (B)">
                         <span class="tool-icon">🪣</span> Đổ màu
                     </button>
@@ -92,6 +95,25 @@
                     </button>
                     <button class="tool-btn" data-tool="burn" title="Làm tối pixel (-)">
                         <span class="tool-icon">🌑</span> Giảm tối
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selection Actions (Hiển thị khi có vùng chọn) -->
+            <div id="selectionActionSection" class="tool-section hidden">
+                <h3 class="section-title">Vùng Chọn (<span id="selectionDims">0x0</span>)</h3>
+                <div class="selection-actions">
+                    <button id="btnDeselect" class="btn btn-outline btn-sm" title="Áp dụng / Bỏ chọn (Enter / Esc)">
+                        ✔️ Áp dụng
+                    </button>
+                    <button id="btnCutSelection" class="btn btn-outline btn-sm" title="Cắt vùng chọn (Ctrl+X)">
+                        ✂️ Cắt
+                    </button>
+                    <button id="btnCopySelection" class="btn btn-outline btn-sm" title="Sao chép vùng chọn (Ctrl+C)">
+                        📋 Chép
+                    </button>
+                    <button id="btnDeleteSelection" class="btn btn-danger btn-sm" title="Xóa vùng chọn (Delete)">
+                        🗑️ Xóa
                     </button>
                 </div>
             </div>
@@ -115,8 +137,8 @@
                     <button id="btnToggleSymmetry" class="feature-toggle-btn" title="Vẽ bên trái tự động sao chép sang bên phải">
                         <span class="toggle-icon">🪞</span> Đối Xứng Trục Giữa: <b id="symStatus">TẮT</b>
                     </button>
-                    <button id="btnFlipH" class="btn btn-outline btn-sm" title="Lật ngang toàn bộ frame hiện tại">
-                        ↔️ Lật Ngang Frame
+                    <button id="btnFlipH" class="btn btn-outline btn-sm" title="Lật ngang vùng chọn hoặc toàn bộ frame (Phím tắt: H)">
+                        ↔️ Lật Ngang (H)
                     </button>
                 </div>
             </div>
