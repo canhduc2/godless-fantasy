@@ -469,6 +469,7 @@ namespace GodlessFantasy.Core
         public static void PlayHit() => Play(Instance?.clipHit, 0.95f);
         public static void PlayPickup() => Play(Instance?.clipPickup, 0.8f);
         public static void PlayEquip() => Play(Instance?.clipPickup, 0.9f);
+        public void PlayEquipItemSound() => PlayEquip();
         public static void PlayDrop() => Play(Instance?.clipPickup, 0.75f);
         public static void PlayLevelUp() => Play(Instance?.clipLevelUp, 1.0f);
         public static void PlayTelegraphCharge() => Play(Instance?.clipTelegraph, 0.9f);

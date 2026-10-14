@@ -13,6 +13,7 @@ namespace GodlessFantasy.Combat
     public class SkillScrollData
     {
         public string id;
+        public string scrollId { get => id; set => id = value; }
         public string scrollName;
         public string requiredClass;     // Kị Sĩ, Pháp Sư, Võ Sĩ, Xạ Thủ, Toàn Hệ
         public string tierRank;          // E, D, C, B, A, S, X

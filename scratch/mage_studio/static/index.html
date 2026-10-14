@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mage Sprite Studio - Xưởng Hoạt Ảnh Pixel Art 8 Hướng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dark-theme">
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-badge">
+                <span class="logo-icon">🧙‍♂️</span>
+                <div class="logo-text">
+                    <h1>MAGE SPRITE STUDIO</h1>
+                    <span class="logo-sub">XƯỞNG HOẠT ẢNH & PIXEL ART 8 HƯỚNG · UNITY DIRECT SYNC</span>
+                </div>
+            </div>
+
+            <!-- Gender Switcher -->
+            <div class="gender-switch-container">
+                <span class="switch-label">Giới tính:</span>
+                <div class="gender-toggle-group">
+                    <button id="btnGenderMale" class="gender-btn active" data-gender="male">
+                        <span class="gender-icon">♂</span> Nam (Male)
+                    </button>
+                    <button id="btnGenderFemale" class="gender-btn" data-gender="female">
+                        <span class="gender-icon">♀</span> Nữ (Female)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- Global Action Buttons -->
+            <label class="autosave-toggle" title="Tự động lưu vào Unity sau khi vẽ">
+                <input type="checkbox" id="chkAutoSave" checked>
+                <span class="slider"></span>
+                <span class="toggle-text">Tự động lưu</span>
+            </label>
+
+            <button id="btnSaveFrame" class="btn btn-primary" title="Lưu Frame hiện tại (Ctrl+S)">
+                💾 Lưu Frame Này
+            </button>
+
+            <button id="btnCopyGender" class="btn btn-secondary" title="Sao chép toàn bộ sang giới tính còn lại">
+                📋 Nhân Bản Sang Nữ
+            </button>
+
+            <button id="btnMirrorOpposite" class="btn btn-secondary" title="Lật đối xứng 8 frame sang hướng đối diện (VD: West -> East)">
+                🪞 Sao Chép Đối Xứng Hướng
+            </button>
+
+            <button id="btnRestoreBackup" class="btn btn-outline" title="Khôi phục ảnh gốc nếu vẽ hỏng">
+                ⏪ Khôi Phục Gốc
+            </button>
+
+            <button id="btnExportSheet" class="btn btn-accent" title="Xuất toàn bộ 64 frame thành 1 Sprite Sheet lớn">
+                🖼️ Xuất Sprite Sheet
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="workspace-container">
+        <!-- LEFT: Pixel Art Tool Palette -->
+        <aside class="sidebar-tools">
+            <div class="tool-section">
+                <h3 class="section-title">Công Cụ Vẽ</h3>
+                <div class="tool-grid">
+                    <button class="tool-btn active" data-tool="pencil" title="Bút vẽ pixel (P)">
+                        <span class="tool-icon">✏️</span> Bút vẽ
+                    </button>
+                    <button class="tool-btn" data-tool="eraser" title="Tẩy xóa pixel (E)">
+                        <span class="tool-icon">🧹</span> Tẩy xóa
+                    </button>
+                    <button class="tool-btn" data-tool="bucket" title="Đổ màu (B)">
+                        <span class="tool-icon">🪣</span> Đổ màu
+                    </button>
+                    <button class="tool-btn" data-tool="eyedropper" title="Chấm hút màu (I)">
+                        <span class="tool-icon">🔍</span> Hút màu
+                    </button>
+                    <button class="tool-btn" data-tool="rect" title="Tô khối chữ nhật (R)">
+                        <span class="tool-icon">🔲</span> Tô khối
+                    </button>
+                    <button class="tool-btn" data-tool="dodge" title="Làm sáng pixel (+)">
+                        <span class="tool-icon">☀️</span> Tăng sáng
+                    </button>
+                    <button class="tool-btn" data-tool="burn" title="Làm tối pixel (-)">
+                        <span class="tool-icon">🌑</span> Giảm tối
+                    </button>
+                </div>
+            </div>
+
+            <!-- Brush Size -->
+            <div class="tool-section">
+                <h3 class="section-title">Kích Thước Nét</h3>
+                <div class="brush-size-group">
+                    <button class="size-btn active" data-size="1">1px</button>
+                    <button class="size-btn" data-size="2">2px</button>
+                    <button class="size-btn" data-size="3">3px</button>
+                    <button class="size-btn" data-size="4">4px</button>
+                    <button class="size-btn" data-size="6">6px</button>
+                </div>
+            </div>
+
+            <!-- Symmetry & Transform Tools -->
+            <div class="tool-section">
+                <h3 class="section-title">Căn Đối Xứng</h3>
+                <div class="symmetry-actions">
+                    <button id="btnToggleSymmetry" class="feature-toggle-btn" title="Vẽ bên trái tự động sao chép sang bên phải">
+                        <span class="toggle-icon">🪞</span> Đối Xứng Trục Giữa: <b id="symStatus">TẮT</b>
+                    </button>
+                    <button id="btnFlipH" class="btn btn-outline btn-sm" title="Lật ngang toàn bộ frame hiện tại">
+                        ↔️ Lật Ngang Frame
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Actions -->
+            <div class="tool-section">
+                <h3 class="section-title">Lịch Sử & Thao Tác</h3>
+                <div class="history-actions">
+                    <button id="btnUndo" class="btn btn-outline btn-sm" title="Hoàn tác (Ctrl+Z)">
+                        ↩️ Undo
+                    </button>
+                    <button id="btnRedo" class="btn btn-outline btn-sm" title="Làm lại (Ctrl+Y)">
+                        ↪️ Redo
+                    </button>
+                    <button id="btnClearCanvas" class="btn btn-danger btn-sm" title="Xóa sạch canvas này">
+                        🗑️ Xóa Sạch
+                    </button>
+                </div>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="tool-section color-section">
+                <div class="color-header">
+                    <h3 class="section-title">Bảng Màu</h3>
+                    <div class="current-color-preview" id="currentColorBox" title="Màu đang chọn"></div>
+                </div>
+
+                <div class="color-picker-row">
+                    <input type="color" id="nativeColorPicker" value="#8B1C1C">
+                    <span id="hexColorLabel" class="hex-label">#8B1C1C</span>
+                </div>
+
+                <!-- Mage Preset Palette -->
+                <div class="palette-group">
+                    <span class="palette-sub">Màu Áo Choàng Đỏ:</span>
+                    <div class="palette-swatches">
+                        <span class="swatch" data-color="#5A0E18" style="background:#5A0E18"></span>
+                        <span class="swatch" data-color="#7D1A25" style="background:#7D1A25"></span>
+                        <span class="swatch active" data-color="#9E2532" style="background:#9E2532"></span>
+                        <span class="swatch" data-color="#BE3442" style="background:#BE3442"></span>
+                        <span class="swatch" data-color="#D94857" style="background:#D94857"></span>
+                    </div>
+
+                    <span class="palette-sub">Màu Viền Vàng Kim:</span>
+                    <div class="palette-swatches">
+                        <span class="swatch" data-color="#7D5710" style="background:#7D5710"></span>
+                        <span class="swatch" data-color="#A87A18" style="background:#A87A18"></span>
+                        <span class="swatch" data-color="#D89E24" style="background:#D89E24"></span>
+                        <span class="swatch" data-color="#FFC83B" style="background:#FFC83B"></span>
+                        <span class="swatch" data-color="#FFE875" style="background:#FFE875"></span>
+                    </div>
+
+                    <span class="palette-sub">Bóng Tối & Mắt Phát Sáng:</span>
+                    <div class="palette-swatches">
+                        <span class="swatch" data-color="#0E0C0E" style="background:#0E0C0E"></span>
+                        <span class="swatch" data-color="#1B161D" style="background:#1B161D"></span>
+                        <span class="swatch" data-color="#2D2530" style="background:#2D2530"></span>
+                        <span class="swatch" data-color="#FFD700" style="background:#FFD700"></span>
+                        <span class="swatch" data-color="#FFFFFF" style="background:#FFFFFF"></span>
+                    </div>
+                </div>
+
+                <!-- Recent Colors -->
+                <div class="recent-colors-group">
+                    <span class="palette-sub">Màu Vừa Dùng:</span>
+                    <div class="palette-swatches" id="recentSwatches"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER: Drawing Canvas Area & Frame Filmstrip -->
+        <main class="main-editor-stage">
+            <!-- Stage Top Bar: Navigation & Compass Indicator -->
+            <div class="stage-control-bar">
+                <div class="direction-tabs" id="directionTabs">
+                    <button class="dir-tab active" data-dir="south" title="Hướng Nam (S) - Phím 1">
+                        ⬇️ Nam (S)
+                    </button>
+                    <button class="dir-tab" data-dir="south_west" title="Hướng Tây Nam (SW) - Phím 2">
+                        ↙️ Tây Nam (SW)
+                    </button>
+                    <button class="dir-tab" data-dir="west" title="Hướng Tây (W) - Phím 3">
+                        ⬅️ Tây (W)
+                    </button>
+                    <button class="dir-tab" data-dir="north_west" title="Hướng Tây Bắc (NW) - Phím 4">
+                        ↖️ Tây Bắc (NW)
+                    </button>
+                    <button class="dir-tab" data-dir="north" title="Hướng Bắc (N) - Phím 5">
+                        ⬆️ Bắc (N)
+                    </button>
+                    <button class="dir-tab" data-dir="north_east" title="Hướng Đông Bắc (NE) - Phím 6">
+                        ↗️ Đông Bắc (NE)
+                    </button>
+                    <button class="dir-tab" data-dir="east" title="Hướng Đông (E) - Phím 7">
+                        ➡️ Đông (E)
+                    </button>
+                    <button class="dir-tab" data-dir="south_east" title="Hướng Đông Nam (SE) - Phím 8">
+                        ↘️ Đông Nam (SE)
+                    </button>
+                </div>
+
+                <!-- View & Canvas Settings -->
+                <div class="canvas-view-controls">
+                    <label class="view-opt">
+                        <input type="checkbox" id="chkGrid" checked> Lưới Pixel
+                    </label>
+                    <label class="view-opt" title="Hiển thị bóng mờ của frame trước để căn bước chân">
+                        <input type="checkbox" id="chkOnionSkin" checked> Onion Skin
+                    </label>
+                    <div class="zoom-group">
+                        <button id="btnZoomOut" class="btn-icon" title="Thu nhỏ (-)">➖</button>
+                        <span id="zoomLevelLabel">400%</span>
+                        <button id="btnZoomIn" class="btn-icon" title="Phóng to (+)">➕</button>
+                        <button id="btnZoomReset" class="btn-icon" title="Về chuẩn 100%">1:1</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Viewport -->
+            <div class="canvas-viewport" id="canvasViewport">
+                <div class="canvas-container" id="canvasContainer">
+                    <!-- Onion skin canvas (nằm dưới) -->
+                    <canvas id="onionCanvas" width="160" height="160"></canvas>
+                    <!-- Main editable pixel canvas -->
+                    <canvas id="paintCanvas" width="160" height="160"></canvas>
+                    <!-- Grid & Cursor overlay canvas -->
+                    <canvas id="overlayCanvas" width="160" height="160"></canvas>
+                </div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="canvas-status-bar">
+                <span id="statusCoordinates">X: 0, Y: 0</span>
+                <span id="statusFrameInfo">mage_south_0.png (160x160 RGBA)</span>
+                <span id="saveStatusIndicator" class="status-indicator ready">Đã sẵn sàng</span>
+            </div>
+
+            <!-- Bottom Frame Filmstrip (Timeline) -->
+            <div class="filmstrip-panel">
+                <div class="filmstrip-header">
+                    <span class="filmstrip-title">DẢI 8 FRAME HOẠT ẢNH (BẤM ĐỂ CHỌN FRAME CẦN VẼ):</span>
+                    <span class="filmstrip-hint">Frame 0 = Đứng Yên (Idle) · Frame 1..7 = Chu Kỳ Bước Đi (Walk Cycle)</span>
+                </div>
+                <div class="filmstrip-thumbnails" id="frameThumbnails">
+                    <!-- 8 Frame cards populated by JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT: Live Animation Preview & 8-Dir Compass -->
+        <aside class="sidebar-preview">
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <h3>PREVIEW HOẠT ẢNH THỜI GIAN THỰC</h3>
+                    <span class="badge-live">UNITY 1:1</span>
+                </div>
+
+                <!-- Interactive 8-Direction Rose / Compass -->
+                <div class="compass-wrapper">
+                    <div class="compass-title">LA BÀN 8 HƯỚNG (BẤM HOẶC DÙNG WASD):</div>
+                    <div class="compass-grid">
+                        <button class="compass-btn" data-dir="north_west" title="Tây Bắc (NW)">↖</button>
+                        <button class="compass-btn" data-dir="north" title="Bắc (N) [W]">⬆</button>
+                        <button class="compass-btn" data-dir="north_east" title="Đông Bắc (NE)">↗</button>
+                        <button class="compass-btn" data-dir="west" title="Tây (W) [A]">⬅</button>
+                        <div class="compass-center" id="compassCenter">
+                            <span id="compassDirCode">S</span>
+                        </div>
+                        <button class="compass-btn" data-dir="east" title="Đông (E) [D]">➡</button>
+                        <button class="compass-btn" data-dir="south_west" title="Tây Nam (SW)">↙</button>
+                        <button class="compass-btn active" data-dir="south" title="Nam (S) [S]">⬇</button>
+                        <button class="compass-btn" data-dir="south_east" title="Đông Nam (SE)">↘</button>
+                    </div>
+                </div>
+
+                <!-- Preview Screen -->
+                <div class="preview-stage-box" id="previewBox">
+                    <canvas id="previewCanvas" width="160" height="160"></canvas>
+                    <div class="preview-indicator-badge" id="previewBadge">WALKING (8.5 FPS)</div>
+                </div>
+
+                <!-- Preview Controls -->
+                <div class="preview-controls">
+                    <div class="mode-toggle-group">
+                        <button id="btnModeWalk" class="btn btn-sm btn-primary active">
+                            🚶 Bước Đi (Walk)
+                        </button>
+                        <button id="btnModeIdle" class="btn btn-sm btn-outline">
+                            🧍 Đứng Yên (Idle)
+                        </button>
+                    </div>
+
+                    <!-- Speed & Background options -->
+                    <div class="preview-param-row">
+                        <label>Tốc độ: <span id="fpsValueLabel">8.5 FPS</span></label>
+                        <input type="range" id="rngFps" min="1" max="24" step="0.5" value="8.5">
+                    </div>
+
+                    <div class="preview-param-row">
+                        <label>Nền xem trước:</label>
+                        <div class="bg-color-options">
+                            <button class="bg-opt active" data-bg="checker" title="Trong suốt"></button>
+                            <button class="bg-opt" data-bg="dark" title="Nền tối"></button>
+                            <button class="bg-opt" data-bg="grass" title="Cỏ xanh game"></button>
+                            <button class="bg-opt" data-bg="light" title="Nền sáng"></button>
+                        </div>
+                    </div>
+
+                    <div class="preview-param-row">
+                        <label>Phóng to:</label>
+                        <div class="scale-options">
+                            <button class="scale-opt" data-scale="1">1x</button>
+                            <button class="scale-opt active" data-scale="2">2x</button>
+                            <button class="scale-opt" data-scale="3">3x</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keyboard shortcuts cheatsheet -->
+                <div class="shortcuts-card">
+                    <h4>⌨️ Phím Nóng Nhanh:</h4>
+                    <ul>
+                        <li><b>Ctrl + S</b>: Lưu frame lập tức vào Unity</li>
+                        <li><b>W, A, S, D / Mũi tên</b>: Đổi hướng nhìn</li>
+                        <li><b>1 .. 8</b>: Chọn trực tiếp 8 hướng</li>
+                        <li><b>Ctrl + Z / Y</b>: Hoàn tác / Làm lại</li>
+                        <li><b>Space + Drag</b>: Cuộn / Pan canvas</li>
+                        <li><b>Lăn chuột</b>: Phóng to / Thu nhỏ</li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

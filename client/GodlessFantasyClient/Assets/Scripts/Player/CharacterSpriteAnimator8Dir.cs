@@ -111,9 +111,10 @@ namespace GodlessFantasy.Player
             }
         }
 
-        public static Sprite LoadMageSprite(string dirName, int frame)
+        public static Sprite LoadMageSprite(string dirName, int frame, bool female = false)
         {
-            string key = $"Characters/Mage/mage_{dirName}_{frame}";
+            string gender = female ? "female" : "male";
+            string key = $"Characters/Mage/{gender}/mage_{dirName}_{frame}";
             if (spriteCache.TryGetValue(key, out var cached) && cached != null)
             {
                 return cached;
@@ -122,11 +123,25 @@ namespace GodlessFantasy.Player
             Sprite loaded = Resources.Load<Sprite>(key);
             if (loaded == null)
             {
-                // Fallback thử load Texture2D rồi tạo Sprite nếu Unity chưa import dạng Sprite
                 Texture2D tex = Resources.Load<Texture2D>(key);
                 if (tex != null)
                 {
                     loaded = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.2f), 100f);
+                }
+            }
+
+            // Fallback về thư mục Characters/Mage nếu chưa có file
+            if (loaded == null)
+            {
+                string fallbackKey = $"Characters/Mage/mage_{dirName}_{frame}";
+                loaded = Resources.Load<Sprite>(fallbackKey);
+                if (loaded == null)
+                {
+                    Texture2D tex = Resources.Load<Texture2D>(fallbackKey);
+                    if (tex != null)
+                    {
+                        loaded = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.2f), 100f);
+                    }
                 }
             }
 
@@ -152,7 +167,7 @@ namespace GodlessFantasy.Player
                 animTimer += Time.deltaTime * walkFps;
                 int frameIdx = ((int)animTimer) % 8;
 
-                Sprite sp = LoadMageSprite(dirName, frameIdx) ?? LoadMageSprite(dirName, 0);
+                Sprite sp = LoadMageSprite(dirName, frameIdx, isFemale) ?? LoadMageSprite(dirName, 0, isFemale);
                 if (sp != null) spriteRenderer.sprite = sp;
 
                 // Reset scale bình thường khi bước đi
@@ -162,7 +177,7 @@ namespace GodlessFantasy.Player
             {
                 // Trạng thái nghỉ (Idle): Cố định Frame 0 (Thế đứng chuẩn y hệt Preview)
                 animTimer = 0f;
-                Sprite sp = LoadMageSprite(dirName, 0) ?? LoadMageSprite("south", 0);
+                Sprite sp = LoadMageSprite(dirName, 0, isFemale) ?? LoadMageSprite("south", 0, isFemale);
                 if (sp != null) spriteRenderer.sprite = sp;
 
                 // Nhịp thở bồng bềnh nhẹ nhàng
@@ -206,11 +221,11 @@ namespace GodlessFantasy.Player
         /// <summary>
         /// Lấy Sprite cụ thể theo hướng và số thứ tự frame (0..7)
         /// </summary>
-        public static Sprite GetSprite(Direction8 dir, int frameIndex)
+        public static Sprite GetSprite(Direction8 dir, int frameIndex, bool female = false)
         {
             string dirName = GetDirectionSpriteName(dir);
             int f = Mathf.Clamp(frameIndex, 0, 7);
-            return LoadMageSprite(dirName, f) ?? LoadMageSprite(dirName, 0);
+            return LoadMageSprite(dirName, f, female) ?? LoadMageSprite(dirName, 0, female);
         }
     }
 }

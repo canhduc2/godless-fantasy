@@ -1900,7 +1900,7 @@ namespace GodlessFantasy.UI
                 }
                 else
                 {
-                    SetTooltip("Ô Kỹ Năng", "Ô trống (Kéo thả cuộn bí kíp từ Túi Đồ vào đây để trang bị)", new Vector2(Mathf.Clamp(r.x + (r.width - 340f) / 2f, 16f, Screen.width - 340f - 16f), true, $"Phím [{slotNumber}]");
+                    SetTooltip("Ô Kỹ Năng", "Ô trống (Kéo thả cuộn bí kíp từ Túi Đồ vào đây để trang bị)", new Vector2(Mathf.Clamp(r.x + (r.width - 340f) / 2f, 16f, Screen.width - 340f - 16f), r.y - 8f), true, $"Phím [{slotNumber}]");
                 }
 
                 // Chuột phải để tháo chiêu
@@ -2806,7 +2806,7 @@ namespace GodlessFantasy.UI
                                 {
                                     Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
                                     FloatingDamageManager.ShowFloatingText(spawnPos, $"⚡ Đã lắp [{dragItem.itemName}] vào Ô [{slot + 1}]!", Color.green);
-                                    GodlessFantasy.Core.AudioManager.Instance?.PlayEquipItemSound();
+                                    GodlessFantasy.Core.AudioManager.PlayEquip();
                                 }
                                 isDraggingItem = false;
                                 dragItem = null;
@@ -2885,7 +2885,7 @@ namespace GodlessFantasy.UI
                                 {
                                     Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
                                     FloatingDamageManager.ShowFloatingText(spawnPos, $"⚡ Đã lắp [{contextItem.itemName}] vào Ô [{slot + 1}]!", Color.green);
-                                    GodlessFantasy.Core.AudioManager.Instance?.PlayEquipItemSound();
+                                    GodlessFantasy.Core.AudioManager.PlayEquip();
                                 }
                             }
                             else
@@ -3441,7 +3441,7 @@ namespace GodlessFantasy.UI
                         {
                             Vector3 spawnPos = playerStats != null ? playerStats.transform.position + Vector3.up * 1.5f : Vector3.zero;
                             FloatingDamageManager.ShowFloatingText(spawnPos, $"⚡ Đã lắp [{dragItem.itemName}] vào Ô [{targetSlot + 1}]!", Color.green);
-                            GodlessFantasy.Core.AudioManager.Instance?.PlayEquipItemSound();
+                            GodlessFantasy.Core.AudioManager.PlayEquip();
                         }
                         isDraggingItem = false;
                         dragItem = null;

@@ -710,7 +710,10 @@ namespace GodlessFantasy.Player
         {
             if (useTraditionalFrameAnimation)
             {
-                return Resources.Load<Texture2D>("Characters/Mage/mage_south_0") ?? Resources.Load<Texture2D>("Characters/avatar_male");
+                string gender = IsFemale ? "female" : "male";
+                return Resources.Load<Texture2D>($"Characters/Mage/{gender}/mage_south_0") 
+                    ?? Resources.Load<Texture2D>("Characters/Mage/mage_south_0") 
+                    ?? Resources.Load<Texture2D>(IsFemale ? "Characters/avatar_female" : "Characters/avatar_male");
             }
 
             if (rig2D != null) return rig2D.GetPortraitTexture();
@@ -729,7 +732,10 @@ namespace GodlessFantasy.Player
             if (useTraditionalFrameAnimation)
             {
                 string dirStr = GetDirectionSpriteName(CurrentDirection);
-                return Resources.Load<Texture2D>($"Characters/Mage/mage_{dirStr}_0") ?? Resources.Load<Texture2D>("Characters/Mage/mage_south_0");
+                string gender = IsFemale ? "female" : "male";
+                return Resources.Load<Texture2D>($"Characters/Mage/{gender}/mage_{dirStr}_0") 
+                    ?? Resources.Load<Texture2D>($"Characters/Mage/mage_{dirStr}_0") 
+                    ?? Resources.Load<Texture2D>("Characters/Mage/mage_south_0");
             }
 
             if (rig2D != null) return rig2D.GetFullBodyTexture();

@@ -736,7 +736,7 @@ namespace GodlessFantasy.Player
         public InventoryItem FindItemByScroll(Combat.SkillScrollData scroll)
         {
             if (scroll == null) return null;
-            return items.Find(it => it != null && it.itemType == ItemType.SkillScroll && (it.scrollData == scroll || (it.scrollData != null && it.scrollData.scrollId == scroll.scrollId)));
+            return items.Find(it => it != null && it.itemType == ItemType.SkillScroll && (it.scrollData == scroll || (it.scrollData != null && it.scrollData.id == scroll.id)));
         }
 
         // ================= XỬ LÝ VỨT ĐỒ (DOUBLE CHECK 5S) =================
