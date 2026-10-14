@@ -801,16 +801,11 @@ namespace GodlessFantasy.UI
             // Chặn Click-to-Move xuyên màn hình khi chuột ở trên bất kỳ vùng UI nào
             PlayerMovement.BlockWorldClick = IsMouseOverAnyUI(Event.current.mousePosition);
 
-            // Tự động giải phóng nếu chuột trái không còn được nhấn
-            if (!Input.GetMouseButton(0) && (isDraggingItem || isPotentialDrag || dragItem != null || dragSourceSlot >= 0 || isDraggingFromHotbar))
-            {
-                CancelAllDragging();
-            }
-
-            // KÍCH HOẠT KÉO THẢ TOÀN CỤC KHI ĐANG NHẤN GIỮ CHUỘT TRÁI VÀ KÉO ĐỦ KHOẢNG CÁCH (> 8px)
+            // KÍCH HOẠT KÉO THẢ TOÀN CỤC KHI ĐANG NHẤN GIỮ CHUỘT TRÁI VÀ KÉO ĐỦ KHOẢNG CÁCH (> 6px)
             if (isPotentialDrag && !isDraggingItem && dragItem != null && Input.GetMouseButton(0))
             {
-                if (Vector2.Distance(Event.current.mousePosition, dragStartPos) > 8f)
+                Vector2 curMouseScreen = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+                if (Vector2.Distance(curMouseScreen, dragStartPos) > 6f)
                 {
                     isDraggingItem = true;
                 }
@@ -898,6 +893,12 @@ namespace GodlessFantasy.UI
 
             // HỦY KÉO THẢ TOÀN CỤC NẾU NHẢ CHUỘT RA NGOÀI CÁC Ô HỢP LỆ
             if (Event.current.type == EventType.MouseUp)
+            {
+                CancelAllDragging();
+            }
+
+            // DỌN DẸP DỰ PHÒNG KHI KHÔNG CÒN NHẤN CHUỘT TRÊN LƯỢT VẼ REPAINT
+            if (Event.current.type == EventType.Repaint && !Input.GetMouseButton(0) && (isPotentialDrag || isDraggingItem))
             {
                 CancelAllDragging();
             }
@@ -1886,7 +1887,7 @@ namespace GodlessFantasy.UI
                         isDraggingFromHotbar = true;
                         dragHotbarSourceSlot = slotIndex;
                         dragItem = inventoryManager?.FindItemByScroll(scroll);
-                        dragStartPos = Event.current.mousePosition;
+                        dragStartPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
                         isPotentialDrag = true;
                         isDraggingItem = false;
                         Event.current.Use();
@@ -1913,14 +1914,6 @@ namespace GodlessFantasy.UI
                 {
                     inventoryManager?.UnequipSkillScrollFromHotbar(slotIndex);
                     Event.current.Use();
-                }
-            }
-
-            if (isDraggingFromHotbar && !isDraggingItem && dragItem != null && Input.GetMouseButton(0))
-            {
-                if (Vector2.Distance(Event.current.mousePosition, dragStartPos) > 8f)
-                {
-                    isDraggingItem = true;
                 }
             }
         }
@@ -2582,7 +2575,7 @@ namespace GodlessFantasy.UI
                                 selectedInventoryItem = item;
                                 dragSourceSlot = index;
                                 dragItem = item;
-                                dragStartPos = Event.current.mousePosition - inventoryScrollPos + scrollAreaRect.position;
+                                dragStartPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
                                 isPotentialDrag = true;
                                 isDraggingItem = false;
                                 isDraggingFromHotbar = false;
@@ -2685,8 +2678,8 @@ namespace GodlessFantasy.UI
             // Kích hoạt kéo khi di chuyển chuột xa khỏi điểm bấm ban đầu và ĐANG NHẤN GIỮ CHUỘT TRÁI
             if (isPotentialDrag && !isDraggingItem && dragItem != null && Input.GetMouseButton(0))
             {
-                Vector2 curScreenPos = Event.current.mousePosition - inventoryScrollPos + scrollAreaRect.position;
-                if (Vector2.Distance(curScreenPos, dragStartPos) > 8f)
+                Vector2 curMouseScreen = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+                if (Vector2.Distance(curMouseScreen, dragStartPos) > 6f)
                 {
                     isDraggingItem = true;
                     Event.current.Use();
@@ -2875,7 +2868,7 @@ namespace GodlessFantasy.UI
                             isDraggingFromHotbar = true;
                             dragHotbarSourceSlot = targetSlot;
                             dragItem = inventoryManager?.FindItemByScroll(eqScroll);
-                            dragStartPos = Event.current.mousePosition;
+                            dragStartPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
                             isPotentialDrag = true;
                             isDraggingItem = false;
                             Event.current.Use();
