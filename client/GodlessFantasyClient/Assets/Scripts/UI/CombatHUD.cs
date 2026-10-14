@@ -3713,7 +3713,6 @@ namespace GodlessFantasy.UI
 
             if (DrawFantasyButton(new Rect(btnX, pY + 72, btnW, btnH), "THẢ THÚ", 10, false, new Color(1f, 0.45f, 0.45f)))
             {
-                var petItem = inventoryManager?.Items.Find(it => it.itemType == ItemType.Pet);
                 if (petItem != null)
                 {
                     if (petItem.isEquipped) petItem.isEquipped = false;
