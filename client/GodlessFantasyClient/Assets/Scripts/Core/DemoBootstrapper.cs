@@ -55,10 +55,11 @@ namespace GodlessFantasy.Core
             Sprite safeTile = Resources.Load<Sprite>("tile_safezone");
             Sprite grassTile = Resources.Load<Sprite>("tile_grass");
 
-            // 2. Xây Dựng Bản Đồ Thế Giới Khối Địa Hình & Chunk Streaming Siêu Rộng x3 (270m x 132m)
+            // 2. Xây Dựng Bản Đồ Thế Giới Khối Địa Hình & Chunk Streaming Đa Vùng (Multi-Region Engine)
             gameObject.AddComponent<EnvironmentAtmosphereManager>();
             var mapMgr = gameObject.AddComponent<BlockMapManager>();
-            mapMgr.InitializeMap(-135, 135, -66, 66);
+            var regionMgr = gameObject.AddComponent<GodlessFantasy.World.RegionManager>();
+            regionMgr.InitializeFirstRegion("region_village_0_0");
             gameObject.AddComponent<GodlessFantasy.AI.MonsterAIManager>();
             gameObject.AddComponent<TerrainPainterTool>();
             gameObject.AddComponent<ItemCreatorModal>();
@@ -218,39 +219,7 @@ namespace GodlessFantasy.Core
             // - Bù Nhìn Gỗ trong Vùng An Toàn Làng Tân Thủ tại bãi võ
             CreateMonsterTarget("Dummy_Village_SafeGuard", "Bù Nhìn Gỗ (Làng)", "SafeZone", new Vector3(-76.0f, -12.0f, 0), dummySprite, true, hasAI: false, isBoss: false, maxHp: 9999, scale: 1.0f);
 
-            // - Quái 1: Slime Thảo Nguyên Bìa Rừng
-            CreateMonsterTarget("Monster_PvP_Warrior_1", "Slime Thảo Nguyên", "Lv.1 · Ma Vật", new Vector3(18.0f, 4.0f, 0), slimeGrassSprite, false, hasAI: true, isBoss: false, maxHp: 120, attackRange: 1.8f, attackDamage: 16, scale: 1.0f);
-
-            // - Quái 2: Slime Nước Tuần Tra Ven Sông
-            CreateMonsterTarget("Monster_PvP_Warrior_2", "Slime Thủy Tinh (Ven Sông)", "Lv.2 · Hệ Thủy", new Vector3(35.0f, -8.0f, 0), slimeWaterSprite, false, hasAI: true, isBoss: false, maxHp: 140, attackRange: 1.8f, attackDamage: 18, scale: 1.0f);
-
-            // - Quái 3: Dã Lang Rừng Sâu
-            CreateMonsterTarget("Monster_PvP_Warrior_3", "Dã Lang Rừng Sâu", "Lv.3 · Dã Thú 🐺", new Vector3(65.0f, 8.0f, 0), wolfSprite, false, hasAI: true, isBoss: false, maxHp: 180, attackRange: 2.0f, attackDamage: 22, scale: 1.1f);
-
-            // - Quái 4: Dã Lang Hắc Ám Gần Tàn Tích
-            CreateMonsterTarget("Monster_PvP_Warrior_4", "Dã Lang Hắc Ám (Tàn Tích)", "Lv.4 · Tinh Anh 🐺", new Vector3(85.0f, -12.0f, 0), wolfSprite, false, hasAI: true, isBoss: false, maxHp: 240, attackRange: 2.2f, attackDamage: 26, scale: 1.25f);
-
-            // - Quái 5: Mini-Boss Thủ Lĩnh Ma Thú (Tại Đấu Trường Tàn Tích 110, -10)
-            CreateMonsterTarget("Boss_PvP_Champion", "Thủ Lĩnh Ma Thú (Mini-Boss)", "Lv.5 · Mini-Boss 🔥", new Vector3(110.0f, -10.0f, 0), lichBossSprite, false, hasAI: true, isBoss: true, maxHp: 650, attackRange: 3.4f, attackDamage: 40, scale: 1.4f);
-
-            // 10. Cổng Dịch Chuyển Không Gian 2 Chiều (Map Portals: Làng Tân Thủ <-> Rừng Rậm Hắc Ám)
-            CreateMapPortal("Portal_Village_To_Wilderness", "Cổng Đến Rừng Rậm Hắc Ám", "Rừng Rậm Hắc Ám",
-                new Vector3(-18.0f, 3.5f, 0), new Vector3(15.0f, 0f, 0), BgmTrack.Combat, new Color(0.68f, 0.25f, 1.0f, 0.85f));
-
-            CreateMapPortal("Portal_Wilderness_To_Village", "Cổng Về Làng Tân Thủ", "Làng Tân Thủ",
-                new Vector3(15.0f, 3.5f, 0), new Vector3(-22.0f, 0f, 0), BgmTrack.Village, new Color(0.25f, 0.95f, 0.55f, 0.85f));
-
-            // Cổng Vào Phó Bản Hầm Ngục Di Tích (Dungeon Crypt Floor 1)
-            CreateMapPortal("Portal_To_Dungeon_Crypt", "Cổng Phó Bản Hầm Ngục Di Tích", "Hầm Ngục Di Tích (Tầng 1)",
-                new Vector3(120.0f, 25.0f, 0), new Vector3(0.0f, -48.0f, 0), BgmTrack.Combat, new Color(0.85f, 0.2f, 1.0f, 0.9f));
-
-            CreateMapPortal("Portal_Dungeon_To_Surface", "Cổng Lên Mặt Đất", "Rừng Rậm Hắc Ám",
-                new Vector3(0.0f, -50.0f, 0), new Vector3(118.0f, 22.0f, 0), BgmTrack.Combat, new Color(0.2f, 0.85f, 1.0f, 0.9f));
-
-            // Quái Vật Trong Phó Bản Hầm Ngục Di Tích (Crypt Floor 1)
-            CreateMonsterTarget("Monster_Crypt_Skeleton_1", "Cốt Binh Di Tích (Tả)", "Lv.4 · Quái Ngục 💀", new Vector3(-6.0f, -42.0f, 0), wolfSprite, false, hasAI: true, isBoss: false, maxHp: 220, attackRange: 1.8f, attackDamage: 24, scale: 1.1f);
-            CreateMonsterTarget("Monster_Crypt_Skeleton_2", "Cốt Binh Di Tích (Hữu)", "Lv.4 · Quái Ngục 💀", new Vector3(6.0f, -42.0f, 0), wolfSprite, false, hasAI: true, isBoss: false, maxHp: 220, attackRange: 1.8f, attackDamage: 24, scale: 1.1f);
-            CreateMonsterTarget("Boss_Crypt_Lich", "Đại Vu Yêu Hắc Ám (Dungeon Boss)", "Lv.6 · BOSS NGỤC 🔥", new Vector3(0.0f, -36.0f, 0), lichBossSprite, false, hasAI: true, isBoss: true, maxHp: 850, attackRange: 3.6f, attackDamage: 45, scale: 1.6f);
+            // (Các bãi quái và cổng dịch chuyển hiện nay được RegionManager nạp động 100% từ file JSON của từng khu vực)
 
             // 11. Khởi tạo Floating Damage Manager & Combat HUD Wireframe
             if (FindAnyObjectByType<FloatingDamageManager>() == null)

@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Godless Studio - Engine Thiết Kế Cuộn Trục & Tự Động Hóa Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(14, 20, 32, 0.92);
+      --bg-slot: #04060a;
+      --gold-primary: #d4af37;
+      --gold-bright: #ffe066;
+      --gold-dark: #8c6f1a;
+      --cyan-glow: #00e5ff;
+      --red-accent: #ff4757;
+      --border-frame: rgba(212, 175, 55, 0.45);
+      --border-bright: #ffd700;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #111a2e 0%, var(--bg-dark) 75%);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: rgba(8, 12, 20, 0.95);
+      border-bottom: 2px solid var(--gold-primary);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 26px;
+      filter: drop-shadow(0 0 8px #ffaa00);
+    }
+
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      letter-spacing: 1px;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--cyan-glow);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--gold-primary);
+      background: linear-gradient(180deg, #1f293d 0%, #0d1524 100%);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn:hover {
+      background: linear-gradient(180deg, #2b3954 0%, #141f33 100%);
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-gold {
+      background: linear-gradient(180deg, #d4af37 0%, #997c1d 100%);
+      color: #000;
+      font-weight: 700;
+      border-color: #ffe066;
+    }
+    .btn-gold:hover {
+      background: linear-gradient(180deg, #ffe066 0%, #bfa02a 100%);
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
+    }
+
+    .btn-cyan {
+      background: linear-gradient(180deg, #00b4d8 0%, #0077b6 100%);
+      border-color: #00e5ff;
+    }
+    .btn-cyan:hover {
+      background: linear-gradient(180deg, #00e5ff 0%, #0096c7 100%);
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
+    }
+
+    .btn-green {
+      background: linear-gradient(180deg, #2ecc71 0%, #1b7a42 100%);
+      border-color: #55ff55;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap: 16px;
+      padding: 16px 24px;
+      flex: 1;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-frame);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      position: relative;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-frame);
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Left Presets List */
+    .preset-item {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .preset-item:hover, .preset-item.active {
+      background: rgba(212, 175, 55, 0.12);
+      border-color: var(--gold-bright);
+      transform: translateX(3px);
+    }
+    .preset-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border-frame);
+      background: #000;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .preset-info {
+      flex: 1;
+      overflow: hidden;
+    }
+    .preset-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .preset-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Center Form */
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(5, 8, 14, 0.85);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--cyan-glow);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .form-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .radio-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .radio-pill {
+      flex: 1;
+      min-width: 50px;
+      padding: 6px 10px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .radio-pill:hover {
+      border-color: var(--gold-bright);
+    }
+    .radio-pill.selected {
+      background: rgba(212, 175, 55, 0.25);
+      border-color: var(--gold-bright);
+      color: var(--gold-bright);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
+    }
+
+    /* Icon selector grid */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .icon-slot {
+      aspect-ratio: 1;
+      background: var(--bg-slot);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.2s;
+    }
+    .icon-slot:hover {
+      border-color: var(--cyan-glow);
+      transform: scale(1.05);
+    }
+    .icon-slot.selected {
+      border: 2px solid var(--gold-bright);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+      background: rgba(212, 175, 55, 0.15);
+    }
+
+    /* Right Preview */
+    .preview-box {
+      background: rgba(4, 6, 12, 0.95);
+      border: 2px solid var(--gold-primary);
+      border-radius: 6px;
+      padding: 18px;
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    }
+    .hotbar-mockup {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .hotbar-mana-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #5ce1e6;
+      margin-bottom: 4px;
+    }
+    .hotbar-slot-box {
+      width: 58px;
+      height: 58px;
+      background: #020408;
+      border: 2px solid var(--gold-bright);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      position: relative;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+    }
+    .hotbar-key-badge {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--gold-bright);
+    }
+
+    .tooltip-mockup {
+      border: 1px solid var(--gold-primary);
+      background: rgba(8, 12, 22, 0.98);
+      border-radius: 4px;
+      padding: 12px 14px;
+      position: relative;
+    }
+    .tooltip-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      padding-bottom: 4px;
+    }
+    .tooltip-line {
+      font-size: 11px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      margin-bottom: 3px;
+    }
+
+    /* Code Output Box */
+    .code-container {
+      background: #050810;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 4px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      overflow-x: auto;
+      max-height: 180px;
+      margin-top: 10px;
+      white-space: pre;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #059669;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      border: 1px solid #34d399;
+      display: none;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Drag and Drop Fullscreen Overlay */
+    #dropOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 16, 0.94);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 4px dashed var(--gold-bright);
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+    #dropOverlay.active {
+      display: flex;
+    }
+    .drop-icon {
+      font-size: 64px;
+      filter: drop-shadow(0 0 20px var(--gold-bright));
+      animation: bounce 1s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-12px); }
+    }
+    .drop-title {
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      margin-top: 16px;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+    }
+    .drop-sub {
+      font-size: 14px;
+      color: var(--cyan-glow);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Drag & Drop Zone -->
+  <div id="dropOverlay">
+    <div class="drop-icon">📥</div>
+    <div class="drop-title">THẢ FILE VÀO ĐÂY ĐỂ TẢI LÊN STUDIO</div>
+    <div class="drop-sub">Hỗ trợ tự động: File .JSON (Presets), File .CS (Mã C#) hoặc File Ảnh Icon .PNG/.JPG</div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">GODLESS SKILL & SCROLL STUDIO</div>
+        <div class="brand-sub">Engine Tự Động Hóa Coding & Quản Lý Kỹ Năng / Bí Kíp</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label class="btn btn-gold" style="cursor: pointer;" title="Tải file cấu hình .JSON hoặc file mã C# (.CS) từ máy tính lên">
+        📤 TẢI FILE LÊN (.JSON / .CS) <input type="file" id="jsonFileInput" accept=".json,.cs" style="display:none;" onchange="handleUniversalFileUpload(event)">
+      </label>
+      <button class="btn btn-cyan" onclick="exportAllPresetsJson()">📥 Tải Tất Cả Presets (JSON)</button>
+      <button class="btn btn-gold" onclick="copyFullCSharpDatabase()">📋 Xuất File C# Database Cho Team</button>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    
+    <!-- CỘT 1: DANH SÁCH MẪU CÓ SẴN (PRESETS) -->
+    <section class="panel">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>📜 Phôi Mẫu (Presets)</span>
+        <div style="display: flex; gap: 6px;">
+          <label class="btn btn-gold" style="padding: 2px 8px; font-size: 11px; cursor: pointer;" title="Tải file .JSON hoặc .CS vào danh sách phôi mẫu">
+            📤 Tải Lên <input type="file" accept=".json,.cs" style="display:none;" onchange="handleUniversalFileUpload(event)">
+          </label>
+          <button class="btn btn-cyan" style="padding: 2px 8px; font-size: 11px;" onclick="addNewPreset()">+ Mới</button>
+        </div>
+      </div>
+      <div class="panel-body" id="presetsList">
+        <!-- JS rendered items -->
+      </div>
+    </section>
+
+    <!-- CỘT 2: BẢNG FORM THIẾT KẾ KỸ NĂNG -->
+    <section class="panel">
+      <div class="panel-header">
+        <span>⚙️ Thiết Lập Thông Số Kỹ Năng</span>
+        <span style="font-size: 11px; color: var(--gold-bright);" id="currentEditingId">ID: skill_fire_dragon</span>
+      </div>
+      <div class="panel-body">
+        
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Tên Kỹ Năng:</label>
+            <input type="text" id="skillName" class="form-input" value="Hỏa Long Bộc Phá" oninput="updateLivePreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mã Chiêu (ID):</label>
+            <input type="text" id="skillId" class="form-input" value="skill_fire_dragon" oninput="updateLivePreview()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Chức Nghiệp Yêu Cầu:</label>
+          <div class="radio-pill-group" id="classSelector">
+            <div class="radio-pill" onclick="selectClass(0)">Kị Sĩ</div>
+            <div class="radio-pill selected" onclick="selectClass(1)">Pháp Sư</div>
+            <div class="radio-pill" onclick="selectClass(2)">Võ Sĩ</div>
+            <div class="radio-pill" onclick="selectClass(3)">Xạ Thủ</div>
+            <div class="radio-pill" onclick="selectClass(4)">Toàn Hệ</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hệ Nguyên Tố:</label>
+          <div class="radio-pill-group" id="elemSelector">
+            <div class="radio-pill selected" onclick="selectElement(0)">Hỏa 🔥</div>
+            <div class="radio-pill" onclick="selectElement(1)">Băng ❄️</div>
+            <div class="radio-pill" onclick="selectElement(2)">Lôi ⚡</div>
+            <div class="radio-pill" onclick="selectElement(3)">Ánh Sáng ✨</div>
+            <div class="radio-pill" onclick="selectElement(4)">Bóng Tối 🌑</div>
+            <div class="radio-pill" onclick="selectElement(5)">Phong 🌪️</div>
+            <div class="radio-pill" onclick="selectElement(6)">Mộc 🌿</div>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Tác Dụng Chiêu:</label>
+            <div class="radio-pill-group" id="categorySelector">
+              <div class="radio-pill selected" onclick="selectCategory(0)">Tấn Công</div>
+              <div class="radio-pill" onclick="selectCategory(1)">Hồi Máu</div>
+              <div class="radio-pill" onclick="selectCategory(2)">Hồi Mana</div>
+              <div class="radio-pill" onclick="selectCategory(3)">Cường Hóa</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phẩm Cấp (Tier):</label>
+            <div class="radio-pill-group" id="tierSelector">
+              <div class="radio-pill" onclick="selectTier(0)">E</div>
+              <div class="radio-pill" onclick="selectTier(1)">D</div>
+              <div class="radio-pill" onclick="selectTier(2)">C</div>
+              <div class="radio-pill" onclick="selectTier(3)">B</div>
+              <div class="radio-pill selected" onclick="selectTier(4)">A</div>
+              <div class="radio-pill" onclick="selectTier(5)">S</div>
+              <div class="radio-pill" onclick="selectTier(6)">X</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cơ Chế Tâm Ngắm (Indicator):</label>
+          <div class="radio-pill-group" id="indicatorSelector">
+            <div class="radio-pill selected" onclick="selectIndicator(0)">1. Bắn Thẳng (Line)</div>
+            <div class="radio-pill" onclick="selectIndicator(1)">2. Vùng Đất / Mưa (AoE)</div>
+            <div class="radio-pill" onclick="selectIndicator(2)">3. Hình Quạt (Cone)</div>
+            <div class="radio-pill" onclick="selectIndicator(3)">4. Nổ 360° (Nova)</div>
+            <div class="radio-pill" onclick="selectIndicator(4)">5. Tự Thân (Self Buff)</div>
+            <div class="radio-pill" onclick="selectIndicator(5)">6. Buff Cho Đồng Đội (Team Buff)</div>
+          </div>
+        </div>
+
+        <!-- Biến thể AoE: Gây Sát Thương vs Hồi Máu / Hồi Mana -->
+        <div class="form-group" id="aoeSubtypeGroup" style="background: rgba(0, 229, 255, 0.08); padding: 10px 14px; border-radius: 4px; border: 1px solid rgba(0, 229, 255, 0.35); display: none;">
+          <label class="form-label" style="color: var(--cyan-glow); margin-bottom: 6px;">⚡ TÍCH CHỌN BIẾN THỂ AOE (VÙNG ĐẤT / MƯA):</label>
+          <div style="display: flex; gap: 16px; font-size: 12px; font-weight: 600;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ff7755;">
+              <input type="radio" name="aoeVariantRadio" value="damage" id="aoeVariantDmg" checked onchange="selectAoeVariant('damage')">
+              <span>⚔️ Biến Thể 1 (Gốc): Gây Sát Thương Vùng (AoE Damage)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #55ff99;">
+              <input type="radio" name="aoeVariantRadio" value="heal" id="aoeVariantHeal" onchange="selectAoeVariant('heal')">
+              <span>💚 Biến Thể 2: Hồi Máu & Hồi Mana Vùng (AoE Heal / Mana)</span>
+            </label>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+            <div>
+              <label class="form-label" style="font-size: 11px; color: var(--gold-bright);">🌧️ Hướng Rơi (Rain Fall Angle):</label>
+              <select id="rainFallAngle" class="form-input" style="padding: 4px 8px; font-size: 11px;" onchange="updateLivePreview()">
+                <option value="0">0. Thẳng Đứng 90° (Vertical)</option>
+                <option value="1">1. Chéo Trái -30° (Slanted Left)</option>
+                <option value="2">2. Chéo Phải +30° (Slanted Right)</option>
+                <option value="3">3. Từ Người Chơi Vút Lên (Caster Stream)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 11px; color: var(--gold-bright);">🌪️ Kiểu Rơi (Rain Fall Style):</label>
+              <select id="rainFallStyle" class="form-input" style="padding: 4px 8px; font-size: 11px;" onchange="updateLivePreview()">
+                <option value="0">0. Tản Mác (Random Scatter)</option>
+                <option value="1">1. Xoáy Ốc (Spiral Barrage)</option>
+                <option value="2">2. Oanh Tạc Dồn Dập (Bombardment)</option>
+                <option value="3">3. Sóng Quét (Sweeping Waves)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="statsTitle">⚡ Chỉ Số: Mana | Hồi (s) | ST Gốc | % INT | Tầm (m)</label>
+          <div class="form-grid-5">
+            <input type="number" id="manaCost" class="form-input" value="25" oninput="updateLivePreview()" placeholder="Mana">
+            <input type="number" step="0.1" id="cooldown" class="form-input" value="3.5" oninput="updateLivePreview()" placeholder="Hồi (s)">
+            <input type="number" id="baseDamage" class="form-input" value="45" oninput="updateLivePreview()" placeholder="ST Gốc">
+            <input type="number" id="intelScaling" class="form-input" value="80" oninput="updateLivePreview()" placeholder="% INT">
+            <input type="number" step="0.5" id="castRange" class="form-input" value="8.0" oninput="updateLivePreview()" placeholder="Tầm (m)">
+          </div>
+        </div>
+
+        <!-- Toggle Checkbox: Có sử dụng icon ô chiêu riêng không hay Fallback sang Cuộn Trục -->
+        <div class="form-group" style="background: rgba(0,0,0,0.25); padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--gold-bright);">
+            <input type="checkbox" id="useCustomHotbarIcon" checked onchange="toggleHotbarIconMode()">
+            <span>✨ Sử dụng Icon Ô Chiêu riêng (Tắt: Fallback sang Cuộn Trục Cổ Xưa)</span>
+          </label>
+        </div>
+
+        <div class="form-group" id="iconPickerGroup">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin: 0;">🎯 Chọn Icon Ô Chiêu Hotbar [1..4]:</label>
+            <label class="btn" style="padding: 2px 8px; font-size: 11px; cursor: pointer;" title="Tải file ảnh PNG / JPG icon từ máy tính lên">
+              🖼️ Tải Ảnh Icon (.png) <input type="file" id="customIconFileInput" accept="image/*" style="display:none;" onchange="handleCustomIconUpload(event)">
+            </label>
+          </div>
+          <div class="icon-grid" id="iconGrid">
+            <!-- Icon options -->
+          </div>
+        </div>
+
+        <!-- THAM SỐ ĐƯỜNG ĐẠN & BALLISTICS (DISC-10) -->
+        <div class="form-group" style="background: rgba(255, 136, 0, 0.08); padding: 10px 14px; border-radius: 4px; border: 1px solid rgba(255, 136, 0, 0.35);">
+          <label class="form-label" style="color: var(--gold-bright); margin-bottom: 8px;">🚀 THAM SỐ ĐƯỜNG ĐẠN & HOẠT ẢNH THỦ TỤC (PROCEDURAL BALLISTICS):</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <label class="form-label" style="font-size: 11px;">Quỹ Đạo (Trajectory):</label>
+              <select id="trajectoryType" class="form-input" style="padding: 4px 8px; font-size: 11px;" onchange="updateLivePreview()">
+                <option value="0">0. Tuyến Tính (Linear Line)</option>
+                <option value="1">1. Lượn Sóng (Sine Wave)</option>
+                <option value="2">2. Tự Tìm Hitbox (Homing)</option>
+                <option value="3">3. Cầu Vồng (Lobbed Arc)</option>
+                <option value="4">4. Lộn Về (Boomerang)</option>
+                <option value="5">5. Bộc Phát Tức Thời (Instant)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 11px;">Phôi Khối (Base Shape):</label>
+              <select id="baseShapeMask" class="form-input" style="padding: 4px 8px; font-size: 11px;" onchange="updateLivePreview()">
+                <option value="Orb">Cầu Năng Lượng (Orb)</option>
+                <option value="Slash">Vệt Kiếm Khí (Slash)</option>
+                <option value="Arrow">Mũi Tên Ma Thuật (Arrow)</option>
+                <option value="Wave">Sóng Xung Kích (Wave)</option>
+                <option value="Meteor">Thiên Thạch Rơi (Meteor)</option>
+                <option value="NovaRing">Vòng Sóng 360° (NovaRing)</option>
+                <option value="Pillar">Cột Sáng Bốc Thiên (Pillar)</option>
+                <option value="Beam">Luồng Tia Laser (Beam)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+                <span>Tốc Độ Bay:</span>
+                <span id="flySpeedVal" style="color: var(--cyan-glow); font-weight: bold;">16 m/s</span>
+              </div>
+              <input type="range" id="flySpeed" min="6" max="32" value="16" step="1" style="width: 100%;" oninput="document.getElementById('flySpeedVal').innerText=this.value+' m/s'; updateLivePreview();">
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+                <span>Bán Kính Nổ:</span>
+                <span id="explosionRadiusVal" style="color: var(--cyan-glow); font-weight: bold;">2.0 m</span>
+              </div>
+              <input type="range" id="explosionRadius" min="0.5" max="6.0" value="2.0" step="0.5" style="width: 100%;" oninput="document.getElementById('explosionRadiusVal').innerText=this.value+' m'; updateLivePreview();">
+            </div>
+          </div>
+          <div style="display: flex; gap: 16px; font-size: 11px; font-weight: 600;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ffdd66;">
+              <input type="checkbox" id="hasTrail" checked onchange="updateLivePreview()">
+              <span>✨ TrailRenderer Vệt Sáng Bay</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ff9966;">
+              <input type="checkbox" id="hasScreenShake" checked onchange="updateLivePreview()">
+              <span>💥 Camera Shake Khi Va Chạm</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mô Tả Kỹ Năng / Bí Kíp:</label>
+          <textarea id="skillDesc" rows="3" class="form-textarea" oninput="updateLivePreview()">Triệu hồi luồng hỏa long cuồng nộ thiêu rụi mục tiêu trên đường bay!</textarea>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CỘT 3: XEM TRƯỚC 1:1 & XUẤT CODE C# -->
+    <section class="panel">
+      <div class="panel-header">
+        <span>👁️ Xem Trước Trực Tiếp (1:1)</span>
+      </div>
+      <div class="panel-body">
+        
+        <!-- CANVAS LIVE ANIMATED PREVIEW 60 FPS (PROCEDURAL VFX SIMULATOR) -->
+        <div class="vfx-simulator-wrapper" style="margin-bottom: 12px; background: #03060b; border: 1.5px solid var(--border-frame); border-radius: 6px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.6);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: rgba(14, 20, 32, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.3); font-size: 11px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--gold-bright); font-weight: 700; letter-spacing: 0.5px;">🚀 SIMULATOR HOẠT ẢNH THỦ TỤC</span>
+              <span id="targetCoordBadge" style="background: rgba(0, 229, 255, 0.15); color: var(--cyan-glow); padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 10px;">Tâm: (265, 75)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="btn btn-gold" style="padding: 2px 7px; font-size: 10px;" onclick="centerTargetPoint()" title="Căn tâm mục tiêu / phôi về chính giữa khung hình">🎯 Căn Giữa</button>
+              <span id="vfxCanvasFps" style="color: var(--cyan-glow); font-family: monospace; font-weight: bold;">60 FPS</span>
+            </div>
+          </div>
+          <div style="position: relative;">
+            <canvas id="vfxCanvas" width="300" height="150" style="width: 100%; height: 150px; display: block; image-rendering: pixelated; cursor: crosshair;" title="Click hoặc kéo chuột để di chuyển tâm ngắm / phôi"></canvas>
+            <div style="position: absolute; bottom: 4px; left: 8px; font-size: 10px; color: rgba(255,255,255,0.45); pointer-events: none;">
+              🖱️ Kéo thả chuột để di chuyển tâm ngắm / phôi
+            </div>
+          </div>
+          <div style="display: flex; gap: 4px; padding: 6px 8px; background: rgba(10, 14, 24, 0.95); align-items: center; flex-wrap: wrap;">
+            <button class="btn btn-gold" style="flex: 1; padding: 5px 6px; font-size: 11px; justify-content: center;" onclick="triggerVfxCast()">⚡ Bắn Thử</button>
+            <button class="btn" id="loopVfxBtn" style="padding: 5px 8px; font-size: 11px;" onclick="toggleVfxLoop()">🔄 Lặp: BẬT</button>
+            <button class="btn" id="pauseVfxBtn" style="padding: 5px 8px; font-size: 11px;" onclick="toggleVfxPause()">⏸ Tạm Dừng</button>
+            <div style="display: flex; gap: 2px; background: rgba(255,255,255,0.06); padding: 2px; border-radius: 4px;">
+              <button class="btn" id="speed05Btn" style="padding: 3px 6px; font-size: 10px;" onclick="setVfxSpeed(0.5)">0.5x</button>
+              <button class="btn btn-gold" id="speed10Btn" style="padding: 3px 6px; font-size: 10px;" onclick="setVfxSpeed(1.0)">1.0x</button>
+              <button class="btn" id="speed20Btn" style="padding: 3px 6px; font-size: 10px;" onclick="setVfxSpeed(2.0)">2.0x</button>
+            </div>
+            <button class="btn" style="padding: 5px 8px; font-size: 11px;" onclick="resetVfxSim()">⏮ Reset</button>
+          </div>
+        </div>
+
+        <div class="preview-box">
+          <div class="hotbar-mockup">
+            <div class="hotbar-mana-tag" id="prevManaTag">-25mn</div>
+            <div class="hotbar-slot-box" id="prevSlotBox">
+              <span class="hotbar-key-badge">1</span>
+              <span id="prevSlotIcon">🔥</span>
+            </div>
+          </div>
+
+          <div class="tooltip-mockup" id="prevTooltipBox">
+            <div class="tooltip-title" id="prevTitle">Hỏa Long Bộc Phá</div>
+            <div class="tooltip-line" id="prevLine1">• Phẩm: Phẩm A | Hệ: Hỏa | Phái: Pháp Sư</div>
+            <div class="tooltip-line" id="prevLine2">• Tác dụng: Tấn Công | Tầm: 8.0m</div>
+            <div class="tooltip-line" id="prevLine3">• Tiêu hao: 25 Mana | Hồi: 3.5s</div>
+            <div class="tooltip-line" id="prevLine4">• Sát thương: 45 + 80% INT = <span style="color:#ffd700;" id="prevCalcDmg">55</span></div>
+            <div class="tooltip-line" id="prevLine5" style="color: #cbd5e1; margin-top: 4px;">• Triệu hồi luồng hỏa long cuồng nộ thiêu rụi mục tiêu trên đường bay!</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn btn-gold" onclick="copyCurrentCSharp()">📋 Sao Chép Mã C# Snippet</button>
+          <button class="btn btn-cyan" onclick="downloadCurrentCSharpFile()">💾 Tải File C# (.cs)</button>
+          <button class="btn btn-green" onclick="saveAsNewPreset()">💾 Lưu Preset Vào Danh Sách</button>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <label class="btn btn-gold" style="cursor: pointer; justify-content: center; text-align: center; padding: 8px 4px; font-size: 12px;" title="Tải file JSON hoặc C# từ máy tính lên">
+              📤 Tải File Lên <input type="file" accept=".json,.cs" style="display:none;" onchange="handleUniversalFileUpload(event)">
+            </label>
+            <button class="btn" style="justify-content: center; text-align: center; padding: 8px 4px; font-size: 12px;" onclick="exportCurrentPresetJson()">📥 Tải Xuống JSON</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <div class="form-label">MÃ C# TỰ ĐỘNG SINH:</div>
+          <div class="code-container" id="csharpCodeOutput"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <div class="notification" id="notif">Thông báo</div>
+
+  <script>
+    const CLASSES = ["Kị Sĩ", "Pháp Sư", "Võ Sĩ", "Xạ Thủ", "Toàn Hệ"];
+    const ELEMENTS = [
+      { name: "Hỏa", icon: "item_scroll_fire", emoji: "🔥" },
+      { name: "Băng", icon: "item_scroll_ice", emoji: "❄️" },
+      { name: "Lôi", icon: "item_scroll_thunder", emoji: "⚡" },
+      { name: "Ánh Sáng", icon: "item_scroll_light", emoji: "✨" },
+      { name: "Bóng Tối", icon: "item_scroll_dark", emoji: "🌑" },
+      { name: "Phong", icon: "item_scroll_wind", emoji: "🌪️" },
+      { name: "Mộc", icon: "item_scroll_wood", emoji: "🌿" }
+    ];
+    const TIERS = [
+      { name: "Phẩm E", color: "#808080" },
+      { name: "Phẩm D", color: "#55ff55" },
+      { name: "Phẩm C", color: "#55aaff" },
+      { name: "Phẩm B", color: "#bb55ff" },
+      { name: "Phẩm A", color: "#ffaa00" },
+      { name: "Phẩm S", color: "#ff3333" },
+      { name: "Phẩm X", color: "#ff00dd" }
+    ];
+    const CATEGORIES = ["Tấn Công", "Hồi Máu", "Hồi Mana", "Cường Hóa"];
+    const INDICATORS = [
+      "1. Bắn Thẳng (Line)",
+      "2. Vùng Đất / Mưa (AoE)",
+      "3. Hình Quạt (Cone)",
+      "4. Nổ 360° (Nova)",
+      "5. Tự Thân (Self Buff)",
+      "6. Buff Cho Đồng Đội (Team Buff)"
+    ];
+
+    const HOTBAR_ICONS = [
+      { id: "icon_skill_meteor", name: "Thiên Thạch", emoji: "☄️" },
+      { id: "icon_skill_flame_cone", name: "Bão Lửa", emoji: "🔥" },
+      { id: "icon_skill_divine_nova", name: "Thánh Điện", emoji: "💥" },
+      { id: "icon_skill_arcane_bolt", name: "Phi Tiễn", emoji: "🏹" },
+      { id: "icon_skill_dash", name: "Tốc Biến", emoji: "💨" },
+      { id: "skill_fireball", name: "Hỏa Cầu", emoji: "🔮" },
+      { id: "skill_frost", name: "Băng Băng", emoji: "❄️" },
+      { id: "skill_lightning", name: "Lôi Điển", emoji: "⚡" }
+    ];
+
+    let currentPresetIndex = 0;
+    let selectedClassIdx = 1;
+    let selectedElemIdx = 0;
+    let selectedTierIdx = 4;
+    let selectedCatIdx = 0;
+    let selectedIndIdx = 0;
+    let selectedHotbarIconIdx = 0;
+    let useCustomIcon = true;
+
+    // Presets khởi đầu bao gồm đầy đủ 20 Trục Độc Quyền (5 phẩm x 4 hệ) + 10 Trục Đa Hệ từ Thảo luận 10
+    let presets = [
+      // === 1. KỊ SĨ (KNIGHT) ===
+      { id: "knight_x_angel_domain", name: "Thiên Thần Hộ Giới", classIdx: 0, elemIdx: 0, catIdx: 3, tierIdx: 6, indIdx: 5, aoeVariant: "damage", mana: 95, cd: 18.0, dmg: 100, sc: 260, range: 6.5, customIcon: true, iconIdx: 2, desc: "Triệu hồi kết giới thần thánh 360 độ, miễn nhiễm sát thương 3.0s và phản chấn 50% đòn đánh." },
+      { id: "knight_s_holy_ground", name: "Liệt Địa Thánh Kiếm", classIdx: 0, elemIdx: 0, catIdx: 0, tierIdx: 5, indIdx: 1, aoeVariant: "damage", mana: 70, cd: 8.5, dmg: 185, sc: 210, range: 7.0, customIcon: true, iconIdx: 0, desc: "Cắm cự kiếm khổng lồ từ không trung xuống đất, nổ tung địa chấn và hất tung mục tiêu." },
+      { id: "knight_a_shield_charge", name: "Khiên Thành Xung Kích", classIdx: 0, elemIdx: 0, catIdx: 0, tierIdx: 4, indIdx: 0, aoeVariant: "damage", mana: 48, cd: 6.0, dmg: 115, sc: 160, range: 6.0, customIcon: true, iconIdx: 4, desc: "Giơ đại khiên lao nhanh về phía trước hất văng mọi kẻ cản đường, làm choáng 1.5s." },
+      { id: "knight_b_whirlwind_slash", name: "Toàn Phong Trảm Kích", classIdx: 0, elemIdx: 0, catIdx: 0, tierIdx: 3, indIdx: 3, aoeVariant: "damage", mana: 36, cd: 4.0, dmg: 78, sc: 130, range: 3.2, customIcon: true, iconIdx: 1, desc: "Xoay kiếm hình lốc xoáy quanh thân 2 vòng, chém quét mọi kẻ thù xung quanh." },
+      { id: "knight_c_straight_sword_wave", name: "Kiếm Khí Trực Phá", classIdx: 0, elemIdx: 0, catIdx: 0, tierIdx: 2, indIdx: 0, aoeVariant: "damage", mana: 26, cd: 2.8, dmg: 52, sc: 95, range: 8.0, customIcon: true, iconIdx: 0, desc: "Vung kiếm chém ra luồng kiếm khí bay thẳng xé gió, xuyên qua mục tiêu đầu tiên." },
+
+      // === 2. PHÁP SƯ (MAGE) ===
+      { id: "mage_x_world_collapse", name: "Thế Giới Băng Diệt", classIdx: 1, elemIdx: 1, catIdx: 0, tierIdx: 6, indIdx: 1, aoeVariant: "damage", mana: 110, cd: 20.0, dmg: 320, sc: 280, range: 8.5, customIcon: true, iconIdx: 0, desc: "Ngưng đọng không gian, giáng mưa thiên thạch ma pháp đa tầng tàn phá toàn bộ khu vực." },
+      { id: "mage_s_meteor_crash", name: "Thiên Thạch Ma Trụy", classIdx: 1, elemIdx: 0, catIdx: 0, tierIdx: 5, indIdx: 1, aoeVariant: "damage", mana: 75, cd: 8.0, dmg: 195, sc: 220, range: 7.0, customIcon: true, iconIdx: 0, desc: "Triệu hồi vẫn thạch khổng lồ từ tầng mây rơi xuống tâm chỉ định, đốt cháy mặt đất 4 giây." },
+      { id: "mage_a_arcane_blast", name: "Bí Pháp Oanh Kích", classIdx: 1, elemIdx: 0, catIdx: 0, tierIdx: 4, indIdx: 2, aoeVariant: "damage", mana: 52, cd: 5.5, dmg: 125, sc: 170, range: 5.0, customIcon: true, iconIdx: 1, desc: "Vận tụ ma lực xả luồng sóng xung kích hồ quang hình nón cực đại thiêu đốt kẻ địch trước mặt." },
+      { id: "mage_b_elemental_tide", name: "Nguyên Tố Triều Tịch", classIdx: 1, elemIdx: 1, catIdx: 0, tierIdx: 3, indIdx: 0, aoeVariant: "damage", mana: 38, cd: 4.2, dmg: 85, sc: 135, range: 8.0, customIcon: true, iconIdx: 3, desc: "Phóng đợt sóng ma pháp thủy triều cuồn cuộn bay thẳng, đẩy lùi kẻ địch về phía sau." },
+      { id: "mage_c_triple_arcane_orb", name: "Ma Cầu Liên Xạ", classIdx: 1, elemIdx: 0, catIdx: 0, tierIdx: 2, indIdx: 0, aoeVariant: "damage", mana: 25, cd: 2.5, dmg: 48, sc: 100, range: 8.0, customIcon: true, iconIdx: 3, desc: "Bắn liên tiếp 3 quả cầu ma pháp tốc độ cao bám đuổi nhẹ vào hướng con trỏ chuột." },
+
+      // === 3. XẠ THỦ (ARCHER) ===
+      { id: "archer_x_thousand_arrows", name: "Vạn Tiễn Quy Tông", classIdx: 3, elemIdx: 5, catIdx: 0, tierIdx: 6, indIdx: 1, aoeVariant: "damage", mana: 98, cd: 19.0, dmg: 290, sc: 270, range: 8.0, customIcon: true, iconIdx: 0, desc: "Bắn mũi tên dẫn đạo lên trời, triệu hồi hàng vạn mũi tên nguyên tố xối xả như bão quét sạch màn hình." },
+      { id: "archer_s_cloud_piercer", name: "Xuyên Vân Thần Tiễn", classIdx: 3, elemIdx: 5, catIdx: 0, tierIdx: 5, indIdx: 0, aoeVariant: "damage", mana: 68, cd: 7.5, dmg: 180, sc: 230, range: 10.0, customIcon: true, iconIdx: 6, desc: "Tụ lực bắn ra mũi đại tiễn ma thuật xuyên thủng mọi hàng phòng ngự, sát thương tăng theo cự ly." },
+      { id: "archer_a_soul_barrage", name: "Bão Tiễn Đoạt Hồn", classIdx: 3, elemIdx: 2, catIdx: 0, tierIdx: 4, indIdx: 2, aoeVariant: "damage", mana: 50, cd: 5.2, dmg: 120, sc: 165, range: 5.5, customIcon: true, iconIdx: 1, desc: "Bắn một chùm 7 mũi tên xòe hình quạt càn quét diện rộng, gây hiệu ứng xuất huyết." },
+      { id: "archer_b_magic_arrow_rain", name: "Ma Lực Tiễn Vũ", classIdx: 3, elemIdx: 1, catIdx: 0, tierIdx: 3, indIdx: 1, aoeVariant: "damage", mana: 38, cd: 4.5, dmg: 82, sc: 125, range: 7.0, customIcon: true, iconIdx: 0, desc: "Thả chùm tên ma thuật rơi thẳng xuống vùng đất 2.5m, tạo bãi gai năng lượng làm chậm 60%." },
+      { id: "archer_c_homing_snipe", name: "Truy Hồn Xạ Kích", classIdx: 3, elemIdx: 5, catIdx: 0, tierIdx: 2, indIdx: 0, aoeVariant: "damage", mana: 28, cd: 2.6, dmg: 55, sc: 105, range: 8.5, customIcon: true, iconIdx: 6, desc: "Bắn mũi tên thanh mảnh có khả năng uốn lượn tự tìm đến hitbox mục tiêu gần nhất." },
+
+      // === 4. VÕ SĨ (BRAWLER) ===
+      { id: "brawler_x_overlord_smash", name: "Bá Vương Phá Thiên", classIdx: 2, elemIdx: 0, catIdx: 0, tierIdx: 6, indIdx: 3, aoeVariant: "damage", mana: 90, cd: 16.0, dmg: 280, sc: 260, range: 3.5, customIcon: true, iconIdx: 2, desc: "Dồn toàn bộ chân khí tung một quyền vỡ nát mặt đất, tạo chấn động sóng âm làm choáng toàn bộ 3.0s." },
+      { id: "brawler_s_earthquake_leap", name: "Chấn Địa Liệt Quyền", classIdx: 2, elemIdx: 2, catIdx: 0, tierIdx: 5, indIdx: 1, aoeVariant: "damage", mana: 65, cd: 7.0, dmg: 175, sc: 215, range: 4.5, customIcon: true, iconIdx: 0, desc: "Nhảy vọt lên không trung dậm mạnh xuống vị trí chỉ định, tạo hố nứt nguyên tố sát thương cực lớn." },
+      { id: "brawler_a_cyclone_kicks", name: "Bạo Phong Liên Cước", classIdx: 2, elemIdx: 5, catIdx: 0, tierIdx: 4, indIdx: 2, aoeVariant: "damage", mana: 46, cd: 5.0, dmg: 110, sc: 155, range: 4.0, customIcon: true, iconIdx: 1, desc: "Tung chuỗi cước ảnh liên hoàn quét hình nón phía trước, đẩy lùi và phá giáp đối thủ 30%." },
+      { id: "brawler_b_vacuum_palm", name: "Khí Kình Phá Không", classIdx: 2, elemIdx: 5, catIdx: 0, tierIdx: 3, indIdx: 0, aoeVariant: "damage", mana: 35, cd: 3.8, dmg: 75, sc: 120, range: 6.5, customIcon: true, iconIdx: 1, desc: "Tung cú đấm thẳng phát ra luồng sóng khí kình bay vụt đi, thổi bay đường đạn của kẻ thù." },
+      { id: "brawler_c_penetrating_strike", name: "Xung Quyền Thấu Kích", classIdx: 2, elemIdx: 0, catIdx: 0, tierIdx: 2, indIdx: 0, aoeVariant: "damage", mana: 22, cd: 2.2, dmg: 50, sc: 95, range: 2.5, customIcon: true, iconIdx: 4, desc: "Lướt tới 2 mét đấm thẳng vào mục tiêu, gây sát thương bỏ qua 25% phòng ngự." },
+
+      // === 5. TOÀN HỆ / ĐA HỆ (UNIVERSAL TIERS D & E) ===
+      { id: "uni_poison_pillar", name: "Nhiễm Độc Trụ", classIdx: 4, elemIdx: 6, catIdx: 0, tierIdx: 1, indIdx: 1, aoeVariant: "damage", mana: 20, cd: 3.0, dmg: 35, sc: 75, range: 7.0, customIcon: true, iconIdx: 0, desc: "Cắm một cột năng lượng độc tại tâm đất; kẻ địch bước vào bị trúng độc rút máu trong 6s." },
+      { id: "uni_soul_mist", name: "Thực Hồn Độc Vụ", classIdx: 4, elemIdx: 6, catIdx: 0, tierIdx: 1, indIdx: 3, aoeVariant: "damage", mana: 22, cd: 3.5, dmg: 38, sc: 80, range: 3.0, customIcon: true, iconIdx: 2, desc: "Bốc ra màn sương độc quanh thân; gây sát thương DoT và hút 15% sát thương hồi lại HP." },
+      { id: "uni_body_fortify", name: "Hộ Thể Cương Khí", classIdx: 4, elemIdx: 0, catIdx: 3, tierIdx: 1, indIdx: 4, aoeVariant: "damage", mana: 22, cd: 8.0, dmg: 25, sc: 60, range: 0.0, customIcon: true, iconIdx: 4, desc: "Tụ khí quanh người tăng +25 Giáp và giảm 15% sát thương nhận vào trong 10 giây." },
+      { id: "uni_diamond_shield", name: "Kim Cang Thuẫn", classIdx: 4, elemIdx: 3, catIdx: 3, tierIdx: 1, indIdx: 4, aoeVariant: "damage", mana: 25, cd: 10.0, dmg: 30, sc: 70, range: 0.0, customIcon: true, iconIdx: 2, desc: "Tạo lớp khiên chắn năng lượng hấp thụ 120 sát thương trước khi vỡ." },
+      { id: "uni_life_blessing", name: "Sinh Mệnh Chúc", classIdx: 4, elemIdx: 6, catIdx: 1, tierIdx: 1, indIdx: 1, aoeVariant: "heal", mana: 22, cd: 4.5, dmg: 40, sc: 80, range: 7.0, customIcon: true, iconIdx: 2, desc: "Thả vòng hồi sinh xuống đất, đồng đội bước vào hồi +40 HP và phục hồi thể lực." },
+      { id: "uni_mind_clarity", name: "Tĩnh Tâm Quyết", classIdx: 4, elemIdx: 0, catIdx: 2, tierIdx: 0, indIdx: 4, aoeVariant: "damage", mana: 5, cd: 6.0, dmg: 30, sc: 50, range: 0.0, customIcon: true, iconIdx: 2, desc: "Đứng yên tụ khí 1.5s hồi phục ngay lập tức +30 Mana để tiếp tục giao tranh." },
+      { id: "uni_purify_mantra", name: "Thanh Tẩy Chú", classIdx: 4, elemIdx: 3, catIdx: 3, tierIdx: 0, indIdx: 4, aoeVariant: "damage", mana: 12, cd: 5.0, dmg: 20, sc: 40, range: 0.0, customIcon: true, iconIdx: 2, desc: "Hóa giải ngay lập tức hiệu ứng làm chậm, xuất huyết hoặc trúng độc trên bản thân." },
+      { id: "uni_speed_burst", name: "Tốc Bộ Khí", classIdx: 4, elemIdx: 5, catIdx: 3, tierIdx: 0, indIdx: 4, aoeVariant: "damage", mana: 14, cd: 7.0, dmg: 20, sc: 40, range: 0.0, customIcon: true, iconIdx: 4, desc: "Tăng +35% tốc độ di chuyển trong 4.0 giây, hỗ trợ truy đuổi hoặc rút lui nhanh." },
+      { id: "uni_paralyze_trap", name: "Tê Liệt Khí Trận", classIdx: 4, elemIdx: 2, catIdx: 3, tierIdx: 0, indIdx: 1, aoeVariant: "damage", mana: 14, cd: 3.5, dmg: 20, sc: 40, range: 6.0, customIcon: true, iconIdx: 0, desc: "Đặt bẫy năng lượng tại chuột; khi giẫm phải kẻ địch bị trói chân trong 1.8 giây." },
+      { id: "uni_energy_spark", name: "Nguyên Khí Đạn", classIdx: 4, elemIdx: 0, catIdx: 0, tierIdx: 0, indIdx: 0, aoeVariant: "damage", mana: 8, cd: 0.9, dmg: 20, sc: 50, range: 8.0, customIcon: true, iconIdx: 3, desc: "Bắn một tia đạn khí sơ cấp thẳng tắp, hồi chiêu nhanh (0.9s), tiêu hao rất ít Mana." }
+    ];
+
+    function init() {
+      renderIconGrid();
+      renderPresetsList();
+      loadPreset(0);
+      initDragAndDrop();
+      initVfxSimulator();
+    }
+
+    function renderIconGrid() {
+      const container = document.getElementById("iconGrid");
+      container.innerHTML = "";
+      HOTBAR_ICONS.forEach((item, idx) => {
+        const slot = document.createElement("div");
+        slot.className = `icon-slot ${idx === selectedHotbarIconIdx ? 'selected' : ''}`;
+        slot.title = item.name + " (" + item.id + ")";
+        slot.innerHTML = item.emoji;
+        slot.onclick = () => {
+          selectedHotbarIconIdx = idx;
+          renderIconGrid();
+          updateLivePreview();
+        };
+        container.appendChild(slot);
+      });
+    }
+
+    function renderPresetsList() {
+      const container = document.getElementById("presetsList");
+      container.innerHTML = "";
+      presets.forEach((p, idx) => {
+        const item = document.createElement("div");
+        item.className = `preset-item ${idx === currentPresetIndex ? 'active' : ''}`;
+        item.onclick = () => loadPreset(idx);
+        const elem = ELEMENTS[p.elemIdx];
+        const indName = INDICATORS[p.indIdx] || "Chiêu";
+        item.innerHTML = `
+          <div class="preset-icon">${p.customIcon ? HOTBAR_ICONS[p.iconIdx].emoji : '📜'}</div>
+          <div class="preset-info">
+            <div class="preset-name" style="color: ${TIERS[p.tierIdx].color}">${p.name}</div>
+            <div class="preset-sub">[${CLASSES[p.classIdx]} · ${elem.name}] · ${indName}</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function loadPreset(idx) {
+      currentPresetIndex = idx;
+      const p = presets[idx];
+      document.getElementById("skillName").value = p.name;
+      document.getElementById("skillId").value = p.id;
+      document.getElementById("manaCost").value = p.mana;
+      document.getElementById("cooldown").value = p.cd;
+      document.getElementById("baseDamage").value = p.dmg;
+      document.getElementById("intelScaling").value = p.sc;
+      document.getElementById("castRange").value = p.range;
+      document.getElementById("skillDesc").value = p.desc;
+      useCustomIcon = p.customIcon;
+      document.getElementById("useCustomHotbarIcon").checked = useCustomIcon;
+
+      selectedClassIdx = p.classIdx;
+      selectedElemIdx = p.elemIdx;
+      selectedTierIdx = p.tierIdx;
+      selectedCatIdx = p.catIdx;
+      selectedIndIdx = (p.indIdx !== undefined) ? p.indIdx : 0;
+      selectedHotbarIconIdx = p.iconIdx || 0;
+
+      updatePillSelection("classSelector", selectedClassIdx);
+      updatePillSelection("elemSelector", selectedElemIdx);
+      updatePillSelection("tierSelector", selectedTierIdx);
+      updatePillSelection("categorySelector", selectedCatIdx);
+      updatePillSelection("indicatorSelector", selectedIndIdx);
+
+      // Đồng bộ hiển thị nhóm biến thể AoE
+      const aoeGroup = document.getElementById("aoeSubtypeGroup");
+      if (selectedIndIdx === 1) {
+        aoeGroup.style.display = "block";
+        const isHeal = (p.aoeVariant === "heal" || p.catIdx === 1 || p.catIdx === 2);
+        if (isHeal) {
+          document.getElementById("aoeVariantHeal").checked = true;
+          document.getElementById("statsTitle").innerText = "💚 Chỉ Số: Mana | Hồi (s) | Lượng Hồi | % INT | Tầm (m)";
+          document.getElementById("baseDamage").placeholder = "Lượng Hồi";
+        } else {
+          document.getElementById("aoeVariantDmg").checked = true;
+          document.getElementById("statsTitle").innerText = "⚡ Chỉ Số: Mana | Hồi (s) | ST Gốc | % INT | Tầm (m)";
+          document.getElementById("baseDamage").placeholder = "ST Gốc";
+        }
+      } else {
+        aoeGroup.style.display = "none";
+        document.getElementById("statsTitle").innerText = "⚡ Chỉ Số: Mana | Hồi (s) | ST Gốc | % INT | Tầm (m)";
+        document.getElementById("baseDamage").placeholder = "ST Gốc";
+      }
+
+      if (document.getElementById("rainFallAngle")) {
+        document.getElementById("rainFallAngle").value = (p.rainFallAngle !== undefined) ? p.rainFallAngle : 0;
+      }
+      if (document.getElementById("rainFallStyle")) {
+        document.getElementById("rainFallStyle").value = (p.rainFallStyle !== undefined) ? p.rainFallStyle : 0;
+      }
+
+      renderIconGrid();
+      toggleHotbarIconMode();
+      renderPresetsList();
+      updateLivePreview();
+    }
+
+    function updatePillSelection(containerId, index) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const pills = container.getElementsByClassName("radio-pill");
+      for (let i = 0; i < pills.length; i++) {
+        pills[i].classList.toggle("selected", i === index);
+      }
+    }
+
+    function selectClass(idx) { selectedClassIdx = idx; updatePillSelection("classSelector", idx); updateLivePreview(); }
+    function selectElement(idx) { selectedElemIdx = idx; updatePillSelection("elemSelector", idx); updateLivePreview(); }
+    function selectTier(idx) { selectedTierIdx = idx; updatePillSelection("tierSelector", idx); updateLivePreview(); }
+    
+    function selectCategory(idx) { 
+      selectedCatIdx = idx; 
+      updatePillSelection("categorySelector", idx); 
+      
+      // Cập nhật nhãn chỉ số phù hợp
+      if (idx === 1 || idx === 2) {
+        document.getElementById("statsTitle").innerText = "💚 Chỉ Số: Mana | Hồi (s) | Lượng Hồi | % INT | Tầm (m)";
+        document.getElementById("baseDamage").placeholder = "Lượng Hồi";
+      } else if (idx === 3) {
+        document.getElementById("statsTitle").innerText = "🛡️ Chỉ Số: Mana | Hồi (s) | Lực Buff | % INT | Tầm (m)";
+        document.getElementById("baseDamage").placeholder = "Lực Buff";
+      } else {
+        document.getElementById("statsTitle").innerText = "⚡ Chỉ Số: Mana | Hồi (s) | ST Gốc | % INT | Tầm (m)";
+        document.getElementById("baseDamage").placeholder = "ST Gốc";
+      }
+      updateLivePreview(); 
+    }
+
+    function selectIndicator(idx) { 
+      selectedIndIdx = idx; 
+      updatePillSelection("indicatorSelector", idx); 
+      
+      const aoeGroup = document.getElementById("aoeSubtypeGroup");
+      if (idx === 1) { // 2. Vùng Đất / Mưa (AoE)
+        aoeGroup.style.display = "block";
+      } else {
+        aoeGroup.style.display = "none";
+      }
+
+      // Tự động gợi ý tầm xuất chiêu theo cơ chế tâm ngắm
+      const rangeInput = document.getElementById("castRange");
+      if (idx === 4) { // Tự Thân
+        rangeInput.value = "0";
+      } else if (idx === 5) { // Buff Cho Đồng Đội
+        if (parseFloat(rangeInput.value) <= 0 || parseFloat(rangeInput.value) > 10) {
+          rangeInput.value = "6.5";
+        }
+      } else if (parseFloat(rangeInput.value) <= 0) {
+        rangeInput.value = "7.0";
+      }
+
+      updateLivePreview(); 
+    }
+
+    function selectAoeVariant(type) {
+      if (type === 'damage') {
+        selectCategory(0); // Tấn Công
+        document.getElementById("aoeVariantDmg").checked = true;
+        document.getElementById("statsTitle").innerText = "⚡ Chỉ Số: Mana | Hồi (s) | ST Gốc | % INT | Tầm (m)";
+        document.getElementById("baseDamage").placeholder = "ST Gốc";
+        showToast("⚔️ Đã chọn Biến Thể 1: Gây Sát Thương Vùng (AoE Damage)");
+      } else if (type === 'heal') {
+        selectCategory(1); // Hồi Máu
+        document.getElementById("aoeVariantHeal").checked = true;
+        document.getElementById("statsTitle").innerText = "💚 Chỉ Số: Mana | Hồi (s) | Lượng Hồi | % INT | Tầm (m)";
+        document.getElementById("baseDamage").placeholder = "Lượng Hồi";
+        showToast("💚 Đã chọn Biến Thể 2: Hồi Máu & Hồi Mana Vùng (AoE Heal & Mana)");
+      }
+      updateLivePreview();
+    }
+
+    function toggleHotbarIconMode() {
+      useCustomIcon = document.getElementById("useCustomHotbarIcon").checked;
+      document.getElementById("iconPickerGroup").style.display = useCustomIcon ? "block" : "none";
+      updateLivePreview();
+    }
+
+    function updateLivePreview() {
+      const name = document.getElementById("skillName").value || "Kỹ Năng";
+      const id = document.getElementById("skillId").value || "skill_id";
+      const mana = document.getElementById("manaCost").value || "0";
+      const cd = document.getElementById("cooldown").value || "1.0";
+      const dmg = parseInt(document.getElementById("baseDamage").value) || 0;
+      const sc = parseInt(document.getElementById("intelScaling").value) || 0;
+      const range = document.getElementById("castRange").value || "0";
+      const desc = document.getElementById("skillDesc").value;
+
+      document.getElementById("currentEditingId").innerText = "ID: " + id;
+      document.getElementById("prevManaTag").innerText = `-${mana}mn`;
+
+      const tier = TIERS[selectedTierIdx];
+      const elem = ELEMENTS[selectedElemIdx];
+      const cls = CLASSES[selectedClassIdx];
+      const cat = CATEGORIES[selectedCatIdx];
+      const indLabel = INDICATORS[selectedIndIdx] || "Chiêu";
+
+      // Slot icon
+      const slotBox = document.getElementById("prevSlotBox");
+      slotBox.style.borderColor = tier.color;
+      const currentIconObj = HOTBAR_ICONS[selectedHotbarIconIdx];
+      document.getElementById("prevSlotIcon").innerHTML = useCustomIcon ? currentIconObj.emoji : "📜";
+
+      // Tooltip
+      document.getElementById("prevTooltipBox").style.borderColor = tier.color;
+      document.getElementById("prevTitle").innerText = name;
+      document.getElementById("prevTitle").style.color = tier.color;
+      document.getElementById("prevLine1").innerHTML = `• Phẩm: <span style="color:${tier.color}">${tier.name}</span> | Hệ: ${elem.name} | Phái: ${cls}`;
+      
+      let rangeText = `${range}m`;
+      if (selectedIndIdx === 4) rangeText = `Bản Thân (0m)`;
+      else if (selectedIndIdx === 5) rangeText = `${range}m (Toàn Đội 360°)`;
+      document.getElementById("prevLine2").innerText = `• Dạng: ${indLabel} | Tầm: ${rangeText}`;
+      document.getElementById("prevLine3").innerText = `• Tác dụng: ${cat} | Hao: ${mana} MP | CD: ${cd}s`;
+      
+      const calcDmg = dmg + Math.round(12 * (sc / 100)); // INT mẫu = 12
+      const effLabel = (selectedCatIdx === 1) ? "Hồi HP" : (selectedCatIdx === 2) ? "Hồi MP" : (selectedCatIdx === 3) ? "Lực Buff" : "Sát thương";
+      document.getElementById("prevLine4").innerHTML = `• ${effLabel}: ${dmg} + ${sc}% INT = <span style="color:#ffd700;">${calcDmg}</span>`;
+      document.getElementById("prevLine5").innerText = `• ${desc}`;
+
+      // Update C# Code Box
+      document.getElementById("csharpCodeOutput").innerText = generateCSharpSnippet();
+    }
+
+    function generateCSharpSnippet() {
+      const name = document.getElementById("skillName").value;
+      const id = document.getElementById("skillId").value;
+      const mana = document.getElementById("manaCost").value;
+      const cd = document.getElementById("cooldown").value;
+      const dmg = document.getElementById("baseDamage").value;
+      const sc = (parseFloat(document.getElementById("intelScaling").value) / 100).toFixed(2);
+      const range = document.getElementById("castRange").value;
+      const desc = document.getElementById("skillDesc").value;
+
+      const tier = TIERS[selectedTierIdx];
+      const elem = ELEMENTS[selectedElemIdx];
+      const cls = CLASSES[selectedClassIdx];
+      const scrollIcon = elem.icon;
+      const currentIconObj = HOTBAR_ICONS[selectedHotbarIconIdx];
+      const hotbarIcon = useCustomIcon ? currentIconObj.id : scrollIcon;
+      const varName = id.replace(/-/g, "_");
+
+      const eff = (selectedCatIdx === 1) ? "Hồi HP" : (selectedCatIdx === 2) ? "Hồi MP" : (selectedCatIdx === 3) ? "Lực Buff" : "ST";
+      let indTag = (selectedIndIdx === 5) ? " [Buff Đội 360°]" : (selectedIndIdx === 4) ? " [Tự Thân]" : "";
+      const statsStr = `• [${cls} · ${elem.name}${indTag}] | ${eff}: ${dmg} + ${document.getElementById("intelScaling").value}% INT | CD: ${cd}s | Tầm: ${range}m`;
+
+      const trajVal = document.getElementById("trajectoryType") ? document.getElementById("trajectoryType").value : "0";
+      const shapeVal = document.getElementById("baseShapeMask") ? document.getElementById("baseShapeMask").value : "Orb";
+      const flySpd = document.getElementById("flySpeed") ? document.getElementById("flySpeed").value : "16";
+      const expRad = document.getElementById("explosionRadius") ? document.getElementById("explosionRadius").value : "1.8";
+      const trail = document.getElementById("hasTrail") ? document.getElementById("hasTrail").checked : true;
+      const shake = document.getElementById("hasScreenShake") ? document.getElementById("hasScreenShake").checked : false;
+
+      const trajNames = ["Linear", "SineWave", "Homing", "LobbedArc", "Boomerang", "Instant"];
+      const trajName = trajNames[parseInt(trajVal)] || "Linear";
+
+      const fallAngle = document.getElementById("rainFallAngle") ? parseInt(document.getElementById("rainFallAngle").value) : 0;
+      const fallStyle = document.getElementById("rainFallStyle") ? parseInt(document.getElementById("rainFallStyle").value) : 0;
+
+      return `// Cuộn Trục Bí Kíp: ${name} (140 Biến Thể Procedural VFX)
+var ${varName}_scroll = new SkillScrollData("${id}", "${name}", "${tier.name}", ${hexToUnityColor(tier.color)}, "${elem.name}", ${mana}, ${cd}f, ${dmg}, ${sc}f, ${selectedIndIdx + 1}, "${hotbarIcon}", "${scrollIcon}", "${desc}", ${range}f, "${cls}", "", ${selectedCatIdx}) {
+    baseShapeMask = (int)BaseShapeMask.${shapeVal},
+    trajectoryType = (int)TrajectoryType.${trajName},
+    flySpeed = ${flySpd}f,
+    explosionRadius = ${expRad}f,
+    rainFallAngle = ${fallAngle},
+    rainFallStyle = ${fallStyle},
+    hasTrail = ${trail},
+    hasScreenShake = ${shake}
+};
+var ${varName} = new InventoryItem("${id}", "${name}", ItemType.SkillScroll, EquipSlot.None, "${tier.name}", ${hexToUnityColor(tier.color)}, "${scrollIcon}", "${statsStr}", "${desc}", 1, ${varName}_scroll);`;
+    }
+
+    function hexToUnityColor(hex) {
+      const r = (parseInt(hex.slice(1,3), 16) / 255).toFixed(2);
+      const g = (parseInt(hex.slice(3,5), 16) / 255).toFixed(2);
+      const b = (parseInt(hex.slice(5,7), 16) / 255).toFixed(2);
+      return `new Color(${r}f, ${g}f, ${b}f)`;
+    }
+
+    function showToast(msg) {
+      const notif = document.getElementById("notif");
+      notif.innerText = msg;
+      notif.style.display = "block";
+      setTimeout(() => { notif.style.display = "none"; }, 3500);
+    }
+
+    function copyCurrentCSharp() {
+      navigator.clipboard.writeText(generateCSharpSnippet());
+      showToast("✅ Đã sao chép mã C# vào Clipboard! Paste thẳng vào code dự án.");
+    }
+
+    function downloadCurrentCSharpFile() {
+      const id = document.getElementById("skillId").value;
+      const code = `// =========================================================================
+// GODLESS FANTASY - SKILL PRESET
+// Tự động sinh từ Godless Skill Studio
+// =========================================================================
+using UnityEngine;
+using GodlessFantasy.Player;
+using GodlessFantasy.Combat;
+
+namespace GodlessFantasy.Database
+{
+    public static class Skill_${id.replace(/-/g, "_")}
+    {
+        public static InventoryItem Create()
+        {
+            ${generateCSharpSnippet().replace(/\n/g, "\n            ")}
+            return ${id.replace(/-/g, "_")};
+        }
+    }
+}
+`;
+      downloadFile(`${id}.cs`, code);
+      showToast(`💾 Đã tải file C#: ${id}.cs!`);
+    }
+
+    function copyFullCSharpDatabase() {
+      let fullCode = `// =========================================================================
+// GODLESS FANTASY - PRESET SKILLS DATABASE (GENERATED)
+// Sinh tự động từ Web Studio cho toàn bộ team
+// =========================================================================
+using UnityEngine;
+using GodlessFantasy.Player;
+using GodlessFantasy.Combat;
+using System.Collections.Generic;
+
+namespace GodlessFantasy.Database
+{
+    public static class SkillPresetsDatabase
+    {
+        public static List<InventoryItem> LoadAllSkillPresets()
+        {
+            var list = new List<InventoryItem>();\n`;
+
+      presets.forEach(p => {
+        const tier = TIERS[p.tierIdx];
+        const elem = ELEMENTS[p.elemIdx];
+        const cls = CLASSES[p.classIdx];
+        const scrollIcon = elem.icon;
+        const hotbarIcon = p.customIcon ? HOTBAR_ICONS[p.iconIdx].id : scrollIcon;
+        const varName = p.id.replace(/-/g, "_");
+        const sc = (p.sc / 100).toFixed(2);
+        const eff = (p.catIdx === 1) ? "Hồi HP" : (p.catIdx === 2) ? "Hồi MP" : (p.catIdx === 3) ? "Lực Buff" : "ST";
+        const indTag = (p.indIdx === 5) ? " [Buff Đội 360°]" : (p.indIdx === 4) ? " [Tự Thân]" : "";
+        const stats = `• [${cls} · ${elem.name}${indTag}] | ${eff}: ${p.dmg} + ${p.sc}% INT | CD: ${p.cd}s | Tầm: ${p.range}m`;
+
+        fullCode += `
+            // ${p.name}
+            var ${varName} = new InventoryItem("${p.id}", "${p.name}", ItemType.SkillScroll, EquipSlot.None, "${tier.name}", ${hexToUnityColor(tier.color)}, "${scrollIcon}", "${stats}", "${p.desc}", 1,
+                new SkillScrollData("${p.id}", "${p.name}", "${tier.name}", ${hexToUnityColor(tier.color)}, "${elem.name}", ${p.mana}, ${p.cd}f, ${p.dmg}, ${sc}f, ${(p.indIdx || 0) + 1}, "${hotbarIcon}", "${scrollIcon}", "${p.desc}", ${p.range}f, "${cls}", "", ${p.catIdx}));
+            list.Add(${varName});\n`;
+      });
+
+      fullCode += `            return list;
+        }
+    }
+}
+`;
+      navigator.clipboard.writeText(fullCode);
+      showToast(`📋 Đã copy Database C# chứa toàn bộ ${presets.length} bí kíp vào Clipboard!`);
+    }
+
+    function exportAllPresetsJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(presets, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "godless_skill_presets.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("📥 Đã tải file godless_skill_presets.json!");
+    }
+
+    function exportCurrentPresetJson() {
+      const p = getCurrentFormPreset();
+      downloadFile(`${p.id}.json`, JSON.stringify(p, null, 2));
+      showToast(`📥 Đã tải file preset: ${p.id}.json!`);
+    }
+
+    function getCurrentFormPreset() {
+      const isAoe = (selectedIndIdx === 1);
+      const isAoeHeal = isAoe && document.getElementById("aoeVariantHeal").checked;
+      return {
+        id: document.getElementById("skillId").value,
+        name: document.getElementById("skillName").value,
+        classIdx: selectedClassIdx,
+        elemIdx: selectedElemIdx,
+        catIdx: selectedCatIdx,
+        tierIdx: selectedTierIdx,
+        indIdx: selectedIndIdx,
+        aoeVariant: isAoeHeal ? "heal" : "damage",
+        mana: parseInt(document.getElementById("manaCost").value) || 0,
+        cd: parseFloat(document.getElementById("cooldown").value) || 1.0,
+        dmg: parseInt(document.getElementById("baseDamage").value) || 0,
+        sc: parseInt(document.getElementById("intelScaling").value) || 0,
+        range: parseFloat(document.getElementById("castRange").value) || 0,
+        customIcon: useCustomIcon,
+        iconIdx: selectedHotbarIconIdx,
+        rainFallAngle: document.getElementById("rainFallAngle") ? parseInt(document.getElementById("rainFallAngle").value) : 0,
+        rainFallStyle: document.getElementById("rainFallStyle") ? parseInt(document.getElementById("rainFallStyle").value) : 0,
+        desc: document.getElementById("skillDesc").value
+      };
+    }
+
+    function saveAsNewPreset() {
+      const p = getCurrentFormPreset();
+      const existingIdx = presets.findIndex(x => x.id === p.id);
+      if (existingIdx >= 0) {
+        presets[existingIdx] = p;
+        showToast(`✅ Đã cập nhật phôi mẫu: '${p.name}'!`);
+      } else {
+        presets.push(p);
+        currentPresetIndex = presets.length - 1;
+        showToast(`✅ Đã thêm mới phôi mẫu: '${p.name}'!`);
+      }
+      renderPresetsList();
+    }
+
+    function addNewPreset() {
+      const newId = "skill_custom_" + Date.now().toString().slice(-4);
+      const newP = {
+        id: newId,
+        name: "Bí Kíp Mới",
+        classIdx: 4,
+        elemIdx: 0,
+        catIdx: 0,
+        tierIdx: 3,
+        indIdx: 0,
+        aoeVariant: "damage",
+        mana: 20,
+        cd: 3.0,
+        dmg: 35,
+        sc: 80,
+        range: 7.0,
+        customIcon: true,
+        iconIdx: 0,
+        desc: "Mô tả chiêu thức mới được tạo từ Web Studio."
+      };
+      presets.unshift(newP);
+      renderPresetsList();
+      loadPreset(0);
+      showToast("✨ Đã tạo phôi mẫu mới! Hãy chỉnh sửa thông số và lưu lại.");
+    }
+
+    // =========================================================================
+    // HỆ THỐNG TẢI FILE ĐA DẠNG: JSON, C# (.CS), VÀ ẢNH ICON (.PNG, .JPG)
+    // =========================================================================
+    function handleUniversalFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      processUploadedFile(file);
+      event.target.value = "";
+    }
+
+    function handleCustomIconUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        applyCustomIconImage(e.target.result, file.name);
+      };
+      reader.readAsDataURL(file);
+      event.target.value = "";
+    }
+
+    function applyCustomIconImage(dataUrl, fileName) {
+      const customId = "icon_custom_" + Date.now().toString().slice(-4);
+      const shortName = fileName.replace(/\.[^/.]+$/, "");
+      HOTBAR_ICONS.unshift({
+        id: customId,
+        name: shortName,
+        emoji: `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" alt="icon">`,
+        isImage: true,
+        dataUrl: dataUrl
+      });
+      selectedHotbarIconIdx = 0;
+      useCustomIcon = true;
+      document.getElementById("useCustomHotbarIcon").checked = true;
+      toggleHotbarIconMode();
+      renderIconGrid();
+      updateLivePreview();
+      showToast(`🖼️ Đã nạp thành công ảnh Icon: ${shortName}!`);
+    }
+
+    function processUploadedFile(file) {
+      const nameLower = file.name.toLowerCase();
+
+      // Trường hợp 1: File Ảnh
+      if (file.type.startsWith("image/") || nameLower.endsWith(".png") || nameLower.endsWith(".jpg") || nameLower.endsWith(".jpeg") || nameLower.endsWith(".webp")) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          applyCustomIconImage(e.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // Trường hợp 2: File Text (JSON hoặc C# .cs)
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        if (nameLower.endsWith(".cs") || content.includes("SkillScrollData") || content.includes("InventoryItem")) {
+          parseAndLoadCSharpFile(content, file.name);
+        } else {
+          parseAndLoadJsonFile(content, file.name);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function parseAndLoadJsonFile(jsonString, fileName) {
+      try {
+        const parsed = JSON.parse(jsonString);
+        if (Array.isArray(parsed)) {
+          presets = parsed;
+          renderPresetsList();
+          loadPreset(0);
+          showToast(`✅ Đã nạp thành công ${presets.length} phôi mẫu từ JSON (${fileName})!`);
+        } else if (parsed && (parsed.id || parsed.name)) {
+          presets.unshift(parsed);
+          currentPresetIndex = 0;
+          renderPresetsList();
+          loadPreset(0);
+          showToast(`✅ Đã nạp phôi mẫu '${parsed.name || parsed.id}' từ JSON!`);
+        } else {
+          throw new Error("Cấu trúc JSON không hợp lệ cho Preset Kỹ Năng.");
+        }
+      } catch(err) {
+        alert("❌ Lỗi khi đọc file JSON: " + err.message);
+      }
+    }
+
+    function parseAndLoadCSharpFile(csCode, fileName) {
+      try {
+        // Regex tìm kiếm các lệnh khởi tạo SkillScrollData
+        const skillRegex = /new\s+SkillScrollData\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*"([^"]*)"\s*,\s*[^,]+\s*,\s*"([^"]*)"\s*,\s*(\d+)\s*,\s*([\d\.]+)f?\s*,\s*(\d+)\s*,\s*([\d\.]+)f?\s*,\s*(\d+)\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*([\d\.]+)f?\s*,\s*"([^"]*)"\s*,\s*"[^"]*"\s*,\s*(\d+)/g;
+        
+        let match;
+        let loadedCount = 0;
+        while ((match = skillRegex.exec(csCode)) !== null) {
+          const id = match[1];
+          const name = match[2];
+          const tierName = match[3];
+          const elemName = match[4];
+          const mana = parseInt(match[5]) || 0;
+          const cd = parseFloat(match[6]) || 1.0;
+          const dmg = parseInt(match[7]) || 0;
+          const sc = Math.round((parseFloat(match[8]) || 0) * 100);
+          const indIdx = Math.max(0, (parseInt(match[9]) || 1) - 1);
+          const hotbarIcon = match[10];
+          const desc = match[12] || "";
+          const range = parseFloat(match[13]) || 0;
+          const clsName = match[14];
+          const catIdx = parseInt(match[15]) || 0;
+
+          let classIdx = CLASSES.findIndex(c => c.toLowerCase() === clsName.toLowerCase());
+          if (classIdx < 0) classIdx = 4; // Mặc định Toàn Hệ
+
+          let elemIdx = ELEMENTS.findIndex(e => e.name.toLowerCase() === elemName.toLowerCase());
+          if (elemIdx < 0) elemIdx = 0;
+
+          let tierIdx = TIERS.findIndex(t => t.name.toLowerCase().includes(tierName.toLowerCase()));
+          if (tierIdx < 0) tierIdx = 3;
+
+          let iconIdx = HOTBAR_ICONS.findIndex(i => i.id === hotbarIcon);
+          if (iconIdx < 0) iconIdx = 0;
+
+          const newPreset = {
+            id: id,
+            name: name,
+            classIdx: classIdx,
+            elemIdx: elemIdx,
+            catIdx: catIdx,
+            tierIdx: tierIdx,
+            indIdx: indIdx,
+            aoeVariant: (catIdx === 1 || catIdx === 2) ? "heal" : "damage",
+            mana: mana,
+            cd: cd,
+            dmg: dmg,
+            sc: sc,
+            range: range,
+            customIcon: true,
+            iconIdx: iconIdx,
+            desc: desc
+          };
+          presets.unshift(newPreset);
+          loadedCount++;
+        }
+
+        if (loadedCount > 0) {
+          currentPresetIndex = 0;
+          renderPresetsList();
+          loadPreset(0);
+          showToast(`✅ Đã nạp thành công ${loadedCount} kỹ năng từ file C# (${fileName})!`);
+        } else {
+          alert("⚠️ Không trích xuất được 'new SkillScrollData(...)' từ file C#. Hãy kiểm tra lại định dạng file!");
+        }
+      } catch(err) {
+        alert("❌ Lỗi khi nạp file C#: " + err.message);
+      }
+    }
+
+    function initDragAndDrop() {
+      const overlay = document.getElementById("dropOverlay");
+      let dragCounter = 0;
+
+      window.addEventListener("dragenter", (e) => {
+        e.preventDefault();
+        dragCounter++;
+        overlay.classList.add("active");
+      });
+
+      window.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          overlay.classList.remove("active");
+        }
+      });
+
+      window.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+
+      window.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        overlay.classList.remove("active");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          for (let i = 0; i < e.dataTransfer.files.length; i++) {
+            processUploadedFile(e.dataTransfer.files[i]);
+          }
+        }
+      });
+    }
+
+    function downloadFile(filename, content) {
+      const element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+      element.setAttribute('download', filename);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      element.remove();
+    }
+
+    // =========================================================================
+    // PROCEDURAL VFX & BALLISTICS SIMULATION ENGINE (CANVAS 60 FPS)
+    // HỖ TRỢ ĐẦY ĐỦ 6 TẦM CHIÊU (INDICATORS) & HOẠT ẢNH ĐỘNG CHO 7 HỆ NGUYÊN TỐ
+    // =========================================================================
+    let vfxCanvas, vfxCtx;
+    let isVfxLooping = true;
+    let isVfxPaused = false;
+    let simSpeedMultiplier = 1.0;
+    let loopTimer = 0;
+    let lastSimTime = 0;
+    let fpsFrames = 0;
+    let fpsLastUpdate = 0;
+    let screenShakeAmt = 0;
+
+    let activeProjectiles = [];
+    let activeParticles = [];
+    let activeFloatingTexts = [];
+    let activeAoEEffects = [];
+    let dummyHitFlash = 0;
+    let dummyHp = 100;
+    let dummyX = 220, dummyY = 75;
+    let heroX = 45, heroY = 75;
+    let isDraggingDummy = false;
+    let simGlobalTimer = 0;
+
+    const ELEMENTAL_PALETTES = {
+      "Hỏa": { core: "#ffffff", body: "#ff6600", rim: "#cc1100", trail: "rgba(255, 102, 0, 0.75)", particle: "#ffaa33", accent: "#ff2200" },
+      "Băng": { core: "#ffffff", body: "#33c9ff", rim: "#0066cc", trail: "rgba(51, 201, 255, 0.75)", particle: "#b3ecff", accent: "#00eeff" },
+      "Lôi": { core: "#ffffff", body: "#d433ff", rim: "#7700cc", trail: "rgba(212, 51, 255, 0.75)", particle: "#ffff55", accent: "#ea88ff" },
+      "Ánh Sáng": { core: "#ffffff", body: "#ffd700", rim: "#d4af37", trail: "rgba(255, 215, 0, 0.75)", particle: "#fff799", accent: "#ffffff" },
+      "Bóng Tối": { core: "#f3ccff", body: "#8800cc", rim: "#330055", trail: "rgba(136, 0, 204, 0.75)", particle: "#bb44ff", accent: "#440066" },
+      "Phong": { core: "#ffffff", body: "#33e5a5", rim: "#0e7751", trail: "rgba(51, 229, 165, 0.75)", particle: "#80ffcc", accent: "#00ff88" },
+      "Mộc": { core: "#ffffff", body: "#55dd22", rim: "#227705", trail: "rgba(85, 221, 34, 0.75)", particle: "#aaff55", accent: "#33bb00" }
+    };
+
+    function initVfxSimulator() {
+      vfxCanvas = document.getElementById("vfxCanvas");
+      if (!vfxCanvas) return;
+      vfxCtx = vfxCanvas.getContext("2d");
+
+      // Kéo thả chuột thay đổi vị trí tâm ngắm / phôi
+      vfxCanvas.addEventListener("mousedown", (e) => {
+        const rect = vfxCanvas.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left) * (vfxCanvas.width / rect.width);
+        const mouseY = (e.clientY - rect.top) * (vfxCanvas.height / rect.height);
+        dummyX = Math.max(70, Math.min(vfxCanvas.width - 20, Math.round(mouseX)));
+        dummyY = Math.max(20, Math.min(vfxCanvas.height - 20, Math.round(mouseY)));
+        isDraggingDummy = true;
+        updateTargetCoordBadge();
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDraggingDummy || !vfxCanvas) return;
+        const rect = vfxCanvas.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left) * (vfxCanvas.width / rect.width);
+        const mouseY = (e.clientY - rect.top) * (vfxCanvas.height / rect.height);
+        dummyX = Math.max(70, Math.min(vfxCanvas.width - 20, Math.round(mouseX)));
+        dummyY = Math.max(20, Math.min(vfxCanvas.height - 20, Math.round(mouseY)));
+        updateTargetCoordBadge();
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (isDraggingDummy) isDraggingDummy = false;
+      });
+
+      lastSimTime = performance.now();
+      fpsLastUpdate = performance.now();
+      updateTargetCoordBadge();
+      requestAnimationFrame(vfxSimLoop);
+      triggerVfxCast();
+    }
+
+    function updateTargetCoordBadge() {
+      const badge = document.getElementById("targetCoordBadge");
+      if (badge) badge.innerText = `Tâm: (${dummyX}, ${dummyY})`;
+    }
+
+    function centerTargetPoint() {
+      dummyX = 200;
+      dummyY = 75;
+      updateTargetCoordBadge();
+      showToast("🎯 Đã căn chỉnh tâm mục tiêu về vị trí chuẩn!");
+    }
+
+    function toggleVfxLoop() {
+      isVfxLooping = !isVfxLooping;
+      const btn = document.getElementById("loopVfxBtn");
+      if (btn) btn.innerText = isVfxLooping ? "🔄 Lặp: BẬT" : "⏸ Lặp: TẮT";
+    }
+
+    function toggleVfxPause() {
+      isVfxPaused = !isVfxPaused;
+      const btn = document.getElementById("pauseVfxBtn");
+      if (btn) btn.innerText = isVfxPaused ? "▶ Tiếp Tục" : "⏸ Tạm Dừng";
+    }
+
+    function setVfxSpeed(spd) {
+      simSpeedMultiplier = spd;
+      const btn05 = document.getElementById("speed05Btn");
+      const btn10 = document.getElementById("speed10Btn");
+      const btn20 = document.getElementById("speed20Btn");
+      if (btn05) btn05.className = (spd === 0.5) ? "btn btn-gold" : "btn";
+      if (btn10) btn10.className = (spd === 1.0) ? "btn btn-gold" : "btn";
+      if (btn20) btn20.className = (spd === 2.0) ? "btn btn-gold" : "btn";
+    }
+
+    function resetVfxSim() {
+      activeProjectiles = [];
+      activeParticles = [];
+      activeFloatingTexts = [];
+      activeAoEEffects = [];
+      dummyHp = 100;
+      dummyHitFlash = 0;
+      screenShakeAmt = 0;
+      loopTimer = 0;
+    }
+
+    function triggerVfxCast() {
+      if (!vfxCanvas) return;
+      const elemName = ELEMENTS[selectedElemIdx] ? ELEMENTS[selectedElemIdx].name : "Hỏa";
+      const palette = ELEMENTAL_PALETTES[elemName] || ELEMENTAL_PALETTES["Hỏa"];
+
+      const shape = document.getElementById("baseShapeMask") ? document.getElementById("baseShapeMask").value : "Orb";
+      const traj = document.getElementById("trajectoryType") ? parseInt(document.getElementById("trajectoryType").value) : 0;
+      const spd = document.getElementById("flySpeed") ? parseFloat(document.getElementById("flySpeed").value) : 16;
+      const radius = document.getElementById("explosionRadius") ? parseFloat(document.getElementById("explosionRadius").value) : 2.0;
+      const hasTrail = document.getElementById("hasTrail") ? document.getElementById("hasTrail").checked : true;
+      const hasShake = document.getElementById("hasScreenShake") ? document.getElementById("hasScreenShake").checked : false;
+      const dmg = parseInt(document.getElementById("baseDamage").value) || 45;
+
+      switch (selectedIndIdx) {
+        case 1: // 2. Vùng Đất / Mưa (AoE Rain)
+          spawnAoERainSim(dummyX, dummyY, elemName, palette, radius, dmg, hasShake);
+          break;
+        case 2: // 3. Hình Quạt (Cone 60°)
+          spawnConeWaveSim(heroX, heroY, dummyX, dummyY, elemName, palette, shape, spd, dmg, hasTrail, hasShake);
+          break;
+        case 3: // 4. Nổ 360° (Radial Nova)
+          spawnRadialNovaSim(dummyX, dummyY, elemName, palette, radius, dmg, hasShake);
+          break;
+        case 4: // 5. Tự Thân (Self Buff Aura)
+          spawnSelfAuraSim(heroX, heroY, elemName, palette, dmg);
+          break;
+        case 5: // 6. Buff Đồng Đội (Team Buff Barrier)
+          spawnTeamBarrierSim(dummyX, dummyY, elemName, palette, radius, dmg);
+          break;
+        default: // 1. Bắn Thẳng (Linear / Projectile)
+          spawnLinearProjectileSim(heroX, heroY, dummyX, dummyY, elemName, palette, shape, traj, spd, radius, dmg, hasTrail, hasShake);
+          break;
+      }
+    }
+
+    function spawnLinearProjectileSim(hx, hy, tx, ty, elemName, palette, shape, traj, spd, radius, dmg, hasTrail, hasShake) {
+      const p = {
+        type: "projectile",
+        x: hx + 10,
+        y: hy,
+        startX: hx + 10,
+        startY: hy,
+        targetX: tx,
+        targetY: ty,
+        element: elemName,
+        shape: shape,
+        trajectory: traj,
+        speed: spd * 12,
+        radius: radius,
+        hasTrail: hasTrail,
+        hasShake: hasShake,
+        damage: dmg,
+        palette: palette,
+        trailHistory: [],
+        lifeTime: 0,
+        maxLifeTime: (traj === 5) ? 0.25 : 2.2,
+        dead: false
+      };
+
+      if (traj === 5) {
+        p.dead = true;
+        createImpactExplosion(tx, ty, p);
+      } else {
+        activeProjectiles.push(p);
+      }
+    }
+
+    function spawnAoERainSim(tx, ty, elemName, palette, radius, dmg, hasShake) {
+      const fallAngle = document.getElementById("rainFallAngle") ? parseInt(document.getElementById("rainFallAngle").value) : 0;
+      const fallStyle = document.getElementById("rainFallStyle") ? parseInt(document.getElementById("rainFallStyle").value) : 0;
+
+      activeAoEEffects.push({
+        type: "aoe_circle",
+        x: tx,
+        y: ty,
+        radius: radius * 14,
+        palette: palette,
+        element: elemName,
+        life: 1.8,
+        maxLife: 1.8
+      });
+
+      const dropCount = 7;
+      for (let i = 0; i < dropCount; i++) {
+        setTimeout(() => {
+          let offsetX = 0;
+          let offsetY = 0;
+
+          if (fallStyle === 0) { // Random scatter
+            offsetX = (Math.random() - 0.5) * (radius * 18);
+            offsetY = (Math.random() - 0.5) * (radius * 10);
+          } else if (fallStyle === 1) { // Spiral
+            const theta = (i / dropCount) * Math.PI * 2.5;
+            const r = (i / dropCount) * (radius * 10);
+            offsetX = Math.cos(theta) * r;
+            offsetY = Math.sin(theta) * (r * 0.5);
+          } else if (fallStyle === 2) { // Bombardment (tập trung tâm)
+            offsetX = (Math.random() - 0.5) * (radius * 6);
+            offsetY = (Math.random() - 0.5) * (radius * 4);
+          } else if (fallStyle === 3) { // Sweeping waves (quét từ trái qua phải)
+            const t = (i / (dropCount - 1)) - 0.5;
+            offsetX = t * (radius * 18);
+            offsetY = (Math.random() - 0.5) * (radius * 6);
+          }
+
+          const impactX = tx + offsetX;
+          const impactY = ty + offsetY;
+
+          let startX = impactX;
+          let startY = -15;
+
+          if (fallAngle === 0) { // Vertical 90 deg
+            startX = impactX;
+            startY = -15;
+          } else if (fallAngle === 1) { // Slanted Left -30 deg
+            startX = impactX + 35;
+            startY = -15;
+          } else if (fallAngle === 2) { // Slanted Right +30 deg
+            startX = impactX - 35;
+            startY = -15;
+          } else if (fallAngle === 3) { // Caster Stream
+            startX = heroX + 10;
+            startY = heroY - 5;
+          }
+
+          activeProjectiles.push({
+            type: "rain_drop",
+            x: startX,
+            y: startY,
+            startX: startX,
+            startY: startY,
+            targetX: impactX,
+            targetY: impactY,
+            element: elemName,
+            shape: "Meteor",
+            trajectory: 0,
+            speed: (fallAngle === 3) ? 320 : 280,
+            radius: radius * 0.7,
+            hasTrail: true,
+            hasShake: hasShake && (i === dropCount - 1),
+            damage: Math.round(dmg / 3),
+            palette: palette,
+            trailHistory: [],
+            lifeTime: 0,
+            maxLifeTime: 1.0,
+            dead: false
+          });
+        }, i * 130);
+      }
+    }
+
+    function spawnConeWaveSim(hx, hy, tx, ty, elemName, palette, shape, spd, dmg, hasTrail, hasShake) {
+      const baseAngle = Math.atan2(ty - hy, tx - hx);
+      const angles = [baseAngle - 0.35, baseAngle, baseAngle + 0.35];
+
+      angles.forEach((ang, idx) => {
+        const destDist = 160;
+        const targetX = hx + Math.cos(ang) * destDist;
+        const targetY = hy + Math.sin(ang) * destDist;
+
+        activeProjectiles.push({
+          type: "cone_wave",
+          x: hx + 10,
+          y: hy,
+          startX: hx + 10,
+          startY: hy,
+          targetX: targetX,
+          targetY: targetY,
+          vx: Math.cos(ang) * (spd * 12),
+          vy: Math.sin(ang) * (spd * 12),
+          element: elemName,
+          shape: shape === "Orb" ? "Slash" : shape,
+          speed: spd * 12,
+          radius: 1.5,
+          hasTrail: hasTrail,
+          hasShake: hasShake && (idx === 1),
+          damage: dmg,
+          palette: palette,
+          trailHistory: [],
+          lifeTime: 0,
+          maxLifeTime: 1.2,
+          dead: false
+        });
+      });
+    }
+
+    function spawnRadialNovaSim(cx, cy, elemName, palette, radius, dmg, hasShake) {
+      dummyHitFlash = 0.2;
+      dummyHp = Math.max(10, dummyHp - dmg);
+      if (dummyHp <= 10) dummyHp = 100;
+      if (hasShake) screenShakeAmt = 8.0;
+
+      activeParticles.push({
+        x: cx,
+        y: cy,
+        isRing: true,
+        radius: 4,
+        maxRadius: radius * 26,
+        color: palette.core,
+        life: 0.45,
+        maxLife: 0.45
+      });
+
+      const count = 12;
+      for (let i = 0; i < count; i++) {
+        const ang = (Math.PI * 2 / count) * i;
+        const spd = 120 + Math.random() * 40;
+        activeProjectiles.push({
+          type: "nova_spark",
+          x: cx,
+          y: cy,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          targetX: cx + Math.cos(ang) * 90,
+          targetY: cy + Math.sin(ang) * 90,
+          element: elemName,
+          shape: "Orb",
+          speed: spd,
+          palette: palette,
+          trailHistory: [],
+          lifeTime: 0,
+          maxLifeTime: 0.65,
+          dead: false
+        });
+      }
+
+      activeFloatingTexts.push({
+        text: `CRIT -${dmg}`,
+        x: cx,
+        y: cy - 20,
+        life: 0.9,
+        color: "#ff3366"
+      });
+    }
+
+    function spawnSelfAuraSim(hx, hy, elemName, palette, dmg) {
+      activeAoEEffects.push({
+        type: "self_aura",
+        x: hx,
+        y: hy,
+        palette: palette,
+        element: elemName,
+        life: 2.2,
+        maxLife: 2.2
+      });
+
+      activeFloatingTexts.push({
+        text: `+BUFF CƯỜNG HÓA`,
+        x: hx - 10,
+        y: hy - 25,
+        life: 1.1,
+        color: "#55ff99"
+      });
+    }
+
+    function spawnTeamBarrierSim(cx, cy, elemName, palette, radius, dmg) {
+      activeAoEEffects.push({
+        type: "team_barrier",
+        x: cx,
+        y: cy,
+        radius: radius * 16,
+        palette: palette,
+        element: elemName,
+        life: 2.5,
+        maxLife: 2.5
+      });
+
+      activeFloatingTexts.push({
+        text: `🛡️ KẾT GIỚI HỘ THỂ`,
+        x: cx - 15,
+        y: cy - 25,
+        life: 1.2,
+        color: "#00e5ff"
+      });
+    }
+
+    function createImpactExplosion(x, y, proj) {
+      dummyHitFlash = 0.2;
+      dummyHp = Math.max(10, dummyHp - proj.damage);
+      if (dummyHp <= 10) dummyHp = 100;
+
+      if (proj.hasShake) {
+        screenShakeAmt = 6.0;
+      }
+
+      const count = 16;
+      for (let i = 0; i < count; i++) {
+        const ang = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.4;
+        const spd = 45 + Math.random() * 85;
+        let vyExtra = 0;
+        if (proj.element === "Hỏa") vyExtra = -25;
+
+        activeParticles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd + vyExtra,
+          size: 2.5 + Math.random() * 3.0,
+          element: proj.element,
+          color: proj.palette.particle,
+          life: 0.4 + Math.random() * 0.3,
+          maxLife: 0.7
+        });
+      }
+
+      activeParticles.push({
+        x: x,
+        y: y,
+        isRing: true,
+        radius: 4,
+        maxRadius: (proj.radius || 2) * 16,
+        color: proj.palette.core,
+        life: 0.28,
+        maxLife: 0.28
+      });
+
+      activeFloatingTexts.push({
+        text: `-${proj.damage}`,
+        x: x + (Math.random() - 0.5) * 10,
+        y: y - 16,
+        life: 0.85,
+        color: "#ffd700"
+      });
+    }
+
+    function vfxSimLoop(timestamp) {
+      const dt = Math.min(0.05, Math.max(0.001, (timestamp - lastSimTime) / 1000));
+      lastSimTime = timestamp;
+
+      fpsFrames++;
+      if (timestamp - fpsLastUpdate >= 500) {
+        const fps = Math.round((fpsFrames * 1000) / (timestamp - fpsLastUpdate));
+        const fpsEl = document.getElementById("vfxCanvasFps");
+        if (fpsEl) fpsEl.innerText = `${fps} FPS`;
+        fpsFrames = 0;
+        fpsLastUpdate = timestamp;
+      }
+
+      if (isVfxLooping && activeProjectiles.length === 0) {
+        loopTimer += dt;
+        if (loopTimer >= 1.2) {
+          loopTimer = 0;
+          triggerVfxCast();
+        }
+      }
+
+      vfxCtx.save();
+      vfxCtx.clearRect(0, 0, vfxCanvas.width, vfxCanvas.height);
+
+      if (screenShakeAmt > 0.1) {
+        const sx = (Math.random() - 0.5) * screenShakeAmt;
+        const sy = (Math.random() - 0.5) * screenShakeAmt;
+        vfxCtx.translate(sx, sy);
+        screenShakeAmt *= 0.88;
+      } else {
+        screenShakeAmt = 0;
+      }
+
+      vfxCtx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+      vfxCtx.lineWidth = 1;
+      for (let x = 0; x < vfxCanvas.width; x += 20) {
+        vfxCtx.beginPath(); vfxCtx.moveTo(x, 0); vfxCtx.lineTo(x, vfxCanvas.height); vfxCtx.stroke();
+      }
+      for (let y = 0; y < vfxCanvas.height; y += 20) {
+        vfxCtx.beginPath(); vfxCtx.moveTo(0, y); vfxCtx.lineTo(vfxCanvas.width, y); vfxCtx.stroke();
+      }
+
+      vfxCtx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+      vfxCtx.beginPath();
+      vfxCtx.moveTo(15, 88);
+      vfxCtx.lineTo(vfxCanvas.width - 15, 88);
+      vfxCtx.stroke();
+
+      drawHeroPixel(vfxCtx, heroX, heroY);
+
+      if (dummyHitFlash > 0) dummyHitFlash -= dt;
+      drawDummyTarget(vfxCtx, dummyX, dummyY, dummyHitFlash > 0, dummyHp);
+
+      for (let i = activeProjectiles.length - 1; i >= 0; i--) {
+        const p = activeProjectiles[i];
+        p.lifeTime += dt;
+
+        if (p.hasTrail) {
+          p.trailHistory.push({ x: p.x, y: p.y });
+          if (p.trailHistory.length > 10) p.trailHistory.shift();
+        }
+
+        let nextX = p.x;
+        let nextY = p.y;
+        const totalDistX = p.targetX - p.startX;
+        const normTime = Math.min(1, (p.x - p.startX) / (totalDistX || 1));
+
+        switch (p.trajectory) {
+          case 0:
+            nextX += p.speed * dt;
+            nextY = p.startY;
+            break;
+          case 1:
+            nextX += p.speed * dt;
+            nextY = p.startY + Math.sin(p.lifeTime * 14) * 22;
+            break;
+          case 2:
+            const dx = p.targetX - p.x;
+            const dy = p.targetY - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 2) {
+              nextX += (dx / dist) * p.speed * dt;
+              nextY += (dy / dist) * p.speed * dt;
+            }
+            break;
+          case 3:
+            nextX += p.speed * dt;
+            const arcH = 4 * 45 * normTime * (1 - normTime);
+            nextY = p.startY - arcH;
+            break;
+          case 4:
+            const forwardPhase = p.lifeTime < 0.6;
+            if (forwardPhase) {
+              nextX += p.speed * dt;
+            } else {
+              nextX -= p.speed * dt;
+            }
+            nextY = p.startY + Math.sin(p.lifeTime * 6) * 12;
+            break;
+        }
+
+        p.x = nextX;
+        p.y = nextY;
+
+        if (p.hasTrail && p.trailHistory.length > 1) {
+          vfxCtx.save();
+          vfxCtx.strokeStyle = p.palette.trail;
+          vfxCtx.lineWidth = 3;
+          vfxCtx.beginPath();
+          vfxCtx.moveTo(p.trailHistory[0].x, p.trailHistory[0].y);
+          for (let t = 1; t < p.trailHistory.length; t++) {
+            vfxCtx.lineTo(p.trailHistory[t].x, p.trailHistory[t].y);
+          }
+          vfxCtx.stroke();
+          vfxCtx.restore();
+        }
+
+        drawProjectileShape(vfxCtx, p);
+
+        const hitDist = Math.sqrt((p.x - p.targetX) ** 2 + (p.y - p.targetY) ** 2);
+        if (hitDist <= 14 || p.x >= p.targetX || p.lifeTime >= p.maxLifeTime) {
+          createImpactExplosion(p.targetX, p.targetY, p);
+          activeProjectiles.splice(i, 1);
+        }
+      }
+
+      for (let i = activeParticles.length - 1; i >= 0; i--) {
+        const pt = activeParticles[i];
+        pt.life -= dt;
+        if (pt.life <= 0) {
+          activeParticles.splice(i, 1);
+          continue;
+        }
+
+        const alpha = Math.max(0, pt.life / pt.maxLife);
+        if (pt.isRing) {
+          pt.radius += (pt.maxRadius - pt.radius) * (dt * 12);
+          vfxCtx.save();
+          vfxCtx.strokeStyle = pt.color;
+          vfxCtx.globalAlpha = alpha;
+          vfxCtx.lineWidth = 2;
+          vfxCtx.beginPath();
+          vfxCtx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+          vfxCtx.stroke();
+          vfxCtx.restore();
+        } else {
+          pt.x += pt.vx * dt;
+          pt.y += pt.vy * dt;
+          pt.vx *= 0.92;
+          pt.vy *= 0.92;
+          vfxCtx.save();
+          vfxCtx.fillStyle = pt.color;
+          vfxCtx.globalAlpha = alpha;
+          vfxCtx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+          vfxCtx.restore();
+        }
+      }
+
+      for (let i = activeFloatingTexts.length - 1; i >= 0; i--) {
+        const ft = activeFloatingTexts[i];
+        ft.life -= dt;
+        if (ft.life <= 0) {
+          activeFloatingTexts.splice(i, 1);
+          continue;
+        }
+        ft.y -= 25 * dt;
+        vfxCtx.save();
+        vfxCtx.font = "bold 13px 'JetBrains Mono', monospace";
+        vfxCtx.fillStyle = ft.color;
+        vfxCtx.globalAlpha = Math.min(1, ft.life * 1.5);
+        vfxCtx.shadowColor = "#000";
+        vfxCtx.shadowBlur = 4;
+        vfxCtx.fillText(ft.text, ft.x - 12, ft.y);
+        vfxCtx.restore();
+      }
+
+      vfxCtx.restore();
+      requestAnimationFrame(vfxSimLoop);
+    }
+
+    function drawHeroPixel(ctx, x, y) {
+      ctx.save();
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(x - 5, y + 6, 4, 6);
+      ctx.fillRect(x + 1, y + 6, 4, 6);
+      ctx.fillStyle = "#2563eb";
+      ctx.fillRect(x - 6, y - 2, 12, 9);
+      ctx.fillStyle = "#ffd700";
+      ctx.fillRect(x - 3, y - 1, 6, 4);
+      ctx.fillStyle = "#64748b";
+      ctx.fillRect(x - 5, y - 12, 10, 10);
+      ctx.fillStyle = "#ffdd55";
+      ctx.fillRect(x - 2, y - 8, 5, 4);
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(x + 6, y - 1, 10, 3);
+      ctx.fillStyle = "#ffd700";
+      ctx.fillRect(x + 5, y - 3, 2, 7);
+      ctx.restore();
+    }
+
+    function drawDummyTarget(ctx, x, y, isFlash, hp) {
+      ctx.save();
+      ctx.fillStyle = "#000";
+      ctx.fillRect(x - 14, y - 22, 28, 4);
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(x - 13, y - 21, 26 * (hp / 100), 2);
+      ctx.strokeStyle = "rgba(255, 215, 0, 0.4)";
+      ctx.strokeRect(x - 14, y - 22, 28, 4);
+
+      if (isFlash) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x - 8, y - 14, 16, 26);
+      } else {
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(x - 6, y - 12, 12, 22);
+        ctx.fillStyle = "#92400e";
+        ctx.fillRect(x - 12, y - 6, 24, 4);
+        ctx.fillStyle = "#b45309";
+        ctx.fillRect(x - 5, y - 18, 10, 7);
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(x - 3, y - 15, 2, 2);
+        ctx.fillRect(x + 1, y - 15, 2, 2);
+      }
+      ctx.restore();
+    }
+
+    function drawProjectileShape(ctx, p) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+
+      switch (p.shape) {
+        case "Slash":
+          ctx.fillStyle = p.palette.body;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, -Math.PI * 0.4, Math.PI * 0.4);
+          ctx.arc(-4, 0, 7, Math.PI * 0.35, -Math.PI * 0.35, true);
+          ctx.fill();
+          ctx.fillStyle = p.palette.core;
+          ctx.fillRect(-1, -4, 3, 8);
+          break;
+
+        case "Arrow":
+          ctx.fillStyle = p.palette.body;
+          ctx.beginPath();
+          ctx.moveTo(9, 0);
+          ctx.lineTo(-7, -6);
+          ctx.lineTo(-4, 0);
+          ctx.lineTo(-7, 6);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = p.palette.core;
+          ctx.fillRect(-2, -1, 7, 2);
+          break;
+
+        case "Wave":
+          ctx.fillStyle = p.palette.body;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, -Math.PI * 0.35, Math.PI * 0.35);
+          ctx.arc(-6, 0, 9, Math.PI * 0.3, -Math.PI * 0.3, true);
+          ctx.fill();
+          break;
+
+        case "Meteor":
+          ctx.fillStyle = p.palette.rim;
+          ctx.beginPath();
+          ctx.arc(0, 0, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = p.palette.body;
+          ctx.beginPath();
+          ctx.arc(-1, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = p.palette.core;
+          ctx.beginPath();
+          ctx.arc(2, 0, 4, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+
+        case "NovaRing":
+          ctx.strokeStyle = p.palette.body;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = p.palette.core;
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+
+        case "Pillar":
+          ctx.fillStyle = p.palette.body;
+          ctx.fillRect(-4, -20, 8, 40);
+          ctx.fillStyle = p.palette.core;
+          ctx.fillRect(-2, -16, 4, 32);
+          break;
+
+        case "Beam":
+          ctx.fillStyle = p.palette.body;
+          ctx.fillRect(-15, -3, 30, 6);
+          ctx.fillStyle = p.palette.core;
+          ctx.fillRect(-15, -1, 30, 2);
+          break;
+
+        default: // Orb
+          ctx.fillStyle = p.palette.rim;
+          ctx.beginPath();
+          ctx.arc(0, 0, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = p.palette.body;
+          ctx.beginPath();
+          ctx.arc(0, 0, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = p.palette.core;
+          ctx.beginPath();
+          ctx.arc(0, 0, 3, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+      }
+      ctx.restore();
+    }
+
+    // Khởi chạy khi load trang
+    window.onload = init;
+  </script>
+</body>
+</html>

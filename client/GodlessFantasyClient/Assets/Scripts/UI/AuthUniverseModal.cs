@@ -95,6 +95,54 @@ namespace GodlessFantasy.UI
             }
         }
 
+        public async void ReconnectToServer()
+        {
+            if (isConnecting) return;
+            isConnecting = true;
+            statusMessage = "🔄 Đang thử kết nối lại đến máy chủ...";
+            statusColor = new Color(0.4f, 0.85f, 1f);
+
+            var net = GameNetworkClient.Instance;
+            if (net != null)
+            {
+                bool success = await net.ReconnectAsync();
+                isConnecting = false;
+                if (!success)
+                {
+                    statusMessage = "❌ Không thể kết nối lại! Vui lòng kiểm tra server đang chạy ở cổng 8088.";
+                    statusColor = new Color(1f, 0.4f, 0.4f);
+                }
+            }
+            else
+            {
+                isConnecting = false;
+                statusMessage = "❌ Lỗi: GameNetworkClient không tìm thấy.";
+                statusColor = new Color(1f, 0.4f, 0.4f);
+            }
+        }
+
+        private void Update()
+        {
+            if (!IsOpen) return;
+
+            // Hỗ trợ phím Enter để đăng nhập hoặc vào game tức thì
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                if (CurrentStep == ModalStep.LoginRegister)
+                {
+                    if (isRegisterMode) TryRegister();
+                    else TryLogin();
+                }
+                else if (CurrentStep == ModalStep.UniverseSelect)
+                {
+                    if (universeList != null && universeList.Count > 0)
+                    {
+                        SelectUniverse(selectedUniverseId);
+                    }
+                }
+            }
+        }
+
         private void HandleConnected()
         {
             statusMessage = "🟢 Đã kết nối đến máy chủ! Vui lòng đăng nhập hoặc tạo tài khoản.";
@@ -207,18 +255,28 @@ namespace GodlessFantasy.UI
 
         private void DrawLoginRegisterWindow()
         {
-            float w = 460f;
-            float h = 390f;
+            float w = 470f;
+            float h = 425f;
             float x = (Screen.width - w) / 2f;
             float y = (Screen.height - h) / 2f;
             Rect modalRect = new Rect(x, y, w, h);
 
             FantasyUITheme.DrawDoubleGoldFrame(modalRect, 2);
 
+            // Nút Reconnect góc trên bên phải tiêu đề
+            bool isConnected = GameNetworkClient.Instance != null && GameNetworkClient.Instance.IsConnected;
+            Rect topReconRect = new Rect(x + w - 125f, y + 16f, 105f, 24f);
+            string topReconLabel = isConnecting ? "⏳ Đang nối..." : (isConnected ? "🟢 Kết Nối Lại" : "🔴 Kết Nối Lại");
+            Color topReconCol = isConnected ? new Color(0.6f, 0.95f, 0.7f) : new Color(1f, 0.5f, 0.5f);
+            if (FantasyUITheme.DrawFantasyButton(topReconRect, topReconLabel, 10, false, topReconCol))
+            {
+                ReconnectToServer();
+            }
+
             // 1. Tiêu Đề
             string title = isRegisterMode ? "✨ TẠO TÀI KHOẢN MỚI · GODLESS FANTASY" : "⚔️ ĐĂNG NHẬP · THẾ GIỚI KHÔNG THẦN";
-            Rect titleRect = new Rect(x + 20, y + 20, w - 40, 30);
-            FantasyUITheme.DrawGradientGoldTitle(titleRect, title, 16);
+            Rect titleRect = new Rect(x + 20, y + 20, w - 150, 30);
+            FantasyUITheme.DrawGradientGoldTitle(titleRect, title, 15);
 
             // Subtitle
             Rect subRect = new Rect(x + 20, y + 54, w - 40, 20);
@@ -227,7 +285,7 @@ namespace GodlessFantasy.UI
             GUI.Label(subRect, "Hệ Thống Đa Vũ Trụ · Đồng Bộ Thời Gian Thực", subStyle);
 
             // 2. Form Nhập Liệu
-            float fieldY = y + 95f;
+            float fieldY = y + 88f;
             float fieldW = w - 80f;
             float fieldX = x + 40f;
 
@@ -239,27 +297,39 @@ namespace GodlessFantasy.UI
             inputUsername = GUI.TextField(new Rect(fieldX, fieldY + 24, fieldW, 28), inputUsername, 24);
 
             // Password
-            fieldY += 65f;
+            fieldY += 60f;
             GUI.Label(new Rect(fieldX, fieldY, fieldW, 20), "MẬT KHẨU BẢO MẬT:", labelStyle);
             inputPassword = GUI.PasswordField(new Rect(fieldX, fieldY + 24, fieldW, 28), inputPassword, '*', 32);
 
-            // 3. Thông Báo Trạng Thái
-            fieldY += 62f;
+            // 3. Thông Báo Trạng Thái & Nút Kết Nối Lại Khẩn Cấp
+            fieldY += 58f;
+            if (!isConnected)
+            {
+                Rect reconBtnRect = new Rect(fieldX, fieldY, fieldW, 30f);
+                string reconText = isConnecting ? "⏳ ĐANG KẾT NỐI ĐẾN MÁY CHỦ..." : "🔄 THỬ KẾT NỐI LẠI MÁY CHỦ (CỔNG 8088)";
+                Color reconBtnCol = isConnecting ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.35f, 0.85f, 1f);
+                if (FantasyUITheme.DrawFantasyButton(reconBtnRect, reconText, 11, true, reconBtnCol))
+                {
+                    ReconnectToServer();
+                }
+                fieldY += 34f;
+            }
+
             if (!string.IsNullOrEmpty(statusMessage))
             {
                 var msgStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 11, wordWrap = true, fontStyle = FontStyle.Bold };
                 msgStyle.normal.textColor = statusColor;
-                GUI.Label(new Rect(fieldX, fieldY, fieldW, 36), statusMessage, msgStyle);
+                GUI.Label(new Rect(fieldX, fieldY, fieldW, 32), statusMessage, msgStyle);
             }
 
             // 4. Các Nút Thao Tác
-            float btnY = y + h - 70f;
+            float btnY = y + h - 68f;
             float btnW = (fieldW - 16f) / 2f;
 
             if (isRegisterMode)
             {
                 // Nút Đăng Ký
-                if (FantasyUITheme.DrawFantasyButton(new Rect(fieldX, btnY, btnW, 36), "XÁC NHẬN ĐĂNG KÝ", 12, true, new Color(0.4f, 1f, 0.5f)))
+                if (FantasyUITheme.DrawFantasyButton(new Rect(fieldX, btnY, btnW, 36), "XÁC NHẬN [↵ Enter]", 12, true, new Color(0.4f, 1f, 0.5f)))
                 {
                     TryRegister();
                 }
@@ -274,7 +344,7 @@ namespace GodlessFantasy.UI
             else
             {
                 // Nút Đăng Nhập
-                if (FantasyUITheme.DrawFantasyButton(new Rect(fieldX, btnY, btnW, 36), "ĐĂNG NHẬP NGAY", 12, true, FantasyUITheme.ColorTextGold))
+                if (FantasyUITheme.DrawFantasyButton(new Rect(fieldX, btnY, btnW, 36), "ĐĂNG NHẬP [↵ Enter]", 12, true, FantasyUITheme.ColorTextGold))
                 {
                     TryLogin();
                 }
@@ -287,8 +357,9 @@ namespace GodlessFantasy.UI
                 }
             }
 
-            // Phím tắt Enter để submit
-            if (Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter))
+            // Phím tắt Enter khi đang focus IMGUI
+            if (Event.current != null && Event.current.type == EventType.KeyDown && 
+                (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter))
             {
                 if (isRegisterMode) TryRegister();
                 else TryLogin();

@@ -297,6 +297,12 @@ namespace GodlessFantasy.Player
             clickMarkerTimer = CLICK_MARKER_DURATION;
         }
 
+        public void StopMovement()
+        {
+            isMovingToTarget = false;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+        }
+
         public void SetTargetPosition(Vector2 worldPos)
         {
             if (IsDead) return;
@@ -422,12 +428,6 @@ namespace GodlessFantasy.Player
 
             rb.linearVelocity = Vector2.zero;
             isDashing = false;
-        }
-
-        public void StopMovement()
-        {
-            isMovingToTarget = false;
-            if (rb != null) rb.linearVelocity = Vector2.zero;
         }
 
         // ================= VẼ HIỆU ỨNG RIPPLE TẠI ĐIỂM CLICK ĐẾN =================

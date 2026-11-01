@@ -1,0 +1,72 @@
+{
+  "game": "Godless Fantasy",
+  "version": "2.0.0",
+  "defaultRegionId": "region_village_0_0",
+  "standardRegionSize": {
+    "width": 270,
+    "height": 132,
+    "minX": -135,
+    "maxX": 135,
+    "minY": -66,
+    "maxY": 66
+  },
+  "regions": [
+    {
+      "regionId": "region_village_0_0",
+      "displayName": "Làng Tân Thủ & Đại Lộ Cổ",
+      "gridCoord": [
+        0,
+        0
+      ],
+      "type": "overworld",
+      "file": "region_village_0_0.json"
+    },
+    {
+      "regionId": "region_east_forest_1_0",
+      "displayName": "Rừng Rậm Hắc Ám & Tàn Tích",
+      "gridCoord": [
+        1,
+        0
+      ],
+      "type": "overworld",
+      "file": "region_east_forest_1_0.json"
+    },
+    {
+      "regionId": "region_west_coast_m1_0",
+      "displayName": "Bờ Biển Thần Năng",
+      "gridCoord": [
+        -1,
+        0
+      ],
+      "type": "overworld",
+      "file": "region_west_coast_m1_0.json"
+    },
+    {
+      "regionId": "region_north_mountains_0_1",
+      "displayName": "Dãy Núi Long Tích",
+      "gridCoord": [
+        0,
+        1
+      ],
+      "type": "overworld",
+      "file": "region_north_mountains_0_1.json"
+    },
+    {
+      "regionId": "region_south_swamp_0_m1",
+      "displayName": "Đầm Lầy Tử Khí",
+      "gridCoord": [
+        0,
+        -1
+      ],
+      "type": "overworld",
+      "file": "region_south_swamp_0_m1.json"
+    },
+    {
+      "regionId": "dungeon_crypt_floor_1",
+      "displayName": "Hầm Ngục Di Tích Tầng 1",
+      "gridCoord": null,
+      "type": "dungeon_instance",
+      "file": "dungeon_crypt_floor_1.json"
+    }
+  ]
+}

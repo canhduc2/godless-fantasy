@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Godless Map Studio — Engine Web Builder Bản Đồ & Chuyển Vùng 2D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-panel: rgba(13, 18, 30, 0.95);
+      --bg-header: rgba(9, 12, 20, 0.98);
+      --bg-slot: #0b0f19;
+      --bg-slot-hover: #151d30;
+      --gold-primary: #d4af37;
+      --gold-bright: #ffe066;
+      --gold-dark: #8c6f1a;
+      --cyan-glow: #00e5ff;
+      --green-accent: #2ecc71;
+      --red-accent: #ff4757;
+      --purple-accent: #a55eea;
+      --border-frame: rgba(212, 175, 55, 0.35);
+      --border-bright: #ffd700;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* TOP HEADER */
+    header {
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-frame);
+      height: 56px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff 20%, var(--gold-bright) 70%, var(--gold-primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
+
+    .brand .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      background: rgba(0, 229, 255, 0.15);
+      color: var(--cyan-glow);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .region-selector-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .region-selector-wrap label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select, button, input {
+      font-family: 'Outfit', sans-serif;
+      color: var(--text-main);
+      background: var(--bg-slot);
+      border: 1px solid var(--border-frame);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--cyan-glow);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    }
+
+    button:hover {
+      background: var(--bg-slot-hover);
+      border-color: var(--gold-bright);
+      color: #fff;
+    }
+
+    button.btn-primary {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.08));
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-bright);
+      font-weight: 600;
+    }
+
+    button.btn-primary:hover {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(212, 175, 55, 0.15));
+      border-color: #fff;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+    }
+
+    button.btn-cyan {
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(0, 229, 255, 0.05));
+      border: 1px solid var(--cyan-glow);
+      color: var(--cyan-glow);
+    }
+
+    button.btn-cyan:hover {
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.35), rgba(0, 229, 255, 0.1));
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    }
+
+    /* MAIN WORKSPACE */
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* LEFT SIDEBAR: PALETTES & TOOLS */
+    .sidebar-left {
+      width: 320px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-frame);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+
+    .tools-toolbar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 4px;
+      font-size: 0.72rem;
+      border-radius: 6px;
+      background: var(--bg-slot);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tool-btn .icon {
+      font-size: 1.15rem;
+    }
+
+    .tool-btn.active {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.1));
+      border-color: var(--gold-bright);
+      color: var(--gold-bright);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+    }
+
+    .palette-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .palette-tab-btn {
+      flex: 1;
+      padding: 10px 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .palette-tab-btn.active {
+      color: var(--gold-bright);
+      border-bottom-color: var(--gold-bright);
+      background: rgba(212, 175, 55, 0.05);
+    }
+
+    .palette-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .category-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .category-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 4px;
+      margin-top: 4px;
+    }
+
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .tile-item {
+      aspect-ratio: 1;
+      background: var(--bg-slot);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      padding: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .tile-item:hover {
+      border-color: var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+
+    .tile-item.active {
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+      background: rgba(212, 175, 55, 0.1);
+    }
+
+    .tile-color-preview {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.4);
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .tile-name {
+      font-size: 0.65rem;
+      text-align: center;
+      line-height: 1.1;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    /* CENTER CANVAS VIEWPORT */
+    .viewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #05070a;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(13, 20, 36, 0.5) 0%, rgba(5, 7, 10, 0.9) 100%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+    }
+
+    #mapCanvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+
+    /* FLOATING OVERLAYS IN VIEWPORT */
+    .viewport-overlay {
+      position: absolute;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .hud-coords {
+      top: 16px;
+      left: 16px;
+      background: rgba(9, 12, 20, 0.85);
+      border: 1px solid var(--border-frame);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--cyan-glow);
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+      backdrop-filter: blur(6px);
+    }
+
+    .hud-boundary-indicators {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .boundary-banner {
+      position: absolute;
+      background: rgba(9, 12, 20, 0.88);
+      border: 1px solid var(--gold-primary);
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      color: var(--gold-bright);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 4px;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+
+    .boundary-banner.north { top: 12px; left: 50%; transform: translateX(-50%); }
+    .boundary-banner.south { bottom: 12px; left: 50%; transform: translateX(-50%); }
+    .boundary-banner.west  { left: 12px; top: 50%; transform: translateY(-50%); }
+    .boundary-banner.east  { right: 12px; top: 50%; transform: translateY(-50%); }
+
+    .zoom-controls {
+      bottom: 16px;
+      right: 16px;
+      background: rgba(9, 12, 20, 0.85);
+      border: 1px solid var(--border-frame);
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+      backdrop-filter: blur(6px);
+    }
+
+    .zoom-controls button {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
+
+    /* RIGHT SIDEBAR: INSPECTOR & CONNECTIONS */
+    .sidebar-right {
+      width: 340px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border-frame);
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      overflow-y: auto;
+    }
+
+    .section-box {
+      padding: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .input-row label {
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .input-row input, .input-row select {
+      flex: 1.5;
+    }
+
+    /* 4-DIRECTION CONNECTION CARDS */
+    .connection-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .conn-card {
+      background: var(--bg-slot);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .conn-card.active {
+      border-color: var(--gold-primary);
+      background: rgba(212, 175, 55, 0.05);
+    }
+
+    .conn-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .conn-header .dir-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--gold-bright);
+    }
+
+    .conn-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* MONSTER CAMP LIST */
+    .camp-item {
+      background: var(--bg-slot);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .camp-item:hover {
+      border-color: var(--red-accent);
+      background: rgba(255, 71, 87, 0.08);
+    }
+
+    .camp-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      color: var(--red-accent);
+    }
+
+    .camp-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 10px;
+    }
+
+    /* BOTTOM STATUS BAR */
+    footer {
+      height: 28px;
+      background: var(--bg-header);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      z-index: 100;
+    }
+
+    /* MODAL POPUPS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      width: 780px;
+      max-width: 95vw;
+      max-height: 85vh;
+      background: var(--bg-panel);
+      border: 1px solid var(--gold-primary);
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-frame);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--gold-bright);
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* WORLD GRID MATRIX VISUALIZER */
+    .world-matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 10px;
+    }
+
+    .world-region-node {
+      height: 110px;
+      background: var(--bg-slot);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .world-region-node:hover {
+      border-color: var(--cyan-glow);
+      background: rgba(0, 229, 255, 0.08);
+      transform: scale(1.02);
+    }
+
+    .world-region-node.active-region {
+      border: 2px solid var(--gold-bright);
+      background: rgba(212, 175, 55, 0.12);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
+
+    .world-region-node .coord-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .world-region-node .reg-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text-main);
+      padding: 0 8px;
+    }
+
+    /* SIMULATOR MODAL */
+    .sim-canvas-wrap {
+      width: 100%;
+      height: 420px;
+      background: #020406;
+      border: 1px solid var(--border-frame);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #simCanvas {
+      image-rendering: pixelated;
+    }
+
+    .sim-legend {
+      display: flex;
+      gap: 20px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header>
+    <div class="brand">
+      <span style="font-size: 1.4rem;">🗺️</span>
+      <h1>Godless Map Studio</h1>
+      <span class="badge">V2.0 — MULTI-REGION & 4-WAY SEAMLESS</span>
+    </div>
+
+    <div class="top-controls">
+      <div class="region-selector-wrap">
+        <label>Khu Vực:</label>
+        <select id="regionSelect">
+          <option value="region_village_0_0">[0, 0] Làng Tân Thủ & Đại Lộ Cổ</option>
+          <option value="region_east_forest_1_0">[1, 0] Rừng Rậm Hắc Ám & Tàn Tích</option>
+          <option value="dungeon_crypt_floor_1">[D-1] Hầm Ngục Di Tích Tầng 1</option>
+        </select>
+        <button id="btnNewRegion" title="Tạo Khu Vực Mới">➕ Mới</button>
+      </div>
+
+      <button id="btnWorldGrid" class="btn-cyan">🌐 Lưới Thế Giới (World Grid)</button>
+      <button id="btnSimulate" class="btn-primary">🎮 Thử Nghiệm Di Chuyển (WASD)</button>
+      <button id="btnExportJson">💾 Xuất JSON</button>
+      <button id="btnImportJson">📂 Nhập JSON</button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+
+    <!-- LEFT SIDEBAR: PALETTE & TOOLS -->
+    <div class="sidebar-left">
+      <!-- TOOLS TOOLBAR -->
+      <div class="tools-toolbar">
+        <button class="tool-btn active" data-tool="pencil" title="Bút vẽ 1x1 [P]">
+          <span class="icon">✏️</span>
+          <span>Bút 1x1</span>
+        </button>
+        <button class="tool-btn" data-tool="brush3" title="Cọ 3x3 [B]">
+          <span class="icon">🖌️</span>
+          <span>Cọ 3x3</span>
+        </button>
+        <button class="tool-btn" data-tool="brush5" title="Cọ 5x5 [L]">
+          <span class="icon">🖌️</span>
+          <span>Cọ 5x5</span>
+        </button>
+        <button class="tool-btn" data-tool="bucket" title="Đổ màu [F]">
+          <span class="icon">🪣</span>
+          <span>Đổ Màu</span>
+        </button>
+        <button class="tool-btn" data-tool="rect" title="Kẻ hình chữ nhật [R]">
+          <span class="icon">🔲</span>
+          <span>Khung</span>
+        </button>
+        <button class="tool-btn" data-tool="eraser" title="Tẩy / Xóa [E]">
+          <span class="icon">🧹</span>
+          <span>Xóa</span>
+        </button>
+        <button class="tool-btn" data-tool="eyedropper" title="Hút mã khối [I]">
+          <span class="icon">🔍</span>
+          <span>Hút</span>
+        </button>
+        <button class="tool-btn" data-tool="pan" title="Kéo bản đồ [Space]">
+          <span class="icon">✋</span>
+          <span>Kéo</span>
+        </button>
+      </div>
+
+      <!-- PALETTE TABS -->
+      <div class="palette-tabs">
+        <button class="palette-tab-btn active" data-tab="terrain">Địa Hình</button>
+        <button class="palette-tab-btn" data-tab="props">Đạo Cụ / Cây</button>
+        <button class="palette-tab-btn" data-tab="camps">Bãi Quái</button>
+        <button class="palette-tab-btn" data-tab="portals">Cổng Vùng</button>
+      </div>
+
+      <!-- PALETTE CONTENT -->
+      <div class="palette-content" id="paletteContent">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+    <!-- CENTER CANVAS VIEWPORT -->
+    <div class="viewport" id="viewport">
+      <canvas id="mapCanvas"></canvas>
+
+      <!-- HUD OVERLAYS -->
+      <div class="viewport-overlay hud-coords">
+        <span>Tọa Độ: <b id="hudPos">X: -80, Y: 0</b></span>
+        <span>Chunk: <b id="hudChunk">[-5, 0]</b></span>
+        <span>Khối: <b id="hudTile">Đồng Cỏ Xanh Tươi (ID: 0)</b></span>
+      </div>
+
+      <!-- 4-WAY BOUNDARY BANNERS -->
+      <div class="hud-boundary-indicators">
+        <div class="boundary-banner north">⬆️ BẮC: <span id="bannerNorth">Dãy Núi Long Tích [0, 1]</span></div>
+        <div class="boundary-banner south">⬇️ NAM: <span id="bannerSouth">Đầm Lầy Tử Khí [0, -1]</span></div>
+        <div class="boundary-banner west">⬅️ TÂY: <span id="bannerWest">Bờ Biển Thần Năng [-1, 0]</span></div>
+        <div class="boundary-banner east">➡️ ĐÔNG: <span id="bannerEast">Rừng Rậm Hắc Ám [1, 0]</span></div>
+      </div>
+
+      <!-- ZOOM CONTROLS -->
+      <div class="viewport-overlay zoom-controls">
+        <button id="btnZoomOut" title="Thu nhỏ [-]">-</button>
+        <span id="zoomLevel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; min-width: 45px; text-align: center;">100%</span>
+        <button id="btnZoomIn" title="Phóng to [+]">+</button>
+        <button id="btnResetView" title="Reset Góc Nhìn">🎯 Focus</button>
+        <button id="btnToggleGrid" title="Bật/Tắt Lưới [G]">Lưới</button>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: REGION INSPECTOR & CONNECTIONS -->
+    <div class="sidebar-right">
+      <div class="section-box">
+        <div class="section-title">
+          <span>Thông Số Khu Vực</span>
+          <span id="regionTypeBadge" style="font-size: 0.7rem; color: var(--gold-bright);">OVERWORLD</span>
+        </div>
+        <div class="input-row">
+          <label>Mã Vùng:</label>
+          <input type="text" id="inpRegionId" readonly style="color: var(--cyan-glow);">
+        </div>
+        <div class="input-row">
+          <label>Tên Hiển Thị:</label>
+          <input type="text" id="inpDisplayName">
+        </div>
+        <div class="input-row">
+          <label>Tọa Độ Lưới:</label>
+          <input type="text" id="inpGridCoord" placeholder="[0, 0]">
+        </div>
+        <div class="input-row">
+          <label>Kích Thước (m):</label>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--gold-bright);">270m x 132m (-135..135, -66..66)</span>
+        </div>
+        <div class="input-row">
+          <label>Điểm Hồi Sinh:</label>
+          <span id="spawnPointText" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">X: -80, Y: -5</span>
+          <button id="btnSetSpawn" style="font-size: 0.7rem; padding: 2px 6px;">Đặt Tọa Độ</button>
+        </div>
+      </div>
+
+      <!-- 4-WAY BOUNDARY CONNECTIONS -->
+      <div class="section-box">
+        <div class="section-title">
+          <span>Chuyển Tiếp 4 Hướng Ranh Giới</span>
+          <span style="font-size: 0.7rem; color: var(--cyan-glow);">Tự Động Render</span>
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.3;">
+          Khi người chơi chạm rìa, khu vực cũ tự động hủy render; nhân vật xuất hiện ở mép đối diện của khu vực kế tiếp với tọa độ song song chuẩn xác 100%.
+        </p>
+
+        <div class="connection-grid">
+          <!-- NORTH -->
+          <div class="conn-card active" id="cardNorth">
+            <div class="conn-header">
+              <span class="dir-tag">⬆️ Hướng Bắc (Y = +66)</span>
+              <input type="checkbox" id="chkNorthEnabled" checked>
+            </div>
+            <div class="input-row">
+              <label>Đích Đến:</label>
+              <select id="selConnNorth"></select>
+            </div>
+            <span class="conn-desc">Người chơi đi lên mép Bắc → Xuất hiện ở mép Nam (Y = -64.5) của vùng mới, giữ nguyên X.</span>
+          </div>
+
+          <!-- SOUTH -->
+          <div class="conn-card active" id="cardSouth">
+            <div class="conn-header">
+              <span class="dir-tag">⬇️ Hướng Nam (Y = -66)</span>
+              <input type="checkbox" id="chkSouthEnabled" checked>
+            </div>
+            <div class="input-row">
+              <label>Đích Đến:</label>
+              <select id="selConnSouth"></select>
+            </div>
+            <span class="conn-desc">Người chơi đi xuống mép Nam → Xuất hiện ở mép Bắc (Y = +64.5) của vùng mới, giữ nguyên X.</span>
+          </div>
+
+          <!-- EAST -->
+          <div class="conn-card active" id="cardEast">
+            <div class="conn-header">
+              <span class="dir-tag">➡️ Hướng Đông (X = +135)</span>
+              <input type="checkbox" id="chkEastEnabled" checked>
+            </div>
+            <div class="input-row">
+              <label>Đích Đến:</label>
+              <select id="selConnEast"></select>
+            </div>
+            <span class="conn-desc">Người chơi đi qua mép Đông → Xuất hiện ở mép Tây (X = -133.5) của vùng mới, giữ nguyên Y.</span>
+          </div>
+
+          <!-- WEST -->
+          <div class="conn-card active" id="cardWest">
+            <div class="conn-header">
+              <span class="dir-tag">⬅️ Hướng Tây (X = -135)</span>
+              <input type="checkbox" id="chkWestEnabled" checked>
+            </div>
+            <div class="input-row">
+              <label>Đích Đến:</label>
+              <select id="selConnWest"></select>
+            </div>
+            <span class="conn-desc">Người chơi đi qua mép Tây → Xuất hiện ở mép Đông (X = +133.5) của vùng mới, giữ nguyên Y.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MONSTER CAMPS IN THIS REGION -->
+      <div class="section-box">
+        <div class="section-title">
+          <span>Danh Sách Bãi Quái (<span id="campCount">0</span>)</span>
+          <button id="btnAddCampBtn" style="font-size: 0.7rem; padding: 2px 8px;">➕ Thêm Bãi</button>
+        </div>
+        <div id="monsterCampsList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER STATUS -->
+  <footer>
+    <span id="statusMessage">Sẵn sàng! Dùng chuột trái vẽ khối, chuột giữa/Space để rê bản đồ, lăn chuột để phóng to/thu nhỏ.</span>
+    <span>Tiles: <b id="statTotalTiles">0</b> | Props: <b id="statTotalProps">0</b> | FPS: <b id="statFps">60</b></span>
+  </footer>
+
+  <!-- WORLD GRID MATRIX MODAL -->
+  <div class="modal-backdrop" id="modalWorldGrid">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>🌐 Bản Đồ Lưới Thế Giới (World Region Matrix)</h2>
+        <button class="btnCloseModal" data-modal="modalWorldGrid">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          Mỗi ô đại diện cho một <b>Khu Vực Map Độc Lập (270m x 132m)</b>. Chỉ có khu vực bạn đang đứng được nạp vào bộ nhớ và hiển thị. Bấm vào ô bất kỳ để chuyển trực tiếp đến khu vực đó!
+        </p>
+
+        <div class="world-matrix" id="worldMatrixGrid">
+          <!-- Injected dynamically -->
+        </div>
+
+        <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+          <h4 style="font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--purple-accent); margin-bottom: 8px;">Phó Bản Di Tích & Hầm Ngục Riêng Biệt (Dungeon Instances)</h4>
+          <div style="display: flex; gap: 10px;" id="dungeonInstancesList">
+            <!-- Injected -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btnCloseModal btn-primary" data-modal="modalWorldGrid">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULATOR MODAL (WASD MOVEMENT & 4-WAY SEAMLESS TRANSITION) -->
+  <div class="modal-backdrop" id="modalSimulator">
+    <div class="modal-box" style="width: 900px;">
+      <div class="modal-header">
+        <h2>🎮 Trình Giả Lập Di Chuyển & Chuyển Vùng Ranh Giới 4 Hướng</h2>
+        <button class="btnCloseModal" data-modal="modalSimulator">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="sim-legend">
+          <span>Điều khiển: <b>W, A, S, D</b> hoặc <b>Phím Mũi Tên</b></span>
+          <span>Khu vực hiện tại: <b id="simCurrentRegion" style="color: var(--gold-bright);">Làng Tân Thủ</b></span>
+          <span>Tọa độ người chơi: <b id="simPlayerPos" style="color: var(--cyan-glow);">X: -80.0, Y: 0.0</b></span>
+        </div>
+
+        <div class="sim-canvas-wrap">
+          <canvas id="simCanvas" width="860" height="400"></canvas>
+        </div>
+
+        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+          💡 <b>Cách thử nghiệm:</b> Hãy di chuyển nhân vật chạy hết sang mép bên <b>Phải (Đông)</b>, bạn sẽ thấy khu vực cũ biến mất và nhân vật xuất hiện ở mép bên <b>Trái (Tây)</b> của khu vực <i>Rừng Rậm Hắc Ám</i> với tọa độ Y giữ nguyên chuẩn xác!
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btnCloseModal btn-primary" data-modal="modalSimulator">Đóng Giả Lập</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT / IMPORT MODAL -->
+  <div class="modal-backdrop" id="modalExport">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modalExportTitle">Xuất Dữ Liệu Bản Đồ (JSON)</h2>
+        <button class="btnCloseModal" data-modal="modalExport">✕</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtJsonData" style="width: 100%; height: 350px; background: #04060a; color: #a5f3fc; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 12px; border: 1px solid var(--border-frame); border-radius: 6px; resize: none;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="btnCopyJson" class="btn-cyan">📋 Sao Chép Clipboard</button>
+        <button id="btnDownloadJson" class="btn-primary">💾 Tải Tệp .json</button>
+        <button class="btnCloseModal" data-modal="modalExport">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+  <!-- ENGINE LOGIC SCRIPT -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. REGISTRY CÁC KHỐI ĐỊA HÌNH (CHUẨN THEO TerrainBlockRegistry.cs)
+    // -------------------------------------------------------------
+    const BLOCK_DEFS = {
+      0:  { name: "Đồng Cỏ Xanh Tươi", cat: "ground", color: "#70cc47", icon: "🌱" },
+      1:  { name: "Cỏ Hoa Cúc Vàng", cat: "ground", color: "#8cd940", icon: "🌼" },
+      2:  { name: "Cỏ Hoa Lưu Ly Xanh", cat: "ground", color: "#66c773", icon: "🌸" },
+      3:  { name: "Cỏ Hoa Anh Túc Đỏ", cat: "ground", color: "#80bf4d", icon: "🌺" },
+      5:  { name: "Cỏ Rậm Ba Lá", cat: "ground", color: "#52ab33", icon: "☘️" },
+      6:  { name: "Đồng Cỏ Thu Úa", cat: "ground", color: "#c2a140", icon: "🌾" },
+      7:  { name: "Thảm Cỏ Rừng Sâu", cat: "ground", color: "#245e38", icon: "🌲" },
+      8:  { name: "Lối Mòn Đất Nện Ấm", cat: "ground", color: "#d4b380", icon: "🟫" },
+      9:  { name: "Đại Lộ Đất Đá Sỏi", cat: "ground", color: "#ad916e", icon: "🛤️" },
+      10: { name: "Đất Cày Nông Trại", cat: "ground", color: "#785438", icon: "🌾" },
+      11: { name: "Đất Bùn Đầm Lầy", cat: "ground", color: "#594a38", icon: "💩" },
+
+      12: { name: "Nước Nông Gợn Sóng", cat: "water", color: "#38b8eb", icon: "🌊", obstacle: true },
+      13: { name: "Nước Sâu Biển Hồ", cat: "water", color: "#1a69b8", icon: "🌊", obstacle: true },
+      14: { name: "Dòng Suối Chảy Xiết", cat: "water", color: "#4dc7f2", icon: "💧", obstacle: true },
+      16: { name: "Bãi Cát Vàng Ven Hồ", cat: "ground", color: "#f0d994", icon: "🏖️" },
+      19: { name: "Đầm Nước Độc Xanh", cat: "water", color: "#2e6e2e", icon: "☠️", obstacle: true },
+
+      20: { name: "Đá Hoa Cương Lát Làng", cat: "stone", color: "#a6adc0", icon: "🏛️" },
+      21: { name: "Đá Lát Rêu Phong", cat: "stone", color: "#8ca680", icon: "🧱" },
+      22: { name: "Sàn Đá Hầm Ngục Crypt", cat: "stone", color: "#544a5e", icon: "🪦" },
+      23: { name: "Tường Gạch Đá Kiên Cố", cat: "obstacle", color: "#736e78", icon: "🧱", obstacle: true },
+      24: { name: "Vách Đá Núi Cao", cat: "obstacle", color: "#6e5e4f", icon: "⛰️", obstacle: true },
+      25: { name: "Sàn Gỗ Lát Nhà", cat: "stone", color: "#a67345", icon: "🪵" },
+      26: { name: "Cầu Gỗ Bắc Qua Sông", cat: "stone", color: "#8c6138", icon: "🌉" },
+      27: { name: "Trụ Cột Tàn Tích Cổ", cat: "obstacle", color: "#9196a6", icon: "🏛️", obstacle: true },
+      28: { name: "Trận Pháp Ma Thuật", cat: "stone", color: "#b55eff", icon: "🔮" },
+      29: { name: "Đá Thiêng Vùng An Toàn", cat: "stone", color: "#ffd700", icon: "⭐" },
+
+      30: { name: "Bụi Rậm Ẩn Nấp (Tàng Hình)", cat: "foliage", color: "#309c3b", icon: "🌿" },
+      32: { name: "Khóm Cỏ Dại Đung Đưa", cat: "foliage", color: "#6edb4a", icon: "🌾" },
+      33: { name: "Bụi Lau Sậy Bờ Sông", cat: "foliage", color: "#87b04a", icon: "🌾" },
+      38: { name: "Vạt Hoa Dã Quỳ", cat: "foliage", color: "#ffe02e", icon: "🌻" },
+      39: { name: "Nấm Đỏ Khổng Lồ", cat: "foliage", color: "#e02e38", icon: "🍄" }
+    };
+
+    const PROP_DEFS = {
+      "prop_fountain_grand": { name: "Đài Phun Nước Thần Thoại", icon: "⛲", w: 3, h: 2 },
+      "prop_water_pillar": { name: "Trụ Nước Thần Năng", icon: "🏛️", w: 1, h: 2 },
+      "prop_stone_well": { name: "Giếng Nước Đá Cổ", icon: "🪣", w: 1, h: 1 },
+      "prop_tree_village": { name: "Cây Xanh Làng Thôn", icon: "🌳", w: 2, h: 3 },
+      "prop_tree_dark": { name: "Cây Hắc Ám Quỷ Dị", icon: "🌲", w: 2, h: 3 },
+      "prop_wooden_fence": { name: "Hàng Rào Gỗ", icon: "🚧", w: 1, h: 1 },
+      "prop_torch_post": { name: "Trụ Đuốc Bập Bùng (Có Lửa)", icon: "🔥", w: 1, h: 2 },
+      "prop_waystone_shrine": { name: "Trụ Hồi Sinh Đá Cổ", icon: "💠", w: 1, h: 2 },
+      "prop_dungeon_gate": { name: "Cổng Vào Hầm Ngục Cổ", icon: "⛩️", w: 3, h: 3 }
+    };
+
+    const MONSTER_DEFS = {
+      "monster_slime_grass": { name: "Slime Thảo Nguyên", color: "#2ecc71", icon: "🟢", level: 1 },
+      "monster_slime_water": { name: "Slime Thủy Tinh (Ven Sông)", color: "#00e5ff", icon: "💧", level: 2 },
+      "monster_forest_wolf": { name: "Dã Lang Rừng Sâu", color: "#e67e22", icon: "🐺", level: 3 },
+      "monster_lich_boss":   { name: "Thủ Lĩnh Ma Thú (Mini-Boss)", color: "#e74c3c", icon: "👑", level: 5, isBoss: true }
+    };
+
+    // -------------------------------------------------------------
+    // 2. STATE QUẢN LÝ DỮ LIỆU BẢN ĐỒ TOÀN CỤC
+    // -------------------------------------------------------------
+    let worldManifest = {
+      standardSize: { minX: -135, maxX: 135, minY: -66, maxY: 66, width: 270, height: 132 },
+      regions: [
+        { id: "region_village_0_0", name: "Làng Tân Thủ & Đại Lộ Cổ", grid: [0, 0], type: "overworld" },
+        { id: "region_east_forest_1_0", name: "Rừng Rậm Hắc Ám & Tàn Tích", grid: [1, 0], type: "overworld" },
+        { id: "region_west_coast_m1_0", name: "Bờ Biển Thần Năng", grid: [-1, 0], type: "overworld" },
+        { id: "region_north_mountains_0_1", name: "Dãy Núi Long Tích", grid: [0, 1], type: "overworld" },
+        { id: "region_south_swamp_0_m1", name: "Đầm Lầy Tử Khí", grid: [0, -1], type: "overworld" },
+        { id: "dungeon_crypt_floor_1", name: "Hầm Ngục Di Tích Tầng 1", grid: null, type: "dungeon_instance" }
+      ]
+    };
+
+    // Bộ nhớ cache các vùng đã tải
+    let loadedRegions = {};
+    let currentRegionId = "region_village_0_0";
+
+    // Trạng thái Canvas & Thao tác
+    let activeTool = "pencil";
+    let activePaletteTab = "terrain";
+    let selectedBlockId = 0;
+    let selectedPropType = "prop_tree_village";
+    let selectedMonsterType = "monster_slime_grass";
+
+    let zoom = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isPanning = false;
+    let startMouseX = 0, startMouseY = 0;
+    let showGrid = true;
+    let isDrawing = false;
+
+    const canvas = document.getElementById("mapCanvas");
+    const ctx = canvas.getContext("2d");
+    const viewport = document.getElementById("viewport");
+
+    // -------------------------------------------------------------
+    // 3. KHỞI TẠO DỮ LIỆU BAN ĐẦU
+    // -------------------------------------------------------------
+    function initDefaultRegions() {
+      // Vùng 1: Làng Tân Thủ (0, 0)
+      loadedRegions["region_village_0_0"] = {
+        regionId: "region_village_0_0",
+        displayName: "Làng Tân Thủ & Đại Lộ Cổ",
+        gridCoord: [0, 0],
+        dimensions: { minX: -135, maxX: 135, minY: -66, maxY: 66, width: 270, height: 132 },
+        defaultSpawn: { x: -80, y: -5 },
+        safeZone: { centerX: -80, centerY: 0, radius: 14.5 },
+        connections: {
+          north: { targetRegionId: "region_north_mountains_0_1", enabled: true },
+          south: { targetRegionId: "region_south_swamp_0_m1", enabled: true },
+          east:  { targetRegionId: "region_east_forest_1_0", enabled: true },
+          west:  { targetRegionId: "region_west_coast_m1_0", enabled: true }
+        },
+        portals: [
+          { portalId: "portal_crypt", name: "Cổng Hầm Ngục Di Tích", x: 120, y: 25, targetRegionId: "dungeon_crypt_floor_1", targetX: 0, targetY: -22 }
+        ],
+        monsterCamps: [
+          { campId: "c1", name: "Bãi Slime Thảo Nguyên", x: 18, y: 4, radius: 8, monsterType: "monster_slime_grass", count: 5 },
+          { campId: "c2", name: "Bãi Slime Thủy Tinh (Ven Sông)", x: 35, y: -8, radius: 6, monsterType: "monster_slime_water", count: 4 },
+          { campId: "c3", name: "Bãi Dã Lang Rừng Sâu", x: 65, y: 8, radius: 10, monsterType: "monster_forest_wolf", count: 6 },
+          { campId: "c4", name: "Thủ Lĩnh Ma Thú (Mini-Boss)", x: 110, y: -10, radius: 12, monsterType: "monster_lich_boss", count: 1 }
+        ],
+        props: [
+          { type: "prop_fountain_grand", x: -80, y: 0 },
+          { type: "prop_water_pillar", x: -89, y: 7 },
+          { type: "prop_water_pillar", x: -89, y: -7 },
+          { type: "prop_water_pillar", x: -71, y: 7 },
+          { type: "prop_water_pillar", x: -71, y: -7 },
+          { type: "prop_stone_well", x: -62, y: 8 },
+          { type: "prop_waystone_shrine", x: -76, y: -12 },
+          { type: "prop_dungeon_gate", x: 120, y: 25 }
+        ],
+        blocks: generateProceduralBlocksForVillage()
+      };
+
+      // Vùng 2: Rừng Rậm Hắc Ám (1, 0)
+      loadedRegions["region_east_forest_1_0"] = {
+        regionId: "region_east_forest_1_0",
+        displayName: "Rừng Rậm Hắc Ám & Tàn Tích",
+        gridCoord: [1, 0],
+        dimensions: { minX: -135, maxX: 135, minY: -66, maxY: 66, width: 270, height: 132 },
+        defaultSpawn: { x: -130, y: 0 },
+        connections: {
+          north: { targetRegionId: "", enabled: false },
+          south: { targetRegionId: "", enabled: false },
+          east:  { targetRegionId: "", enabled: false },
+          west:  { targetRegionId: "region_village_0_0", enabled: true }
+        },
+        portals: [],
+        monsterCamps: [
+          { campId: "c_wolf_1", name: "Bãi Hắc Lang Tinh Anh", x: -30, y: 15, radius: 10, monsterType: "monster_forest_wolf", count: 6 },
+          { campId: "c_boss_1", name: "Bãi Gargoyle Đá Cổ", x: 60, y: -15, radius: 14, monsterType: "monster_lich_boss", count: 1 }
+        ],
+        props: [
+          { type: "prop_tree_dark", x: -100, y: 20 },
+          { type: "prop_tree_dark", x: -80, y: -30 },
+          { type: "prop_waystone_shrine", x: 0, y: 0 }
+        ],
+        blocks: generateProceduralBlocksForForest()
+      };
+
+      // Vùng 3: Hầm Ngục Di Tích Tầng 1
+      loadedRegions["dungeon_crypt_floor_1"] = {
+        regionId: "dungeon_crypt_floor_1",
+        displayName: "Hầm Ngục Di Tích Tầng 1",
+        gridCoord: null,
+        isDungeon: true,
+        dimensions: { minX: -30, maxX: 30, minY: -30, maxY: 30, width: 60, height: 60 },
+        defaultSpawn: { x: 0, y: -22 },
+        connections: { north: { enabled: false }, south: { enabled: false }, east: { enabled: false }, west: { enabled: false } },
+        portals: [
+          { portalId: "portal_exit", name: "Cổng Rời Hầm Ngục", x: 0, y: -25, targetRegionId: "region_village_0_0", targetX: 118, targetY: 25 }
+        ],
+        monsterCamps: [
+          { campId: "c_crypt_boss", name: "Đại Vu Yêu Hắc Ám (BOSS)", x: 0, y: 0, radius: 8, monsterType: "monster_lich_boss", count: 1 }
+        ],
+        props: [{ type: "prop_dungeon_gate", x: 0, y: -25 }],
+        blocks: generateProceduralBlocksForDungeon()
+      };
+    }
+
+    function generateProceduralBlocksForVillage() {
+      const b = {};
+      // Viền vách núi
+      for (let x = -135; x <= 135; x++) {
+        b[`${x},-66`] = 24; b[`${x},66`] = 24;
+      }
+      for (let y = -66; y <= 66; y++) {
+        b[`-135,${y}`] = 24;
+        // Chừa lối đi mở ở mép Đông nối sang Rừng Rậm!
+        if (Math.abs(y) > 6) b[`135,${y}`] = 24;
+      }
+      // Quảng trường làng (-80, 0)
+      for (let x = -95; x <= -65; x++) {
+        for (let y = -15; y <= 15; y++) {
+          let dist = Math.hypot(x - (-80), y);
+          if (dist <= 14.5) {
+            if (dist >= 12.0) b[`${x},${y}`] = 29; // safezone gold
+            else if (dist <= 2.2) b[`${x},${y}`] = 14; // water fountain
+            else b[`${x},${y}`] = 20; // cobble plaza
+          }
+        }
+      }
+      // Trục đại lộ cổ (y = -2..2)
+      for (let x = -134; x <= 135; x++) {
+        for (let y = -2; y <= 2; y++) {
+          if (!b[`${x},${y}`]) b[`${x},${y}`] = (x <= -20) ? 8 : 9;
+        }
+      }
+      // Dòng sông ma thuật tại x = 43..48
+      for (let x = 43; x <= 48; x++) {
+        for (let y = -65; y <= 65; y++) {
+          if (Math.abs(y) <= 2) b[`${x},${y}`] = 26; // cầu gỗ
+          else b[`${x},${y}`] = (x === 44 || x === 47) ? 12 : 13; // nước
+        }
+      }
+      return b;
+    }
+
+    function generateProceduralBlocksForForest() {
+      const b = {};
+      for (let x = -135; x <= 135; x++) {
+        b[`${x},-66`] = 24; b[`${x},66`] = 24;
+      }
+      for (let y = -66; y <= 66; y++) {
+        if (Math.abs(y) > 6) b[`-135,${y}`] = 24; // Chừa lối Tây kết nối với Làng!
+        b[`135,${y}`] = 24;
+      }
+      // Lối đi kết nối
+      for (let x = -135; x <= 0; x++) {
+        for (let y = -2; y <= 2; y++) b[`${x},${y}`] = 9;
+      }
+      // Khu tàn tích trung tâm (0, 0)
+      for (let x = -15; x <= 15; x++) {
+        for (let y = -15; y <= 15; y++) {
+          if (Math.hypot(x, y) <= 12) b[`${x},${y}`] = 21;
+        }
+      }
+      return b;
+    }
+
+    function generateProceduralBlocksForDungeon() {
+      const b = {};
+      for (let x = -30; x <= 30; x++) {
+        for (let y = -30; y <= 30; y++) {
+          if (x === -30 || x === 30 || y === -30 || y === 30) b[`${x},${y}`] = 23; // stone wall
+          else if (Math.abs(x) <= 3 && Math.abs(y) <= 3) b[`${x},${y}`] = 28; // rune
+          else b[`${x},${y}`] = 22; // crypt floor
+        }
+      }
+      return b;
+    }
+
+    // -------------------------------------------------------------
+    // 4. KHỞI TẠO BẢNG CÔNG CỤ & TILE PALETTE
+    // -------------------------------------------------------------
+    function renderPalette() {
+      const container = document.getElementById("paletteContent");
+      container.innerHTML = "";
+
+      if (activePaletteTab === "terrain") {
+        const categories = {
+          "ground": "Đồng Cỏ & Đất Lối Mòn",
+          "water": "Nước, Sông & Bờ Cát",
+          "stone": "Đá Lát, Sàn Gỗ & Kiến Trúc",
+          "obstacle": "Tường Đá & Vách Núi (Cản Đường)",
+          "foliage": "Thực Vật & Bụi Rậm Tàng Hình"
+        };
+
+        for (let [catKey, catTitle] of Object.entries(categories)) {
+          const group = document.createElement("div");
+          group.className = "category-group";
+          group.innerHTML = `<div class="category-title">${catTitle}</div>`;
+          const grid = document.createElement("div");
+          grid.className = "tile-grid";
+
+          for (let [idStr, def] of Object.entries(BLOCK_DEFS)) {
+            if (def.cat === catKey) {
+              const id = parseInt(idStr);
+              const item = document.createElement("div");
+              item.className = `tile-item ${selectedBlockId === id ? 'active' : ''}`;
+              item.innerHTML = `
+                <div class="tile-color-preview" style="background: ${def.color};">${def.icon}</div>
+                <div class="tile-name" title="${def.name}">${def.name}</div>
+              `;
+              item.onclick = () => {
+                document.querySelectorAll(".tile-item").forEach(el => el.classList.remove("active"));
+                item.classList.add("active");
+                selectedBlockId = id;
+                activeTool = "pencil";
+                updateToolButtons();
+              };
+              grid.appendChild(item);
+            }
+          }
+          group.appendChild(grid);
+          container.appendChild(group);
+        }
+      } else if (activePaletteTab === "props") {
+        const group = document.createElement("div");
+        group.className = "category-group";
+        group.innerHTML = `<div class="category-title">Cây Cối, Đuốc & Đạo Cụ</div>`;
+        const grid = document.createElement("div");
+        grid.className = "tile-grid";
+
+        for (let [pKey, pDef] of Object.entries(PROP_DEFS)) {
+          const item = document.createElement("div");
+          item.className = `tile-item ${selectedPropType === pKey ? 'active' : ''}`;
+          item.innerHTML = `
+            <div class="tile-color-preview" style="background: #1e293b; font-size: 1.2rem;">${pDef.icon}</div>
+            <div class="tile-name" title="${pDef.name}">${pDef.name}</div>
+          `;
+          item.onclick = () => {
+            document.querySelectorAll(".tile-item").forEach(el => el.classList.remove("active"));
+            item.classList.add("active");
+            selectedPropType = pKey;
+          };
+          grid.appendChild(item);
+        }
+        group.appendChild(grid);
+        container.appendChild(group);
+      } else if (activePaletteTab === "camps") {
+        container.innerHTML = `
+          <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+            Chọn loại quái vật rồi <b>Click chuột lên bản đồ</b> để tạo Bãi Quái Mới (Monster Camp)!
+          </div>
+        `;
+        const group = document.createElement("div");
+        group.className = "category-group";
+        group.innerHTML = `<div class="category-title">Loại Quái Vật Triệu Hồi</div>`;
+        const grid = document.createElement("div");
+        grid.className = "tile-grid";
+
+        for (let [mKey, mDef] of Object.entries(MONSTER_DEFS)) {
+          const item = document.createElement("div");
+          item.className = `tile-item ${selectedMonsterType === mKey ? 'active' : ''}`;
+          item.innerHTML = `
+            <div class="tile-color-preview" style="background: ${mDef.color}; font-size: 1.2rem;">${mDef.icon}</div>
+            <div class="tile-name">${mDef.name}</div>
+          `;
+          item.onclick = () => {
+            document.querySelectorAll(".tile-item").forEach(el => el.classList.remove("active"));
+            item.classList.add("active");
+            selectedMonsterType = mKey;
+          };
+          grid.appendChild(item);
+        }
+        group.appendChild(grid);
+        container.appendChild(group);
+      } else if (activePaletteTab === "portals") {
+        container.innerHTML = `
+          <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+            Chế độ <b>Cổng Dịch Chuyển (Portals)</b>: Dùng để đặt cổng chuyển sang Phó Bản Hầm Ngục hoặc cổng viễn chinh.
+          </div>
+          <button id="btnPlacePortal" class="btn-cyan" style="margin-top: 10px; width: 100%;">⛩️ Đặt Cổng Hầm Ngục</button>
+        `;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 5. RENDER CANVAS BẢN ĐỒ CHÍNH (60 FPS VIEWPORT)
+    // -------------------------------------------------------------
+    function resizeCanvas() {
+      canvas.width = viewport.clientWidth;
+      canvas.height = viewport.clientHeight;
+      drawMap();
+    }
+
+    function worldToScreen(wx, wy) {
+      const reg = loadedRegions[currentRegionId];
+      const cx = canvas.width / 2 + panX;
+      const cy = canvas.height / 2 + panY;
+      const tileSize = 16 * zoom;
+      return {
+        x: cx + wx * tileSize,
+        y: cy - wy * tileSize // Unity Y tăng hướng lên trên
+      };
+    }
+
+    function screenToWorld(sx, sy) {
+      const cx = canvas.width / 2 + panX;
+      const cy = canvas.height / 2 + panY;
+      const tileSize = 16 * zoom;
+      const wx = Math.floor((sx - cx) / tileSize);
+      const wy = Math.floor((cy - sy) / tileSize);
+      return { wx, wy };
+    }
+
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const reg = loadedRegions[currentRegionId];
+      if (!reg) return;
+
+      const tileSize = 16 * zoom;
+      const dims = reg.dimensions;
+
+      // Tính vùng nhìn thấy trên màn hình để culling (tối ưu 120+ FPS!)
+      const topLeft = screenToWorld(0, 0);
+      const botRight = screenToWorld(canvas.width, canvas.height);
+
+      const startX = Math.max(dims.minX, Math.min(topLeft.wx, botRight.wx) - 1);
+      const endX   = Math.min(dims.maxX, Math.max(topLeft.wx, botRight.wx) + 1);
+      const startY = Math.max(dims.minY, Math.min(topLeft.wy, botRight.wy) - 1);
+      const endY   = Math.min(dims.maxY, Math.max(topLeft.wy, botRight.wy) + 1);
+
+      // 1. Vẽ nền gạch mặc định (grass_bright)
+      const defaultColor = BLOCK_DEFS[0].color;
+      for (let x = startX; x <= endX; x++) {
+        for (let y = startY; y <= endY; y++) {
+          const blockId = reg.blocks[`${x},${y}`] !== undefined ? reg.blocks[`${x},${y}`] : (reg.isDungeon ? 22 : 0);
+          const def = BLOCK_DEFS[blockId] || BLOCK_DEFS[0];
+
+          const p = worldToScreen(x, y + 1);
+          ctx.fillStyle = def.color;
+          ctx.fillRect(p.x, p.y, Math.ceil(tileSize), Math.ceil(tileSize));
+        }
+      }
+
+      // 2. Vẽ lưới ô vuông nếu bật
+      if (showGrid && zoom >= 0.75) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = startX; x <= endX + 1; x++) {
+          const p1 = worldToScreen(x, dims.maxY + 1);
+          const p2 = worldToScreen(x, dims.minY);
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+        }
+        for (let y = startY; y <= endY + 1; y++) {
+          const p1 = worldToScreen(dims.minX, y);
+          const p2 = worldToScreen(dims.maxX + 1, y);
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+        }
+        ctx.stroke();
+
+        // Đường ranh giới Chunk 16x16
+        ctx.strokeStyle = "rgba(0, 229, 255, 0.25)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let x = Math.floor(dims.minX / 16) * 16; x <= dims.maxX; x += 16) {
+          const p1 = worldToScreen(x, dims.maxY + 1);
+          const p2 = worldToScreen(x, dims.minY);
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+        }
+        for (let y = Math.floor(dims.minY / 16) * 16; y <= dims.maxY; y += 16) {
+          const p1 = worldToScreen(dims.minX, y);
+          const p2 = worldToScreen(dims.maxX + 1, y);
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+        }
+        ctx.stroke();
+      }
+
+      // 3. Vẽ Viền Biên Giới Khu Vực (4-Way Bounds)
+      const pTopLeft = worldToScreen(dims.minX, dims.maxY + 1);
+      const pBotRight = worldToScreen(dims.maxX + 1, dims.minY);
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.85)";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(pTopLeft.x, pTopLeft.y, pBotRight.x - pTopLeft.x, pBotRight.y - pTopLeft.y);
+
+      // 4. Vẽ Vùng An Toàn (SafeZone) nếu có
+      if (reg.safeZone) {
+        const szPos = worldToScreen(reg.safeZone.centerX, reg.safeZone.centerY);
+        const szRad = reg.safeZone.radius * tileSize;
+        ctx.strokeStyle = "rgba(255, 215, 0, 0.75)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.arc(szPos.x, szPos.y, szRad, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "rgba(255, 215, 0, 0.08)";
+        ctx.fill();
+      }
+
+      // 5. Vẽ Props (Cây cối, đài phun, trụ đuốc)
+      if (reg.props) {
+        for (let pr of reg.props) {
+          const pDef = PROP_DEFS[pr.type];
+          if (!pDef) continue;
+          const pos = worldToScreen(pr.x, pr.y + 1);
+          ctx.font = `${Math.max(14, tileSize * 1.4)}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(pDef.icon, pos.x + tileSize / 2, pos.y + tileSize / 2);
+        }
+      }
+
+      // 6. Vẽ Bãi Quái (Monster Camps)
+      if (reg.monsterCamps) {
+        for (let camp of reg.monsterCamps) {
+          const pos = worldToScreen(camp.x, camp.y);
+          const rad = camp.radius * tileSize;
+          const mDef = MONSTER_DEFS[camp.monsterType] || { color: "#e74c3c", icon: "👹" };
+
+          // Vòng bán kính tuần tra của bãi quái
+          ctx.fillStyle = "rgba(255, 71, 87, 0.12)";
+          ctx.strokeStyle = mDef.color;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, rad, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Icon trung tâm bãi quái
+          ctx.font = `${Math.max(16, tileSize * 1.6)}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(mDef.icon, pos.x, pos.y);
+
+          // Nhãn tên bãi quái
+          ctx.font = "10px 'Outfit', sans-serif";
+          ctx.fillStyle = "#fff";
+          ctx.fillText(camp.name, pos.x, pos.y + rad + 12);
+        }
+      }
+
+      // 7. Vẽ Điểm Spawn Mặc Định
+      if (reg.defaultSpawn) {
+        const sp = worldToScreen(reg.defaultSpawn.x, reg.defaultSpawn.y + 1);
+        ctx.fillStyle = "rgba(0, 229, 255, 0.4)";
+        ctx.strokeStyle = "#00e5ff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(sp.x + tileSize / 2, sp.y + tileSize / 2, tileSize * 0.75, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = `${Math.max(14, tileSize * 1.2)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("🚩", sp.x + tileSize / 2, sp.y + tileSize / 2);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 6. SỰ KIỆN CHUỘT & VẼ TILE
+    // -------------------------------------------------------------
+    viewport.addEventListener("mousedown", (e) => {
+      if (e.button === 1 || e.button === 2 || activeTool === "pan" || e.spaceKey) {
+        isPanning = true;
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        return;
+      }
+
+      if (e.button === 0) {
+        isDrawing = true;
+        applyTool(e.clientX, e.clientY);
+      }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const { wx, wy } = screenToWorld(mouseX, mouseY);
+
+      // Cập nhật HUD
+      document.getElementById("hudPos").textContent = `X: ${wx}, Y: ${wy}`;
+      document.getElementById("hudChunk").textContent = `[${Math.floor(wx / 16)}, ${Math.floor(wy / 16)}]`;
+
+      const reg = loadedRegions[currentRegionId];
+      if (reg) {
+        const bId = reg.blocks[`${wx},${wy}`] !== undefined ? reg.blocks[`${wx},${wy}`] : 0;
+        const bDef = BLOCK_DEFS[bId];
+        document.getElementById("hudTile").textContent = bDef ? `${bDef.name} (ID: ${bId})` : `Khối ID: ${bId}`;
+      }
+
+      if (isPanning) {
+        panX += e.clientX - startMouseX;
+        panY += e.clientY - startMouseY;
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        drawMap();
+      } else if (isDrawing) {
+        applyTool(e.clientX, e.clientY);
+      }
+    });
+
+    window.addEventListener("mouseup", () => {
+      isPanning = false;
+      isDrawing = false;
+    });
+
+    viewport.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+      const newZoom = Math.max(0.2, Math.min(5.0, zoom * zoomFactor));
+
+      // Zoom focus vào con trỏ chuột
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - canvas.width / 2;
+      const mouseY = e.clientY - rect.top - canvas.height / 2;
+
+      panX = mouseX - (mouseX - panX) * (newZoom / zoom);
+      panY = mouseY - (mouseY - panY) * (newZoom / zoom);
+      zoom = newZoom;
+
+      document.getElementById("zoomLevel").textContent = `${Math.round(zoom * 100)}%`;
+      drawMap();
+    });
+
+    function applyTool(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const { wx, wy } = screenToWorld(clientX - rect.left, clientY - rect.top);
+      const reg = loadedRegions[currentRegionId];
+      if (!reg) return;
+
+      const dims = reg.dimensions;
+      if (wx < dims.minX || wx > dims.maxX || wy < dims.minY || wy > dims.maxY) return;
+
+      if (activePaletteTab === "terrain") {
+        let radius = 0;
+        if (activeTool === "brush3") radius = 1;
+        if (activeTool === "brush5") radius = 2;
+
+        for (let dx = -radius; dx <= radius; dx++) {
+          for (let dy = -radius; dy <= radius; dy++) {
+            const tx = wx + dx;
+            const ty = wy + dy;
+            if (tx >= dims.minX && tx <= dims.maxX && ty >= dims.minY && ty <= dims.maxY) {
+              if (activeTool === "eraser") {
+                delete reg.blocks[`${tx},${ty}`];
+              } else if (activeTool === "eyedropper") {
+                selectedBlockId = reg.blocks[`${tx},${ty}`] !== undefined ? reg.blocks[`${tx},${ty}`] : 0;
+                renderPalette();
+              } else {
+                reg.blocks[`${tx},${ty}`] = selectedBlockId;
+              }
+            }
+          }
+        }
+      } else if (activePaletteTab === "props" && activeTool === "pencil") {
+        reg.props.push({ type: selectedPropType, x: wx, y: wy });
+        isDrawing = false; // Đặt 1 prop mỗi lần click
+      } else if (activePaletteTab === "camps" && activeTool === "pencil") {
+        const campId = `camp_${Date.now()}`;
+        const mDef = MONSTER_DEFS[selectedMonsterType];
+        reg.monsterCamps.push({
+          campId: campId,
+          name: `Bãi ${mDef.name}`,
+          x: wx,
+          y: wy,
+          radius: 8,
+          monsterType: selectedMonsterType,
+          count: 5
+        });
+        isDrawing = false;
+        renderInspector();
+      }
+
+      drawMap();
+      updateStatusCounters();
+    }
+
+    // -------------------------------------------------------------
+    // 7. INSPECTOR & CẬP NHẬT GIAO DIỆN PHẢI
+    // -------------------------------------------------------------
+    function renderInspector() {
+      const reg = loadedRegions[currentRegionId];
+      if (!reg) return;
+
+      document.getElementById("inpRegionId").value = reg.regionId;
+      document.getElementById("inpDisplayName").value = reg.displayName;
+      document.getElementById("inpGridCoord").value = reg.gridCoord ? `[${reg.gridCoord[0]}, ${reg.gridCoord[1]}]` : "Phó bản (Instance)";
+      document.getElementById("regionTypeBadge").textContent = reg.isDungeon ? "DUNGEON INSTANCE" : "OVERWORLD REGION";
+
+      // Cập nhật 4 banners
+      const conns = reg.connections || {};
+      document.getElementById("bannerNorth").textContent = conns.north?.targetRegionId ? getRegionName(conns.north.targetRegionId) : "Vách Núi Biên Giới (Không Đi Được)";
+      document.getElementById("bannerSouth").textContent = conns.south?.targetRegionId ? getRegionName(conns.south.targetRegionId) : "Vách Núi Biên Giới (Không Đi Được)";
+      document.getElementById("bannerWest").textContent  = conns.west?.targetRegionId  ? getRegionName(conns.west.targetRegionId)  : "Vách Núi Biên Giới (Không Đi Được)";
+      document.getElementById("bannerEast").textContent  = conns.east?.targetRegionId  ? getRegionName(conns.east.targetRegionId)  : "Vách Núi Biên Giới (Không Đi Được)";
+
+      // Cập nhật dropdowns ranh giới
+      populateConnSelect("selConnNorth", conns.north?.targetRegionId);
+      populateConnSelect("selConnSouth", conns.south?.targetRegionId);
+      populateConnSelect("selConnEast",  conns.east?.targetRegionId);
+      populateConnSelect("selConnWest",  conns.west?.targetRegionId);
+
+      document.getElementById("chkNorthEnabled").checked = !!conns.north?.enabled;
+      document.getElementById("chkSouthEnabled").checked = !!conns.south?.enabled;
+      document.getElementById("chkEastEnabled").checked  = !!conns.east?.enabled;
+      document.getElementById("chkWestEnabled").checked  = !!conns.west?.enabled;
+
+      // Danh sách Bãi Quái
+      const campList = document.getElementById("monsterCampsList");
+      campList.innerHTML = "";
+      document.getElementById("campCount").textContent = reg.monsterCamps ? reg.monsterCamps.length : 0;
+
+      if (reg.monsterCamps && reg.monsterCamps.length > 0) {
+        reg.monsterCamps.forEach((camp, idx) => {
+          const item = document.createElement("div");
+          item.className = "camp-item";
+          item.innerHTML = `
+            <div class="camp-title">
+              <span>${camp.name}</span>
+              <span style="color: var(--gold-bright);">X: ${camp.x}, Y: ${camp.y}</span>
+            </div>
+            <div class="camp-meta">
+              <span>Bán kính: ${camp.radius}m</span>
+              <span>Số lượng: ${camp.count}</span>
+            </div>
+          `;
+          item.onclick = () => {
+            focusWorldPos(camp.x, camp.y);
+          };
+          campList.appendChild(item);
+        });
+      } else {
+        campList.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-muted);">Chưa có bãi quái nào trong khu vực này.</span>`;
+      }
+
+      updateStatusCounters();
+    }
+
+    function getRegionName(rId) {
+      if (loadedRegions[rId]) return loadedRegions[rId].displayName;
+      const found = worldManifest.regions.find(r => r.id === rId);
+      return found ? found.name : rId;
+    }
+
+    function populateConnSelect(elemId, currentVal) {
+      const sel = document.getElementById(elemId);
+      sel.innerHTML = `<option value="">-- Biên Giới Chặn (Không Nối) --</option>`;
+      worldManifest.regions.forEach(r => {
+        if (r.id !== currentRegionId && r.type !== "dungeon_instance") {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.textContent = `${r.grid ? '[' + r.grid.join(',') + '] ' : ''}${r.name}`;
+          if (r.id === currentVal) opt.selected = true;
+          sel.appendChild(opt);
+        }
+      });
+    }
+
+    function focusWorldPos(wx, wy) {
+      const tileSize = 16 * zoom;
+      panX = -wx * tileSize;
+      panY = wy * tileSize;
+      drawMap();
+    }
+
+    function updateStatusCounters() {
+      const reg = loadedRegions[currentRegionId];
+      if (!reg) return;
+      document.getElementById("statTotalTiles").textContent = Object.keys(reg.blocks).length;
+      document.getElementById("statTotalProps").textContent = reg.props ? reg.props.length : 0;
+    }
+
+    function updateToolButtons() {
+      document.querySelectorAll(".tool-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tool === activeTool);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // 8. WORLD GRID MATRIX POPUP
+    // -------------------------------------------------------------
+    function renderWorldGridModal() {
+      const grid = document.getElementById("worldMatrixGrid");
+      grid.innerHTML = "";
+
+      // Hiển thị lưới 3x3 quanh (0,0): X từ -1..1, Y từ 1..-1
+      for (let y = 1; y >= -1; y--) {
+        for (let x = -1; x <= 1; x++) {
+          const node = document.createElement("div");
+          node.className = "world-region-node";
+
+          const found = worldManifest.regions.find(r => r.grid && r.grid[0] === x && r.grid[1] === y);
+          if (found) {
+            const isCurrent = found.id === currentRegionId;
+            if (isCurrent) node.classList.add("active-region");
+            node.innerHTML = `
+              <div class="coord-tag">[${x}, ${y}]</div>
+              <div class="reg-name">${found.name}</div>
+              ${isCurrent ? '<span style="font-size: 0.65rem; color: var(--gold-bright); font-weight: 700;">ĐANG CHỌN</span>' : ''}
+            `;
+            node.onclick = () => {
+              switchRegion(found.id);
+              document.getElementById("modalWorldGrid").classList.remove("show");
+            };
+          } else {
+            node.innerHTML = `
+              <div class="coord-tag">[${x}, ${y}]</div>
+              <div style="font-size: 0.75rem; color: rgba(255,255,255,0.3);">Trống</div>
+              <button style="font-size: 0.65rem; padding: 2px 6px;">➕ Thêm</button>
+            `;
+          }
+          grid.appendChild(node);
+        }
+      }
+
+      // Dungeon instances
+      const dList = document.getElementById("dungeonInstancesList");
+      dList.innerHTML = "";
+      worldManifest.regions.filter(r => r.type === "dungeon_instance").forEach(d => {
+        const dBtn = document.createElement("button");
+        dBtn.className = "btn-cyan";
+        dBtn.textContent = `🏛️ ${d.name}`;
+        dBtn.onclick = () => {
+          switchRegion(d.id);
+          document.getElementById("modalWorldGrid").classList.remove("show");
+        };
+        dList.appendChild(dBtn);
+      });
+    }
+
+    function switchRegion(targetId) {
+      if (!loadedRegions[targetId]) {
+        alert(`Khu vực [${targetId}] chưa được nạp. Đang tạo mẫu mặc định.`);
+        loadedRegions[targetId] = {
+          regionId: targetId,
+          displayName: getRegionName(targetId),
+          gridCoord: worldManifest.regions.find(r => r.id === targetId)?.grid || [0, 0],
+          dimensions: { minX: -135, maxX: 135, minY: -66, maxY: 66, width: 270, height: 132 },
+          defaultSpawn: { x: 0, y: 0 },
+          connections: {},
+          props: [],
+          monsterCamps: [],
+          blocks: {}
+        };
+      }
+
+      currentRegionId = targetId;
+      document.getElementById("regionSelect").value = targetId;
+      renderInspector();
+      drawMap();
+    }
+
+    // -------------------------------------------------------------
+    // 9. SIMULATOR CHUYỂN VÙNG 4 HƯỚNG LIÊN TỤC (WASD)
+    // -------------------------------------------------------------
+    let simPlayer = { x: -80, y: 0, speed: 1.5 };
+    let simKeys = {};
+    let simAnimFrame = null;
+    const simCanvas = document.getElementById("simCanvas");
+    const simCtx = simCanvas.getContext("2d");
+
+    function startSimulator() {
+      const reg = loadedRegions[currentRegionId];
+      if (reg && reg.defaultSpawn) {
+        simPlayer.x = reg.defaultSpawn.x;
+        simPlayer.y = reg.defaultSpawn.y;
+      }
+      document.getElementById("modalSimulator").classList.add("show");
+      simLoop();
+    }
+
+    function simLoop() {
+      updateSimPlayer();
+      drawSimCanvas();
+      simAnimFrame = requestAnimationFrame(simLoop);
+    }
+
+    function updateSimPlayer() {
+      const reg = loadedRegions[currentRegionId];
+      if (!reg) return;
+
+      let dx = 0, dy = 0;
+      if (simKeys["KeyW"] || simKeys["ArrowUp"]) dy += simPlayer.speed;
+      if (simKeys["KeyS"] || simKeys["ArrowDown"]) dy -= simPlayer.speed;
+      if (simKeys["KeyA"] || simKeys["ArrowLeft"]) dx -= simPlayer.speed;
+      if (simKeys["KeyD"] || simKeys["ArrowRight"]) dx += simPlayer.speed;
+
+      simPlayer.x += dx;
+      simPlayer.y += dy;
+
+      const dims = reg.dimensions;
+
+      // =========================================================
+      // CƠ CHẾ CHUYỂN VÙNG RANH GIỚI 4 HƯỚNG (SEAMLESS 4-WAY EDGE)
+      // =========================================================
+      // 1. Chạm Rìa Đông (East Edge)
+      if (simPlayer.x >= dims.maxX) {
+        const eastConn = reg.connections?.east;
+        if (eastConn && eastConn.enabled && eastConn.targetRegionId) {
+          triggerRegionTransition(eastConn.targetRegionId, "east");
+          return;
+        } else {
+          simPlayer.x = dims.maxX - 0.5; // Chặn lại nếu không có liên kết
+        }
+      }
+
+      // 2. Chạm Rìa Tây (West Edge)
+      if (simPlayer.x <= dims.minX) {
+        const westConn = reg.connections?.west;
+        if (westConn && westConn.enabled && westConn.targetRegionId) {
+          triggerRegionTransition(westConn.targetRegionId, "west");
+          return;
+        } else {
+          simPlayer.x = dims.minX + 0.5;
+        }
+      }
+
+      // 3. Chạm Rìa Bắc (North Edge)
+      if (simPlayer.y >= dims.maxY) {
+        const northConn = reg.connections?.north;
+        if (northConn && northConn.enabled && northConn.targetRegionId) {
+          triggerRegionTransition(northConn.targetRegionId, "north");
+          return;
+        } else {
+          simPlayer.y = dims.maxY - 0.5;
+        }
+      }
+
+      // 4. Chạm Rìa Nam (South Edge)
+      if (simPlayer.y <= dims.minY) {
+        const southConn = reg.connections?.south;
+        if (southConn && southConn.enabled && southConn.targetRegionId) {
+          triggerRegionTransition(southConn.targetRegionId, "south");
+          return;
+        } else {
+          simPlayer.y = dims.minY + 0.5;
+        }
+      }
+
+      document.getElementById("simPlayerPos").textContent = `X: ${simPlayer.x.toFixed(1)}, Y: ${simPlayer.y.toFixed(1)}`;
+      document.getElementById("simCurrentRegion").textContent = reg.displayName;
+    }
+
+    function triggerRegionTransition(targetRegionId, exitDirection) {
+      const oldRegion = loadedRegions[currentRegionId];
+      switchRegion(targetRegionId);
+      const newRegion = loadedRegions[targetRegionId];
+      const dims = newRegion.dimensions;
+
+      // REMAPPING VỊ TRÍ CHUẨN XÁC KHI SANG VÙNG MỚI:
+      if (exitDirection === "east") {
+        // Đi ra từ mép Đông → Xuất hiện ở mép Tây của vùng mới (X = minX + 2.0), giữ nguyên Y!
+        simPlayer.x = dims.minX + 2.0;
+      } else if (exitDirection === "west") {
+        // Đi ra từ mép Tây → Xuất hiện ở mép Đông của vùng mới (X = maxX - 2.0), giữ nguyên Y!
+        simPlayer.x = dims.maxX - 2.0;
+      } else if (exitDirection === "north") {
+        // Đi ra từ mép Bắc → Xuất hiện ở mép Nam của vùng mới (Y = minY + 2.0), giữ nguyên X!
+        simPlayer.y = dims.minY + 2.0;
+      } else if (exitDirection === "south") {
+        // Đi ra từ mép Nam → Xuất hiện ở mép Bắc của vùng mới (Y = maxY - 2.0), giữ nguyên X!
+        simPlayer.y = dims.maxY - 2.0;
+      }
+
+      console.log(`[TRANSITION] Chuyển tiếp thành công từ [${oldRegion.displayName}] sang [${newRegion.displayName}] qua hướng [${exitDirection}]. Vị trí mới: (${simPlayer.x}, ${simPlayer.y})`);
+    }
+
+    function drawSimCanvas() {
+      simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+      const reg = loadedRegions[currentRegionId];
+      if (!reg) return;
+
+      const simZoom = 3.5;
+      const sCX = simCanvas.width / 2;
+      const sCY = simCanvas.height / 2;
+
+      // Vẽ các tile xung quanh người chơi
+      const rad = 25;
+      const pX = Math.round(simPlayer.x);
+      const pY = Math.round(simPlayer.y);
+
+      for (let x = pX - rad; x <= pX + rad; x++) {
+        for (let y = pY - rad; y <= pY + rad; y++) {
+          const bId = reg.blocks[`${x},${y}`] !== undefined ? reg.blocks[`${x},${y}`] : (reg.isDungeon ? 22 : 0);
+          const def = BLOCK_DEFS[bId] || BLOCK_DEFS[0];
+
+          const scrX = sCX + (x - simPlayer.x) * (8 * simZoom);
+          const scrY = sCY - (y - simPlayer.y) * (8 * simZoom);
+
+          simCtx.fillStyle = def.color;
+          simCtx.fillRect(scrX, scrY, Math.ceil(8 * simZoom), Math.ceil(8 * simZoom));
+        }
+      }
+
+      // Vẽ Props gần
+      if (reg.props) {
+        for (let pr of reg.props) {
+          const dist = Math.hypot(pr.x - simPlayer.x, pr.y - simPlayer.y);
+          if (dist < rad) {
+            const pDef = PROP_DEFS[pr.type];
+            if (pDef) {
+              const scrX = sCX + (pr.x - simPlayer.x) * (8 * simZoom);
+              const scrY = sCY - (pr.y - simPlayer.y) * (8 * simZoom);
+              simCtx.font = "24px sans-serif";
+              simCtx.textAlign = "center";
+              simCtx.textBaseline = "middle";
+              simCtx.fillText(pDef.icon, scrX, scrY);
+            }
+          }
+        }
+      }
+
+      // Vẽ Người Chơi ở Chính Giữa
+      simCtx.fillStyle = "#00e5ff";
+      simCtx.strokeStyle = "#fff";
+      simCtx.lineWidth = 2;
+      simCtx.beginPath();
+      simCtx.arc(sCX, sCY, 14, 0, Math.PI * 2);
+      simCtx.fill();
+      simCtx.stroke();
+
+      simCtx.font = "18px sans-serif";
+      simCtx.textAlign = "center";
+      simCtx.textBaseline = "middle";
+      simCtx.fillText("🧙‍♂️", sCX, sCY);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      simKeys[e.code] = true;
+      if (e.code === "KeyP") { activeTool = "pencil"; updateToolButtons(); }
+      if (e.code === "KeyB") { activeTool = "brush3"; updateToolButtons(); }
+      if (e.code === "KeyE") { activeTool = "eraser"; updateToolButtons(); }
+      if (e.code === "KeyG") { showGrid = !showGrid; drawMap(); }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      simKeys[e.code] = false;
+    });
+
+    // -------------------------------------------------------------
+    // 10. SETUP SỰ KIỆN GIAO DIỆN & IMPORT/EXPORT
+    // -------------------------------------------------------------
+    function setupEventListeners() {
+      window.addEventListener("resize", resizeCanvas);
+
+      document.querySelectorAll(".tool-btn").forEach(btn => {
+        btn.onclick = () => {
+          activeTool = btn.dataset.tool;
+          updateToolButtons();
+        };
+      });
+
+      document.querySelectorAll(".palette-tab-btn").forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll(".palette-tab-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          activePaletteTab = btn.dataset.tab;
+          renderPalette();
+        };
+      });
+
+      document.getElementById("regionSelect").onchange = (e) => {
+        switchRegion(e.target.value);
+      };
+
+      document.getElementById("btnWorldGrid").onclick = () => {
+        renderWorldGridModal();
+        document.getElementById("modalWorldGrid").classList.add("show");
+      };
+
+      document.getElementById("btnSimulate").onclick = startSimulator;
+
+      document.querySelectorAll(".btnCloseModal").forEach(btn => {
+        btn.onclick = () => {
+          const mId = btn.dataset.modal;
+          document.getElementById(mId).classList.remove("show");
+          if (mId === "modalSimulator" && simAnimFrame) {
+            cancelAnimationFrame(simAnimFrame);
+          }
+        };
+      });
+
+      document.getElementById("btnResetView").onclick = () => {
+        const reg = loadedRegions[currentRegionId];
+        if (reg && reg.defaultSpawn) {
+          focusWorldPos(reg.defaultSpawn.x, reg.defaultSpawn.y);
+        } else {
+          panX = 0; panY = 0; zoom = 1.0;
+          drawMap();
+        }
+      };
+
+      document.getElementById("btnToggleGrid").onclick = () => {
+        showGrid = !showGrid;
+        drawMap();
+      };
+
+      document.getElementById("btnZoomIn").onclick = () => {
+        zoom = Math.min(5.0, zoom * 1.25);
+        document.getElementById("zoomLevel").textContent = `${Math.round(zoom * 100)}%`;
+        drawMap();
+      };
+
+      document.getElementById("btnZoomOut").onclick = () => {
+        zoom = Math.max(0.2, zoom / 1.25);
+        document.getElementById("zoomLevel").textContent = `${Math.round(zoom * 100)}%`;
+        drawMap();
+      };
+
+      // XUẤT JSON
+      document.getElementById("btnExportJson").onclick = () => {
+        const reg = loadedRegions[currentRegionId];
+        const jsonStr = JSON.stringify(reg, null, 2);
+        document.getElementById("txtJsonData").value = jsonStr;
+        document.getElementById("modalExportTitle").textContent = `Xuất Dữ Liệu Khu Vực [${reg.displayName}]`;
+        document.getElementById("modalExport").classList.add("show");
+      };
+
+      document.getElementById("btnCopyJson").onclick = () => {
+        navigator.clipboard.writeText(document.getElementById("txtJsonData").value);
+        alert("Đã sao chép dữ liệu JSON vào Clipboard!");
+      };
+
+      document.getElementById("btnDownloadJson").onclick = () => {
+        const reg = loadedRegions[currentRegionId];
+        const blob = new Blob([document.getElementById("txtJsonData").value], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${reg.regionId}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // NHẬP JSON
+      document.getElementById("btnImportJson").onclick = () => {
+        document.getElementById("fileInput").click();
+      };
+
+      document.getElementById("fileInput").onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = JSON.parse(evt.target.result);
+            if (data.regionId) {
+              loadedRegions[data.regionId] = data;
+              switchRegion(data.regionId);
+              alert(`Nhập thành công khu vực [${data.displayName}]!`);
+            } else {
+              alert("Tệp JSON không đúng định dạng Region!");
+            }
+          } catch (err) {
+            alert(`Lỗi đọc JSON: ${err.message}`);
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
+
+    // -------------------------------------------------------------
+    // KHỞI ĐỘNG STUDIO
+    // -------------------------------------------------------------
+    window.onload = () => {
+      initDefaultRegions();
+      renderPalette();
+      setupEventListeners();
+      resizeCanvas();
+      renderInspector();
+
+      // Focus ban đầu vào quảng trường làng (-80, 0)
+      focusWorldPos(-80, 0);
+      zoom = 1.25;
+      document.getElementById("zoomLevel").textContent = "125%";
+      drawMap();
+    };
+  </script>
+</body>
+</html>

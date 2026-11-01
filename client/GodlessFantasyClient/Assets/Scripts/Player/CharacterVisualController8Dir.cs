@@ -175,21 +175,30 @@ namespace GodlessFantasy.Player
             var rootSr = GetComponent<SpriteRenderer>();
             if (rootSr != null) rootSr.enabled = false;
 
-            // 1. Bóng đổ dưới chân (SortingOrder: 7) - Khớp 100% tâm bàn chân
+            // 1. Bóng đổ dưới chân (SortingOrder: 7) - Khớp 100% tâm bàn chân (Y = -0.19f)
             if (shadowRenderer == null)
             {
                 var sObj = new GameObject("Shadow");
                 sObj.transform.parent = transform;
-                sObj.transform.localPosition = new Vector3(0f, -0.48f, 0f);
+                sObj.transform.localPosition = new Vector3(0f, -0.19f, 0f);
                 shadowRenderer = sObj.AddComponent<SpriteRenderer>();
                 shadowRenderer.sortingOrder = 7;
-                shadowRenderer.color = new Color(0, 0, 0, 0.35f);
-                shadowRenderer.sprite = LoadSprite("indicator_circle");
-                sObj.transform.localScale = new Vector3(0.55f, 0.28f, 1f);
+                var shSp = LoadSprite("character_shadow");
+                if (shSp != null)
+                {
+                    shadowRenderer.sprite = shSp;
+                    shadowRenderer.color = new Color(1f, 1f, 1f, 0.85f);
+                }
+                else
+                {
+                    shadowRenderer.sprite = LoadSprite("indicator_circle");
+                    shadowRenderer.color = new Color(0, 0, 0, 0.35f);
+                }
+                sObj.transform.localScale = new Vector3(1.05f, 0.95f, 1f);
             }
             else
             {
-                shadowRenderer.transform.localPosition = new Vector3(0f, -0.48f, 0f);
+                shadowRenderer.transform.localPosition = new Vector3(0f, -0.19f, 0f);
             }
 
             // 2. Thân nhân vật (SortingOrder: 10)

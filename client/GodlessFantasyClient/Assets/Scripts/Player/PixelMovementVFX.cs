@@ -14,7 +14,7 @@ namespace GodlessFantasy.Player
         [Header("Cấu Hình Bụi 8-Bit")]
         [SerializeField] private float stepDustInterval = 0.28f;
         [SerializeField] private float sprintDustInterval = 0.14f;
-        [SerializeField] private Vector3 footOffset = new Vector3(0f, -0.42f, 0f);
+        [SerializeField] private Vector3 footOffset = new Vector3(0f, -0.19f, 0f);
         [SerializeField] private float dustFps = 16f;
         [SerializeField] private int sortingOrder = 8; // Nằm sau nhân vật (order 10) và trên mặt đất
 

@@ -131,6 +131,13 @@ namespace GodlessFantasy.Network
             }
         }
 
+        public async Task<bool> ReconnectAsync(string customUrl = null)
+        {
+            Disconnect();
+            await Task.Delay(150);
+            return await ConnectAsync(customUrl);
+        }
+
         public async void SendPacket<T>(string opCode, T payload)
         {
             if (!IsConnected)

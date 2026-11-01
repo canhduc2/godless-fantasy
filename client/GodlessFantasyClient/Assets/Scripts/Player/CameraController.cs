@@ -138,5 +138,13 @@ namespace GodlessFantasy.Player
         {
             target = newTarget;
         }
+
+        public void SnapToTarget()
+        {
+            if (target != null)
+            {
+                transform.position = target.position + offset;
+            }
+        }
     }
 }

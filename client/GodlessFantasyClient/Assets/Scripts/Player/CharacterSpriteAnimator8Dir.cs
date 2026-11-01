@@ -73,23 +73,38 @@ namespace GodlessFantasy.Player
 
         private void SetupGroundShadow()
         {
-            var existingShadow = transform.Find("GroundShadow");
+            var existingShadow = transform.Find("GroundShadow") ?? transform.Find("Shadow");
+            GameObject shadowObj;
             if (existingShadow != null)
             {
+                shadowObj = existingShadow.gameObject;
                 shadowTransform = existingShadow;
                 shadowRenderer = shadowTransform.GetComponent<SpriteRenderer>();
+                if (shadowRenderer == null) shadowRenderer = shadowObj.AddComponent<SpriteRenderer>();
             }
             else
             {
-                var shadowObj = new GameObject("GroundShadow");
+                shadowObj = new GameObject("GroundShadow");
                 shadowObj.transform.parent = transform;
-                shadowObj.transform.localPosition = new Vector3(0f, -0.42f, 0f);
-                shadowObj.transform.localScale = new Vector3(0.6f, 0.28f, 1f);
                 shadowRenderer = shadowObj.AddComponent<SpriteRenderer>();
-                shadowRenderer.sortingOrder = 7;
-                shadowRenderer.color = new Color(0f, 0f, 0f, 0.38f);
-                shadowRenderer.sprite = Resources.Load<Sprite>("indicator_circle");
                 shadowTransform = shadowObj.transform;
+            }
+
+            // Căn chỉnh tâm bóng đổ khớp 100% với điểm tiếp đất của bàn chân (Y = -0.19f)
+            shadowObj.transform.localPosition = new Vector3(0f, -0.19f, 0f);
+            shadowObj.transform.localScale = new Vector3(1.05f, 0.95f, 1f);
+            shadowRenderer.sortingOrder = 7;
+
+            Sprite shadowSp = Resources.Load<Sprite>("character_shadow");
+            if (shadowSp != null)
+            {
+                shadowRenderer.sprite = shadowSp;
+                shadowRenderer.color = new Color(1f, 1f, 1f, 0.85f);
+            }
+            else
+            {
+                shadowRenderer.sprite = Resources.Load<Sprite>("indicator_circle");
+                shadowRenderer.color = new Color(0f, 0f, 0f, 0.38f);
             }
         }
 

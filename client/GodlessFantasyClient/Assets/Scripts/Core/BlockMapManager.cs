@@ -711,7 +711,98 @@ namespace GodlessFantasy.Core
             }
         }
 
-        private GameObject CreateProp(string name, Sprite sprite, Vector3 pos, Transform parent, Vector2? colSize = null, Vector2? colOffset = null, int sortingOrder = 10)
+        public void ClearCurrentRegion()
+        {
+            foreach (var kvp in allCachedChunks)
+            {
+                if (kvp.Value != null) Destroy(kvp.Value);
+            }
+            loadedChunks.Clear();
+            allCachedChunks.Clear();
+            pendingLoadQueue.Clear();
+            queuedChunks.Clear();
+            customBlockTypes.Clear();
+
+            if (propsParent != null)
+            {
+                for (int i = propsParent.childCount - 1; i >= 0; i--)
+                {
+                    Destroy(propsParent.GetChild(i).gameObject);
+                }
+            }
+        }
+
+        public void ApplyRegionData(World.RegionData data)
+        {
+            if (data == null) return;
+            ClearCurrentRegion();
+
+            if (data.dimensions != null)
+            {
+                MinX = data.dimensions.minX;
+                MaxX = data.dimensions.maxX;
+                MinY = data.dimensions.minY;
+                MaxY = data.dimensions.maxY;
+            }
+
+            if (data.blockList != null)
+            {
+                foreach (var b in data.blockList)
+                {
+                    customBlockTypes[new Vector2Int(b.x, b.y)] = (TerrainBlockType)b.id;
+                }
+            }
+
+            if (data.props != null)
+            {
+                foreach (var p in data.props)
+                {
+                    SpawnPropByName(p.name, p.type, new Vector3(p.x, p.y, 0f), p.sort);
+                }
+            }
+
+            FindPlayer();
+            Vector3 pPos = playerTransform != null ? playerTransform.position : (data.defaultSpawn != null ? new Vector3(data.defaultSpawn.x, data.defaultSpawn.y, 0f) : Vector3.zero);
+            int pcx = Mathf.FloorToInt(pPos.x / CHUNK_SIZE);
+            int pcy = Mathf.FloorToInt(pPos.y / CHUNK_SIZE);
+
+            for (int cx = pcx - 2; cx <= pcx + 2; cx++)
+            {
+                for (int cy = pcy - 2; cy <= pcy + 2; cy++)
+                {
+                    LoadChunk(cx, cy);
+                }
+            }
+        }
+
+        public void SpawnPropByName(string name, string type, Vector3 pos, int sortingOrder = 10)
+        {
+            Sprite spr = Resources.Load<Sprite>(type);
+            if (spr == null) spr = Resources.Load<Sprite>($"prop_{type}");
+            if (spr == null) return;
+
+            Vector2? colSize = new Vector2(0.8f, 0.6f);
+            Vector2? colOffset = new Vector2(0f, -0.4f);
+
+            if (type.Contains("fountain")) { colSize = new Vector2(1.8f, 1.2f); colOffset = new Vector2(0, -0.4f); }
+            else if (type.Contains("gate")) { colSize = new Vector2(1.2f, 0.6f); colOffset = new Vector2(0, -0.5f); }
+            else if (type.Contains("fence")) { colSize = new Vector2(0.95f, 0.4f); colOffset = null; }
+            else if (type.Contains("tree")) { colSize = new Vector2(0.7f, 0.4f); colOffset = new Vector2(0, -0.6f); }
+
+            GameObject propObj = CreateProp(name, spr, pos, propsParent, colSize, colOffset, sortingOrder);
+
+            if (type.Contains("torch") && propObj != null)
+            {
+                propObj.AddComponent<World.AnimatedPixelFire>();
+            }
+            else if (type.Contains("waystone") && propObj != null)
+            {
+                var ws = propObj.AddComponent<World.WaystoneShrine>();
+                ws.Setup(name, true);
+            }
+        }
+
+        public GameObject CreateProp(string name, Sprite sprite, Vector3 pos, Transform parent, Vector2? colSize = null, Vector2? colOffset = null, int sortingOrder = 10)
         {
             if (sprite == null) return null;
             GameObject propObj = new GameObject(name);
