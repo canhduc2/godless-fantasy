@@ -172,12 +172,25 @@ namespace GodlessFantasy.UI
             var ps = Player.PlayerStats.Instance;
             if (ps != null)
             {
-                // Áp dụng định danh
                 var pObj = ps.gameObject;
+                bool isFem = string.Equals(c.gender, "Nữ", StringComparison.OrdinalIgnoreCase);
+
+                var visual8Dir = pObj.GetComponent<Player.CharacterVisualController8Dir>();
+                if (visual8Dir != null)
+                {
+                    visual8Dir.ForceSetGender(isFem);
+                }
+
+                var anim8 = pObj.GetComponent<Player.CharacterSpriteAnimator8Dir>();
+                if (anim8 != null)
+                {
+                    anim8.SetGender(isFem);
+                }
+
                 var rig = pObj.GetComponent<Player.ProceduralCharacterRig2D>();
                 if (rig != null)
                 {
-                    rig.SetGender(string.Equals(c.gender, "Nữ", StringComparison.OrdinalIgnoreCase));
+                    rig.SetGender(isFem);
                 }
             }
         }
