@@ -124,6 +124,10 @@ namespace GodlessFantasy.Player
                 if (spriteAnimator == null)
                     spriteAnimator = gameObject.AddComponent<CharacterSpriteAnimator8Dir>();
 
+                var dustVfx = GetComponent<PixelMovementVFX>();
+                if (dustVfx == null)
+                    gameObject.AddComponent<PixelMovementVFX>();
+
                 var rootSr = GetComponent<SpriteRenderer>();
                 if (rootSr != null) rootSr.enabled = true;
             }

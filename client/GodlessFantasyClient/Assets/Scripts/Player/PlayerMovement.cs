@@ -399,6 +399,12 @@ namespace GodlessFantasy.Player
                 dashDirection = Vector2.right;
             }
 
+            var dustVfx = GetComponent<PixelMovementVFX>();
+            if (dustVfx != null)
+            {
+                dustVfx.TriggerDashBurst(dashDirection);
+            }
+
             StartCoroutine(DashRoutine(dashDirection));
         }
 

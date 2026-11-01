@@ -665,7 +665,11 @@ namespace GodlessFantasy.Core
             };
             foreach (var tp in torchPositions)
             {
-                CreateProp("Torch_Post", torchPostSprite, tp, propsParent, new Vector2(0.4f, 0.4f), new Vector2(0, -0.3f), sortingOrder: 10);
+                var torchObj = CreateProp("Torch_Post", torchPostSprite, tp, propsParent, new Vector2(0.4f, 0.4f), new Vector2(0, -0.3f), sortingOrder: 10);
+                if (torchObj != null)
+                {
+                    torchObj.AddComponent<World.AnimatedPixelFire>();
+                }
                 if (EnvironmentAtmosphereManager.Instance != null)
                 {
                     EnvironmentAtmosphereManager.Instance.RegisterTorch(tp);

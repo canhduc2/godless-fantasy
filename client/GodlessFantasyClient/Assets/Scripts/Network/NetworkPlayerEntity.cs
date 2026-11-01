@@ -40,6 +40,12 @@ namespace GodlessFantasy.Network
                 spriteAnimator = gameObject.AddComponent<CharacterSpriteAnimator8Dir>();
             }
 
+            var dustVfx = GetComponent<Player.PixelMovementVFX>();
+            if (dustVfx == null)
+            {
+                gameObject.AddComponent<Player.PixelMovementVFX>();
+            }
+
             var oldRig = GetComponent<ProceduralCharacterRig2D>();
             if (oldRig != null) oldRig.enabled = false;
 

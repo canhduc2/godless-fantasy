@@ -152,6 +152,16 @@ namespace GodlessFantasy.Player
             return loaded;
         }
 
+        private PlayerMovement playerMovement;
+        private float idleWindTimer = 0f;
+        private float currentTilt = 0f;
+        private float ghostTimer = 0f;
+
+        private void Start()
+        {
+            playerMovement = GetComponent<PlayerMovement>();
+        }
+
         private void Update()
         {
             if (spriteRenderer != null)
@@ -161,30 +171,69 @@ namespace GodlessFantasy.Player
 
             string dirName = GetDirectionSpriteName(currentDirection);
 
+            bool isSprinting = (playerMovement != null && playerMovement.IsRunning && isMoving);
+
             if (isMoving)
             {
-                // Chu kỳ hoạt ảnh bước đi 8 frame
-                animTimer += Time.deltaTime * walkFps;
+                // Tốc độ hoạt ảnh bước đi: tự động tăng nhịp khi chạy nước rút (sprint)
+                float currentFps = isSprinting ? walkFps * 1.45f : walkFps;
+                animTimer += Time.deltaTime * currentFps;
                 int frameIdx = ((int)animTimer) % 8;
 
                 Sprite sp = LoadMageSprite(dirName, frameIdx, isFemale) ?? LoadMageSprite(dirName, 0, isFemale);
                 if (sp != null) spriteRenderer.sprite = sp;
 
-                // Reset scale bình thường khi bước đi
+                // Độ nghiêng tự nhiên khi di chuyển theo chiều gió (Dynamic lean)
+                float targetTilt = 0f;
+                if (currentDirection == Direction8.West || currentDirection == Direction8.NorthWest || currentDirection == Direction8.SouthWest)
+                {
+                    targetTilt = 2.2f;
+                }
+                else if (currentDirection == Direction8.East || currentDirection == Direction8.NorthEast || currentDirection == Direction8.SouthEast)
+                {
+                    targetTilt = -2.2f;
+                }
+                currentTilt = Mathf.MoveTowards(currentTilt, targetTilt, Time.deltaTime * 18f);
+                transform.localRotation = Quaternion.Euler(0f, 0f, currentTilt);
                 transform.localScale = initialScale;
+
+                // Dư ảnh bóng mờ khi lướt (Dash ghost afterimage)
+                if (playerMovement != null && playerMovement.IsDashing)
+                {
+                    ghostTimer += Time.deltaTime;
+                    if (ghostTimer >= 0.05f)
+                    {
+                        ghostTimer = 0f;
+                        SpawnDashGhost();
+                    }
+                }
             }
             else
             {
-                // Trạng thái nghỉ (Idle): Cố định Frame 0 (Thế đứng chuẩn y hệt Preview)
+                // Trạng thái nghỉ (Idle): Hoạt họa áo choàng bay nhẹ trong gió (Wind flutter)
                 animTimer = 0f;
-                Sprite sp = LoadMageSprite(dirName, 0, isFemale) ?? LoadMageSprite("south", 0, isFemale);
+                currentTilt = Mathf.MoveTowards(currentTilt, 0f, Time.deltaTime * 12f);
+                transform.localRotation = Quaternion.identity;
+
+                idleWindTimer += Time.deltaTime;
+
+                // Mỗi chu kỳ 3.6s, cơn gió nhẹ thổi qua làm tà áo choàng lay động (Frame 0 -> Frame 1 -> Frame 0)
+                int idleFrame = 0;
+                float cycle = idleWindTimer % 3.6f;
+                if (cycle > 2.8f && cycle < 3.2f)
+                {
+                    idleFrame = 1; // Khẽ lay động tà áo choàng
+                }
+
+                Sprite sp = LoadMageSprite(dirName, idleFrame, isFemale) ?? LoadMageSprite(dirName, 0, isFemale);
                 if (sp != null) spriteRenderer.sprite = sp;
 
-                // Nhịp thở bồng bềnh nhẹ nhàng
+                // Nhịp thở và dao động tà áo choàng bồng bềnh
                 if (enableBreathing)
                 {
                     float breath = Mathf.Sin(Time.time * breathSpeed) * breathScaleAmount;
-                    transform.localScale = new Vector3(initialScale.x * (1f - breath * 0.5f), initialScale.y * (1f + breath), initialScale.z);
+                    float flutterX = Mathf.Cos(Time.time * (breathSpeed * 1.2f)) * (breathScaleAmount * 0.75f);
+                    transform.localScale = new Vector3(initialScale.x * (1f + flutterX), initialScale.y * (1f + breath), initialScale.z);
                 }
             }
 
@@ -195,6 +244,59 @@ namespace GodlessFantasy.Player
             {
                 c.a = Mathf.MoveTowards(c.a, targetAlpha, Time.deltaTime * 6f);
                 spriteRenderer.color = c;
+            }
+        }
+
+        /// <summary>
+        /// Tạo ảo ảnh bóng mờ áo choàng khi dash lướt nhanh
+        /// </summary>
+        public void SpawnDashGhost()
+        {
+            if (spriteRenderer == null || spriteRenderer.sprite == null) return;
+
+            GameObject ghost = new GameObject("DashGhost");
+            ghost.transform.position = transform.position;
+            ghost.transform.rotation = transform.rotation;
+            ghost.transform.localScale = transform.localScale;
+
+            var sr = ghost.AddComponent<SpriteRenderer>();
+            sr.sprite = spriteRenderer.sprite;
+            sr.sortingOrder = spriteRenderer.sortingOrder - 1;
+
+            // Màu viền áo choàng: Nam = Cyan ngọc, Nữ = Hồng cánh sen
+            Color ghostColor = isFemale ? new Color(1.0f, 0.35f, 0.75f, 0.65f) : new Color(0.15f, 0.85f, 1.0f, 0.65f);
+            sr.color = ghostColor;
+
+            var fader = ghost.AddComponent<GhostFader>();
+            fader.Setup(0.24f);
+        }
+
+        private class GhostFader : MonoBehaviour
+        {
+            private SpriteRenderer sr;
+            private float lifetime = 0.24f;
+            private float timer = 0f;
+            private Color initialCol;
+
+            public void Setup(float time)
+            {
+                lifetime = time;
+                sr = GetComponent<SpriteRenderer>();
+                if (sr != null) initialCol = sr.color;
+            }
+
+            private void Update()
+            {
+                timer += Time.deltaTime;
+                if (timer >= lifetime || sr == null)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+                float alpha = Mathf.Lerp(initialCol.a, 0f, timer / lifetime);
+                Color c = initialCol;
+                c.a = alpha;
+                sr.color = c;
             }
         }
 
