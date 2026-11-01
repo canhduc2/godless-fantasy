@@ -1,6 +1,8 @@
 # Custom User / Local Tools
 addit-gitignore-donttouch/
-tools/
+tools/*
+!tools/GodlessSkillStudio/
+!tools/GodlessMapStudio/
 *.zip
 
 # Unity Temporary & Cache Directories
