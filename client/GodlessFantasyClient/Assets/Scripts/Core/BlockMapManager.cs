@@ -88,10 +88,15 @@ namespace GodlessFantasy.Core
 
         private void Awake()
         {
-            if (Instance == null) Instance = this;
+            Instance = this;
             World.TerrainBlockRegistry.EnsureInitialized();
             World.TerrainAtlasManager.EnsureInitialized();
             LoadSprites();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         private void LoadSprites()

@@ -47,9 +47,18 @@ namespace GodlessFantasy.World
             return blockUvs[0]; // Mặc định là grass_bright (slot 0)
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            isInitialized = false;
+            atlasTexture = null;
+            atlasMaterial = null;
+            blockUvs = new Rect[256];
+        }
+
         public static void EnsureInitialized()
         {
-            if (isInitialized) return;
+            if (isInitialized && atlasMaterial != null && atlasTexture != null) return;
             InitializeAtlas();
             isInitialized = true;
         }
@@ -90,14 +99,22 @@ namespace GodlessFantasy.World
 
             atlasTexture.Apply(false, false);
 
-            // Tạo Material với GPU Instancing
-            Shader spriteShader = Shader.Find("Sprites/Default");
-            if (spriteShader == null) spriteShader = Shader.Find("Unlit/Transparent");
-            if (spriteShader == null) spriteShader = Shader.Find("Mobile/Particles/Alpha Blended");
+            // Tạo Material với shader hỗ trợ Universal Render Pipeline (URP 2D / Unlit) và fallback Built-in
+            Shader terrainShader = Shader.Find("GodlessFantasy/TerrainChunk");
+            if (terrainShader == null) terrainShader = Shader.Find("Universal Render Pipeline/2D/Mesh2D-Unlit-Default");
+            if (terrainShader == null) terrainShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+            if (terrainShader == null) terrainShader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (terrainShader == null) terrainShader = Shader.Find("Sprites/Default");
+            if (terrainShader == null) terrainShader = Shader.Find("Unlit/Transparent");
+            if (terrainShader == null) terrainShader = Shader.Find("Mobile/Particles/Alpha Blended");
 
-            atlasMaterial = new Material(spriteShader);
+            atlasMaterial = new Material(terrainShader);
             atlasMaterial.name = "Mat_Terrain_Master_Atlas";
             atlasMaterial.mainTexture = atlasTexture;
+            if (atlasMaterial.HasProperty("_MainTex")) atlasMaterial.SetTexture("_MainTex", atlasTexture);
+            if (atlasMaterial.HasProperty("_BaseMap")) atlasMaterial.SetTexture("_BaseMap", atlasTexture);
+            if (atlasMaterial.HasProperty("_Color")) atlasMaterial.SetColor("_Color", Color.white);
+            if (atlasMaterial.HasProperty("_BaseColor")) atlasMaterial.SetColor("_BaseColor", Color.white);
             atlasMaterial.enableInstancing = true;
         }
 

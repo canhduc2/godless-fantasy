@@ -55,9 +55,17 @@ namespace GodlessFantasy.World
         private static Dictionary<string, ushort> codeToId = new Dictionary<string, ushort>();
         private static bool isInitialized = false;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            isInitialized = false;
+            blockDefs.Clear();
+            codeToId.Clear();
+        }
+
         public static void EnsureInitialized()
         {
-            if (isInitialized) return;
+            if (isInitialized && blockDefs != null && blockDefs.Count > 0) return;
             InitializeRegistry();
             isInitialized = true;
         }
@@ -269,7 +277,7 @@ namespace GodlessFantasy.World
         public static Sprite GetSprite(ushort id)
         {
             var def = GetBlock(id);
-            if (def.cachedSprite != null) return def.cachedSprite;
+            if (def.cachedSprite != null && def.cachedSprite.texture != null) return def.cachedSprite;
 
             // 1. Thử nạp từ Resources theo đường dẫn đăng ký
             if (!string.IsNullOrEmpty(def.spriteResourcePath))
